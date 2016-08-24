@@ -3,6 +3,7 @@ package phylip
 import (
 	"bytes"
 	"errors"
+	"fmt"
 	"github.com/fredericlemoine/goalign/align"
 	"io"
 	"strconv"
@@ -37,6 +38,20 @@ func (p *Parser) scan() (tok Token, lit string) {
 
 	// Save it to the buffer in case we unscan later.
 	p.buf.tok, p.buf.lit = tok, lit
+	return
+}
+
+func (p *Parser) scanWithEOL() (tok Token, lit string) {
+	tok, lit = p.scan()
+	if tok != ENDOFLINE {
+		return
+	}
+	prevtok, prevlit := tok, lit
+	for ; tok == ENDOFLINE; tok, lit = p.scan() {
+		prevtok, prevlit = tok, lit
+	}
+	p.unscan()
+	tok, lit = prevtok, prevlit
 	return
 }
 
@@ -93,7 +108,7 @@ func (p *Parser) Parse() (align.Alignment, error) {
 	for i := 0; i < int(nbseq); i++ {
 		tok, lit = p.scan()
 		if tok != IDENTIFIER && tok != NUMERIC {
-			return nil, errors.New("Bad Phylip format, we should have an sequence identifier after the header")
+			return nil, errors.New("Bad Phylip format, we should have an sequence identifier after the header: " + lit)
 		}
 		names[i] = lit
 		tok, lit = p.scan()
@@ -110,10 +125,13 @@ func (p *Parser) Parse() (align.Alignment, error) {
 		}
 	}
 
-	// After first block a blank line
-	tok, lit = p.scan()
-	if tok != ENDOFLINE && seqs[0].Len() != int(lenseq) {
-		return nil, errors.New("Bad Phylip format, we should have a blank line after the name/sequence block: " + lit)
+	tok, lit = p.scanWithEOL()
+
+	if tok == ENDOFLINE {
+	} else if int(lenseq) != seqs[0].Len() {
+		panic("Bad Phylip Format: Should have a blank line here")
+	} else if tok != EOF {
+		panic("Bad Phylip Format : Should not have a character here, all sequences have been red")
 	}
 
 	// Then other blocks with only sequences
@@ -134,15 +152,22 @@ func (p *Parser) Parse() (align.Alignment, error) {
 				tok, lit = p.scan()
 			}
 		}
-		// After the block a blank line
-		tok, lit = p.scan()
-		if tok != ENDOFLINE && seqs[0].Len() != int(lenseq) {
-			return nil, errors.New("Bad Phylip format, we should have a blank line after the sequence block")
+		tok, lit = p.scanWithEOL()
+		if tok == ENDOFLINE {
+			tok, lit = p.scan()
+		} else if int(lenseq) != seqs[0].Len() {
+			panic("Bad Phylip Format: Should have a blank line here")
+		} else if tok != EOF {
+			panic("Bad Phylip Format : Should not have a character here, all sequences have been red")
 		}
+
 	}
 
 	for i, name := range names {
 		seq := seqs[i].String()
+		if int(lenseq) != len(seq) {
+			panic("Bad Phylip format: Length of sequences does not correspond to header")
+		}
 		if al == nil {
 			al = align.NewAlign(align.DetectAlphabet(seq))
 		}

@@ -1,6 +1,7 @@
 package align
 
 import (
+	"bytes"
 	"errors"
 	"math/rand"
 )
@@ -19,6 +20,7 @@ type Alignment interface {
 	Length() int
 	ShuffleSequences()
 	ShuffleSites(rate float64)
+	BuildBootstrap() Alignment
 }
 
 type align struct {
@@ -118,6 +120,26 @@ func (a *align) ShuffleSites(rate float64) {
 			a.seqs[r].sequence[site] = temp
 		}
 	}
+}
+
+func (a *align) BuildBootstrap() Alignment {
+	n := a.Length()
+	boot := NewAlign(a.alphabet)
+	indices := make([]int, n)
+	var buf bytes.Buffer
+
+	for i := 0; i < n; i++ {
+		indices[i] = rand.Intn(n)
+	}
+
+	for _, seq := range a.seqs {
+		buf.Reset()
+		for _, indice := range indices {
+			buf.WriteRune(seq.sequence[indice])
+		}
+		boot.AddSequence(seq.name, buf.String(), "")
+	}
+	return boot
 }
 
 func DetectAlphabet(seq string) int {

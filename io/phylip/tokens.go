@@ -18,6 +18,14 @@ func isEndOfLine(ch rune) bool {
 	return ch == '\n' || ch == '\r'
 }
 
+func isCR(ch rune) bool {
+	return ch == '\r'
+}
+
+func isNL(ch rune) bool {
+	return ch == '\n'
+}
+
 func isIdent(ch rune) bool {
 	return ch != '\n' && ch != ' ' && ch != '\n' && ch != '\r'
 }

@@ -45,7 +45,16 @@ func (s *Scanner) Scan() (tok Token, lit string) {
 	}
 
 	if isEndOfLine(ch) {
-		return ENDOFLINE, ""
+		if isCR(ch) {
+			ch := s.read()
+			if isNL(ch) {
+				return ENDOFLINE, ""
+			} else {
+				panic("\\r without \\n detected...")
+			}
+		} else {
+			return ENDOFLINE, ""
+		}
 	}
 
 	switch ch {
