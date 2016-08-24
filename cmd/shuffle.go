@@ -35,9 +35,11 @@ and usage of using your command. For example:
 Cobra is a CLI library for Go that empowers applications.
 This application is a tool to generate the needed files
 to quickly create a Cobra application.`,
-	Run: func(cmd *cobra.Command, args []string) {
+	PersistentPreRun: func(cmd *cobra.Command, args []string) {
+		RootCmd.PersistentPreRun(cmd, args)
 		rand.Seed(shuffleSeed)
-		rootalign.Shuffle()
+	},
+	PersistentPostRun: func(cmd *cobra.Command, args []string) {
 		if rootphylip {
 			fmt.Print(phylip.WriteAlignment(rootalign))
 		} else {
@@ -49,7 +51,7 @@ to quickly create a Cobra application.`,
 func init() {
 	RootCmd.AddCommand(shuffleCmd)
 
-	shuffleCmd.Flags().Int64VarP(&shuffleSeed, "seed", "s", time.Now().UTC().UnixNano(), "Initial Random Seed")
+	shuffleCmd.PersistentFlags().Int64VarP(&shuffleSeed, "seed", "s", time.Now().UTC().UnixNano(), "Initial Random Seed")
 	// Here you will define your flags and configuration settings.
 
 	// Cobra supports Persistent Flags which will work for this command

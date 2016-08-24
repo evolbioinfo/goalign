@@ -8,20 +8,20 @@ type Sequence interface {
 
 type seq struct {
 	name     string // Name of the sequence
-	sequence string // Sequence of nucleotides/aa
+	sequence []rune // Sequence of nucleotides/aa
 	comment  string // Comment if any
 }
 
 func NewSequence(name string, sequence string, comment string) *seq {
 	return &seq{
 		name,
-		sequence,
+		[]rune(sequence),
 		comment,
 	}
 }
 
 func (s *seq) Sequence() string {
-	return s.sequence
+	return string(s.sequence)
 }
 
 func (s *seq) Name() string {

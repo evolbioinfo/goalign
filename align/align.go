@@ -17,7 +17,8 @@ type Alignment interface {
 	Iterate(it func(name string, sequence string))
 	NbSequences() int
 	Length() int
-	Shuffle()
+	ShuffleSequences()
+	ShuffleSites(rate float64)
 }
 
 type align struct {
@@ -44,7 +45,7 @@ func NewAlign(alphabet int) *align {
 
 func (a *align) Iterate(it func(name string, sequence string)) {
 	for _, seq := range a.seqs {
-		it(seq.name, seq.sequence)
+		it(seq.name, string(seq.sequence))
 	}
 }
 
@@ -82,7 +83,9 @@ func (a *align) Length() int {
 	return a.length
 }
 
-func (a *align) Shuffle() {
+// Just shuffle the order of the sequences in the alignment
+// Does not change biological information
+func (a *align) ShuffleSequences() {
 	var temp *seq
 	var n int = a.NbSequences()
 	for n > 1 {
@@ -91,6 +94,29 @@ func (a *align) Shuffle() {
 		temp = a.seqs[n]
 		a.seqs[n] = a.seqs[r]
 		a.seqs[r] = temp
+	}
+}
+
+// Shuffles vertically rate sites of the alignment
+// randomly
+// rate must be >=0 and <=1
+func (a *align) ShuffleSites(rate float64) {
+	if rate < 0 || rate > 1 {
+		panic("Shuffle site rate must be >=0 and <=1")
+	}
+	permutation := rand.Perm(a.Length())
+	nb_to_shuffle := int(rate * float64(a.Length()))
+	var temp rune
+	for i := 0; i < nb_to_shuffle; i++ {
+		site := permutation[i]
+		var n int = a.NbSequences()
+		for n > 1 {
+			r := rand.Intn(n)
+			n--
+			temp = a.seqs[n].sequence[site]
+			a.seqs[n].sequence[site] = a.seqs[r].sequence[site]
+			a.seqs[r].sequence[site] = temp
+		}
 	}
 }
 

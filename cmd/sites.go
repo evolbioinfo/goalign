@@ -15,14 +15,14 @@
 package cmd
 
 import (
-	"fmt"
-
 	"github.com/spf13/cobra"
 )
 
-// convertCmd represents the convert command
-var convertCmd = &cobra.Command{
-	Use:   "convert",
+var siteRate float64
+
+// sitesCmd represents the sites command
+var sitesCmd = &cobra.Command{
+	Use:   "sites",
 	Short: "A brief description of your command",
 	Long: `A longer description that spans multiple lines and likely contains examples
 and usage of using your command. For example:
@@ -31,22 +31,22 @@ Cobra is a CLI library for Go that empowers applications.
 This application is a tool to generate the needed files
 to quickly create a Cobra application.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		// TODO: Work your own magic here
-		fmt.Println("convert called")
+		rootalign.ShuffleSites(siteRate)
 	},
 }
 
 func init() {
-	RootCmd.AddCommand(convertCmd)
+	shuffleCmd.AddCommand(sitesCmd)
+	sitesCmd.PersistentFlags().Float64VarP(&siteRate, "rate", "r", 0.5, "Rate of shuffled sites (>=0 and <=1)")
 
 	// Here you will define your flags and configuration settings.
 
 	// Cobra supports Persistent Flags which will work for this command
 	// and all subcommands, e.g.:
-	// convertCmd.PersistentFlags().String("foo", "", "A help for foo")
+	// sitesCmd.PersistentFlags().String("foo", "", "A help for foo")
 
 	// Cobra supports local flags which will only run when this command
 	// is called directly, e.g.:
-	// convertCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
+	// sitesCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
 
 }

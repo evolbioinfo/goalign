@@ -15,15 +15,12 @@
 package cmd
 
 import (
-	"fmt"
-	"github.com/fredericlemoine/goalign/io/fasta"
-
 	"github.com/spf13/cobra"
 )
 
-// phylip2fastaCmd represents the phylip2fasta command
-var phylip2fastaCmd = &cobra.Command{
-	Use:   "phylip2fasta",
+// seqsCmd represents the seqs command
+var seqsCmd = &cobra.Command{
+	Use:   "seqs",
 	Short: "A brief description of your command",
 	Long: `A longer description that spans multiple lines and likely contains examples
 and usage of using your command. For example:
@@ -32,22 +29,21 @@ Cobra is a CLI library for Go that empowers applications.
 This application is a tool to generate the needed files
 to quickly create a Cobra application.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		// TODO: Work your own magic here
-		fmt.Print(fasta.WriteAlignment(rootalign))
+		rootalign.ShuffleSequences()
 	},
 }
 
 func init() {
-	convertCmd.AddCommand(phylip2fastaCmd)
-	rootphylip = true
+	shuffleCmd.AddCommand(seqsCmd)
+
 	// Here you will define your flags and configuration settings.
 
 	// Cobra supports Persistent Flags which will work for this command
 	// and all subcommands, e.g.:
-	// phylip2fastaCmd.PersistentFlags().String("foo", "", "A help for foo")
+	// seqsCmd.PersistentFlags().String("foo", "", "A help for foo")
 
 	// Cobra supports local flags which will only run when this command
 	// is called directly, e.g.:
-	// phylip2fastaCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
+	// seqsCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
 
 }
