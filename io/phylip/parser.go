@@ -3,7 +3,6 @@ package phylip
 import (
 	"bytes"
 	"errors"
-	"fmt"
 	"github.com/fredericlemoine/goalign/align"
 	"io"
 	"strconv"
@@ -128,6 +127,8 @@ func (p *Parser) Parse() (align.Alignment, error) {
 	tok, lit = p.scanWithEOL()
 
 	if tok == ENDOFLINE {
+		tok, lit = p.scan()
+		p.unscan()
 	} else if int(lenseq) != seqs[0].Len() {
 		panic("Bad Phylip Format: Should have a blank line here")
 	} else if tok != EOF {
@@ -155,6 +156,7 @@ func (p *Parser) Parse() (align.Alignment, error) {
 		tok, lit = p.scanWithEOL()
 		if tok == ENDOFLINE {
 			tok, lit = p.scan()
+			p.unscan()
 		} else if int(lenseq) != seqs[0].Len() {
 			panic("Bad Phylip Format: Should have a blank line here")
 		} else if tok != EOF {
