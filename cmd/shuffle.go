@@ -15,15 +15,16 @@
 package cmd
 
 import (
-	"fmt"
 	"github.com/fredericlemoine/goalign/io/fasta"
 	"github.com/fredericlemoine/goalign/io/phylip"
 	"github.com/spf13/cobra"
 	"math/rand"
+	"os"
 	"time"
 )
 
 var shuffleSeed int64
+var shuffleOutput string
 
 // shuffleCmd represents the shuffle command
 var shuffleCmd = &cobra.Command{
@@ -40,11 +41,24 @@ to quickly create a Cobra application.`,
 		rand.Seed(shuffleSeed)
 	},
 	PersistentPostRun: func(cmd *cobra.Command, args []string) {
-		if rootphylip {
-			fmt.Print(phylip.WriteAlignment(rootalign))
+		var f *os.File
+		var err error
+
+		if shuffleOutput == "stdout" {
+			f = os.Stdout
 		} else {
-			fmt.Print(fasta.WriteAlignment(rootalign))
+			f, err = os.Create(shuffleOutput)
+			if err != nil {
+				panic(err)
+			}
 		}
+		if rootphylip {
+			f.WriteString(phylip.WriteAlignment(rootalign))
+		} else {
+			f.WriteString(fasta.WriteAlignment(rootalign))
+		}
+
+		f.Close()
 	},
 }
 
@@ -52,14 +66,5 @@ func init() {
 	RootCmd.AddCommand(shuffleCmd)
 
 	shuffleCmd.PersistentFlags().Int64VarP(&shuffleSeed, "seed", "s", time.Now().UTC().UnixNano(), "Initial Random Seed")
-	// Here you will define your flags and configuration settings.
-
-	// Cobra supports Persistent Flags which will work for this command
-	// and all subcommands, e.g.:
-	// shuffleCmd.PersistentFlags().String("foo", "", "A help for foo")
-
-	// Cobra supports local flags which will only run when this command
-	// is called directly, e.g.:
-	// shuffleCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
-
+	shuffleCmd.PersistentFlags().StringVarP(&shuffleOutput, "output", "o", "stdout", "Shuffled alignment output file")
 }

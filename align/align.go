@@ -21,6 +21,7 @@ type Alignment interface {
 	ShuffleSequences()
 	ShuffleSites(rate float64)
 	BuildBootstrap() Alignment
+	Recombine(rate float64)
 }
 
 type align struct {
@@ -118,6 +119,38 @@ func (a *align) ShuffleSites(rate float64) {
 			temp = a.seqs[n].sequence[site]
 			a.seqs[n].sequence[site] = a.seqs[r].sequence[site]
 			a.seqs[r].sequence[site] = temp
+		}
+	}
+}
+
+// recombine a rate of the sequences together
+// takes rate/2 seqs and recombine them with the other rate/2 seqs at a random position
+// if rate < 0 : does nothing
+// if rate > 1 : does nothing
+func (a *align) Recombine(rate float64) {
+	var nb_to_shuffle, nb_sites int
+	var pos int
+	var tmpchar rune
+	var seq1, seq2 *seq
+
+	if rate < 0 || rate > 1 {
+		return
+	}
+	nb_sites = a.Length()
+	nb_to_shuffle = (int)(rate * float64(a.NbSequences()))
+
+	permutation := rand.Perm(a.NbSequences())
+
+	for i := 0; i < int(nb_to_shuffle/2); i++ {
+		// We take a random position in the sequences and recombine both
+		pos = rand.Intn(nb_sites)
+		seq1 = a.seqs[permutation[i]]
+		seq2 = a.seqs[permutation[i+(int)(nb_to_shuffle/2)]]
+		for pos < nb_sites {
+			tmpchar = seq1.sequence[pos]
+			seq1.sequence[pos] = seq2.sequence[pos]
+			seq2.sequence[pos] = tmpchar
+			pos++
 		}
 	}
 }
