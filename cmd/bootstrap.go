@@ -147,7 +147,7 @@ goalign build bootstrap -i align.phylip -p -n 500 -o boot_
 
 func writenewfile(name string, gz bool, bootstring string) {
 	if gz {
-		if f, err := os.Create(name + ".gz"); err != nil {
+		if f, err := os.Create(name + ".fa.gz"); err != nil {
 			io.ExitWithMessage(err)
 		} else {
 			gw := gzip.NewWriter(f)
@@ -157,7 +157,7 @@ func writenewfile(name string, gz bool, bootstring string) {
 			f.Close()
 		}
 	} else {
-		if f, err := os.Create(name); err != nil {
+		if f, err := os.Create(name + ".fa"); err != nil {
 			io.ExitWithMessage(err)
 		} else {
 			f.WriteString(bootstring)
@@ -171,7 +171,7 @@ func addstringtotargz(tw *tar.Writer, name string, align string) error {
 	alignbytes := []byte(align)
 
 	header := new(tar.Header)
-	header.Name = name
+	header.Name = name + ".fa"
 	header.Size = int64(len(alignbytes))
 	header.Mode = 436 //int64(stat.Mode())
 	header.ModTime = time.Now()
