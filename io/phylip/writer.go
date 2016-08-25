@@ -36,6 +36,8 @@ func WriteAlignment(al align.Alignment) string {
 			for i := cursize; i < cursize+PHYLIP_LINE && i < len(seq); i += PHYLIP_BLOCK {
 				if i > cursize {
 					buf.WriteString(" ")
+				} else if !header {
+					buf.WriteString("   ")
 				}
 				end := min_int(i+PHYLIP_BLOCK, len(seq))
 				for j := i; j < end; j++ {
