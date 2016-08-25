@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"archive/tar"
+	"bufio"
 	"compress/gzip"
 	"fmt"
 	"github.com/fredericlemoine/goalign/io/fasta"
@@ -9,6 +10,7 @@ import (
 	"github.com/spf13/cobra"
 	"math/rand"
 	"os"
+	"sync"
 	"time"
 )
 
@@ -16,7 +18,14 @@ var bootstrapSeed int64
 var bootstrapNb int
 var bootstrapoutprefix string
 var bootstrapOrder bool
-var bootstraptargz bool
+var bootstraptar bool
+var bootstrapgz bool
+var bootstrapCpus int
+
+type outboot struct {
+	bootstr string
+	name    string
+}
 
 // bootstrapCmd represents the bootstrap command
 var bootstrapCmd = &cobra.Command{
@@ -49,49 +58,99 @@ goalign build bootstrap -i align.phylip -p -n 500 -o boot_
 		}
 
 		rand.Seed(bootstrapSeed)
-		var f *os.File
 		var err error
+		var f *os.File
 		var tw *tar.Writer
 		var gw *gzip.Writer
-		var bootstring string
 
-		if bootstraptargz {
-			f, err = os.Create(bootstrapoutprefix + ".tar.gz")
+		if bootstraptar {
+			if bootstrapgz {
+				f, err = os.Create(bootstrapoutprefix + ".tar.gz")
+			} else {
+				f, err = os.Create(bootstrapoutprefix + ".tar")
+			}
 			if err != nil {
 				panic(err)
 			}
 			defer f.Close()
-			gw = gzip.NewWriter(f)
-			defer gw.Close()
-			tw = tar.NewWriter(gw)
+			if bootstrapgz {
+				gw = gzip.NewWriter(f)
+				defer gw.Close()
+				tw = tar.NewWriter(gw)
+			} else {
+				tw = tar.NewWriter(f)
+			}
 			defer tw.Close()
 		}
 
-		for i := 0; i < bootstrapNb; i++ {
-			bootid := bootstrapoutprefix + fmt.Sprintf("%d", i)
-			boot := rootalign.BuildBootstrap()
-			if bootstrapOrder {
-				boot.ShuffleSequences()
-			}
+		bootidx := make(chan int, 100)
+		outchan := make(chan outboot, 100)
 
-			if rootphylip {
-				bootstring = phylip.WriteAlignment(boot)
-			} else {
-				bootstring = fasta.WriteAlignment(boot)
+		go func() {
+			for i := 0; i < bootstrapNb; i++ {
+				bootidx <- i
 			}
+			close(bootidx)
+		}()
 
-			if bootstraptargz {
-				if err = addstringtotargz(tw, bootid, bootstring); err != nil {
+		var wg sync.WaitGroup // For waiting end of step computation
+		for i := 0; i < bootstrapCpus; i++ {
+			wg.Add(1)
+			go func() {
+				var bootstring string
+				for idx := range bootidx {
+					bootid := bootstrapoutprefix + fmt.Sprintf("%d", idx)
+					boot := rootalign.BuildBootstrap()
+					if bootstrapOrder {
+						boot.ShuffleSequences()
+					}
+					if rootphylip {
+						bootstring = phylip.WriteAlignment(boot)
+					} else {
+						bootstring = fasta.WriteAlignment(boot)
+					}
+
+					// Output
+					if bootstraptar {
+						outchan <- outboot{bootstring, bootid}
+					} else {
+						if bootstrapgz {
+							if f, err := os.Create(bootid + ".gz"); err != nil {
+								panic(err)
+							} else {
+								gw := gzip.NewWriter(f)
+								buf := bufio.NewWriter(gw)
+								buf.WriteString(bootstring)
+								gw.Close()
+								f.Close()
+							}
+						} else {
+							if f, err := os.Create(bootid); err != nil {
+								panic(err)
+							} else {
+								f.WriteString(bootstring)
+								f.Close()
+							}
+						}
+					}
+				}
+				wg.Done()
+			}()
+		}
+
+		go func() {
+			wg.Wait()
+			close(outchan)
+		}()
+
+		idx := 0
+		for oboot := range outchan {
+			if bootstraptar {
+				if err = addstringtotargz(tw, oboot.name, oboot.bootstr); err != nil {
 					panic(err)
 				}
-			} else {
-				f, err = os.Create(bootid)
-				if err != nil {
-					panic(err)
-				}
-				f.WriteString(bootstring)
-				f.Close()
 			}
+			idx++
 		}
 	},
 }
@@ -122,7 +181,9 @@ func init() {
 
 	bootstrapCmd.PersistentFlags().Int64VarP(&bootstrapSeed, "seed", "s", time.Now().UTC().UnixNano(), "Initial Random Seed")
 	bootstrapCmd.PersistentFlags().BoolVarP(&bootstrapOrder, "shuf-order", "S", false, "Also shuffle order of sequences in bootstrap files")
-	bootstrapCmd.PersistentFlags().BoolVar(&bootstraptargz, "tar-gz", false, "Will create a single targz file with all bootstrap alignments")
+	bootstrapCmd.PersistentFlags().BoolVar(&bootstraptar, "tar", false, "Will create a single tar file with all bootstrap alignments (one thread for tar, but not a bottleneck)")
+	bootstrapCmd.PersistentFlags().BoolVar(&bootstrapgz, "gz", false, "Will gzip output file(s). Maybe slow if combined with --tar (only one thread working for tar/gz)")
 	bootstrapCmd.PersistentFlags().IntVarP(&bootstrapNb, "nboot", "n", 1, "Number of bootstrap replicates to build")
 	bootstrapCmd.PersistentFlags().StringVarP(&bootstrapoutprefix, "out-prefix", "o", "none", "Prefix of output bootstrap files")
+	bootstrapCmd.PersistentFlags().IntVarP(&bootstrapCpus, "threads", "t", 1, "Number of threads")
 }
