@@ -2,12 +2,14 @@ package cmd
 
 import (
 	"bufio"
+	"compress/gzip"
 	"fmt"
 	"github.com/fredericlemoine/goalign/align"
 	"github.com/fredericlemoine/goalign/io/fasta"
 	"github.com/fredericlemoine/goalign/io/phylip"
 	"github.com/spf13/cobra"
 	"os"
+	"strings"
 )
 
 var cfgFile string
@@ -40,6 +42,7 @@ It allows to :
 `,
 	PersistentPreRun: func(cmd *cobra.Command, args []string) {
 		var fi *os.File
+		var r *bufio.Reader
 		var err error
 		if infile == "stdin" || infile == "-" {
 			fi = os.Stdin
@@ -49,7 +52,16 @@ It allows to :
 				panic(err)
 			}
 		}
-		r := bufio.NewReader(fi)
+		if strings.HasSuffix(infile, ".gz") {
+			if gr, err := gzip.NewReader(fi); err != nil {
+				panic(err)
+			} else {
+				r = bufio.NewReader(gr)
+			}
+
+		} else {
+			r = bufio.NewReader(fi)
+		}
 		var al align.Alignment
 		var err2 error
 		if rootphylip {
