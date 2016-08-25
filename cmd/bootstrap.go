@@ -1,17 +1,3 @@
-// Copyright © 2016 NAME HERE <EMAIL ADDRESS>
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-//     http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
-
 package cmd
 
 import (
@@ -35,13 +21,28 @@ var bootstraptargz bool
 // bootstrapCmd represents the bootstrap command
 var bootstrapCmd = &cobra.Command{
 	Use:   "bootstrap",
-	Short: "A brief description of your command",
-	Long: `A longer description that spans multiple lines and likely contains examples
-and usage of using your command. For example:
+	Short: "Generates n bootstrap alignments from an input alignment",
+	Long: `Generates n bootstrap alignments from input alignment.
 
-Cobra is a CLI library for Go that empowers applications.
-This application is a tool to generate the needed files
-to quickly create a Cobra application.`,
+The input may be a Phylip or Fasta file.
+
+- With -S option, sequence order is shuffled in output alignments.
+- With --tar-gz option, only one .tar.gz file is generated, containing 
+  all alignments files.
+
+- If the input file is in phylip format (-p option), then output bootstrap
+  files will be in phylip format as well.
+- If the input file is in fasta format (no -p option), then output bootstrap
+  files will be in fasta format as well.
+
+- It is possible to give a initial seed (-s). In this case several runs of 
+  the tool will give the exact same results. 
+
+Example of usage:
+
+goalign build bootstrap -i align.phylip -p -n 500 -o boot --tar-gz
+goalign build bootstrap -i align.phylip -p -n 500 -o boot_ 
+`,
 	Run: func(cmd *cobra.Command, args []string) {
 		if bootstrapoutprefix == "none" {
 			panic("Output bootstrap file prefix is mandatory")
@@ -122,6 +123,6 @@ func init() {
 	bootstrapCmd.PersistentFlags().Int64VarP(&bootstrapSeed, "seed", "s", time.Now().UTC().UnixNano(), "Initial Random Seed")
 	bootstrapCmd.PersistentFlags().BoolVarP(&bootstrapOrder, "shuf-order", "S", false, "Also shuffle order of sequences in bootstrap files")
 	bootstrapCmd.PersistentFlags().BoolVar(&bootstraptargz, "tar-gz", false, "Will create a single targz file with all bootstrap alignments")
-	bootstrapCmd.PersistentFlags().IntVarP(&bootstrapNb, "nboot", "n", 1, "Prefix of output bootstrap files")
-	bootstrapCmd.PersistentFlags().StringVarP(&bootstrapoutprefix, "prefix", "r", "none", "Number of bootstrap replicates to build")
+	bootstrapCmd.PersistentFlags().IntVarP(&bootstrapNb, "nboot", "n", 1, "Number of bootstrap replicates to build")
+	bootstrapCmd.PersistentFlags().StringVarP(&bootstrapoutprefix, "out-prefix", "o", "none", "Prefix of output bootstrap files")
 }

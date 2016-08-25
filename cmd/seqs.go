@@ -1,17 +1,3 @@
-// Copyright © 2016 NAME HERE <EMAIL ADDRESS>
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-//     http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
-
 package cmd
 
 import (
@@ -21,13 +7,19 @@ import (
 // seqsCmd represents the seqs command
 var seqsCmd = &cobra.Command{
 	Use:   "seqs",
-	Short: "A brief description of your command",
-	Long: `A longer description that spans multiple lines and likely contains examples
-and usage of using your command. For example:
+	Short: "Shuffles sequence order in alignment",
+	Long: `Shuffle sequence order in alignment.
 
-Cobra is a CLI library for Go that empowers applications.
-This application is a tool to generate the needed files
-to quickly create a Cobra application.`,
+It may take a Fasta or Phylip alignment as input.
+Output a randomly reordered alignment. It does not
+change the biological meaning of the alignment.
+
+Example of usage:
+
+goalign shuffle seqs -i align.phylip -p 
+goalign shuffle seqs -i align.fasta
+
+`,
 	Run: func(cmd *cobra.Command, args []string) {
 		rootalign.ShuffleSequences()
 	},
@@ -35,15 +27,4 @@ to quickly create a Cobra application.`,
 
 func init() {
 	shuffleCmd.AddCommand(seqsCmd)
-
-	// Here you will define your flags and configuration settings.
-
-	// Cobra supports Persistent Flags which will work for this command
-	// and all subcommands, e.g.:
-	// seqsCmd.PersistentFlags().String("foo", "", "A help for foo")
-
-	// Cobra supports local flags which will only run when this command
-	// is called directly, e.g.:
-	// seqsCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
-
 }

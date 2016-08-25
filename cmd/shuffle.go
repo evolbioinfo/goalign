@@ -1,17 +1,3 @@
-// Copyright © 2016 NAME HERE <EMAIL ADDRESS>
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-//     http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
-
 package cmd
 
 import (
@@ -29,13 +15,18 @@ var shuffleOutput string
 // shuffleCmd represents the shuffle command
 var shuffleCmd = &cobra.Command{
 	Use:   "shuffle",
-	Short: "A brief description of your command",
-	Long: `A longer description that spans multiple lines and likely contains examples
-and usage of using your command. For example:
+	Short: "A set of commands to shuffle an alignment",
+	Long: `A set of commands to shuffle an alignment.
 
-Cobra is a CLI library for Go that empowers applications.
-This application is a tool to generate the needed files
-to quickly create a Cobra application.`,
+It takes a Fasta of Phylip alignment in input.
+
+It is possible to:
+1 - Shuffle n sites vertically: It takes n sites of the input
+    alignment and reassign the characters to different sequences;
+2 - Shuffle sequence order in the alignment;
+3 - Recombine n sequences together.
+
+`,
 	PersistentPreRun: func(cmd *cobra.Command, args []string) {
 		RootCmd.PersistentPreRun(cmd, args)
 		rand.Seed(shuffleSeed)
