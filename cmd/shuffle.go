@@ -35,7 +35,7 @@ It is possible to:
 		var f *os.File
 		var err error
 
-		if shuffleOutput == "stdout" {
+		if shuffleOutput == "stdout" || shuffleOutput == "-" {
 			f = os.Stdout
 		} else {
 			f, err = os.Create(shuffleOutput)

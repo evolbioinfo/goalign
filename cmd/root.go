@@ -41,7 +41,7 @@ It allows to :
 	PersistentPreRun: func(cmd *cobra.Command, args []string) {
 		var fi *os.File
 		var err error
-		if infile == "stdin" {
+		if infile == "stdin" || infile == "-" {
 			fi = os.Stdin
 		} else {
 			fi, err = os.Open(infile)
