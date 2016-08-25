@@ -63,26 +63,6 @@ goalign build bootstrap -i align.phylip -p -n 500 -o boot_
 		var tw *tar.Writer
 		var gw *gzip.Writer
 
-		if bootstraptar {
-			if bootstrapgz {
-				f, err = os.Create(bootstrapoutprefix + ".tar.gz")
-			} else {
-				f, err = os.Create(bootstrapoutprefix + ".tar")
-			}
-			if err != nil {
-				panic(err)
-			}
-			defer f.Close()
-			if bootstrapgz {
-				gw = gzip.NewWriter(f)
-				defer gw.Close()
-				tw = tar.NewWriter(gw)
-			} else {
-				tw = tar.NewWriter(f)
-			}
-			defer tw.Close()
-		}
-
 		bootidx := make(chan int, 100)
 		outchan := make(chan outboot, 100)
 
@@ -114,24 +94,7 @@ goalign build bootstrap -i align.phylip -p -n 500 -o boot_
 					if bootstraptar {
 						outchan <- outboot{bootstring, bootid}
 					} else {
-						if bootstrapgz {
-							if f, err := os.Create(bootid + ".gz"); err != nil {
-								panic(err)
-							} else {
-								gw := gzip.NewWriter(f)
-								buf := bufio.NewWriter(gw)
-								buf.WriteString(bootstring)
-								gw.Close()
-								f.Close()
-							}
-						} else {
-							if f, err := os.Create(bootid); err != nil {
-								panic(err)
-							} else {
-								f.WriteString(bootstring)
-								f.Close()
-							}
-						}
+						writenewfile(bootid, bootstrapgz, bootstring)
 					}
 				}
 				wg.Done()
@@ -143,6 +106,27 @@ goalign build bootstrap -i align.phylip -p -n 500 -o boot_
 			close(outchan)
 		}()
 
+		// Create new tar(/gz) file
+		if bootstraptar {
+			if bootstrapgz {
+				f, err = os.Create(bootstrapoutprefix + ".tar.gz")
+			} else {
+				f, err = os.Create(bootstrapoutprefix + ".tar")
+			}
+			if err != nil {
+				panic(err)
+			}
+			defer f.Close()
+			if bootstrapgz {
+				gw = gzip.NewWriter(f)
+				defer gw.Close()
+				tw = tar.NewWriter(gw)
+			} else {
+				tw = tar.NewWriter(f)
+			}
+			defer tw.Close()
+		}
+
 		idx := 0
 		for oboot := range outchan {
 			if bootstraptar {
@@ -153,6 +137,27 @@ goalign build bootstrap -i align.phylip -p -n 500 -o boot_
 			idx++
 		}
 	},
+}
+
+func writenewfile(name string, gz bool, bootstring string) {
+	if gz {
+		if f, err := os.Create(name + ".gz"); err != nil {
+			panic(err)
+		} else {
+			gw := gzip.NewWriter(f)
+			buf := bufio.NewWriter(gw)
+			buf.WriteString(bootstring)
+			gw.Close()
+			f.Close()
+		}
+	} else {
+		if f, err := os.Create(name); err != nil {
+			panic(err)
+		} else {
+			f.WriteString(bootstring)
+			f.Close()
+		}
+	}
 }
 
 func addstringtotargz(tw *tar.Writer, name string, align string) error {
