@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"github.com/fredericlemoine/goalign/io"
 	"github.com/spf13/cobra"
 	"os"
 )
@@ -26,7 +27,7 @@ fasta and phylip, such as 60 characters per line, etc.
 		} else {
 			f, err = os.Create(reformatOutput)
 			if err != nil {
-				panic(err)
+				io.ExitWithMessage(err)
 			}
 		}
 		if rootphylip {

@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"github.com/fredericlemoine/goalign/io"
 	"github.com/spf13/cobra"
 	"math/rand"
 	"time"
@@ -24,7 +25,7 @@ As output, writes an alignment containing a sample of the sequences
 	Run: func(cmd *cobra.Command, args []string) {
 		rand.Seed(sampleSeed)
 		if sample, err := rootalign.Sample(sampleNb); err != nil {
-			panic(err)
+			io.ExitWithMessage(err)
 		} else {
 			writeAlign(sample, sampleOutput)
 		}

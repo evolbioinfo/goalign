@@ -3,6 +3,8 @@ package phylip
 import (
 	"bufio"
 	"bytes"
+	"errors"
+	alignio "github.com/fredericlemoine/goalign/io"
 	"io"
 	"strconv"
 )
@@ -50,7 +52,7 @@ func (s *Scanner) Scan() (tok Token, lit string) {
 			if isNL(ch) {
 				return ENDOFLINE, ""
 			} else {
-				panic("\\r without \\n detected...")
+				alignio.ExitWithMessage(errors.New("\\r without \\n detected..."))
 			}
 		} else {
 			return ENDOFLINE, ""

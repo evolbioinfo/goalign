@@ -5,6 +5,7 @@ import (
 	"compress/gzip"
 	"fmt"
 	"github.com/fredericlemoine/goalign/align"
+	"github.com/fredericlemoine/goalign/io"
 	"github.com/fredericlemoine/goalign/io/fasta"
 	"github.com/fredericlemoine/goalign/io/phylip"
 	"github.com/spf13/cobra"
@@ -53,12 +54,12 @@ It allows to :
 		} else {
 			fi, err = os.Open(infile)
 			if err != nil {
-				panic(err)
+				io.ExitWithMessage(err)
 			}
 		}
 		if strings.HasSuffix(infile, ".gz") {
 			if gr, err := gzip.NewReader(fi); err != nil {
-				panic(err)
+				io.ExitWithMessage(err)
 			} else {
 				r = bufio.NewReader(gr)
 			}
@@ -74,7 +75,7 @@ It allows to :
 			al, err2 = fasta.NewParser(r).Parse()
 		}
 		if err2 != nil {
-			panic(err2)
+			io.ExitWithMessage(err2)
 		}
 		rootalign = al
 	},
@@ -113,7 +114,7 @@ func writeAlign(al align.Alignment, file string) {
 	} else {
 		f, err = os.Create(file)
 		if err != nil {
-			panic(err)
+			io.ExitWithMessage(err)
 		}
 	}
 	if rootphylip {

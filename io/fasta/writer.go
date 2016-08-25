@@ -19,13 +19,15 @@ func min_int(a int, b int) int {
 func WriteAlignment(al align.Alignment) string {
 	var buf bytes.Buffer
 
-	al.Iterate(func(name string, seq string) {
+	al.IterateChar(func(name string, seq []rune) {
 		buf.WriteString(">")
 		buf.WriteString(name)
 		buf.WriteString("\n")
 		for i := 0; i < len(seq); i += FASTA_LINE {
 			end := min_int(i+FASTA_LINE, len(seq))
-			buf.WriteString(seq[i:end])
+			for j := i; j < end; j++ {
+				buf.WriteRune(seq[j])
+			}
 			buf.WriteString("\n")
 		}
 	})

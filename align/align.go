@@ -3,6 +3,7 @@ package align
 import (
 	"bytes"
 	"errors"
+	"github.com/fredericlemoine/goalign/io"
 	"math/rand"
 )
 
@@ -14,8 +15,10 @@ const (
 
 type Alignment interface {
 	AddSequence(name string, sequence string, comment string) error
+	AddSequenceChar(name string, sequence []rune, comment string) error
 	GetSequence(name string) (string, bool)
 	Iterate(it func(name string, sequence string))
+	IterateChar(it func(name string, sequence []rune))
 	NbSequences() int
 	Length() int
 	ShuffleSequences()
@@ -37,7 +40,7 @@ func NewAlign(alphabet int) *align {
 	case AMINOACIDS, NUCLEOTIDS:
 		// OK
 	default:
-		panic("Unexpected sequence alphabet type")
+		io.ExitWithMessage(errors.New("Unexpected sequence alphabet type"))
 	}
 	return &align{
 		-1,
@@ -53,8 +56,19 @@ func (a *align) Iterate(it func(name string, sequence string)) {
 	}
 }
 
+func (a *align) IterateChar(it func(name string, sequence []rune)) {
+	for _, seq := range a.seqs {
+		it(seq.name, seq.sequence)
+	}
+}
+
 // Adds a sequence to this alignment
 func (a *align) AddSequence(name string, sequence string, comment string) error {
+	a.AddSequenceChar(name, []rune(sequence), comment)
+	return nil
+}
+
+func (a *align) AddSequenceChar(name string, sequence []rune, comment string) error {
 	_, ok := a.seqmap[name]
 	if ok {
 		return errors.New("Sequence " + name + " already exists in alignment")
@@ -106,7 +120,7 @@ func (a *align) ShuffleSequences() {
 // rate must be >=0 and <=1
 func (a *align) ShuffleSites(rate float64) {
 	if rate < 0 || rate > 1 {
-		panic("Shuffle site rate must be >=0 and <=1")
+		io.ExitWithMessage(errors.New("Shuffle site rate must be >=0 and <=1"))
 	}
 	permutation := rand.Perm(a.Length())
 	nb_to_shuffle := int(rate * float64(a.Length()))
@@ -167,7 +181,7 @@ func (a *align) Sample(nb int) (Alignment, error) {
 	permutation := rand.Perm(a.NbSequences())
 	for i := 0; i < nb; i++ {
 		seq := a.seqs[permutation[i]]
-		sample.AddSequence(seq.name, seq.Sequence(), seq.Comment())
+		sample.AddSequenceChar(seq.name, seq.SequenceChar(), seq.Comment())
 	}
 	return sample, nil
 }
@@ -187,7 +201,7 @@ func (a *align) BuildBootstrap() Alignment {
 		for _, indice := range indices {
 			buf.WriteRune(seq.sequence[indice])
 		}
-		boot.AddSequence(seq.name, buf.String(), seq.Comment())
+		boot.AddSequenceChar(seq.name, bytes.Runes(buf.Bytes()), seq.Comment())
 	}
 	return boot
 }
@@ -211,7 +225,7 @@ func DetectAlphabet(seq string) int {
 		isaa = isaa && couldbeaa
 		isnt = isnt && couldbent
 		if !(isaa || isnt) {
-			panic("Unknown character state in alignment : " + string(nt))
+			io.ExitWithMessage(errors.New("Unknown character state in alignment : " + string(nt)))
 		}
 	}
 

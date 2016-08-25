@@ -1,9 +1,10 @@
 package align
 
 type Sequence interface {
-	Sequence()
-	Name()
-	Comment()
+	Sequence() string
+	SequenceChar() []rune
+	Name() string
+	Comment() string
 }
 
 type seq struct {
@@ -12,16 +13,19 @@ type seq struct {
 	comment  string // Comment if any
 }
 
-func NewSequence(name string, sequence string, comment string) *seq {
+func NewSequence(name string, sequence []rune, comment string) *seq {
 	return &seq{
 		name,
-		[]rune(sequence),
+		sequence,
 		comment,
 	}
 }
 
 func (s *seq) Sequence() string {
 	return string(s.sequence)
+}
+func (s *seq) SequenceChar() []rune {
+	return s.sequence
 }
 
 func (s *seq) Name() string {

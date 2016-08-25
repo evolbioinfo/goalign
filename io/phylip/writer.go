@@ -27,7 +27,7 @@ func WriteAlignment(al align.Alignment) string {
 		if cursize > 0 {
 			buf.WriteString("\n")
 		}
-		al.Iterate(func(name string, seq string) {
+		al.IterateChar(func(name string, seq []rune) {
 			if header {
 				buf.WriteString(name)
 				buf.WriteString("  ")
@@ -38,7 +38,9 @@ func WriteAlignment(al align.Alignment) string {
 					buf.WriteString(" ")
 				}
 				end := min_int(i+PHYLIP_BLOCK, len(seq))
-				buf.WriteString(seq[i:end])
+				for j := i; j < end; j++ {
+					buf.WriteRune(seq[j])
+				}
 			}
 			buf.WriteString("\n")
 		})

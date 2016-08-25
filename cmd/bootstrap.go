@@ -4,7 +4,9 @@ import (
 	"archive/tar"
 	"bufio"
 	"compress/gzip"
+	"errors"
 	"fmt"
+	"github.com/fredericlemoine/goalign/io"
 	"github.com/fredericlemoine/goalign/io/fasta"
 	"github.com/fredericlemoine/goalign/io/phylip"
 	"github.com/spf13/cobra"
@@ -53,7 +55,7 @@ goalign build bootstrap -i align.phylip -p -n 500 -o boot_
 `,
 	Run: func(cmd *cobra.Command, args []string) {
 		if bootstrapoutprefix == "none" {
-			panic("Output bootstrap file prefix is mandatory")
+			io.ExitWithMessage(errors.New("Output bootstrap file prefix is mandatory"))
 		}
 
 		rand.Seed(bootstrapSeed)
@@ -118,7 +120,7 @@ goalign build bootstrap -i align.phylip -p -n 500 -o boot_
 				f, err = os.Create(bootstrapoutprefix + ".tar")
 			}
 			if err != nil {
-				panic(err)
+				io.ExitWithMessage(err)
 			}
 			defer f.Close()
 			if bootstrapgz {
@@ -135,7 +137,7 @@ goalign build bootstrap -i align.phylip -p -n 500 -o boot_
 		for oboot := range outchan {
 			if bootstraptar {
 				if err = addstringtotargz(tw, oboot.name, oboot.bootstr); err != nil {
-					panic(err)
+					io.ExitWithMessage(err)
 				}
 			}
 			idx++
@@ -146,7 +148,7 @@ goalign build bootstrap -i align.phylip -p -n 500 -o boot_
 func writenewfile(name string, gz bool, bootstring string) {
 	if gz {
 		if f, err := os.Create(name + ".gz"); err != nil {
-			panic(err)
+			io.ExitWithMessage(err)
 		} else {
 			gw := gzip.NewWriter(f)
 			buf := bufio.NewWriter(gw)
@@ -156,7 +158,7 @@ func writenewfile(name string, gz bool, bootstring string) {
 		}
 	} else {
 		if f, err := os.Create(name); err != nil {
-			panic(err)
+			io.ExitWithMessage(err)
 		} else {
 			f.WriteString(bootstring)
 			f.Close()

@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"errors"
 	"github.com/fredericlemoine/goalign/align"
+	alignio "github.com/fredericlemoine/goalign/io"
 	"io"
 	"strconv"
 )
@@ -130,9 +131,9 @@ func (p *Parser) Parse() (align.Alignment, error) {
 		tok, lit = p.scan()
 		p.unscan()
 	} else if int(lenseq) != seqs[0].Len() {
-		panic("Bad Phylip Format: Should have a blank line here")
+		alignio.ExitWithMessage(errors.New("Bad Phylip Format: Should have a blank line here"))
 	} else if tok != EOF {
-		panic("Bad Phylip Format : Should not have a character here, all sequences have been red")
+		alignio.ExitWithMessage(errors.New("Bad Phylip Format : Should not have a character here, all sequences have been red"))
 	}
 
 	// Then other blocks with only sequences
@@ -158,9 +159,9 @@ func (p *Parser) Parse() (align.Alignment, error) {
 			tok, lit = p.scan()
 			p.unscan()
 		} else if int(lenseq) != seqs[0].Len() {
-			panic("Bad Phylip Format: Should have a blank line here")
+			alignio.ExitWithMessage(errors.New("Bad Phylip Format: Should have a blank line here"))
 		} else if tok != EOF {
-			panic("Bad Phylip Format : Should not have a character here, all sequences have been red")
+			alignio.ExitWithMessage(errors.New("Bad Phylip Format : Should not have a character here, all sequences have been red"))
 		}
 
 	}
@@ -168,7 +169,7 @@ func (p *Parser) Parse() (align.Alignment, error) {
 	for i, name := range names {
 		seq := seqs[i].String()
 		if int(lenseq) != len(seq) {
-			panic("Bad Phylip format: Length of sequences does not correspond to header")
+			alignio.ExitWithMessage(errors.New("Bad Phylip format: Length of sequences does not correspond to header"))
 		}
 		if al == nil {
 			al = align.NewAlign(align.DetectAlphabet(seq))
