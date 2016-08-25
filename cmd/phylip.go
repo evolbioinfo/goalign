@@ -1,7 +1,6 @@
 package cmd
 
 import (
-	"fmt"
 	"github.com/fredericlemoine/goalign/io/phylip"
 	"github.com/spf13/cobra"
 )
@@ -20,7 +19,7 @@ goalign reformat phylip -i align.fasta
 
 `,
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Print(phylip.WriteAlignment(rootalign))
+		reformatOutputString = phylip.WriteAlignment(rootalign)
 	},
 }
 

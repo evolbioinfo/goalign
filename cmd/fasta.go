@@ -1,7 +1,6 @@
 package cmd
 
 import (
-	"fmt"
 	"github.com/fredericlemoine/goalign/io/fasta"
 	"github.com/spf13/cobra"
 )
@@ -20,7 +19,7 @@ goalign reformat fasta -i align.fasta
 
 `,
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Print(fasta.WriteAlignment(rootalign))
+		reformatOutputString = fasta.WriteAlignment(rootalign)
 	},
 }
 
