@@ -9,6 +9,7 @@ import (
 	"github.com/fredericlemoine/goalign/io/phylip"
 	"github.com/spf13/cobra"
 	"os"
+	"runtime"
 	"strings"
 )
 
@@ -16,6 +17,7 @@ var cfgFile string
 var infile string
 var rootalign align.Alignment
 var rootphylip bool
+var rootcpus int
 
 var Version string = "Unset"
 
@@ -41,6 +43,8 @@ It allows to :
 
 `,
 	PersistentPreRun: func(cmd *cobra.Command, args []string) {
+		runtime.GOMAXPROCS(rootcpus)
+
 		var fi *os.File
 		var r *bufio.Reader
 		var err error
@@ -90,6 +94,8 @@ func init() {
 
 	RootCmd.PersistentFlags().StringVarP(&infile, "align", "i", "stdin", "Alignment input file")
 	RootCmd.PersistentFlags().BoolVarP(&rootphylip, "phylip", "p", false, "Alignment is in phylip? False=Fasta")
+	RootCmd.PersistentFlags().IntVarP(&rootcpus, "threads", "t", 1, "Number of threads")
+
 	RootCmd.SetHelpTemplate(helptemplate)
 }
 

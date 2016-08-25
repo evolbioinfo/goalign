@@ -20,7 +20,6 @@ var bootstrapoutprefix string
 var bootstrapOrder bool
 var bootstraptar bool
 var bootstrapgz bool
-var bootstrapCpus int
 
 type outboot struct {
 	bootstr string
@@ -66,6 +65,11 @@ goalign build bootstrap -i align.phylip -p -n 500 -o boot_
 		bootidx := make(chan int, 100)
 		outchan := make(chan outboot, 100)
 
+		cpus := rootcpus
+		if bootstraptar {
+			cpus = min_int(1, cpus-1)
+		}
+
 		go func() {
 			for i := 0; i < bootstrapNb; i++ {
 				bootidx <- i
@@ -74,7 +78,7 @@ goalign build bootstrap -i align.phylip -p -n 500 -o boot_
 		}()
 
 		var wg sync.WaitGroup // For waiting end of step computation
-		for i := 0; i < bootstrapCpus; i++ {
+		for i := 0; i < rootcpus; i++ {
 			wg.Add(1)
 			go func() {
 				var bootstring string
@@ -181,6 +185,13 @@ func addstringtotargz(tw *tar.Writer, name string, align string) error {
 	return nil
 }
 
+func min_int(a, b int) int {
+	if a < b {
+		return a
+	}
+	return b
+}
+
 func init() {
 	buildCmd.AddCommand(bootstrapCmd)
 
@@ -190,5 +201,4 @@ func init() {
 	bootstrapCmd.PersistentFlags().BoolVar(&bootstrapgz, "gz", false, "Will gzip output file(s). Maybe slow if combined with --tar (only one thread working for tar/gz)")
 	bootstrapCmd.PersistentFlags().IntVarP(&bootstrapNb, "nboot", "n", 1, "Number of bootstrap replicates to build")
 	bootstrapCmd.PersistentFlags().StringVarP(&bootstrapoutprefix, "out-prefix", "o", "none", "Prefix of output bootstrap files")
-	bootstrapCmd.PersistentFlags().IntVarP(&bootstrapCpus, "threads", "t", 1, "Number of threads")
 }
