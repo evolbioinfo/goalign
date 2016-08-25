@@ -1,11 +1,8 @@
 package cmd
 
 import (
-	"github.com/fredericlemoine/goalign/io/fasta"
-	"github.com/fredericlemoine/goalign/io/phylip"
 	"github.com/spf13/cobra"
 	"math/rand"
-	"os"
 	"time"
 )
 
@@ -32,24 +29,7 @@ It is possible to:
 		rand.Seed(shuffleSeed)
 	},
 	PersistentPostRun: func(cmd *cobra.Command, args []string) {
-		var f *os.File
-		var err error
-
-		if shuffleOutput == "stdout" || shuffleOutput == "-" {
-			f = os.Stdout
-		} else {
-			f, err = os.Create(shuffleOutput)
-			if err != nil {
-				panic(err)
-			}
-		}
-		if rootphylip {
-			f.WriteString(phylip.WriteAlignment(rootalign))
-		} else {
-			f.WriteString(fasta.WriteAlignment(rootalign))
-		}
-
-		f.Close()
+		writeAlign(rootalign, shuffleOutput)
 	},
 }
 

@@ -20,6 +20,7 @@ type Alignment interface {
 	Length() int
 	ShuffleSequences()
 	ShuffleSites(rate float64)
+	Sample(nb int) (Alignment, error)
 	BuildBootstrap() Alignment
 	Recombine(rate float64)
 }
@@ -155,6 +156,22 @@ func (a *align) Recombine(rate float64) {
 	}
 }
 
+// Samples randomly a subset of the sequences
+// And returns this new alignment
+// If nb < 1 or nb > nbsequences returns nil and an error
+func (a *align) Sample(nb int) (Alignment, error) {
+	if a.NbSequences() < nb || nb < 1 {
+		return nil, errors.New("Number of sequences to sample is not compatible with alignment")
+	}
+	sample := NewAlign(a.alphabet)
+	permutation := rand.Perm(a.NbSequences())
+	for i := 0; i < nb; i++ {
+		seq := a.seqs[permutation[i]]
+		sample.AddSequence(seq.name, seq.Sequence(), seq.Comment())
+	}
+	return sample, nil
+}
+
 func (a *align) BuildBootstrap() Alignment {
 	n := a.Length()
 	boot := NewAlign(a.alphabet)
@@ -170,7 +187,7 @@ func (a *align) BuildBootstrap() Alignment {
 		for _, indice := range indices {
 			buf.WriteRune(seq.sequence[indice])
 		}
-		boot.AddSequence(seq.name, buf.String(), "")
+		boot.AddSequence(seq.name, buf.String(), seq.Comment())
 	}
 	return boot
 }

@@ -85,3 +85,23 @@ func init() {
 func initConfig() {
 
 }
+
+func writeAlign(al align.Alignment, file string) {
+	var f *os.File
+	var err error
+
+	if file == "stdout" || file == "-" {
+		f = os.Stdout
+	} else {
+		f, err = os.Create(file)
+		if err != nil {
+			panic(err)
+		}
+	}
+	if rootphylip {
+		f.WriteString(phylip.WriteAlignment(al))
+	} else {
+		f.WriteString(fasta.WriteAlignment(al))
+	}
+	f.Close()
+}
