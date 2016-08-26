@@ -29,6 +29,7 @@ type Alignment interface {
 	Sample(nb int) (Alignment, error)
 	BuildBootstrap() Alignment
 	Swap(rate float64)
+	Recombine(rate float64, lenprop float64)
 	TrimNames(size int) (map[string]string, error)
 	TrimSequences(trimsize int, fromStart bool) error
 }
@@ -172,6 +173,37 @@ func (a *align) Swap(rate float64) {
 			seq1.sequence[pos] = seq2.sequence[pos]
 			seq2.sequence[pos] = tmpchar
 			pos++
+		}
+	}
+}
+
+// Recombines a rate of the sequences to another sequences
+// takes rate/2 seqs and copy/paste a portion of them to the other
+// rate/2 seqs at a random position
+// if rate < 0 : does nothing
+// if rate > 1 : does nothing
+// prop must be <= 0.5 because it will recombine x% of seqs based on other x% of seqs
+func (a *align) Recombine(prop float64, lenprop float64) {
+	var seq1, seq2 *seq
+
+	if prop < 0 || prop > 0.5 {
+		return
+	}
+	if lenprop < 0 || lenprop > 1 {
+		return
+	}
+
+	nb := int(prop * float64(a.NbSequences()))
+	lentorecomb := int(lenprop * float64(a.Length()))
+	permutation := rand.Perm(a.NbSequences())
+
+	// We take a random position in the sequences between min and max
+	for i := 0; i < nb; i++ {
+		pos := rand.Intn(a.Length() - lentorecomb)
+		seq1 = a.seqs[permutation[i]]
+		seq2 = a.seqs[permutation[i+nb]]
+		for j := pos; j < pos+lentorecomb; j++ {
+			seq1.sequence[j] = seq2.sequence[j]
 		}
 	}
 }
