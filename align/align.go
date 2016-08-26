@@ -199,7 +199,7 @@ func (a *align) Recombine(prop float64, lenprop float64) {
 
 	// We take a random position in the sequences between min and max
 	for i := 0; i < nb; i++ {
-		pos := rand.Intn(a.Length() - lentorecomb)
+		pos := rand.Intn(a.Length() - lentorecomb + 1)
 		seq1 = a.seqs[permutation[i]]
 		seq2 = a.seqs[permutation[i+nb]]
 		for j := pos; j < pos+lentorecomb; j++ {
