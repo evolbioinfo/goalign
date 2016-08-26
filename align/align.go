@@ -3,8 +3,11 @@ package align
 import (
 	"bytes"
 	"errors"
+	"fmt"
 	"github.com/fredericlemoine/goalign/io"
+	"math"
 	"math/rand"
+	"strings"
 )
 
 const (
@@ -26,6 +29,7 @@ type Alignment interface {
 	Sample(nb int) (Alignment, error)
 	BuildBootstrap() Alignment
 	Recombine(rate float64)
+	TrimNames(size int) (map[string]string, error)
 }
 
 type align struct {
@@ -168,6 +172,61 @@ func (a *align) Recombine(rate float64) {
 			pos++
 		}
 	}
+}
+
+func (a *align) TrimNames(size int) (map[string]string, error) {
+	shortmap := make(map[string][]string)
+	finalshort := make(map[string]string)
+	if math.Pow10(size-2) < float64(a.NbSequences()) {
+		return nil, errors.New("New name size (" + fmt.Sprintf("%d", size-2) + ") does not allow to identify that amount of sequences (" + fmt.Sprintf("%d", a.NbSequences()) + ")")
+	}
+
+	for _, seq := range a.seqs {
+		n := seq.Name()
+		n = strings.Replace(n, ":", "", -1)
+		n = strings.Replace(n, "_", "", -1)
+		// Possible to have 100 Identical shortnames
+		if len(n) >= size-2 {
+			n = n[0 : size-2]
+		} else {
+			target := len(n)
+			for m := 0; m < (size - 2 - target); m++ {
+				n = n + "x"
+			}
+		}
+		if _, ok := shortmap[n]; !ok {
+			shortmap[n] = make([]string, 0, 100)
+		}
+		shortmap[n] = append(shortmap[n], seq.Name())
+	}
+
+	for short, list := range shortmap {
+		if len(list) > 100 {
+			return nil, errors.New("More than 100 identical short names (" + short + "), cannot shorten the names")
+		} else if len(list) > 1 {
+			i := 1
+			for _, longname := range list {
+				finalshort[longname] = short + fmt.Sprintf("%02d", i)
+				i++
+			}
+		} else {
+			for _, longname := range list {
+				finalshort[longname] = short + "00"
+			}
+		}
+	}
+
+	for long, short := range finalshort {
+		if seq, ok := a.seqmap[long]; !ok {
+			return nil, errors.New("The sequence with name " + long + " does not exist")
+		} else {
+			seq.name = short
+			delete(a.seqmap, long)
+			a.seqmap[short] = seq
+		}
+	}
+
+	return finalshort, nil
 }
 
 // Samples randomly a subset of the sequences
