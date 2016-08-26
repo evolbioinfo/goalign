@@ -19,6 +19,9 @@ import (
 )
 
 // trimCmd represents the trim command
+var trimAlignOut string
+var trimNb int
+
 var trimCmd = &cobra.Command{
 	Use:   "trim",
 	Short: "This command trims names of sequences or sequences themselves",
@@ -34,4 +37,5 @@ With "seq" subcommand, you can trim sequences from start or from end, by n chara
 
 func init() {
 	RootCmd.AddCommand(trimCmd)
+	trimCmd.PersistentFlags().StringVarP(&trimAlignOut, "out-align", "o", "stdout", "Renamed alignment output file")
 }

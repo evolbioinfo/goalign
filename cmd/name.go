@@ -20,9 +20,7 @@ import (
 	"os"
 )
 
-var trimNb int
 var trimMapout string
-var trimAlignOut string
 
 // nameCmd represents the name command
 var nameCmd = &cobra.Command{
@@ -67,9 +65,6 @@ func writeNameMap(namemap map[string]string, outfile string) {
 
 func init() {
 	trimCmd.AddCommand(nameCmd)
-
-	nameCmd.PersistentFlags().IntVarP(&trimNb, "nb-char", "n", 1, "Number of characters to keep in sequence names")
 	nameCmd.PersistentFlags().StringVarP(&trimMapout, "out-map", "m", "none", "Mapping output file")
-	nameCmd.PersistentFlags().StringVarP(&trimAlignOut, "out-align", "o", "stdout", "Renamed alignment output file")
-
+	nameCmd.PersistentFlags().IntVarP(&trimNb, "nb-char", "n", 1, "Number of characters to keep in sequence names")
 }

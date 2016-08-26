@@ -30,6 +30,7 @@ type Alignment interface {
 	BuildBootstrap() Alignment
 	Recombine(rate float64)
 	TrimNames(size int) (map[string]string, error)
+	TrimSequences(trimsize int, fromStart bool) error
 }
 
 type align struct {
@@ -227,6 +228,26 @@ func (a *align) TrimNames(size int) (map[string]string, error) {
 	}
 
 	return finalshort, nil
+}
+
+// Trims alignment sequences.
+// If fromStart, then trims from the start, else trims from the end
+// If trimsize >= sequence or trimsize < 0 lengths, then throw an error
+func (a *align) TrimSequences(trimsize int, fromStart bool) error {
+	if trimsize < 0 {
+		return errors.New("Trim size must not be < 0")
+	}
+	if trimsize >= a.Length() {
+		return errors.New("Trim size must be < alignment length (" + fmt.Sprintf("%d", a.Length()) + ")")
+	}
+	for _, seq := range a.seqs {
+		if fromStart {
+			seq.sequence = seq.sequence[trimsize:len(seq.sequence)]
+		} else {
+			seq.sequence = seq.sequence[0 : len(seq.sequence)-trimsize]
+		}
+	}
+	return nil
 }
 
 // Samples randomly a subset of the sequences
