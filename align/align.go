@@ -28,7 +28,7 @@ type Alignment interface {
 	ShuffleSites(rate float64)
 	Sample(nb int) (Alignment, error)
 	BuildBootstrap() Alignment
-	Recombine(rate float64)
+	Swap(rate float64)
 	TrimNames(size int) (map[string]string, error)
 	TrimSequences(trimsize int, fromStart bool) error
 }
@@ -143,11 +143,12 @@ func (a *align) ShuffleSites(rate float64) {
 	}
 }
 
-// recombine a rate of the sequences together
-// takes rate/2 seqs and recombine them with the other rate/2 seqs at a random position
+// Swaps a rate of the sequences together
+// takes rate/2 seqs and swap a part of them with the other
+// rate/2 seqs at a random position
 // if rate < 0 : does nothing
 // if rate > 1 : does nothing
-func (a *align) Recombine(rate float64) {
+func (a *align) Swap(rate float64) {
 	var nb_to_shuffle, nb_sites int
 	var pos int
 	var tmpchar rune
@@ -162,7 +163,7 @@ func (a *align) Recombine(rate float64) {
 	permutation := rand.Perm(a.NbSequences())
 
 	for i := 0; i < int(nb_to_shuffle/2); i++ {
-		// We take a random position in the sequences and recombine both
+		// We take a random position in the sequences and swap both
 		pos = rand.Intn(nb_sites)
 		seq1 = a.seqs[permutation[i]]
 		seq2 = a.seqs[permutation[i+(int)(nb_to_shuffle/2)]]
