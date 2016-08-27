@@ -153,6 +153,7 @@ func writenewfile(name string, gz bool, bootstring string) {
 			gw := gzip.NewWriter(f)
 			buf := bufio.NewWriter(gw)
 			buf.WriteString(bootstring)
+			buf.Flush()
 			gw.Close()
 			f.Close()
 		}
