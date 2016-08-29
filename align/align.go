@@ -327,10 +327,10 @@ func DetectAlphabet(seq string) int {
 		couldbent := false
 		couldbeaa := false
 		switch nt {
-		case 'A', 'C', 'B', 'G', '?', '-', 'D', 'K', 'S', 'H', 'M', 'N', 'V', 'X', 'T', 'W', 'Y':
+		case 'A', 'C', 'B', 'R', 'G', '?', '-', 'D', 'K', 'S', 'H', 'M', 'N', 'V', 'X', 'T', 'W', 'Y':
 			couldbent = true
 			couldbeaa = true
-		case 'U', 'O', 'R':
+		case 'U', 'O':
 			couldbent = true
 		case 'Q', 'E', 'I', 'L', 'F', 'P', 'Z':
 			couldbeaa = true
