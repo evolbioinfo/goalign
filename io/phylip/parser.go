@@ -3,6 +3,7 @@ package phylip
 import (
 	"bytes"
 	"errors"
+	"fmt"
 	"github.com/fredericlemoine/goalign/align"
 	alignio "github.com/fredericlemoine/goalign/io"
 	"io"
@@ -137,10 +138,17 @@ func (p *Parser) Parse() (align.Alignment, error) {
 	}
 
 	// Then other blocks with only sequences
+	b := 0
 	for tok != EOF {
 		for i := 0; i < int(nbseq); i++ {
 			tok, lit := p.scan()
+			if tok == WS {
+				tok, lit = p.scan()
+			}
+
 			if tok != IDENTIFIER {
+				fmt.Println("Block: ")
+				fmt.Println(b)
 				return nil, errors.New("Bad Phylip format, we should have a sequence block here")
 			}
 			for tok != ENDOFLINE {
@@ -163,7 +171,7 @@ func (p *Parser) Parse() (align.Alignment, error) {
 		} else if tok != EOF {
 			alignio.ExitWithMessage(errors.New("Bad Phylip Format : Should not have a character here, all sequences have been red"))
 		}
-
+		b++
 	}
 
 	for i, name := range names {
