@@ -32,6 +32,7 @@ type Alignment interface {
 	Recombine(rate float64, lenprop float64)
 	TrimNames(size int) (map[string]string, error)
 	TrimSequences(trimsize int, fromStart bool) error
+	CharStats() map[rune]int64
 }
 
 type align struct {
@@ -347,4 +348,17 @@ func DetectAlphabet(seq string) int {
 	} else {
 		return AMINOACIDS
 	}
+}
+
+// Returns the distribution of all characters
+func (a *align) CharStats() map[rune]int64 {
+	outmap := make(map[rune]int64)
+
+	for _, seq := range a.seqs {
+		for _, r := range seq.sequence {
+			outmap[r]++
+		}
+	}
+
+	return outmap
 }
