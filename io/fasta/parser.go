@@ -83,7 +83,7 @@ func (p *Parser) Parse() (align.Alignment, error) {
 				}
 				curseq.Reset()
 			} else if curname != "" {
-				return nil, errors.New("A Fasta entry has a name but no sequence")
+				return nil, errors.New("A Fasta entry has a name but no sequence (" + curname + ")")
 			}
 			curname = lit
 		case IDENTIFIER:
