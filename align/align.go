@@ -71,8 +71,8 @@ func (a *align) IterateChar(it func(name string, sequence []rune)) {
 
 // Adds a sequence to this alignment
 func (a *align) AddSequence(name string, sequence string, comment string) error {
-	a.AddSequenceChar(name, []rune(sequence), comment)
-	return nil
+	err := a.AddSequenceChar(name, []rune(sequence), comment)
+	return err
 }
 
 func (a *align) AddSequenceChar(name string, sequence []rune, comment string) error {
