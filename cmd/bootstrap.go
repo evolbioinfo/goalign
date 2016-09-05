@@ -28,9 +28,9 @@ type outboot struct {
 	name    string
 }
 
-// bootstrapCmd represents the bootstrap command
-var bootstrapCmd = &cobra.Command{
-	Use:   "bootstrap",
+// seqbootCmd represents the bootstrap command
+var seqbootCmd = &cobra.Command{
+	Use:   "seqboot",
 	Short: "Generates n bootstrap alignments from an input alignment",
 	Long: `Generates n bootstrap alignments from input alignment.
 
@@ -50,8 +50,8 @@ The input may be a Phylip or Fasta file.
 
 Example of usage:
 
-goalign build bootstrap -i align.phylip -p -n 500 -o boot --tar-gz
-goalign build bootstrap -i align.phylip -p -n 500 -o boot_ 
+goalign build seqboot -i align.phylip -p -n 500 -o boot --tar-gz
+goalign build seqboot -i align.phylip -p -n 500 -o boot_ 
 `,
 	Run: func(cmd *cobra.Command, args []string) {
 		if bootstrapoutprefix == "none" {
@@ -196,12 +196,12 @@ func min_int(a, b int) int {
 }
 
 func init() {
-	buildCmd.AddCommand(bootstrapCmd)
+	buildCmd.AddCommand(seqbootCmd)
 
-	bootstrapCmd.PersistentFlags().Int64VarP(&bootstrapSeed, "seed", "s", time.Now().UTC().UnixNano(), "Initial Random Seed")
-	bootstrapCmd.PersistentFlags().BoolVarP(&bootstrapOrder, "shuf-order", "S", false, "Also shuffle order of sequences in bootstrap files")
-	bootstrapCmd.PersistentFlags().BoolVar(&bootstraptar, "tar", false, "Will create a single tar file with all bootstrap alignments (one thread for tar, but not a bottleneck)")
-	bootstrapCmd.PersistentFlags().BoolVar(&bootstrapgz, "gz", false, "Will gzip output file(s). Maybe slow if combined with --tar (only one thread working for tar/gz)")
-	bootstrapCmd.PersistentFlags().IntVarP(&bootstrapNb, "nboot", "n", 1, "Number of bootstrap replicates to build")
-	bootstrapCmd.PersistentFlags().StringVarP(&bootstrapoutprefix, "out-prefix", "o", "none", "Prefix of output bootstrap files")
+	seqbootCmd.PersistentFlags().Int64VarP(&bootstrapSeed, "seed", "s", time.Now().UTC().UnixNano(), "Initial Random Seed")
+	seqbootCmd.PersistentFlags().BoolVarP(&bootstrapOrder, "shuf-order", "S", false, "Also shuffle order of sequences in bootstrap files")
+	seqbootCmd.PersistentFlags().BoolVar(&bootstraptar, "tar", false, "Will create a single tar file with all bootstrap alignments (one thread for tar, but not a bottleneck)")
+	seqbootCmd.PersistentFlags().BoolVar(&bootstrapgz, "gz", false, "Will gzip output file(s). Maybe slow if combined with --tar (only one thread working for tar/gz)")
+	seqbootCmd.PersistentFlags().IntVarP(&bootstrapNb, "nboot", "n", 1, "Number of bootstrap replicates to build")
+	seqbootCmd.PersistentFlags().StringVarP(&bootstrapoutprefix, "out-prefix", "o", "none", "Prefix of output bootstrap files")
 }

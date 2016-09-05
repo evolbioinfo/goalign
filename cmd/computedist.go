@@ -1,44 +1,44 @@
 package cmd
 
 import (
+	"errors"
 	"fmt"
+	"github.com/fredericlemoine/goalign/distance"
 	"github.com/fredericlemoine/goalign/io"
 	"github.com/spf13/cobra"
-	"math/rand"
 	"os"
 	"time"
 )
 
 var computedistSeed int64
 var computedistOutput string
-var distMatrix [][]float64
+var computedistModel string
 
 // computedistCmd represents the computedist command
 var computedistCmd = &cobra.Command{
-	Use:   "computedist",
+	Use:   "distance",
 	Short: "Compute distance matrix of 2 sequences",
 	Long: `Compute distance matrix of 2 sequences
 For example:
 
-goalign computedist k2p -i align.ph -p
-goalign computedist k2p -i align.fa
+goalign compute distance -m k2p -i align.ph -p
+goalign compute distance -m k2p -i align.fa
 
 `,
-	PersistentPreRun: func(cmd *cobra.Command, args []string) {
-		RootCmd.PersistentPreRun(cmd, args)
-		rand.Seed(computedistSeed)
-	},
-	PersistentPostRun: func(cmd *cobra.Command, args []string) {
+	Run: func(cmd *cobra.Command, args []string) {
+		if computedistModel != "k2p" {
+			io.ExitWithMessage(errors.New("Only k2p is implemented so far"))
+		}
+		var distMatrix [][]float64 = distance.MatrixK2P(rootalign, nil)
 		writeDistMatrix(distMatrix, computedistOutput)
 	},
 }
 
 func init() {
-	RootCmd.AddCommand(computedistCmd)
-
+	computeCmd.AddCommand(computedistCmd)
 	computedistCmd.PersistentFlags().Int64VarP(&computedistSeed, "seed", "s", time.Now().UTC().UnixNano(), "Initial Random Seed")
 	computedistCmd.PersistentFlags().StringVarP(&computedistOutput, "output", "o", "stdout", "Distance matrix output file")
-
+	computedistCmd.PersistentFlags().StringVarP(&computedistModel, "model", "m", "k2p", "Model for distance computation")
 }
 
 func writeDistMatrix(matrix [][]float64, file string) {
