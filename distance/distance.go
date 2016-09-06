@@ -6,6 +6,7 @@ import (
 	"math"
 )
 
+/* Return a normalized vector of weights */
 func BuildWeights(al align.Alignment) []float64 {
 	outweights := make([]float64, al.Length())
 	// Parameters of the binomial
@@ -15,9 +16,16 @@ func BuildWeights(al align.Alignment) []float64 {
 	// that fits the binomial
 	alpha := (n * p / (1 - p))
 	beta := 1 - p
+	total := 0.0
 	for i := 0; i < al.Length(); i++ {
 		outweights[i] = stats.Gamma(alpha, beta)
+		total += outweights[i]
 	}
+	// Normalizing the vector
+	for i := 0; i < al.Length(); i++ {
+		outweights[i] = outweights[i] * float64(al.Length()) / total
+	}
+
 	return outweights
 }
 
