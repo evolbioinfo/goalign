@@ -1,23 +1,8 @@
-// Copyright © 2016 NAME HERE <EMAIL ADDRESS>
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-//     http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
-
 package cmd
 
 import (
 	"github.com/fredericlemoine/goalign/io"
 	"github.com/spf13/cobra"
-	"os"
 )
 
 var trimMapout string
@@ -27,6 +12,8 @@ var nameCmd = &cobra.Command{
 	Use:   "name",
 	Short: "This command trims names of sequences",
 	Long: `This command trims names of sequences.
+
+If the input alignment contains several alignments, will process only the first one
 
 It trims sequence names to n characters. It will output mapping between 
 old names and new names into a map file as well as the new alignment.
@@ -40,20 +27,20 @@ goalign trim name -i align.phy -p -n 10 -m map.txt
 
 `,
 	Run: func(cmd *cobra.Command, args []string) {
-		if namemap, err := rootalign.TrimNames(trimNb); err != nil {
+		al := <-rootaligns
+		f := openWriteFile(trimAlignOut)
+		if namemap, err := al.TrimNames(trimNb); err != nil {
 			io.ExitWithMessage(err)
 		} else {
-			writeAlign(rootalign, trimAlignOut)
+			writeAlign(al, f)
 			writeNameMap(namemap, trimMapout)
 		}
+		f.Close()
 	},
 }
 
 func writeNameMap(namemap map[string]string, outfile string) {
-	f, err := os.Create(outfile)
-	if err != nil {
-		io.ExitWithMessage(err)
-	}
+	f := openWriteFile(outfile)
 	for long, short := range namemap {
 		f.WriteString(long)
 		f.WriteString("\t")

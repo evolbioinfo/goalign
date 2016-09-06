@@ -23,6 +23,8 @@ var distbootCmd = &cobra.Command{
 	Short: "Builds bootstrap distances matrices",
 	Long: `Builds bootstrap distances matrices
 
+If the input alignment contains several alignments, will take the first one only
+
 For example:
 
 goalign build distboot -m k2p -i align.fa -o mats.txt`,
@@ -43,14 +45,17 @@ goalign build distboot -m k2p -i align.fa -o mats.txt`,
 				io.ExitWithMessage(err)
 			}
 		}
+
+		align := <-rootaligns
+
 		for i := 0; i < distbootnb; i++ {
 			var weights []float64 = nil
 			if distbootgamma {
-				weights = distance.BuildWeights(rootalign)
-				distMatrix := distance.MatrixK2P(rootalign, weights)
+				weights = distance.BuildWeights(align)
+				distMatrix := distance.MatrixK2P(align, weights)
 				writeDistBootMatrix(distMatrix, f)
 			} else {
-				boot := rootalign.BuildBootstrap()
+				boot := align.BuildBootstrap()
 				distMatrix := distance.MatrixK2P(boot, nil)
 				writeDistBootMatrix(distMatrix, f)
 			}

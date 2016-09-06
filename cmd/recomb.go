@@ -15,6 +15,8 @@ var recombCmd = &cobra.Command{
 
 It may take Fasta or Phylip input alignment.
 
+If the input alignment contains several alignments, will process all of them
+
 Two options:
 1 - The proportion of recommbining sequences. It will take n sequences 
     and will copy/paste a portion of another n sequences;
@@ -33,7 +35,12 @@ goalign shuffle recomb -i align.phylip -p -n 1 -l 0.5
 goalign shuffle recomb -i align.fasta -r 0.5 -n 1 -l 0.5
 `,
 	Run: func(cmd *cobra.Command, args []string) {
-		rootalign.Recombine(recombNb, recombProp)
+		f := openWriteFile(shuffleOutput)
+		for al := range rootaligns {
+			al.Recombine(recombNb, recombProp)
+			writeAlign(al, f)
+		}
+		f.Close()
 	},
 }
 

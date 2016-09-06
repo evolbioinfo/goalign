@@ -16,7 +16,7 @@ import (
 
 var cfgFile string
 var infile string
-var rootalign align.Alignment
+var rootaligns chan align.Alignment
 var rootphylip bool
 var rootcpus int
 
@@ -45,7 +45,7 @@ It allows to :
 `,
 	PersistentPreRun: func(cmd *cobra.Command, args []string) {
 		runtime.GOMAXPROCS(rootcpus)
-
+		rootaligns = make(chan align.Alignment, 15)
 		var fi *os.File
 		var r *bufio.Reader
 		var err error
@@ -63,21 +63,25 @@ It allows to :
 			} else {
 				r = bufio.NewReader(gr)
 			}
-
 		} else {
 			r = bufio.NewReader(fi)
 		}
 		var al align.Alignment
 		var err2 error
 		if rootphylip {
-			al, err2 = phylip.NewParser(r).Parse()
+			go func() {
+				err2 = phylip.NewParser(r).ParseMultiple(rootaligns)
+				if err2 != nil {
+					io.ExitWithMessage(err2)
+				}
+			}()
 		} else {
 			al, err2 = fasta.NewParser(r).Parse()
+			if err2 != nil {
+				io.ExitWithMessage(err2)
+			}
+			rootaligns <- al
 		}
-		if err2 != nil {
-			io.ExitWithMessage(err2)
-		}
-		rootalign = al
 	},
 }
 
@@ -105,22 +109,30 @@ func initConfig() {
 
 }
 
-func writeAlign(al align.Alignment, file string) {
-	var f *os.File
-	var err error
-
-	if file == "stdout" || file == "-" {
-		f = os.Stdout
-	} else {
-		f, err = os.Create(file)
-		if err != nil {
-			io.ExitWithMessage(err)
-		}
-	}
+func writeAlign(al align.Alignment, f *os.File) {
 	if rootphylip {
 		f.WriteString(phylip.WriteAlignment(al))
 	} else {
 		f.WriteString(fasta.WriteAlignment(al))
 	}
-	f.Close()
+}
+
+func writeAlignFasta(al align.Alignment, f *os.File) {
+	f.WriteString(fasta.WriteAlignment(al))
+}
+
+func writeAlignPhylip(al align.Alignment, f *os.File) {
+	f.WriteString(phylip.WriteAlignment(al))
+}
+
+func openWriteFile(file string) *os.File {
+	if file == "stdout" || file == "-" {
+		return os.Stdout
+	} else {
+		f, err := os.Create(file)
+		if err != nil {
+			io.ExitWithMessage(err)
+		}
+		return f
+	}
 }

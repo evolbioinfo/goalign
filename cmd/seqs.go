@@ -11,6 +11,9 @@ var seqsCmd = &cobra.Command{
 	Long: `Shuffle sequence order in alignment.
 
 It may take a Fasta or Phylip alignment as input.
+
+If the input alignment contains several alignments, will process all of them
+
 Output a randomly reordered alignment. It does not
 change the biological meaning of the alignment.
 
@@ -21,7 +24,12 @@ goalign shuffle seqs -i align.fasta
 
 `,
 	Run: func(cmd *cobra.Command, args []string) {
-		rootalign.ShuffleSequences()
+		f := openWriteFile(shuffleOutput)
+		for al := range rootaligns {
+			al.ShuffleSequences()
+			writeAlign(al, f)
+		}
+		f.Close()
 	},
 }
 

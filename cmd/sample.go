@@ -19,16 +19,22 @@ var sampleCmd = &cobra.Command{
 
 May take a Fasta or Phylip alignment in input.
 
+If the input alignment contains several alignments, will process all of them
+
 As output, writes an alignment containing a sample of the sequences
 
 `,
 	Run: func(cmd *cobra.Command, args []string) {
 		rand.Seed(sampleSeed)
-		if sample, err := rootalign.Sample(sampleNb); err != nil {
-			io.ExitWithMessage(err)
-		} else {
-			writeAlign(sample, sampleOutput)
+		f := openWriteFile(sampleOutput)
+		for al := range rootaligns {
+			if sample, err := al.Sample(sampleNb); err != nil {
+				io.ExitWithMessage(err)
+			} else {
+				writeAlign(sample, f)
+			}
 		}
+		f.Close()
 	},
 }
 

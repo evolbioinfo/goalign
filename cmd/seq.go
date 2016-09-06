@@ -14,15 +14,21 @@ var seqCmd = &cobra.Command{
 	Long: `A longer description that spans multiple lines and likely contains examples
 and usage of using your command. For example:
 
+If the input alignment contains several alignments, will process all of them
+
 Cobra is a CLI library for Go that empowers applications.
 This application is a tool to generate the needed files
 to quickly create a Cobra application.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		if err := rootalign.TrimSequences(trimNb, trimFromStart); err != nil {
-			io.ExitWithMessage(err)
-		} else {
-			writeAlign(rootalign, trimAlignOut)
+		f := openWriteFile(trimAlignOut)
+		for al := range rootaligns {
+			if err := al.TrimSequences(trimNb, trimFromStart); err != nil {
+				io.ExitWithMessage(err)
+			} else {
+				writeAlign(al, f)
+			}
 		}
+		f.Close()
 	},
 }
 

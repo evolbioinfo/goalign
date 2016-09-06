@@ -3,10 +3,8 @@ package cmd
 import (
 	"fmt"
 	"github.com/fredericlemoine/goalign/distance"
-	"github.com/fredericlemoine/goalign/io"
 	"github.com/spf13/cobra"
 	"math/rand"
-	"os"
 	"time"
 )
 
@@ -19,23 +17,19 @@ var weightbootCmd = &cobra.Command{
 	Use:   "weightboot",
 	Short: "generate weights for all positions of the input alignment",
 	Long: `generate weights for all positions of the input alignment
+
+If the input alignment contains several alignments, will process the first one only
+
 `,
 	Run: func(cmd *cobra.Command, args []string) {
 		rand.Seed(weightbootSeed)
-		var f *os.File
-		var err error
 
-		if weightbootOutput == "stdout" || weightbootOutput == "-" {
-			f = os.Stdout
-		} else {
-			f, err = os.Create(weightbootOutput)
-			if err != nil {
-				io.ExitWithMessage(err)
-			}
-		}
+		al := <-rootaligns
+
+		f := openWriteFile(weightbootOutput)
 		for i := 0; i < weightbootnb; i++ {
 			var weights []float64 = nil
-			weights = distance.BuildWeights(rootalign)
+			weights = distance.BuildWeights(al)
 			for i, w := range weights {
 				if i > 0 {
 					f.WriteString("\t")

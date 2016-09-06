@@ -19,6 +19,10 @@ var computedistCmd = &cobra.Command{
 	Use:   "distance",
 	Short: "Compute distance matrix of 2 sequences",
 	Long: `Compute distance matrix of 2 sequences
+
+If the input alignment contains several alignments, will compute distances
+for all of them
+
 For example:
 
 goalign compute distance -m k2p -i align.ph -p
@@ -26,11 +30,26 @@ goalign compute distance -m k2p -i align.fa
 
 `,
 	Run: func(cmd *cobra.Command, args []string) {
+		var f *os.File
+		var err error
+
+		if computedistOutput == "stdout" || computedistOutput == "-" {
+			f = os.Stdout
+		} else {
+			f, err = os.Create(computedistOutput)
+			if err != nil {
+				io.ExitWithMessage(err)
+			}
+		}
+
 		if computedistModel != "k2p" {
 			io.ExitWithMessage(errors.New("Only k2p is implemented so far"))
 		}
-		var distMatrix [][]float64 = distance.MatrixK2P(rootalign, nil)
-		writeDistMatrix(distMatrix, computedistOutput)
+		for align := range rootaligns {
+			var distMatrix [][]float64 = distance.MatrixK2P(align, nil)
+			writeDistMatrix(distMatrix, f)
+		}
+		f.Close()
 	},
 }
 
@@ -41,18 +60,7 @@ func init() {
 	computedistCmd.PersistentFlags().StringVarP(&computedistModel, "model", "m", "k2p", "Model for distance computation")
 }
 
-func writeDistMatrix(matrix [][]float64, file string) {
-	var f *os.File
-	var err error
-
-	if file == "stdout" || file == "-" {
-		f = os.Stdout
-	} else {
-		f, err = os.Create(file)
-		if err != nil {
-			io.ExitWithMessage(err)
-		}
-	}
+func writeDistMatrix(matrix [][]float64, f *os.File) {
 
 	f.WriteString(fmt.Sprintf("%d\n", len(matrix)))
 	for i := 0; i < len(matrix); i++ {
@@ -62,5 +70,4 @@ func writeDistMatrix(matrix [][]float64, file string) {
 		}
 		f.WriteString("\n")
 	}
-	f.Close()
 }

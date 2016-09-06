@@ -291,6 +291,7 @@ func (a *align) TrimSequences(trimsize int, fromStart bool) error {
 			seq.sequence = seq.sequence[0 : len(seq.sequence)-trimsize]
 		}
 	}
+	a.length = a.length - trimsize
 	return nil
 }
 

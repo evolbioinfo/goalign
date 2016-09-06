@@ -13,13 +13,17 @@ var nseqCmd = &cobra.Command{
 	Long: `Prints the number of sequences in the alignment. 
 May take a Phylip of Fasta input alignment.
 
+If the input alignment contains several alignments, will process all of them
+
 Example of usages:
 
 goalign stats nseq -i align.phylip -p
 goalign stats nseq -i align.fasta
 `,
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println(rootalign.NbSequences())
+		for al := range rootaligns {
+			fmt.Println(al.NbSequences())
+		}
 	},
 }
 

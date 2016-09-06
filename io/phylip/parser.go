@@ -71,8 +71,11 @@ func (p *Parser) Parse() (align.Alignment, error) {
 	if tok == WS {
 		tok, lit = p.scan()
 	}
+	if tok == EOF {
+		return nil, nil
+	}
 	if tok != NUMERIC {
-		return nil, errors.New("Phylip file must begin with the number of sequences")
+		return nil, errors.New("Phylip file must begin with the number of sequences : " + fmt.Sprintf("%d", tok))
 	} else {
 		nbseq, err = strconv.ParseInt(lit, 10, 64)
 		if err != nil {
@@ -109,7 +112,7 @@ func (p *Parser) Parse() (align.Alignment, error) {
 	for i := 0; i < int(nbseq); i++ {
 		tok, lit = p.scan()
 		if tok != IDENTIFIER && tok != NUMERIC {
-			return nil, errors.New("Bad Phylip format, we should have an sequence identifier after the header: " + lit)
+			return nil, errors.New("Bad Phylip format, we should have an sequence identifier after the header : " + lit)
 		}
 		names[i] = lit
 		tok, lit = p.scan()
@@ -132,14 +135,14 @@ func (p *Parser) Parse() (align.Alignment, error) {
 		tok, lit = p.scan()
 		p.unscan()
 	} else if int(lenseq) != seqs[0].Len() {
-		alignio.ExitWithMessage(errors.New("Bad Phylip Format: Should have a blank line here"))
+		alignio.ExitWithMessage(errors.New("Bad Phylip Format : Should have a blank line here"))
 	} else if tok != EOF {
 		alignio.ExitWithMessage(errors.New("Bad Phylip Format : Should not have a character here, all sequences have been red"))
 	}
 
 	// Then other blocks with only sequences
 	b := 0
-	for tok != EOF {
+	for tok != EOF && int(lenseq) != seqs[0].Len() {
 		for i := 0; i < int(nbseq); i++ {
 			tok, lit := p.scan()
 			if tok == WS {
@@ -167,7 +170,7 @@ func (p *Parser) Parse() (align.Alignment, error) {
 			tok, lit = p.scan()
 			p.unscan()
 		} else if int(lenseq) != seqs[0].Len() {
-			alignio.ExitWithMessage(errors.New("Bad Phylip Format: Should have a blank line here"))
+			alignio.ExitWithMessage(errors.New("Bad Phylip Format : Should have a blank line here"))
 		} else if tok != EOF {
 			alignio.ExitWithMessage(errors.New("Bad Phylip Format : Should not have a character here, all sequences have been red"))
 		}
@@ -177,7 +180,7 @@ func (p *Parser) Parse() (align.Alignment, error) {
 	for i, name := range names {
 		seq := seqs[i].String()
 		if int(lenseq) != len(seq) {
-			alignio.ExitWithMessage(errors.New("Bad Phylip format: Length of sequences does not correspond to header"))
+			alignio.ExitWithMessage(errors.New("Bad Phylip format : Length of sequences does not correspond to header"))
 		}
 		if al == nil {
 			al = align.NewAlign(align.DetectAlphabet(seq))
@@ -185,4 +188,26 @@ func (p *Parser) Parse() (align.Alignment, error) {
 		al.AddSequence(name, seq, "")
 	}
 	return al, nil
+}
+
+/*
+Parses mutliple phylip alignments and give them to the channel
+At the end (or in case of error), it closes the channel
+*/
+func (p *Parser) ParseMultiple(aligns chan<- align.Alignment) error {
+	al, err := p.Parse()
+	if err != nil {
+		close(aligns)
+		return err
+	}
+	for err == nil && al != nil {
+		aligns <- al
+		al, err = p.Parse()
+		if err != nil {
+			close(aligns)
+			return err
+		}
+	}
+	close(aligns)
+	return nil
 }

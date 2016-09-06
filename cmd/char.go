@@ -17,7 +17,7 @@ goalign stats char -i align.phylip -p
 goalign stats char -i align.fasta
 `,
 	Run: func(cmd *cobra.Command, args []string) {
-		printCharStats(rootalign)
+		printCharStats(<-rootaligns)
 	},
 }
 

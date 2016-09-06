@@ -1,7 +1,6 @@
 package cmd
 
 import (
-	"github.com/fredericlemoine/goalign/io/fasta"
 	"github.com/spf13/cobra"
 )
 
@@ -12,6 +11,9 @@ var fastaCmd = &cobra.Command{
 	Long: `Reformats an alignment into Fasta. 
 It may take a Phylip of Fasta input alignment.
 
+If the input alignment contains several alignments, will take the first one only
+
+
 Example of usage:
 
 goalign reformat fasta -i align.phylip -p
@@ -19,7 +21,9 @@ goalign reformat fasta -i align.fasta
 
 `,
 	Run: func(cmd *cobra.Command, args []string) {
-		reformatOutputString = fasta.WriteAlignment(rootalign)
+		f := openWriteFile(reformatOutput)
+		writeAlignFasta(<-rootaligns, f)
+		f.Close()
 	},
 }
 

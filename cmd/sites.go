@@ -14,6 +14,8 @@ var sitesCmd = &cobra.Command{
 
 It may take Fasta or Phylip input alignment.
 
+If the input alignment contains several alignments, will process all of them
+
 The only option is to specify the rate of shuffled sites.
 A rate of 0.5 will shuffle 50% of the sites of the alignment.
 
@@ -27,7 +29,12 @@ goalign shuffle sites -i align.fasta -r 0.5
 
 `,
 	Run: func(cmd *cobra.Command, args []string) {
-		rootalign.ShuffleSites(siteRate)
+		f := openWriteFile(shuffleOutput)
+		for al := range rootaligns {
+			al.ShuffleSites(siteRate)
+			writeAlign(al, f)
+		}
+		f.Close()
 	},
 }
 

@@ -64,6 +64,8 @@ goalign build seqboot -i align.phylip -p -n 500 -o boot_
 		var tw *tar.Writer
 		var gw *gzip.Writer
 
+		align := <-rootaligns
+
 		bootidx := make(chan int, 100)
 		outchan := make(chan outboot, 100)
 
@@ -86,7 +88,7 @@ goalign build seqboot -i align.phylip -p -n 500 -o boot_
 				var bootstring string
 				for idx := range bootidx {
 					bootid := bootstrapoutprefix + fmt.Sprintf("%d", idx)
-					boot := rootalign.BuildBootstrap()
+					boot := align.BuildBootstrap()
 					if bootstrapOrder {
 						boot.ShuffleSequences()
 					}

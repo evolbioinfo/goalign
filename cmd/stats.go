@@ -16,11 +16,16 @@ var statsCmd = &cobra.Command{
 
 1 - Length
 2 - Number of sequences
+
+If the input alignment contains several alignments, will process all of them
+
 `,
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Fprintf(os.Stdout, "length\t%d\n", rootalign.Length())
-		fmt.Fprintf(os.Stdout, "nseqs\t%d\n", rootalign.NbSequences())
-		printCharStats(rootalign)
+		for al := range rootaligns {
+			fmt.Fprintf(os.Stdout, "length\t%d\n", al.Length())
+			fmt.Fprintf(os.Stdout, "nseqs\t%d\n", al.NbSequences())
+			printCharStats(al)
+		}
 	},
 }
 

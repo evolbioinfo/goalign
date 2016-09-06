@@ -28,9 +28,6 @@ It is possible to:
 		RootCmd.PersistentPreRun(cmd, args)
 		rand.Seed(shuffleSeed)
 	},
-	PersistentPostRun: func(cmd *cobra.Command, args []string) {
-		writeAlign(rootalign, shuffleOutput)
-	},
 }
 
 func init() {

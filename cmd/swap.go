@@ -13,6 +13,8 @@ var swapCmd = &cobra.Command{
 	Long: `Swap portion of sequences in the input alignment.
 It may take Fasta or Phylip input alignment.
 
+If the input alignment contains several alignments, will process all of them
+
 The only option is to specify the rate of swap.
 A rate of 0.5 will swap 25% of the sequences with 
 other 25% of the sequences at a random position.
@@ -31,7 +33,12 @@ goalign shuffle swap -i align.fasta -r 0.5
 
 `,
 	Run: func(cmd *cobra.Command, args []string) {
-		rootalign.Swap(swapRate)
+		f := openWriteFile(shuffleOutput)
+		for al := range rootaligns {
+			al.Swap(swapRate)
+			writeAlign(al, f)
+		}
+		f.Close()
 	},
 }
 
