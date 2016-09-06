@@ -81,6 +81,7 @@ It allows to :
 				io.ExitWithMessage(err2)
 			}
 			rootaligns <- al
+			close(rootaligns)
 		}
 	},
 }
