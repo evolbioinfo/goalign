@@ -172,8 +172,6 @@ func (p *Parser) Parse() (align.Alignment, error) {
 			p.unscan()
 		} else if int(lenseq) != seqs[0].Len() {
 			alignio.ExitWithMessage(errors.New("Bad Phylip Format : Should have a blank line here"))
-		} else if tok != EOF {
-			alignio.ExitWithMessage(errors.New("Bad Phylip Format : Should not have a character here, all sequences have been red"))
 		}
 		b++
 	}
