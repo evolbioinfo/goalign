@@ -87,35 +87,45 @@ func isTransversion(nt1 rune, nt2 rune) bool {
 }
 
 /* Count number of mutations and associate a weight to them */
-func countMutations(seq1 []rune, seq2 []rune, weights []float64) (transitions, transversions float64) {
+func countMutations(seq1 []rune, seq2 []rune, weights []float64) (transitions, transversions float64, numSites float64) {
 	transitions, transversions = 0.0, 0.0
 	for i := 0; i < len(seq1); i++ {
 		w := 1.0
 		if weights != nil {
 			w = weights[i]
 		}
-		if seq1[i] != seq2[i] {
-			if isTransversion(seq1[i], seq2[i]) {
-				transversions += float64(w)
-			} else if isTransition(seq1[i], seq2[i]) {
-				transitions += float64(w)
+		if isNuc(seq1[i]) && isNuc(seq2[i]) {
+			if seq1[i] != seq2[i] {
+				if isTransversion(seq1[i], seq2[i]) {
+					transversions += float64(w)
+				} else if isTransition(seq1[i], seq2[i]) {
+					transitions += float64(w)
+				}
 			}
+			numSites += w
 		}
 	}
 	return
 }
 
 /* Count number of mutations and associate a weight to them */
-func countDiffs(seq1 []rune, seq2 []rune, weights []float64) (nbdiffs float64) {
+func countDiffs(seq1 []rune, seq2 []rune, weights []float64) (nbdiffs float64, numSites float64) {
 	nbdiffs = 0
 	for i := 0; i < len(seq1); i++ {
 		w := 1.0
 		if weights != nil {
 			w = weights[i]
 		}
-		if seq1[i] != seq2[i] {
-			nbdiffs += float64(w)
+		if isNuc(seq1[i]) && isNuc(seq2[i]) {
+			if seq1[i] != seq2[i] {
+				nbdiffs += float64(w)
+			}
+			numSites += w
 		}
 	}
 	return
+}
+
+func isNuc(r rune) bool {
+	return r == 'A' || r == 'C' || r == 'G' || r == 'T'
 }
