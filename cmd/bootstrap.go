@@ -148,8 +148,14 @@ goalign build seqboot -i align.phylip -p -n 500 -o boot_
 }
 
 func writenewfile(name string, gz bool, bootstring string) {
+	ext := ""
+	if rootphylip {
+		ext = ".ph"
+	} else {
+		ext = ".fa"
+	}
 	if gz {
-		if f, err := os.Create(name + ".fa.gz"); err != nil {
+		if f, err := os.Create(name + ext + ".gz"); err != nil {
 			io.ExitWithMessage(err)
 		} else {
 			gw := gzip.NewWriter(f)
@@ -160,7 +166,7 @@ func writenewfile(name string, gz bool, bootstring string) {
 			f.Close()
 		}
 	} else {
-		if f, err := os.Create(name + ".fa"); err != nil {
+		if f, err := os.Create(name + ext); err != nil {
 			io.ExitWithMessage(err)
 		} else {
 			f.WriteString(bootstring)
@@ -172,9 +178,14 @@ func writenewfile(name string, gz bool, bootstring string) {
 func addstringtotargz(tw *tar.Writer, name string, align string) error {
 	// now lets create the header as needed for this file within the tarball
 	alignbytes := []byte(align)
-
+	ext := ""
+	if rootphylip {
+		ext = ".ph"
+	} else {
+		ext = ".fa"
+	}
 	header := new(tar.Header)
-	header.Name = name + ".fa"
+	header.Name = name + ext
 	header.Size = int64(len(alignbytes))
 	header.Mode = 436 //int64(stat.Mode())
 	header.ModTime = time.Now()

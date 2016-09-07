@@ -1,9 +1,7 @@
 package cmd
 
 import (
-	"github.com/fredericlemoine/goalign/io"
 	"github.com/spf13/cobra"
-	"os"
 )
 
 var reformatOutput string
@@ -18,25 +16,6 @@ var reformatCmd = &cobra.Command{
 Allows to convert formats between phylip and fasta, but also reformat 
 fasta and phylip, such as 60 characters per line, etc.
 `,
-	PersistentPostRun: func(cmd *cobra.Command, args []string) {
-		var f *os.File
-		var err error
-
-		if reformatOutput == "stdout" || reformatOutput == "-" {
-			f = os.Stdout
-		} else {
-			f, err = os.Create(reformatOutput)
-			if err != nil {
-				io.ExitWithMessage(err)
-			}
-		}
-		if rootphylip {
-			f.WriteString(reformatOutputString)
-		} else {
-			f.WriteString(reformatOutputString)
-		}
-		f.Close()
-	},
 }
 
 func init() {
