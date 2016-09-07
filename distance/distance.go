@@ -62,20 +62,16 @@ func DistK2P(seq1 []rune, seq2 []rune, weights []float64) float64 {
 
 /* Returns true if it is a transition, false otherwize */
 func isTransition(nt1 rune, nt2 rune) bool {
-	return ((nt1 == 'A' && nt2 == 'G') ||
-		(nt1 == 'G' && nt2 == 'A') ||
-		(nt1 == 'T' && nt2 == 'C') ||
-		(nt1 == 'C' && nt2 == 'T'))
+	return ((nt1 == 'A' && nt2 == 'G') || (nt1 == 'G' && nt2 == 'A') ||
+		(nt1 == 'T' && nt2 == 'C') || (nt1 == 'C' && nt2 == 'T'))
 }
 
 /* Returns true if it is a transversion, false otherwize */
 func isTransversion(nt1 rune, nt2 rune) bool {
-	trv := false
-	trv = trv || (nt1 == 'A' && nt2 == 'C') || (nt1 == 'C' && nt2 == 'A')
-	trv = trv || (nt1 == 'G' && nt2 == 'T') || (nt1 == 'T' && nt2 == 'G')
-	trv = trv || (nt1 == 'T' && nt2 == 'A') || (nt1 == 'A' && nt2 == 'T')
-	trv = trv || (nt1 == 'C' && nt2 == 'G') || (nt1 == 'G' && nt2 == 'C')
-	return (trv)
+	return ((nt1 == 'A' && nt2 == 'C') || (nt1 == 'C' && nt2 == 'A') ||
+		(nt1 == 'G' && nt2 == 'T') || (nt1 == 'T' && nt2 == 'G') ||
+		(nt1 == 'T' && nt2 == 'A') || (nt1 == 'A' && nt2 == 'T') ||
+		(nt1 == 'C' && nt2 == 'G') || (nt1 == 'G' && nt2 == 'C'))
 }
 
 /* Count number of mutations and associate a weight to them */
