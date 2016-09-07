@@ -25,6 +25,13 @@ var distbootCmd = &cobra.Command{
 
 If the input alignment contains several alignments, will take the first one only
 
+Available Distances:
+
+- pdist
+- jc   : Juke-Cantor
+- k2p  : Kimura 2 Parameters
+- f81  : Felsenstein 81
+
 For example:
 
 goalign build distboot -m k2p -i align.fa -o mats.txt`,
@@ -34,29 +41,19 @@ goalign build distboot -m k2p -i align.fa -o mats.txt`,
 		if distbootmodel != "k2p" {
 			io.ExitWithMessage(errors.New("Only k2p is implemented so far"))
 		}
-		var f *os.File
-		var err error
-
-		if distbootOutput == "stdout" || distbootOutput == "-" {
-			f = os.Stdout
-		} else {
-			f, err = os.Create(distbootOutput)
-			if err != nil {
-				io.ExitWithMessage(err)
-			}
-		}
-
+		f := openWriteFile(distbootOutput)
 		align := <-rootaligns
 
+		model := distance.Model(distbootmodel)
 		for i := 0; i < distbootnb; i++ {
 			var weights []float64 = nil
 			if distbootgamma {
 				weights = distance.BuildWeights(align)
-				distMatrix := distance.MatrixK2P(align, weights)
+				distMatrix := distance.DistMatrix(align, weights, model)
 				writeDistBootMatrix(distMatrix, f)
 			} else {
 				boot := align.BuildBootstrap()
-				distMatrix := distance.MatrixK2P(boot, nil)
+				distMatrix := distance.DistMatrix(boot, nil, model)
 				writeDistBootMatrix(distMatrix, f)
 			}
 		}

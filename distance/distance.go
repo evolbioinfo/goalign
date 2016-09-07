@@ -1,10 +1,34 @@
 package distance
 
 import (
+	"errors"
 	"github.com/fredericlemoine/goalign/align"
+	"github.com/fredericlemoine/goalign/io"
 	"github.com/fredericlemoine/goalign/stats"
-	"math"
 )
+
+type DistModel interface {
+	InitModel(al align.Alignment)
+	Distance(seq1 []rune, seq2 []rune, weigths []float64) float64
+}
+
+/* Returns the right model depending on the args */
+func Model(modelType string) DistModel {
+	var model DistModel
+	switch modelType {
+	case "jc":
+		model = NewJCModel()
+	case "k2p":
+		model = NewK2PModel()
+	case "pdist":
+		model = NewPDistModel()
+	case "f81":
+		model = NewF81Model()
+	default:
+		io.ExitWithMessage(errors.New("This model is not implemented : " + modelType))
+	}
+	return model
+}
 
 /* Return a normalized vector of weights */
 func BuildWeights(al align.Alignment) []float64 {
@@ -31,7 +55,7 @@ func BuildWeights(al align.Alignment) []float64 {
 
 /* Compute a matrix distance, with weights associated to each alignment positions */
 /* If weights == nil, then all weights are considered 1 */
-func MatrixK2P(al align.Alignment, weights []float64) [][]float64 {
+func DistMatrix(al align.Alignment, weights []float64, model DistModel) [][]float64 {
 	outmatrix := make([][]float64, al.NbSequences())
 	for i := 0; i < al.NbSequences(); i++ {
 		outmatrix[i] = make([]float64, al.NbSequences())
@@ -41,23 +65,11 @@ func MatrixK2P(al align.Alignment, weights []float64) [][]float64 {
 		outmatrix[i][i] = 0
 		for j := i + 1; j < al.NbSequences(); j++ {
 			seq2, _ := al.GetSequenceChar(j)
-			outmatrix[i][j] = DistK2P(seq1, seq2, weights)
+			outmatrix[i][j] = model.Distance(seq1, seq2, weights)
 			outmatrix[j][i] = outmatrix[i][j]
 		}
 	}
 	return outmatrix
-}
-
-/* computes K2P distance between 2 sequences */
-func DistK2P(seq1 []rune, seq2 []rune, weights []float64) float64 {
-	trS, trV := countMutations(seq1, seq2, weights)
-	trS, trV = trS/float64(len(seq1)), trV/float64(len(seq1))
-	dist := -0.5*math.Log(1-2*trS-trV) - 0.25*math.Log(1-2*trV)
-	if dist > 0 {
-		return (dist)
-	} else {
-		return (0)
-	}
 }
 
 /* Returns true if it is a transition, false otherwize */
@@ -88,6 +100,21 @@ func countMutations(seq1 []rune, seq2 []rune, weights []float64) (transitions, t
 			} else if isTransition(seq1[i], seq2[i]) {
 				transitions += float64(w)
 			}
+		}
+	}
+	return
+}
+
+/* Count number of mutations and associate a weight to them */
+func countDiffs(seq1 []rune, seq2 []rune, weights []float64) (nbdiffs float64) {
+	nbdiffs = 0
+	for i := 0; i < len(seq1); i++ {
+		w := 1.0
+		if weights != nil {
+			w = weights[i]
+		}
+		if seq1[i] != seq2[i] {
+			nbdiffs += float64(w)
 		}
 	}
 	return

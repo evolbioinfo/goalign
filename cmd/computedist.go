@@ -1,7 +1,6 @@
 package cmd
 
 import (
-	"errors"
 	"fmt"
 	"github.com/fredericlemoine/goalign/distance"
 	"github.com/fredericlemoine/goalign/io"
@@ -21,7 +20,14 @@ var computedistCmd = &cobra.Command{
 	Long: `Compute distance matrix of 2 sequences
 
 If the input alignment contains several alignments, will compute distances
-for all of them
+for all of them.
+
+Available Distances:
+
+- pdist
+- jc   : Juke-Cantor
+- k2p  : Kimura 2 Parameters
+- f81  : Felsenstein 81
 
 For example:
 
@@ -42,11 +48,9 @@ goalign compute distance -m k2p -i align.fa
 			}
 		}
 
-		if computedistModel != "k2p" {
-			io.ExitWithMessage(errors.New("Only k2p is implemented so far"))
-		}
+		model := distance.Model(computedistModel)
 		for align := range rootaligns {
-			var distMatrix [][]float64 = distance.MatrixK2P(align, nil)
+			var distMatrix [][]float64 = distance.DistMatrix(align, nil, model)
 			writeDistMatrix(distMatrix, f)
 		}
 		f.Close()
