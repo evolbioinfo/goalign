@@ -21,6 +21,7 @@ type Alignment interface {
 	AddSequenceChar(name string, sequence []rune, comment string) error
 	GetSequence(name string) (string, bool)
 	GetSequenceChar(ith int) ([]rune, bool)
+	GetSequenceName(ith int) (string, bool)
 	Iterate(it func(name string, sequence string))
 	IterateChar(it func(name string, sequence []rune))
 	NbSequences() int
@@ -106,6 +107,15 @@ func (a *align) GetSequenceChar(ith int) ([]rune, bool) {
 		return a.seqs[ith].SequenceChar(), true
 	}
 	return nil, false
+}
+
+// If ith >=0 && i < nbSequences() return name,true
+// Otherwise, return "", false
+func (a *align) GetSequenceName(ith int) (string, bool) {
+	if ith >= 0 && ith < a.NbSequences() {
+		return a.seqs[ith].Name(), true
+	}
+	return "", false
 }
 
 // If sequence exists in alignment, return true,sequence

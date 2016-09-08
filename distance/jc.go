@@ -6,16 +6,21 @@ import (
 )
 
 type JCModel struct {
+	numSites      float64 // Number of selected sites (no gaps)
+	selectedSites []bool  // true for selected sites
 }
 
 func NewJCModel() *JCModel {
-	return &JCModel{}
+	return &JCModel{
+		0,
+		nil,
+	}
 }
 
 /* computes K2P distance between 2 sequences */
 func (m *JCModel) Distance(seq1 []rune, seq2 []rune, weights []float64) float64 {
-	diff, total := countDiffs(seq1, seq2, weights)
-	diff = diff / total
+	diff, _ := countDiffs(seq1, seq2, weights)
+	diff = diff / m.numSites
 	dist := -3.0 / 4.0 * math.Log(1.0-4.0/3.0*diff)
 	if dist > 0 {
 		return (dist)
@@ -24,6 +29,6 @@ func (m *JCModel) Distance(seq1 []rune, seq2 []rune, weights []float64) float64 
 	}
 }
 
-func (m *JCModel) InitModel(al align.Alignment) {
-
+func (m *JCModel) InitModel(al align.Alignment, weights []float64) {
+	m.numSites, m.selectedSites = selectedSites(al, weights)
 }

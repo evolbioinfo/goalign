@@ -6,10 +6,14 @@ import (
 )
 
 type K2PModel struct {
+	numSites      float64 // Number of selected sites (no gaps)
+	selectedSites []bool  // true for selected sites
 }
 
 func NewK2PModel() *K2PModel {
-	return &K2PModel{}
+	return &K2PModel{
+		0,
+		nil}
 }
 
 /* computes K2P distance between 2 sequences */
@@ -24,6 +28,6 @@ func (m *K2PModel) Distance(seq1 []rune, seq2 []rune, weights []float64) float64
 	}
 }
 
-func (m *K2PModel) InitModel(al align.Alignment) {
-
+func (m *K2PModel) InitModel(al align.Alignment, weights []float64) {
+	m.numSites, m.selectedSites = selectedSites(al, weights)
 }

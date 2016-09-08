@@ -1,7 +1,9 @@
 package cmd
 
 import (
+	"errors"
 	"fmt"
+	"github.com/fredericlemoine/goalign/align"
 	"github.com/fredericlemoine/goalign/distance"
 	"github.com/fredericlemoine/goalign/io"
 	"github.com/spf13/cobra"
@@ -51,7 +53,7 @@ goalign compute distance -m k2p -i align.fa
 		model := distance.Model(computedistModel)
 		for align := range rootaligns {
 			var distMatrix [][]float64 = distance.DistMatrix(align, nil, model)
-			writeDistMatrix(distMatrix, f)
+			writeDistMatrix(align, distMatrix, f)
 		}
 		f.Close()
 	},
@@ -64,13 +66,16 @@ func init() {
 	computedistCmd.PersistentFlags().StringVarP(&computedistModel, "model", "m", "k2p", "Model for distance computation")
 }
 
-func writeDistMatrix(matrix [][]float64, f *os.File) {
-
+func writeDistMatrix(al align.Alignment, matrix [][]float64, f *os.File) {
 	f.WriteString(fmt.Sprintf("%d\n", len(matrix)))
 	for i := 0; i < len(matrix); i++ {
-		f.WriteString(fmt.Sprintf("%d", i))
+		if name, ok := al.GetSequenceName(i); ok {
+			f.WriteString(fmt.Sprintf("%s", name))
+		} else {
+			io.ExitWithMessage(errors.New(fmt.Sprintf("Sequence %d does not exist in the alignment", i)))
+		}
 		for j := 0; j < len(matrix); j++ {
-			f.WriteString(fmt.Sprintf("\t%f", matrix[i][j]))
+			f.WriteString(fmt.Sprintf("\t%.12f", matrix[i][j]))
 		}
 		f.WriteString("\n")
 	}

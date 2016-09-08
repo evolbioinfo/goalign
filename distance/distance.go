@@ -8,7 +8,7 @@ import (
 )
 
 type DistModel interface {
-	InitModel(al align.Alignment)
+	InitModel(al align.Alignment, weights []float64)
 	Distance(seq1 []rune, seq2 []rune, weigths []float64) float64
 }
 
@@ -56,6 +56,7 @@ func BuildWeights(al align.Alignment) []float64 {
 /* Compute a matrix distance, with weights associated to each alignment positions */
 /* If weights == nil, then all weights are considered 1 */
 func DistMatrix(al align.Alignment, weights []float64, model DistModel) [][]float64 {
+	model.InitModel(al, weights)
 	outmatrix := make([][]float64, al.NbSequences())
 	for i := 0; i < al.NbSequences(); i++ {
 		outmatrix[i] = make([]float64, al.NbSequences())
@@ -80,6 +81,7 @@ func isTransition(nt1 rune, nt2 rune) bool {
 
 /* Returns true if it is a transversion, false otherwize */
 func isTransversion(nt1 rune, nt2 rune) bool {
+
 	return ((nt1 == 'A' && nt2 == 'C') || (nt1 == 'C' && nt2 == 'A') ||
 		(nt1 == 'G' && nt2 == 'T') || (nt1 == 'T' && nt2 == 'G') ||
 		(nt1 == 'T' && nt2 == 'A') || (nt1 == 'A' && nt2 == 'T') ||
@@ -87,8 +89,9 @@ func isTransversion(nt1 rune, nt2 rune) bool {
 }
 
 /* Count number of mutations and associate a weight to them */
-func countMutations(seq1 []rune, seq2 []rune, weights []float64) (transitions, transversions float64, numSites float64) {
+func countMutations(seq1 []rune, seq2 []rune, weights []float64) (transitions, transversions float64, total float64) {
 	transitions, transversions = 0.0, 0.0
+	total = 0.0
 	for i := 0; i < len(seq1); i++ {
 		w := 1.0
 		if weights != nil {
@@ -102,15 +105,16 @@ func countMutations(seq1 []rune, seq2 []rune, weights []float64) (transitions, t
 					transitions += float64(w)
 				}
 			}
-			numSites += w
+			total += w
 		}
 	}
 	return
 }
 
 /* Count number of mutations and associate a weight to them */
-func countDiffs(seq1 []rune, seq2 []rune, weights []float64) (nbdiffs float64, numSites float64) {
+func countDiffs(seq1 []rune, seq2 []rune, weights []float64) (nbdiffs float64, total float64) {
 	nbdiffs = 0
+	total = 0
 	for i := 0; i < len(seq1); i++ {
 		w := 1.0
 		if weights != nil {
@@ -120,7 +124,7 @@ func countDiffs(seq1 []rune, seq2 []rune, weights []float64) (nbdiffs float64, n
 			if seq1[i] != seq2[i] {
 				nbdiffs += float64(w)
 			}
-			numSites += w
+			total += w
 		}
 	}
 	return
@@ -128,4 +132,27 @@ func countDiffs(seq1 []rune, seq2 []rune, weights []float64) (nbdiffs float64, n
 
 func isNuc(r rune) bool {
 	return r == 'A' || r == 'C' || r == 'G' || r == 'T'
+}
+
+/* Returns the sites of the alignments that contains only nucleotides and no gaps */
+func selectedSites(al align.Alignment, weights []float64) (float64, []bool) {
+	selectedSites := make([]bool, al.Length())
+	numSites := 0.0
+	for l := 0; l < al.Length(); l++ {
+		w := 1.0
+		if weights != nil {
+			w = weights[l]
+		}
+		selectedSites[l] = true
+		for i := 0; i < al.NbSequences(); i++ {
+			seq, _ := al.GetSequenceChar(i)
+			if !isNuc(seq[l]) || seq[l] == '*' || seq[l] == '?' || seq[l] == '-' {
+				selectedSites[l] = false
+			}
+		}
+		if selectedSites[l] {
+			numSites += w
+		}
+	}
+	return numSites, selectedSites
 }

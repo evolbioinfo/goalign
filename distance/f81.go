@@ -1,21 +1,25 @@
 package distance
 
 import (
+	"fmt"
 	"github.com/fredericlemoine/goalign/align"
 	"math"
 )
 
 type F81Model struct {
 	/* Vector of nt proba */
-	pi []float64
-	/* 1- sum(pi^2) */
-	b1 float64
+	pi            []float64 // proba of each nt
+	b1            float64   // 1- sum(pi^2)
+	numSites      float64   // Number of selected sites (no gaps)
+	selectedSites []bool    // true for selected sites
 }
 
 func NewF81Model() *F81Model {
 	return &F81Model{
 		make([]float64, 4),
 		0,
+		0,
+		nil,
 	}
 }
 
@@ -23,7 +27,7 @@ func NewF81Model() *F81Model {
 func (m *F81Model) Distance(seq1 []rune, seq2 []rune, weights []float64) float64 {
 	diff, total := countDiffs(seq1, seq2, weights)
 	diff = diff / total
-	dist := -3.0 / 4.0 * math.Log(1.0-4.0/3.0*diff)
+	dist := -1.0 * m.b1 * math.Log(1.0-diff/m.b1)
 	if dist > 0 {
 		return (dist)
 	} else {
@@ -31,22 +35,25 @@ func (m *F81Model) Distance(seq1 []rune, seq2 []rune, weights []float64) float64
 	}
 }
 
-func (m *F81Model) InitModel(al align.Alignment) {
+func (m *F81Model) InitModel(al align.Alignment, weights []float64) {
+	m.numSites, m.selectedSites = selectedSites(al, weights)
 	total := 0.0
 	for i := 0; i < al.NbSequences(); i++ {
 		seq1, _ := al.GetSequenceChar(i)
 		for _, n := range seq1 {
-			switch n {
-			case 'A':
-				m.pi[0]++
-			case 'C':
-				m.pi[1]++
-			case 'G':
-				m.pi[2]++
-			case 'T':
-				m.pi[3]++
+			if m.selectedSites[n] {
+				switch n {
+				case 'A':
+					m.pi[0]++
+				case 'C':
+					m.pi[1]++
+				case 'G':
+					m.pi[2]++
+				case 'T':
+					m.pi[3]++
+				}
+				total++
 			}
-			total++
 		}
 	}
 	for i, _ := range m.pi {
@@ -54,4 +61,5 @@ func (m *F81Model) InitModel(al align.Alignment) {
 		m.b1 += math.Pow(m.pi[i], 2.0)
 	}
 	m.b1 = 1 - m.b1
+	fmt.Println(m.b1)
 }
