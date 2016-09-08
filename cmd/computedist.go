@@ -52,7 +52,7 @@ goalign compute distance -m k2p -i align.fa
 
 		model := distance.Model(computedistModel)
 		for align := range rootaligns {
-			var distMatrix [][]float64 = distance.DistMatrix(align, nil, model)
+			var distMatrix [][]float64 = distance.DistMatrix(align, nil, model, rootcpus)
 			writeDistMatrix(align, distMatrix, f)
 		}
 		f.Close()

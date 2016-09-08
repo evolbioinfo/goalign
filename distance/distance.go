@@ -5,11 +5,19 @@ import (
 	"github.com/fredericlemoine/goalign/align"
 	"github.com/fredericlemoine/goalign/io"
 	"github.com/fredericlemoine/goalign/stats"
+	"sync"
 )
 
 type DistModel interface {
 	InitModel(al align.Alignment, weights []float64)
 	Distance(seq1 []rune, seq2 []rune, weigths []float64) float64
+}
+
+type seqpairdist struct {
+	i, j       int
+	seq1, seq2 []rune
+	model      DistModel
+	weights    []float64
 }
 
 /* Returns the right model depending on the args */
@@ -55,21 +63,43 @@ func BuildWeights(al align.Alignment) []float64 {
 
 /* Compute a matrix distance, with weights associated to each alignment positions */
 /* If weights == nil, then all weights are considered 1 */
-func DistMatrix(al align.Alignment, weights []float64, model DistModel) [][]float64 {
+func DistMatrix(al align.Alignment, weights []float64, model DistModel, cpus int) [][]float64 {
 	model.InitModel(al, weights)
+	distchan := make(chan seqpairdist, 100)
+
 	outmatrix := make([][]float64, al.NbSequences())
 	for i := 0; i < al.NbSequences(); i++ {
 		outmatrix[i] = make([]float64, al.NbSequences())
 	}
-	for i := 0; i < al.NbSequences(); i++ {
-		seq1, _ := al.GetSequenceChar(i)
-		outmatrix[i][i] = 0
-		for j := i + 1; j < al.NbSequences(); j++ {
-			seq2, _ := al.GetSequenceChar(j)
-			outmatrix[i][j] = model.Distance(seq1, seq2, weights)
-			outmatrix[j][i] = outmatrix[i][j]
+
+	go func() {
+		for i := 0; i < al.NbSequences(); i++ {
+			seq1, _ := al.GetSequenceChar(i)
+			for j := i + 1; j < al.NbSequences(); j++ {
+				seq2, _ := al.GetSequenceChar(j)
+				distchan <- seqpairdist{i, j, seq1, seq2, model, weights}
+			}
 		}
+		close(distchan)
+	}()
+
+	var wg sync.WaitGroup
+	for cpu := 0; cpu < cpus; cpu++ {
+		wg.Add(1)
+		go func() {
+			for sp := range distchan {
+				if sp.i == sp.j {
+					outmatrix[sp.i][sp.i] = 0
+				} else {
+					outmatrix[sp.i][sp.j] = model.Distance(sp.seq1, sp.seq2, sp.weights)
+					outmatrix[sp.j][sp.i] = outmatrix[sp.i][sp.j]
+				}
+			}
+			wg.Done()
+		}()
 	}
+	wg.Wait()
+
 	return outmatrix
 }
 

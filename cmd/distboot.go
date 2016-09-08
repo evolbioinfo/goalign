@@ -49,11 +49,11 @@ goalign build distboot -m k2p -i align.fa -o mats.txt`,
 			var weights []float64 = nil
 			if distbootgamma {
 				weights = distance.BuildWeights(align)
-				distMatrix := distance.DistMatrix(align, weights, model)
+				distMatrix := distance.DistMatrix(align, weights, model, rootcpus)
 				writeDistBootMatrix(distMatrix, f)
 			} else {
 				boot := align.BuildBootstrap()
-				distMatrix := distance.DistMatrix(boot, nil, model)
+				distMatrix := distance.DistMatrix(boot, nil, model, rootcpus)
 				writeDistBootMatrix(distMatrix, f)
 			}
 		}
