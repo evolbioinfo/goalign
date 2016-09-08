@@ -1,7 +1,6 @@
 package distance
 
 import (
-	"fmt"
 	"github.com/fredericlemoine/goalign/align"
 	"math"
 )
@@ -61,5 +60,4 @@ func (m *F81Model) InitModel(al align.Alignment, weights []float64) {
 		m.b1 += math.Pow(m.pi[i], 2.0)
 	}
 	m.b1 = 1 - m.b1
-	fmt.Println(m.b1)
 }
