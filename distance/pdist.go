@@ -15,8 +15,8 @@ func NewPDistModel() *PDistModel {
 
 /* computes p-distance between 2 sequences */
 func (m *PDistModel) Distance(seq1 []rune, seq2 []rune, weights []float64) float64 {
-	diff, _ := countDiffs(seq1, seq2, weights)
-	diff = diff / m.numSites
+	diff, total := countDiffs(seq1, seq2, weights)
+	diff = diff / total
 	return diff
 }
 
