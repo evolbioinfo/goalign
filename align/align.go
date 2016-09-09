@@ -35,6 +35,7 @@ type Alignment interface {
 	TrimNames(size int) (map[string]string, error)
 	TrimSequences(trimsize int, fromStart bool) error
 	CharStats() map[rune]int64
+	Alphabet() int
 }
 
 type align struct {
@@ -382,4 +383,8 @@ func (a *align) CharStats() map[rune]int64 {
 	}
 
 	return outmap
+}
+
+func (a *align) Alphabet() int {
+	return a.alphabet
 }
