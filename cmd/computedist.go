@@ -14,6 +14,7 @@ import (
 var computedistSeed int64
 var computedistOutput string
 var computedistModel string
+var computedistRemoveGaps bool
 
 // computedistCmd represents the computedist command
 var computedistCmd = &cobra.Command{
@@ -50,7 +51,7 @@ goalign compute distance -m k2p -i align.fa
 			}
 		}
 
-		model := distance.Model(computedistModel)
+		model := distance.Model(computedistModel, computedistRemoveGaps)
 		for align := range rootaligns {
 			var distMatrix [][]float64 = distance.DistMatrix(align, nil, model, rootcpus)
 			writeDistMatrix(align, distMatrix, f)
@@ -64,6 +65,7 @@ func init() {
 	computedistCmd.PersistentFlags().Int64VarP(&computedistSeed, "seed", "s", time.Now().UTC().UnixNano(), "Initial Random Seed")
 	computedistCmd.PersistentFlags().StringVarP(&computedistOutput, "output", "o", "stdout", "Distance matrix output file")
 	computedistCmd.PersistentFlags().StringVarP(&computedistModel, "model", "m", "k2p", "Model for distance computation")
+	computedistCmd.PersistentFlags().BoolVarP(&computedistRemoveGaps, "rm-gaps", "r", false, "Do not take into account positions containing >=1 gaps")
 }
 
 func writeDistMatrix(al align.Alignment, matrix [][]float64, f *os.File) {

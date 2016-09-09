@@ -6,26 +6,28 @@ import (
 )
 
 type F81Model struct {
-	/* Vector of nt proba */
-	pi            []float64 // proba of each nt
-	b1            float64   // 1- sum(pi^2)
+	pi            []float64 // Vector of nt stationary proba
+	b1            float64   // Parameter for distance computation
 	numSites      float64   // Number of selected sites (no gaps)
 	selectedSites []bool    // true for selected sites
+	removegaps    bool      // If true, we will remove posision with >=1 gaps
 }
 
-func NewF81Model() *F81Model {
+func NewF81Model(removegaps bool) *F81Model {
 	return &F81Model{
-		make([]float64, 4),
+		nil,
 		0,
 		0,
 		nil,
+		removegaps,
 	}
 }
 
 /* computes F81 distance between 2 sequences */
 func (m *F81Model) Distance(seq1 []rune, seq2 []rune, weights []float64) float64 {
-	diff, total := countDiffs(seq1, seq2, weights)
+	diff, total := countDiffs(seq1, seq2, m.selectedSites, weights)
 	diff = diff / total
+
 	dist := -1.0 * m.b1 * math.Log(1.0-diff/m.b1)
 	if dist > 0 {
 		return (dist)
@@ -35,29 +37,11 @@ func (m *F81Model) Distance(seq1 []rune, seq2 []rune, weights []float64) float64
 }
 
 func (m *F81Model) InitModel(al align.Alignment, weights []float64) {
-	m.numSites, m.selectedSites = selectedSites(al, weights)
-	total := 0.0
-	for i := 0; i < al.NbSequences(); i++ {
-		seq1, _ := al.GetSequenceChar(i)
-		for _, n := range seq1 {
-			if m.selectedSites[n] {
-				switch n {
-				case 'A':
-					m.pi[0]++
-				case 'C':
-					m.pi[1]++
-				case 'G':
-					m.pi[2]++
-				case 'T':
-					m.pi[3]++
-				}
-				total++
-			}
-		}
-	}
+	m.numSites, m.selectedSites = selectedSites(al, weights, m.removegaps)
+	m.b1 = 0.0
+	m.pi = probaNt(al, m.selectedSites, weights)
 	for i, _ := range m.pi {
-		m.pi[i] /= total
-		m.b1 += math.Pow(m.pi[i], 2.0)
+		m.b1 += m.pi[i] * m.pi[i]
 	}
 	m.b1 = 1 - m.b1
 }

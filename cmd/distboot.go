@@ -1,10 +1,8 @@
 package cmd
 
 import (
-	"errors"
 	"fmt"
 	"github.com/fredericlemoine/goalign/distance"
-	"github.com/fredericlemoine/goalign/io"
 	"github.com/spf13/cobra"
 	"math/rand"
 	"os"
@@ -16,6 +14,7 @@ var distbootOutput string
 var distbootnb int
 var distbootmodel string
 var distbootgamma bool
+var distboolRemoveGaps bool
 
 // distbootCmd represents the distboot command
 var distbootCmd = &cobra.Command{
@@ -38,13 +37,10 @@ goalign build distboot -m k2p -i align.fa -o mats.txt`,
 
 	Run: func(cmd *cobra.Command, args []string) {
 		rand.Seed(distbootSeed)
-		if distbootmodel != "k2p" {
-			io.ExitWithMessage(errors.New("Only k2p is implemented so far"))
-		}
 		f := openWriteFile(distbootOutput)
 		align := <-rootaligns
 
-		model := distance.Model(distbootmodel)
+		model := distance.Model(distbootmodel, distboolRemoveGaps)
 		for i := 0; i < distbootnb; i++ {
 			var weights []float64 = nil
 			if distbootgamma {
@@ -68,7 +64,7 @@ func init() {
 	distbootCmd.PersistentFlags().StringVarP(&distbootmodel, "model", "m", "k2p", "Model for distance computation")
 	distbootCmd.PersistentFlags().IntVarP(&distbootnb, "nboot", "n", 1, "Number of bootstrap replicates to build")
 	distbootCmd.PersistentFlags().BoolVarP(&distbootgamma, "gamma", "g", false, "Bootstraps are done by weighting alignment using gamma generated weights")
-
+	distbootCmd.PersistentFlags().BoolVarP(&distboolRemoveGaps, "rm-gaps", "r", false, "Do not take into account positions containing >=1 gaps")
 }
 
 func writeDistBootMatrix(matrix [][]float64, f *os.File) {
@@ -76,7 +72,7 @@ func writeDistBootMatrix(matrix [][]float64, f *os.File) {
 	for i := 0; i < len(matrix); i++ {
 		f.WriteString(fmt.Sprintf("%d", i))
 		for j := 0; j < len(matrix); j++ {
-			f.WriteString(fmt.Sprintf("\t%f", matrix[i][j]))
+			f.WriteString(fmt.Sprintf("\t%.12f", matrix[i][j]))
 		}
 		f.WriteString("\n")
 	}
