@@ -241,9 +241,11 @@ func probaNt2Seqs(seq1 []rune, seq2 []rune, selectedSites []bool, weights []floa
 		if weights != nil {
 			w = weights[pos]
 		}
-		if isNuc(seq1[pos]) && isNuc(seq2[pos]) && selectedSites[pos] {
-			pi[indexNt(seq1[pos])] += w
-			pi[indexNt(seq2[pos])] += w
+		if selectedSites[pos] {
+			if isNuc(seq1[pos]) && isNuc(seq2[pos]) {
+				pi[indexNt(seq1[pos])] += w
+				pi[indexNt(seq2[pos])] += w
+			}
 			total += 2 * w
 		}
 	}
