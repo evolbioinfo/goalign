@@ -7,19 +7,15 @@ import (
 
 type TN82Model struct {
 	/* Vector of nt proba */
-	pi            []float64   // proba of each nt
-	psi           [][]float64 // proba of each nt pair
-	b1            float64     //
-	numSites      float64     // Number of selected sites (no gaps)
-	selectedSites []bool      // true for selected sites
-	removegaps    bool        // If true, we will remove posision with >=1 gaps
+	pi            []float64 // proba of each nt
+	numSites      float64   // Number of selected sites (no gaps)
+	selectedSites []bool    // true for selected sites
+	removegaps    bool      // If true, we will remove posision with >=1 gaps
 }
 
 func NewTN82Model(removegaps bool) *TN82Model {
 	return &TN82Model{
 		nil,
-		nil,
-		0,
 		0,
 		nil,
 		removegaps,
