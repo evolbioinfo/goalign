@@ -31,6 +31,8 @@ Available Distances:
 - jc   : Juke-Cantor
 - k2p  : Kimura 2 Parameters
 - f81  : Felsenstein 81
+- f84  : Felsenstein 84
+- tn93 : Tamura and Nei 1993
 
 For example:
 
