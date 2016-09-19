@@ -79,6 +79,9 @@ func BuildWeights(al align.Alignment) []float64 {
 /* Compute a matrix distance, with weights associated to each alignment positions */
 /* If weights == nil, then all weights are considered 1 */
 func DistMatrix(al align.Alignment, weights []float64, model DistModel, cpus int) [][]float64 {
+	if al.Alphabet() != align.NUCLEOTIDS {
+		io.ExitWithMessage(errors.New("The alignment is not nucleotidic"))
+	}
 	model.InitModel(al, weights)
 	distchan := make(chan seqpairdist, 100)
 
