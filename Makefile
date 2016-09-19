@@ -14,10 +14,11 @@ test:
 	${GO_EXECUTABLE} test github.com/fredericlemoine/goalign/tests/
 
 deploy:
-	mkdir -p deploy
-	env GOOS=windows GOARCH=amd64 ${GO_EXECUTABLE} build -o deploy/goalign_amd64.exe -ldflags "-X github.com/fredericlemoine/goalign/cmd.Version=${VERSION}" github.com/fredericlemoine/goalign
-	env GOOS=windows GOARCH=386 ${GO_EXECUTABLE} build -o deploy/goalign_386.exe -ldflags "-X github.com/fredericlemoine/goalign/cmd.Version=${VERSION}" github.com/fredericlemoine/goalign
-	env GOOS=darwin GOARCH=amd64 ${GO_EXECUTABLE} build -o deploy/goalign_amd64_darwin -ldflags "-X github.com/fredericlemoine/goalign/cmd.Version=${VERSION}" github.com/fredericlemoine/goalign
-	env GOOS=darwin GOARCH=386 ${GO_EXECUTABLE} build -o deploy/goalign_386_darwin -ldflags "-X github.com/fredericlemoine/goalign/cmd.Version=${VERSION}" github.com/fredericlemoine/goalign
-	env GOOS=linux GOARCH=amd64 ${GO_EXECUTABLE} build -o deploy/goalign_amd64_linux -ldflags "-X github.com/fredericlemoine/goalign/cmd.Version=${VERSION}" github.com/fredericlemoine/goalign
-	env GOOS=linux GOARCH=386 ${GO_EXECUTABLE} build -o deploy/goalign_386_linux -ldflags "-X github.com/fredericlemoine/goalign/cmd.Version=${VERSION}" github.com/fredericlemoine/goalign
+	mkdir -p deploy/${VERSION}
+	env GOOS=windows GOARCH=amd64 ${GO_EXECUTABLE} build -o deploy/${VERSION}/goalign_amd64.exe -ldflags "-X github.com/fredericlemoine/goalign/cmd.Version=${VERSION}" github.com/fredericlemoine/goalign
+	env GOOS=windows GOARCH=386 ${GO_EXECUTABLE} build -o deploy/${VERSION}/goalign_386.exe -ldflags "-X github.com/fredericlemoine/goalign/cmd.Version=${VERSION}" github.com/fredericlemoine/goalign
+	env GOOS=darwin GOARCH=amd64 ${GO_EXECUTABLE} build -o deploy/${VERSION}/goalign_amd64_darwin -ldflags "-X github.com/fredericlemoine/goalign/cmd.Version=${VERSION}" github.com/fredericlemoine/goalign
+	env GOOS=darwin GOARCH=386 ${GO_EXECUTABLE} build -o deploy/${VERSION}/goalign_386_darwin -ldflags "-X github.com/fredericlemoine/goalign/cmd.Version=${VERSION}" github.com/fredericlemoine/goalign
+	env GOOS=linux GOARCH=amd64 ${GO_EXECUTABLE} build -o deploy/${VERSION}/goalign_amd64_linux -ldflags "-X github.com/fredericlemoine/goalign/cmd.Version=${VERSION}" github.com/fredericlemoine/goalign
+	env GOOS=linux GOARCH=386 ${GO_EXECUTABLE} build -o deploy/${VERSION}/goalign_386_linux -ldflags "-X github.com/fredericlemoine/goalign/cmd.Version=${VERSION}" github.com/fredericlemoine/goalign
+	tar -czvf deploy/${VERSION}.tar.gz deploy/${VERSION}
