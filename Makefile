@@ -21,4 +21,4 @@ deploy:
 	env GOOS=darwin GOARCH=386 ${GO_EXECUTABLE} build -o deploy/${VERSION}/goalign_386_darwin -ldflags "-X github.com/fredericlemoine/goalign/cmd.Version=${VERSION}" github.com/fredericlemoine/goalign
 	env GOOS=linux GOARCH=amd64 ${GO_EXECUTABLE} build -o deploy/${VERSION}/goalign_amd64_linux -ldflags "-X github.com/fredericlemoine/goalign/cmd.Version=${VERSION}" github.com/fredericlemoine/goalign
 	env GOOS=linux GOARCH=386 ${GO_EXECUTABLE} build -o deploy/${VERSION}/goalign_386_linux -ldflags "-X github.com/fredericlemoine/goalign/cmd.Version=${VERSION}" github.com/fredericlemoine/goalign
-	tar -czvf deploy/${VERSION}.tar.gz deploy/${VERSION}
+	tar -czvf deploy/${VERSION}.tar.gz --directory="deploy" ${VERSION}
