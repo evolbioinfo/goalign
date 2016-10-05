@@ -93,7 +93,7 @@ goalign build seqboot -i align.phylip -p -n 500 -o boot_
 						boot.ShuffleSequences()
 					}
 					if rootphylip {
-						bootstring = phylip.WriteAlignment(boot)
+						bootstring = phylip.WriteAlignment(boot, false)
 					} else {
 						bootstring = fasta.WriteAlignment(boot)
 					}

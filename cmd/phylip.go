@@ -4,6 +4,8 @@ import (
 	"github.com/spf13/cobra"
 )
 
+var phylipstrict bool
+
 // phylipCmd represents the phylip command
 var phylipCmd = &cobra.Command{
 	Use:   "phylip",
@@ -23,7 +25,7 @@ goalign reformat phylip -i align.fasta
 		f := openWriteFile(reformatOutput)
 		for al := range rootaligns {
 			//fmt.Println("ALIGN" + fmt.Sprintf("%d", al.NbSequences()))
-			writeAlignPhylip(al, f)
+			writeAlignPhylip(al, f, phylipstrict)
 		}
 		f.Close()
 	},
@@ -31,4 +33,5 @@ goalign reformat phylip -i align.fasta
 
 func init() {
 	reformatCmd.AddCommand(phylipCmd)
+	reformatCmd.PersistentFlags().BoolVarP(&phylipstrict, "strict", "s", false, "If it is strict phylip format")
 }

@@ -112,7 +112,7 @@ func initConfig() {
 
 func writeAlign(al align.Alignment, f *os.File) {
 	if rootphylip {
-		f.WriteString(phylip.WriteAlignment(al))
+		f.WriteString(phylip.WriteAlignment(al, false))
 	} else {
 		f.WriteString(fasta.WriteAlignment(al))
 	}
@@ -122,8 +122,8 @@ func writeAlignFasta(al align.Alignment, f *os.File) {
 	f.WriteString(fasta.WriteAlignment(al))
 }
 
-func writeAlignPhylip(al align.Alignment, f *os.File) {
-	f.WriteString(phylip.WriteAlignment(al))
+func writeAlignPhylip(al align.Alignment, f *os.File, strict bool) {
+	f.WriteString(phylip.WriteAlignment(al, strict))
 }
 
 func openWriteFile(file string) *os.File {

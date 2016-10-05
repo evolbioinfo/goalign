@@ -18,7 +18,7 @@ func min_int(a int, b int) int {
 	return b
 }
 
-func WriteAlignment(al align.Alignment) string {
+func WriteAlignment(al align.Alignment, strict bool) string {
 	var buf bytes.Buffer
 	var header bool = true
 	cursize := 0
@@ -29,7 +29,11 @@ func WriteAlignment(al align.Alignment) string {
 		}
 		al.IterateChar(func(name string, seq []rune) {
 			if header {
-				buf.WriteString(name)
+				if strict {
+					buf.WriteString(fmt.Sprintf("%-10s", name))
+				} else {
+					buf.WriteString(name)
+				}
 				buf.WriteString("  ")
 			}
 
