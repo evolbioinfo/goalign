@@ -126,6 +126,10 @@ func writeAlignPhylip(al align.Alignment, f *os.File, strict bool) {
 	f.WriteString(phylip.WriteAlignment(al, strict))
 }
 
+func writeUnAlignFasta(al align.Alignment, f *os.File) {
+	f.WriteString(fasta.WriteSequences(al))
+}
+
 func openWriteFile(file string) *os.File {
 	if file == "stdout" || file == "-" {
 		return os.Stdout
