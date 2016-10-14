@@ -43,16 +43,13 @@ func WriteSequences(al align.Alignment) string {
 		buf.WriteString(name)
 		buf.WriteString("\n")
 		nbchar := 0
-		for i := 0; i < len(seq); i += FASTA_LINE {
-			end := min_int(i+FASTA_LINE, len(seq))
-			for j := i; j < end; j++ {
-				if seq[j] != '-' {
-					buf.WriteRune(seq[j])
-					nbchar++
-					if nbchar == FASTA_LINE {
-						buf.WriteString("\n")
-						nbchar = 0
-					}
+		for i := 0; i < len(seq); i++ {
+			if seq[i] != '-' {
+				buf.WriteRune(seq[i])
+				nbchar++
+				if nbchar == FASTA_LINE {
+					buf.WriteString("\n")
+					nbchar = 0
 				}
 			}
 		}
