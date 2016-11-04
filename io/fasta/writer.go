@@ -28,6 +28,7 @@ func WriteAlignment(al align.Alignment) string {
 				buf.WriteRune(seq[j])
 			}
 		}
+		buf.WriteRune('\n')
 	})
 	return buf.String()
 }
