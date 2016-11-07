@@ -13,7 +13,7 @@ var distbootSeed int64
 var distbootOutput string
 var distbootnb int
 var distbootmodel string
-var distbootgamma bool
+var distbootcontinuous bool
 var distboolRemoveGaps bool
 
 // distbootCmd represents the distboot command
@@ -35,7 +35,11 @@ Available Distances:
 
 For example:
 
-goalign build distboot -m k2p -i align.fa -o mats.txt`,
+goalign build distboot -m k2p -i align.fa -o mats.txt
+
+If -c is given, then random continuous weights are associated to all sites. 
+Weights follow a Dirichlet distribution D(n;1,...,1)
+`,
 
 	Run: func(cmd *cobra.Command, args []string) {
 		rand.Seed(distbootSeed)
@@ -45,8 +49,8 @@ goalign build distboot -m k2p -i align.fa -o mats.txt`,
 		model := distance.Model(distbootmodel, distboolRemoveGaps)
 		for i := 0; i < distbootnb; i++ {
 			var weights []float64 = nil
-			if distbootgamma {
-				weights = distance.BuildWeights(align)
+			if distbootcontinuous {
+				weights = distance.BuildWeightsDirichlet(align)
 				distMatrix := distance.DistMatrix(align, weights, model, rootcpus)
 				writeDistBootMatrix(distMatrix, f)
 			} else {
@@ -65,7 +69,7 @@ func init() {
 	distbootCmd.PersistentFlags().StringVarP(&distbootOutput, "output", "o", "stdout", "Distance matrices output file")
 	distbootCmd.PersistentFlags().StringVarP(&distbootmodel, "model", "m", "k2p", "Model for distance computation")
 	distbootCmd.PersistentFlags().IntVarP(&distbootnb, "nboot", "n", 1, "Number of bootstrap replicates to build")
-	distbootCmd.PersistentFlags().BoolVarP(&distbootgamma, "gamma", "g", false, "Bootstraps are done by weighting alignment using gamma generated weights")
+	distbootCmd.PersistentFlags().BoolVarP(&distbootcontinuous, "continuous", "c", false, "Bootstraps are done by weighting alignment with continuous weights (dirichlet)")
 	distbootCmd.PersistentFlags().BoolVarP(&distboolRemoveGaps, "rm-gaps", "r", false, "Do not take into account positions containing >=1 gaps")
 }
 

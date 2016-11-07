@@ -12,8 +12,12 @@ import (
 // tntweightbootCmd represents the tntweightboot command
 var tntweightbootCmd = &cobra.Command{
 	Use:   "tntweightboot",
-	Short: "",
-	Long:  ``,
+	Short: "Generates a data file to give as TNT input, with continuous weight for sites",
+	Long: `Generates a data file to give as TNT input, with continuous weight for sites
+
+Weights follow a Dirichlet distribution D(n;1,...,1)
+
+`,
 	Run: func(cmd *cobra.Command, args []string) {
 		rand.Seed(weightbootSeed)
 
@@ -29,7 +33,7 @@ var tntweightbootCmd = &cobra.Command{
 				f = openWriteFile(weightbootOutput)
 			}
 			var weights []float64 = nil
-			weights = distance.BuildWeights(al)
+			weights = distance.BuildWeightsDirichlet(al)
 			minw := -1.0
 			maxw := -1.0
 			for _, w := range weights {

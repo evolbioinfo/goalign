@@ -53,8 +53,8 @@ func Model(modelType string, removegaps bool) DistModel {
 	return model
 }
 
-/* Return a normalized vector of weights */
-func BuildWeights(al align.Alignment) []float64 {
+/* Return a normalized vector of weights following a Gamma distribution*/
+func BuildWeightsGamma(al align.Alignment) []float64 {
 	outweights := make([]float64, al.Length())
 	// Parameters of the binomial
 	n := float64(al.Length())
@@ -73,6 +73,18 @@ func BuildWeights(al align.Alignment) []float64 {
 		outweights[i] = outweights[i] * float64(al.Length()) / total
 	}
 
+	return outweights
+}
+
+/* Returns a vector of weights following a Dirichlet distribution D(n ; 1,...,1)
+   with n alignment length
+*/
+func BuildWeightsDirichlet(al align.Alignment) []float64 {
+	alpha := make([]float64, al.Length(), al.Length())
+	for i := 0; i < al.Length(); i++ {
+		alpha[i] = 1
+	}
+	outweights := stats.Dirichlet(float64(al.Length()), alpha...)
 	return outweights
 }
 

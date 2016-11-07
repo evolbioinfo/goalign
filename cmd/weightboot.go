@@ -15,10 +15,12 @@ var weightbootnb int
 // weightbootCmd represents the weightboot command
 var weightbootCmd = &cobra.Command{
 	Use:   "weightboot",
-	Short: "generate weights for all positions of the input alignment",
-	Long: `generate weights for all positions of the input alignment
+	Short: "generate continous weights for all positions of the input alignment",
+	Long: `generate continous weights for all positions of the input alignment
 
-If the input alignment contains several alignments, will process the first one only
+If the input alignment contains several alignments, will process the first one only.
+
+Weights follow a Dirichlet distribtion D(n;1,...,1)
 
 `,
 	Run: func(cmd *cobra.Command, args []string) {
@@ -29,7 +31,7 @@ If the input alignment contains several alignments, will process the first one o
 		f := openWriteFile(weightbootOutput)
 		for i := 0; i < weightbootnb; i++ {
 			var weights []float64 = nil
-			weights = distance.BuildWeights(al)
+			weights = distance.BuildWeightsDirichlet(al)
 			for i, w := range weights {
 				if i > 0 {
 					f.WriteString("\t")
