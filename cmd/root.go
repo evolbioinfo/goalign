@@ -7,6 +7,7 @@ import (
 	"github.com/fredericlemoine/goalign/align"
 	"github.com/fredericlemoine/goalign/io"
 	"github.com/fredericlemoine/goalign/io/fasta"
+	"github.com/fredericlemoine/goalign/io/nexus"
 	"github.com/fredericlemoine/goalign/io/phylip"
 	"github.com/spf13/cobra"
 	"os"
@@ -124,6 +125,10 @@ func writeAlignFasta(al align.Alignment, f *os.File) {
 
 func writeAlignPhylip(al align.Alignment, f *os.File, strict bool) {
 	f.WriteString(phylip.WriteAlignment(al, strict))
+}
+
+func writeAlignNexus(al align.Alignment, f *os.File) {
+	f.WriteString(nexus.WriteAlignment(al))
 }
 
 func writeUnAlignFasta(al align.Alignment, f *os.File) {
