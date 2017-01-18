@@ -346,7 +346,7 @@ func DetectAlphabet(seq string) int {
 	isaa := true
 	isnt := true
 
-	for _, nt := range seq {
+	for _, nt := range strings.ToUpper(seq) {
 		couldbent := false
 		couldbeaa := false
 		switch nt {
