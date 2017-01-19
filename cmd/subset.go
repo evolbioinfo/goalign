@@ -12,6 +12,7 @@ import (
 
 var namefile string = "stdin"
 var nameout string = "stdout"
+var revert bool = false
 
 // subsetCmd represents the subset command
 var subsetCmd = &cobra.Command{
@@ -38,7 +39,18 @@ If -f is given, it does not take into account sequence names
 given in the comand line.
 `,
 	Run: func(cmd *cobra.Command, args []string) {
-		subset := parseNameFile(namefile)
+		var subset map[string]int
+		// If input file
+		if namefile != "stdin" {
+			subset = parseNameFile(namefile)
+		} else {
+			subset = make(map[string]int)
+			// Else we look at cli args
+			for _, name := range args {
+				subset[name] = 1
+			}
+		}
+
 		out := openWriteFile(nameout)
 		for al := range rootaligns {
 			var filtered align.Alignment = nil
@@ -47,7 +59,9 @@ given in the comand line.
 					filtered = align.NewAlign(align.DetectAlphabet(sequence))
 				}
 				_, ok := subset[name]
-				if ok {
+				if !revert && ok {
+					filtered.AddSequence(name, sequence, "")
+				} else if revert && !ok {
 					filtered.AddSequence(name, sequence, "")
 				}
 			})
@@ -95,5 +109,6 @@ func init() {
 	RootCmd.AddCommand(subsetCmd)
 	subsetCmd.PersistentFlags().StringVarP(&namefile, "name-file", "f", "stdin", "File containing names of sequences to keep")
 	subsetCmd.PersistentFlags().StringVarP(&nameout, "output", "o", "stdout", "Alignment output file")
+	subsetCmd.PersistentFlags().BoolVarP(&revert, "revert", "r", false, "If true, will remove given sequences instead of keeping only them")
 
 }
