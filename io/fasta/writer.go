@@ -22,11 +22,11 @@ func WriteAlignment(al align.Alignment) string {
 		buf.WriteString(">")
 		buf.WriteString(name)
 		buf.WriteString("\n")
-		for i := 0; i < len(seq); i += FASTA_LINE {
-			end := min_int(i+FASTA_LINE, len(seq))
-			for j := i; j < end; j++ {
-				buf.WriteRune(seq[j])
+		for i := 0; i < len(seq); i++ {
+			if i%FASTA_LINE == 0 && i > 0 {
+				buf.WriteString("\n")
 			}
+			buf.WriteRune(seq[i])
 		}
 		buf.WriteRune('\n')
 	})
