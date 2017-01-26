@@ -1,5 +1,10 @@
 package align
 
+import (
+	"errors"
+	"math/rand"
+)
+
 type Sequence interface {
 	Sequence() string
 	SequenceChar() []rune
@@ -34,4 +39,19 @@ func (s *seq) Name() string {
 
 func (s *seq) Comment() string {
 	return s.comment
+}
+
+func RandomSequence(alphabet, length int) ([]rune, error) {
+	seq := make([]rune, length)
+	for i := 0; i < length; i++ {
+		switch alphabet {
+		case AMINOACIDS:
+			seq[i] = stdaminoacid[rand.Intn(len(stdaminoacid))]
+		case NUCLEOTIDS:
+			seq[i] = stdnucleotides[rand.Intn(len(stdnucleotides))]
+		default:
+			return nil, errors.New("Unexpected sequence alphabet type")
+		}
+	}
+	return seq, nil
 }

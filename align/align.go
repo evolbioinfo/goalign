@@ -16,6 +16,9 @@ const (
 
 )
 
+var stdaminoacid = []rune{'A', 'R', 'N', 'D', 'C', 'Q', 'E', 'G', 'H', 'I', 'L', 'K', 'M', 'F', 'P', 'S', 'T', 'W', 'Y', 'V'}
+var stdnucleotides = []rune{'A', 'C', 'G', 'T'}
+
 type Alignment interface {
 	AddSequence(name string, sequence string, comment string) error
 	AddSequenceChar(name string, sequence []rune, comment string) error
@@ -34,6 +37,7 @@ type Alignment interface {
 	Recombine(rate float64, lenprop float64)
 	TrimNames(size int) (map[string]string, error)
 	TrimSequences(trimsize int, fromStart bool) error
+	AppendSeqIdentifier(identifier string, right bool)
 	CharStats() map[rune]int64
 	Alphabet() int
 }
@@ -306,6 +310,21 @@ func (a *align) TrimSequences(trimsize int, fromStart bool) error {
 	return nil
 }
 
+// Append a string to all sequence names of the alignment
+// If right is true, then append it to the right of each names,
+// otherwise, appends it to the left
+func (a *align) AppendSeqIdentifier(identifier string, right bool) {
+	if len(identifier) != 0 {
+		for _, seq := range a.seqs {
+			if right {
+				seq.name = seq.name + identifier
+			} else {
+				seq.name = identifier + seq.name
+			}
+		}
+	}
+}
+
 // Samples randomly a subset of the sequences
 // And returns this new alignment
 // If nb < 1 or nb > nbsequences returns nil and an error
@@ -387,4 +406,17 @@ func (a *align) CharStats() map[rune]int64 {
 
 func (a *align) Alphabet() int {
 	return a.alphabet
+}
+
+func RandomAlignment(alphabet, length, nbseq int) (Alignment, error) {
+	al := NewAlign(alphabet)
+	for i := 0; i < nbseq; i++ {
+		name := fmt.Sprintf("Seq%04d", i)
+		if seq, err := RandomSequence(alphabet, length); err != nil {
+			return nil, err
+		} else {
+			al.AddSequenceChar(name, seq, "")
+		}
+	}
+	return al, nil
 }
