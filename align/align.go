@@ -7,13 +7,14 @@ import (
 	"github.com/fredericlemoine/goalign/io"
 	"math"
 	"math/rand"
+	"sort"
 	"strings"
 )
 
 const (
 	AMINOACIDS = 0 // Amino acid sequence alphabet
 	NUCLEOTIDS = 1 // Nucleotid sequence alphabet
-
+	GAP        = '-'
 )
 
 var stdaminoacid = []rune{'A', 'R', 'N', 'D', 'C', 'Q', 'E', 'G', 'H', 'I', 'L', 'K', 'M', 'F', 'P', 'S', 'T', 'W', 'Y', 'V'}
@@ -27,10 +28,12 @@ type Alignment interface {
 	GetSequenceName(ith int) (string, bool)
 	Iterate(it func(name string, sequence string))
 	IterateChar(it func(name string, sequence []rune))
+	IterateAll(it func(name string, sequence []rune, comment string))
 	NbSequences() int
 	Length() int
 	ShuffleSequences()
 	ShuffleSites(rate float64)
+	RemoveGaps(all bool)
 	Sample(nb int) (Alignment, error)
 	BuildBootstrap() Alignment
 	Swap(rate float64)
@@ -40,6 +43,7 @@ type Alignment interface {
 	AppendSeqIdentifier(identifier string, right bool)
 	CharStats() map[rune]int64
 	Alphabet() int
+	Clone() (Alignment, error)
 }
 
 type align struct {
@@ -73,6 +77,12 @@ func (a *align) Iterate(it func(name string, sequence string)) {
 func (a *align) IterateChar(it func(name string, sequence []rune)) {
 	for _, seq := range a.seqs {
 		it(seq.name, seq.sequence)
+	}
+}
+
+func (a *align) IterateAll(it func(name string, sequence []rune, comment string)) {
+	for _, seq := range a.seqs {
+		it(seq.name, seq.sequence, seq.comment)
 	}
 }
 
@@ -168,6 +178,33 @@ func (a *align) ShuffleSites(rate float64) {
 			a.seqs[r].sequence[site] = temp
 		}
 	}
+}
+
+// Removes positions constituted of Gaps
+// if all is false, then removes positions constituted of at least one gap
+// if all is true, then removes positions constituted of only gaps
+func (a *align) RemoveGaps(all bool) {
+	var nbgaps int
+	toremove := make([]int, 0, 10)
+	for site := 0; site < a.Length(); site++ {
+		nbgaps = 0
+		for seq := 0; seq < a.NbSequences(); seq++ {
+			if a.seqs[seq].sequence[site] == GAP {
+				nbgaps++
+			}
+		}
+		if (all && nbgaps == a.NbSequences()) || (!all && nbgaps > 0) {
+			toremove = append(toremove, site)
+		}
+	}
+	/* Now we remove gap positions, starting at the end */
+	sort.Ints(toremove)
+	for i := (len(toremove) - 1); i >= 0; i-- {
+		for seq := 0; seq < a.NbSequences(); seq++ {
+			a.seqs[seq].sequence = append(a.seqs[seq].sequence[:toremove[i]], a.seqs[seq].sequence[toremove[i]+1:]...)
+		}
+	}
+	a.length -= len(toremove)
 }
 
 // Swaps a rate of the sequences together
@@ -419,4 +456,18 @@ func RandomAlignment(alphabet, length, nbseq int) (Alignment, error) {
 		}
 	}
 	return al, nil
+}
+
+func (a *align) Clone() (Alignment, error) {
+	c := NewAlign(a.Alphabet())
+	var err error
+	a.IterateAll(func(name string, sequence []rune, comment string) {
+		newseq := make([]rune, 0, len(sequence))
+		newseq = append(newseq, sequence...)
+		err = c.AddSequenceChar(name, newseq, comment)
+		if err != nil {
+			return
+		}
+	})
+	return c, err
 }
