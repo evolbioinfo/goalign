@@ -7,6 +7,7 @@ import (
 	"github.com/fredericlemoine/goalign/io"
 	"github.com/fredericlemoine/goalign/stats"
 	"sync"
+	"unicode"
 )
 
 type DistModel interface {
@@ -190,8 +191,8 @@ func countMutations(seq1 []rune, seq2 []rune, selectedSites []bool, weights []fl
 
 /* Count number of mutations and associate a weight to them */
 func countDiffs(seq1 []rune, seq2 []rune, selectedSites []bool, weights []float64) (nbdiffs float64, total float64) {
-	nbdiffs = 0
-	total = 0
+	nbdiffs = 0.0
+	total = 0.0
 	for i := 0; i < len(seq1); i++ {
 		w := 1.0
 		if weights != nil {
@@ -320,7 +321,7 @@ G=2
 T=3
 */
 func indexNt(nt rune) int {
-	switch nt {
+	switch unicode.ToUpper(nt) {
 	case 'A':
 		return 0
 	case 'C':
@@ -335,7 +336,8 @@ func indexNt(nt rune) int {
 }
 
 func isNuc(r rune) bool {
-	return r == 'A' || r == 'C' || r == 'G' || r == 'T'
+	up := unicode.ToUpper(r)
+	return up == 'A' || up == 'C' || up == 'G' || up == 'T'
 }
 
 /* Returns the sites of the alignments that contains only nucleotides and no gaps */
