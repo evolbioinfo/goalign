@@ -183,3 +183,54 @@ func TestClone2(t *testing.T) {
 		i++
 	})
 }
+
+func TestAvgAlleles(t *testing.T) {
+	a, err := RandomAlignment(AMINOACIDS, 300, 300)
+	if err != nil {
+		t.Error(err)
+
+	}
+
+	a.IterateChar(func(name string, sequence []rune) {
+		for j, _ := range sequence {
+			sequence[j] = 'A'
+		}
+	})
+
+	if a.AvgAllelesPerSite() != 1 {
+		t.Error("There should be 1 allele per site in this alignment")
+	}
+}
+
+func TestAvgAlleles2(t *testing.T) {
+	a, err := RandomAlignment(AMINOACIDS, 300, 300)
+	if err != nil {
+		t.Error(err)
+
+	}
+
+	i := 0
+	a.IterateChar(func(name string, sequence []rune) {
+		for j, _ := range sequence {
+			/* One only gap sequence */
+			if i == 10 {
+				sequence[j] = GAP
+			} else if i <= 75 {
+				sequence[j] = 'A'
+			} else if i <= 150 {
+				sequence[j] = 'C'
+			} else if i <= 225 {
+				sequence[j] = 'G'
+			} else {
+				sequence[j] = 'T'
+			}
+		}
+		// Add a gap at a whole position
+		sequence[50] = GAP
+		i++
+	})
+	fmt.Println(a.AvgAllelesPerSite())
+	if a.AvgAllelesPerSite() != 4 {
+		t.Error("There should be 4 allele per site in this alignment")
+	}
+}

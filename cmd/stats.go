@@ -24,6 +24,7 @@ If the input alignment contains several alignments, will process all of them
 		for al := range rootaligns {
 			fmt.Fprintf(os.Stdout, "length\t%d\n", al.Length())
 			fmt.Fprintf(os.Stdout, "nseqs\t%d\n", al.NbSequences())
+			fmt.Fprintf(os.Stdout, "avgalleles\t%.4f\n", al.AvgAllelesPerSite())
 			printCharStats(al)
 		}
 	},

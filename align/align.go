@@ -41,6 +41,7 @@ type Alignment interface {
 	TrimNames(size int) (map[string]string, error)
 	TrimSequences(trimsize int, fromStart bool) error
 	AppendSeqIdentifier(identifier string, right bool)
+	AvgAllelesPerSite() float64
 	CharStats() map[rune]int64
 	Alphabet() int
 	Clone() (Alignment, error)
@@ -470,4 +471,25 @@ func (a *align) Clone() (Alignment, error) {
 		}
 	})
 	return c, err
+}
+
+func (a *align) AvgAllelesPerSite() float64 {
+	nballeles := 0
+	nbsites := 0
+	for site := 0; site < a.Length(); site++ {
+		alleles := make(map[rune]bool)
+		onlygap := true
+		for seq := 0; seq < a.NbSequences(); seq++ {
+			s := a.seqs[seq].sequence[site]
+			if s != GAP {
+				alleles[s] = true
+				onlygap = false
+			}
+		}
+		if !onlygap {
+			nbsites++
+		}
+		nballeles += len(alleles)
+	}
+	return float64(nballeles) / float64(nbsites)
 }
