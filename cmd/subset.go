@@ -3,16 +3,19 @@ package cmd
 import (
 	"bufio"
 	"compress/gzip"
+	"os"
+	"regexp"
+	"strings"
+
 	"github.com/fredericlemoine/goalign/align"
 	"github.com/fredericlemoine/goalign/io"
 	"github.com/spf13/cobra"
-	"os"
-	"strings"
 )
 
 var namefile string = "stdin"
 var nameout string = "stdout"
 var revert bool = false
+var regexmatch = false
 
 // subsetCmd represents the subset command
 var subsetCmd = &cobra.Command{
@@ -52,13 +55,24 @@ given in the comand line.
 		}
 
 		out := openWriteFile(nameout)
+		regexps := make([]*regexp.Regexp, 0, 10)
+		if regexmatch {
+			for k, _ := range subset {
+				if r, err := regexp.Compile(k); err == nil {
+					regexps = append(regexps, r)
+				} else {
+					io.ExitWithMessage(err)
+				}
+			}
+		}
+
 		for al := range rootaligns {
 			var filtered align.Alignment = nil
 			al.Iterate(func(name string, sequence string) {
 				if filtered == nil {
 					filtered = align.NewAlign(align.DetectAlphabet(sequence))
 				}
-				_, ok := subset[name]
+				ok := matchSeqName(name, subset, regexps, regexmatch)
 				if !revert && ok {
 					filtered.AddSequence(name, sequence, "")
 				} else if revert && !ok {
@@ -105,10 +119,27 @@ func parseNameFile(file string) map[string]int {
 	return subset
 }
 
+// Returns true if the name is in the map
+// if regexp is true then the mathc uses regexp
+// otherwise, it is an exact match
+func matchSeqName(name string, subset map[string]int, regexps []*regexp.Regexp, regexp bool) bool {
+	ok := false
+	if regexp {
+		for _, r := range regexps {
+			if ok = r.MatchString(name); ok {
+				break
+			}
+		}
+	} else {
+		_, ok = subset[name]
+	}
+	return ok
+}
+
 func init() {
 	RootCmd.AddCommand(subsetCmd)
 	subsetCmd.PersistentFlags().StringVarP(&namefile, "name-file", "f", "stdin", "File containing names of sequences to keep")
 	subsetCmd.PersistentFlags().StringVarP(&nameout, "output", "o", "stdout", "Alignment output file")
+	subsetCmd.PersistentFlags().BoolVarP(&regexmatch, "regexp", "e", false, "If sequence names are given as regexp patterns")
 	subsetCmd.PersistentFlags().BoolVarP(&revert, "revert", "r", false, "If true, will remove given sequences instead of keeping only them")
-
 }
