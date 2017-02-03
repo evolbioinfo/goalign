@@ -15,6 +15,7 @@ var computedistSeed int64
 var computedistOutput string
 var computedistModel string
 var computedistRemoveGaps bool
+var computedistAverage bool
 
 // computedistCmd represents the computedist command
 var computedistCmd = &cobra.Command{
@@ -39,6 +40,8 @@ For example:
 goalign compute distance -m k2p -i align.ph -p
 goalign compute distance -m k2p -i align.fa
 
+if -a is given: display only the average distance
+
 `,
 	Run: func(cmd *cobra.Command, args []string) {
 		var f *os.File
@@ -56,7 +59,11 @@ goalign compute distance -m k2p -i align.fa
 		model := distance.Model(computedistModel, computedistRemoveGaps)
 		for align := range rootaligns {
 			var distMatrix [][]float64 = distance.DistMatrix(align, nil, model, rootcpus)
-			writeDistMatrix(align, distMatrix, f)
+			if computedistAverage {
+				writeDistAverage(align, distMatrix, f)
+			} else {
+				writeDistMatrix(align, distMatrix, f)
+			}
 		}
 		f.Close()
 	},
@@ -68,6 +75,7 @@ func init() {
 	computedistCmd.PersistentFlags().StringVarP(&computedistOutput, "output", "o", "stdout", "Distance matrix output file")
 	computedistCmd.PersistentFlags().StringVarP(&computedistModel, "model", "m", "k2p", "Model for distance computation")
 	computedistCmd.PersistentFlags().BoolVarP(&computedistRemoveGaps, "rm-gaps", "r", false, "Do not take into account positions containing >=1 gaps")
+	computedistCmd.PersistentFlags().BoolVarP(&computedistAverage, "average", "a", false, "Compute only the average distance between all pairs of sequences")
 }
 
 func writeDistMatrix(al align.Alignment, matrix [][]float64, f *os.File) {
@@ -83,4 +91,16 @@ func writeDistMatrix(al align.Alignment, matrix [][]float64, f *os.File) {
 		}
 		f.WriteString("\n")
 	}
+}
+
+func writeDistAverage(al align.Alignment, matrix [][]float64, f *os.File) {
+	sum := 0.0
+	for i := 0; i < len(matrix); i++ {
+		for j := i + 1; j < len(matrix); j++ {
+			sum += matrix[i][j]
+		}
+	}
+	l := float64(len(matrix))
+	sum /= l * (l - 1) / 2.0
+	f.WriteString(fmt.Sprintf("%.12f\n", sum))
 }
