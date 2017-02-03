@@ -136,27 +136,30 @@ func DistMatrix(al align.Alignment, weights []float64, model DistModel, cpus int
 
 /* Returns true if it is a transition, false otherwize */
 func isTransition(nt1 rune, nt2 rune) bool {
-	return ((nt1 == 'A' && nt2 == 'G') || (nt1 == 'G' && nt2 == 'A') ||
-		(nt1 == 'T' && nt2 == 'C') || (nt1 == 'C' && nt2 == 'T'))
+	n1, n2 := unicode.ToUpper(nt1), unicode.ToUpper(nt2)
+	return ((n1 == 'A' && n2 == 'G') || (n1 == 'G' && n2 == 'A') ||
+		(n1 == 'T' && n2 == 'C') || (n1 == 'C' && n2 == 'T'))
 }
 
 /* Returns true if it is a A<->G  */
 func isAG(nt1 rune, nt2 rune) bool {
-	return ((nt1 == 'A' && nt2 == 'G') || (nt1 == 'G' && nt2 == 'A'))
+	n1, n2 := unicode.ToUpper(nt1), unicode.ToUpper(nt2)
+	return ((n1 == 'A' && n2 == 'G') || (n1 == 'G' && n2 == 'A'))
 }
 
 /* Returns true if it is a A<->G  */
 func isCT(nt1 rune, nt2 rune) bool {
-	return ((nt1 == 'T' && nt2 == 'C') || (nt1 == 'C' && nt2 == 'T'))
+	n1, n2 := unicode.ToUpper(nt1), unicode.ToUpper(nt2)
+	return ((n1 == 'T' && n2 == 'C') || (n1 == 'C' && n2 == 'T'))
 }
 
 /* Returns true if it is a transversion, false otherwize */
 func isTransversion(nt1 rune, nt2 rune) bool {
-
-	return ((nt1 == 'A' && nt2 == 'C') || (nt1 == 'C' && nt2 == 'A') ||
-		(nt1 == 'G' && nt2 == 'T') || (nt1 == 'T' && nt2 == 'G') ||
-		(nt1 == 'T' && nt2 == 'A') || (nt1 == 'A' && nt2 == 'T') ||
-		(nt1 == 'C' && nt2 == 'G') || (nt1 == 'G' && nt2 == 'C'))
+	n1, n2 := unicode.ToUpper(nt1), unicode.ToUpper(nt2)
+	return ((n1 == 'A' && n2 == 'C') || (n1 == 'C' && n2 == 'A') ||
+		(n1 == 'G' && n2 == 'T') || (n1 == 'T' && n2 == 'G') ||
+		(n1 == 'T' && n2 == 'A') || (n1 == 'A' && n2 == 'T') ||
+		(n1 == 'C' && n2 == 'G') || (n1 == 'G' && n2 == 'C'))
 }
 
 /* Count number of mutations and associate a weight to them */

@@ -24,7 +24,7 @@ func NewK2PModel(removegaps bool) *K2PModel {
 func (m *K2PModel) Distance(seq1 []rune, seq2 []rune, weights []float64) float64 {
 	trS, trV, _, _, total := countMutations(seq1, seq2, m.selectedSites, weights)
 	trS, trV = trS/total, trV/total
-	dist := -0.5*math.Log(1-2*trS-trV) - 0.25*math.Log(1-2*trV)
+	dist := -0.5*math.Log(1.0-2.0*trS-trV) - 0.25*math.Log(1.0-2.0*trV)
 	if dist > 0 {
 		return (dist)
 	} else {
