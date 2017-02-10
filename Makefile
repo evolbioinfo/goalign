@@ -11,7 +11,7 @@ install:
 	${GO_EXECUTABLE} install -ldflags "-X github.com/fredericlemoine/goalign/cmd.Version=${VERSION}" github.com/fredericlemoine/goalign
 
 test:
-	${GO_EXECUTABLE} test github.com/fredericlemoine/goalign/tests/
+	${GO_EXECUTABLE} test github.com/fredericlemoine/goalign/...
 
 deploy:
 	mkdir -p deploy/${VERSION}

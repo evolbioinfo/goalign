@@ -13,7 +13,7 @@ func TestDirichlet(t *testing.T) {
 	for i := 0; i < size; i++ {
 		alpha[i] = 1.0
 	}
-	sample := Dirichlet(alpha...)
+	sample := Dirichlet(1.0, alpha...)
 
 	if len(sample) != size {
 		t.Error("Size of sample is different from alpha slice")
