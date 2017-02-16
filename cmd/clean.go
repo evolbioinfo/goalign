@@ -19,7 +19,7 @@ import (
 )
 
 var cleanOutput string
-var allgaps bool
+var cleanCutoff float64
 
 // cleanCmd represents the clean command
 var cleanCmd = &cobra.Command{
@@ -27,14 +27,22 @@ var cleanCmd = &cobra.Command{
 	Short: "Removes gap sites",
 	Long: `Removes sites constituted of gaps
 
-If -a is given, then removes sites having only gaps
-if -a is not given, removes sites having at least one gap.
+Removes alignments sites constitued of >= cutoff gap sites.
 
+Exception for a cutoff of 0: removes sites constitued of > 0 gap sites.
+
+Examples:
+- With a cutoff of 0.5: a site with 5 gaps over 10 sequences will be removed;
+- With a cutoff of 0.5: a site with 4 gaps over 10 sequences will not be removed;
+- With a cutoff of 0.0 a site with 1 gap over 10 sequences will be removed.
+
+If cutoff is <0 or >1, it will be considered as 0, which means that every site with at least 1 gap
+will be removed.
 `,
 	Run: func(cmd *cobra.Command, args []string) {
 		f := openWriteFile(cleanOutput)
 		for al := range rootaligns {
-			al.RemoveGaps(allgaps)
+			al.RemoveGaps(cleanCutoff)
 			writeAlign(al, f)
 		}
 		f.Close()
@@ -44,6 +52,6 @@ if -a is not given, removes sites having at least one gap.
 
 func init() {
 	RootCmd.AddCommand(cleanCmd)
-	cleanCmd.PersistentFlags().BoolVarP(&allgaps, "all-gaps", "a", false, "Remove positions having only gaps")
 	cleanCmd.PersistentFlags().StringVarP(&cleanOutput, "output", "o", "stdout", "Cleaned alignment output file")
+	cleanCmd.PersistentFlags().Float64VarP(&cleanCutoff, "cutoff", "c", 0, "Cutoff for gap deletion : 0 remove sites with > 0 gap, 1 remove sites with 100% gaps)")
 }

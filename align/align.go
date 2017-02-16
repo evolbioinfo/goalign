@@ -33,7 +33,7 @@ type Alignment interface {
 	Length() int
 	ShuffleSequences()
 	ShuffleSites(rate float64)
-	RemoveGaps(all bool)
+	RemoveGaps(cutoff float64)
 	Sample(nb int) (Alignment, error)
 	BuildBootstrap() Alignment
 	Swap(rate float64)
@@ -181,11 +181,18 @@ func (a *align) ShuffleSites(rate float64) {
 	}
 }
 
-// Removes positions constituted of Gaps
-// if all is false, then removes positions constituted of at least one gap
-// if all is true, then removes positions constituted of only gaps
-func (a *align) RemoveGaps(all bool) {
+// Removes positions constituted of [cutoff*100%,100%] Gaps
+// Exception fo a cutoff of 0: does not remove positions with 0% gaps
+// Cutoff must be between 0 and 1, otherwise set to 0.
+// 0 means that positions with > 0 gaps will be removed
+// other cutoffs : ]0,1] mean that positions with >= cutoff gaps will be removed
+func (a *align) RemoveGaps(cutoff float64) {
 	var nbgaps int
+
+	if cutoff < 0 || cutoff > 1 {
+		cutoff = 0
+	}
+
 	toremove := make([]int, 0, 10)
 	for site := 0; site < a.Length(); site++ {
 		nbgaps = 0
@@ -194,7 +201,7 @@ func (a *align) RemoveGaps(all bool) {
 				nbgaps++
 			}
 		}
-		if (all && nbgaps == a.NbSequences()) || (!all && nbgaps > 0) {
+		if (cutoff > 0.0 && float64(nbgaps) >= cutoff*float64(a.NbSequences())) || (cutoff == 0 && nbgaps > 0) {
 			toremove = append(toremove, site)
 		}
 	}

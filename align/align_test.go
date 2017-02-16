@@ -58,7 +58,7 @@ func TestRemoveOneGaps(t *testing.T) {
 		pos++
 	})
 
-	a.RemoveGaps(false)
+	a.RemoveGaps(0.0)
 
 	if a.Length() != 0 {
 		t.Error("We should have removed all positions")
@@ -96,7 +96,7 @@ func TestRemoveAllGaps(t *testing.T) {
 	/* Remove position 20 */
 	backupseq = append(backupseq[:20], backupseq[21:]...)
 
-	a.RemoveGaps(true)
+	a.RemoveGaps(1.0)
 
 	if a.Length() != 299 {
 		t.Error("We should have removed only one position")
@@ -139,7 +139,7 @@ func TestClone(t *testing.T) {
 		t.Error(err2)
 	}
 
-	a.RemoveGaps(false)
+	a.RemoveGaps(0.0)
 
 	a2.IterateChar(func(name string, sequence []rune) {
 		if len(sequence) != 300 {
