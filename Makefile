@@ -1,9 +1,9 @@
 GO_EXECUTABLE := go
 VERSION := $(shell git describe --abbrev=10 --dirty --always --tags)
 DIST_DIRS := find * -type d -exec
-VERSION_PACKAGE := "github.com/fredericlemoine/goalign/cmd.Version"
-NAME := "goalign"
-PACKAGE:="github.com/fredericlemoine/goalign"
+VERSION_PACKAGE := github.com/fredericlemoine/goalign/cmd.Version
+NAME := goalign
+PACKAGE:=github.com/fredericlemoine/goalign
 
 all: build test install 
 
