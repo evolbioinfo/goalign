@@ -19,3 +19,10 @@ func ExitWithMessage(err error) {
 	fmt.Fprintf(os.Stderr, "[Error] in %s (line %d), message: %v\n", name, line, err)
 	os.Exit(EXIT_FAILURE)
 }
+
+func PrintMessage(message string) {
+	_, fn, line, _ := runtime.Caller(1)
+
+	name := strings.Split(fn, "/goalign/")[1]
+	fmt.Fprintf(os.Stderr, "[Warning] in %s (line %d), message: %s\n", name, line, message)
+}

@@ -234,3 +234,41 @@ func TestAvgAlleles2(t *testing.T) {
 		t.Error("There should be 4 allele per site in this alignment")
 	}
 }
+
+func TestRename(t *testing.T) {
+	length := 3000
+	nbseqs := 500
+	a, err := RandomAlignment(AMINOACIDS, length, nbseqs)
+
+	if err != nil {
+		t.Error(err)
+	}
+
+	// Map File
+	namemap1 := make(map[string]string)
+	namemap2 := make(map[string]string)
+	for i := 0; i < 500; i++ {
+		namemap1[fmt.Sprintf("Seq%04d", i)] = fmt.Sprintf("New%04d", i)
+		namemap2[fmt.Sprintf("New%04d", i)] = fmt.Sprintf("Seq%04d", i)
+	}
+
+	a.Rename(namemap1)
+	i := 0
+	a.IterateChar(func(name string, sequence []rune) {
+		expected := fmt.Sprintf("New%04d", i)
+		if name != expected {
+			t.Error(fmt.Sprintf("Sequence name should be %s and is %s", expected, name))
+		}
+		i++
+	})
+
+	a.Rename(namemap2)
+	i = 0
+	a.IterateChar(func(name string, sequence []rune) {
+		expected := fmt.Sprintf("Seq%04d", i)
+		if name != expected {
+			t.Error(fmt.Sprintf("Sequence name should be %s and is %s", expected, name))
+		}
+		i++
+	})
+}

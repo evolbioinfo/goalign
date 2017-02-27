@@ -38,6 +38,7 @@ type Alignment interface {
 	BuildBootstrap() Alignment
 	Swap(rate float64)
 	Recombine(rate float64, lenprop float64)
+	Rename(namemap map[string]string)
 	TrimNames(size int) (map[string]string, error)
 	TrimSequences(trimsize int, fromStart bool) error
 	AppendSeqIdentifier(identifier string, right bool)
@@ -213,6 +214,21 @@ func (a *align) RemoveGaps(cutoff float64) {
 		}
 	}
 	a.length -= len(toremove)
+}
+
+// This function renames sequences of the alignment based on the map in argument
+// If a name in the map does not exist in the alignment, does nothing
+// If a sequence in the alignment does not have a name in the map: does nothing
+func (a *align) Rename(namemap map[string]string) {
+	for seq := 0; seq < a.NbSequences(); seq++ {
+		newname, ok := namemap[a.seqs[seq].name]
+		if ok {
+			a.seqs[seq].name = newname
+		}
+		// else {
+		// 	io.PrintMessage("Sequence " + a.seqs[seq].name + " not present in the map file")
+		// }
+	}
 }
 
 // Swaps a rate of the sequences together
