@@ -272,3 +272,123 @@ func TestRename(t *testing.T) {
 		i++
 	})
 }
+
+func TestRogue(t *testing.T) {
+	length := 3000
+	nbseqs := 500
+	nrogue := 0.5
+	a, err := RandomAlignment(AMINOACIDS, length, nbseqs)
+
+	if err != nil {
+		t.Error(err)
+	}
+
+	a2, err2 := a.Clone()
+	if err2 != nil {
+		t.Error(err2)
+	}
+
+	rogues, intacts := a2.SimulateRogue(nrogue)
+
+	if (len(rogues) + len(intacts)) != a.NbSequences() {
+		t.Error("Number of intact + rogue sequences is not the same than the total number of sequences")
+	}
+
+	for _, s := range rogues {
+		seq2, ok2 := a2.GetSequence(s)
+		seq, ok := a.GetSequence(s)
+		if !ok || !ok2 {
+			t.Error("Rogue name does not exist in alignment...")
+		}
+		if seq == seq2 {
+			t.Error("Rogue sequence is the same after simulation (should be shuffled)...")
+		}
+	}
+	for _, s := range intacts {
+		seq2, ok2 := a2.GetSequence(s)
+		seq, ok := a.GetSequence(s)
+		if !ok || !ok2 {
+			t.Error("Intact name does not exist in alignment...")
+		}
+		if seq != seq2 {
+			t.Error("Intact sequences should be he same before and after simulation...")
+		}
+	}
+}
+
+func TestRogue2(t *testing.T) {
+	length := 3000
+	nbseqs := 500
+	nrogue := 0.0
+	a, err := RandomAlignment(AMINOACIDS, length, nbseqs)
+
+	if err != nil {
+		t.Error(err)
+	}
+
+	a2, err2 := a.Clone()
+	if err2 != nil {
+		t.Error(err2)
+	}
+
+	rogues, intacts := a2.SimulateRogue(nrogue)
+
+	if (len(rogues) + len(intacts)) != a.NbSequences() {
+		t.Error("Number of intact + rogue sequences is not the same than the total number of sequences")
+	}
+
+	if len(rogues) > 0 {
+		t.Error("There should be no rogue taxa in output")
+	}
+
+	for _, s := range intacts {
+		seq2, ok2 := a2.GetSequence(s)
+		seq, ok := a.GetSequence(s)
+		if !ok || !ok2 {
+			t.Error("Intact name does not exist in alignment...")
+		}
+		if seq != seq2 {
+			t.Error("Intact sequences should be he same before and after simulation...")
+		}
+	}
+}
+
+func TestRogue3(t *testing.T) {
+	length := 3000
+	nbseqs := 500
+	nrogue := 1.0
+	a, err := RandomAlignment(AMINOACIDS, length, nbseqs)
+
+	if err != nil {
+		t.Error(err)
+	}
+
+	a2, err2 := a.Clone()
+	if err2 != nil {
+		t.Error(err2)
+	}
+
+	rogues, intacts := a2.SimulateRogue(nrogue)
+
+	if (len(rogues) + len(intacts)) != a.NbSequences() {
+		t.Error(fmt.Sprintf("Number of intact (%d) + rogue (%d) sequences is not the same than the total number of sequences (%d)", len(intacts), len(rogues), a.NbSequences()))
+	}
+
+	if len(rogues) < a.NbSequences() {
+		t.Error("All sequences should be rogues")
+	}
+
+	if len(intacts) > 0 {
+		t.Error("There should be no intact sequences")
+	}
+	for _, s := range rogues {
+		seq2, ok2 := a2.GetSequence(s)
+		seq, ok := a.GetSequence(s)
+		if !ok || !ok2 {
+			t.Error("Rogue name does not exist in alignment...")
+		}
+		if seq == seq2 {
+			t.Error("Rogue sequence is the same after simulation (should be shuffled)...")
+		}
+	}
+}
