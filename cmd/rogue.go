@@ -19,18 +19,32 @@ import (
 )
 
 var rogueNb float64
+var rogueLength float64
 var rogueNameFile string
 
 // rogueCmd represents the rogue command
 var rogueCmd = &cobra.Command{
 	Use:   "rogue",
 	Short: "Simulate rogue taxa",
-	Long:  `Simulate rogue `,
+	Long: `Simulate rogue by shuffling sites of some sequences.
+
+To do so, it takes a proportion of the sequences and shuffles a proportion l of its sites
+
+Example: We want to simulate 0.25 "rogue taxa" by shuffling 0.25 of their length:
+
+goalign shuffle rogue -i al -n 0.25 -l 0.25
+
+Before        After
+S1 12345678    S1 1234567
+S2 12345678 => S2 1234567
+S3 12345678    S3 1634527 <= This one: 2 nucleotides are shuffled
+S4 12345678    S4 1234567
+`,
 	Run: func(cmd *cobra.Command, args []string) {
 		f := openWriteFile(shuffleOutput)
 		nameFile := openWriteFile(rogueNameFile)
 		for al := range rootaligns {
-			names, _ := al.SimulateRogue(rogueNb)
+			names, _ := al.SimulateRogue(rogueNb, rogueLength)
 			writeAlign(al, f)
 			for _, n := range names {
 				nameFile.WriteString(n)
@@ -46,5 +60,6 @@ func init() {
 	shuffleCmd.AddCommand(rogueCmd)
 
 	rogueCmd.PersistentFlags().Float64VarP(&rogueNb, "prop-seq", "n", 0.5, "Proportion of the  sequences to consider as rogue")
+	rogueCmd.PersistentFlags().Float64VarP(&rogueLength, "length", "l", 0.5, "Proportion of the sites to shuffle")
 	rogueCmd.PersistentFlags().StringVar(&rogueNameFile, "rogue-file", "stdout", "Rogue sequence names output file")
 }

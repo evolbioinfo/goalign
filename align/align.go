@@ -33,7 +33,7 @@ type Alignment interface {
 	Length() int
 	ShuffleSequences()
 	ShuffleSites(rate float64)
-	SimulateRogue(prop float64) ([]string, []string)
+	SimulateRogue(prop float64, proplen float64) ([]string, []string)
 	RemoveGaps(cutoff float64)
 	Sample(nb int) (Alignment, error)
 	BuildBootstrap() Alignment
@@ -300,26 +300,36 @@ func (a *align) Recombine(prop float64, lenprop float64) {
 // take the proportion prop of sequences as rogue taxa => R
 // For each t in R
 //   * We shuffle the alignment sites of t
-// Output: List of rogue sequence names, and List of intact sequences
-func (a *align) SimulateRogue(prop float64) ([]string, []string) {
+// Output: List of rogue sequence names, and List of intact sequence names
+func (a *align) SimulateRogue(prop float64, proplen float64) ([]string, []string) {
 	var seq *seq
 
 	if prop < 0 || prop > 1.0 {
 		return nil, nil
 	}
 
+	if proplen < 0 || proplen > 1.0 {
+		return nil, nil
+	}
+
+	if proplen == 0 {
+		prop = 0.0
+	}
+
 	nb := int(prop * float64(a.NbSequences()))
 	permutation := rand.Perm(a.NbSequences())
 	seqlist := make([]string, nb)
 	intactlist := make([]string, a.NbSequences()-nb)
+	len := int(proplen * float64(a.Length()))
 	// For each chosen rogue sequence
 	for r := 0; r < nb; r++ {
 		seq = a.seqs[permutation[r]]
 		seqlist[r] = seq.name
-		// we Shuffle sequence sites
-		for i, _ := range seq.sequence {
+		sitesToShuffle := rand.Perm(a.Length())[0:len]
+		// we Shuffle some sequence sites
+		for i, _ := range sitesToShuffle {
 			j := rand.Intn(i + 1)
-			seq.sequence[i], seq.sequence[j] = seq.sequence[j], seq.sequence[i]
+			seq.sequence[sitesToShuffle[i]], seq.sequence[sitesToShuffle[j]] = seq.sequence[sitesToShuffle[j]], seq.sequence[sitesToShuffle[i]]
 		}
 	}
 	for nr := nb; nr < a.NbSequences(); nr++ {

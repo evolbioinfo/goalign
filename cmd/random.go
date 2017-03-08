@@ -23,7 +23,7 @@ var randomCmd = &cobra.Command{
 	PersistentPreRun: func(cmd *cobra.Command, args []string) {
 	},
 	Run: func(cmd *cobra.Command, args []string) {
-		rand.Seed(sampleSeed)
+		rand.Seed(randomSeed)
 		var a align.Alignment
 		var err error
 		f := openWriteFile(addIdOutput)

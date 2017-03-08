@@ -288,7 +288,7 @@ func TestRogue(t *testing.T) {
 		t.Error(err2)
 	}
 
-	rogues, intacts := a2.SimulateRogue(nrogue)
+	rogues, intacts := a2.SimulateRogue(nrogue, 1.0)
 
 	if (len(rogues) + len(intacts)) != a.NbSequences() {
 		t.Error("Number of intact + rogue sequences is not the same than the total number of sequences")
@@ -331,7 +331,7 @@ func TestRogue2(t *testing.T) {
 		t.Error(err2)
 	}
 
-	rogues, intacts := a2.SimulateRogue(nrogue)
+	rogues, intacts := a2.SimulateRogue(nrogue, 1.0)
 
 	if (len(rogues) + len(intacts)) != a.NbSequences() {
 		t.Error("Number of intact + rogue sequences is not the same than the total number of sequences")
@@ -368,7 +368,7 @@ func TestRogue3(t *testing.T) {
 		t.Error(err2)
 	}
 
-	rogues, intacts := a2.SimulateRogue(nrogue)
+	rogues, intacts := a2.SimulateRogue(nrogue, 1.0)
 
 	if (len(rogues) + len(intacts)) != a.NbSequences() {
 		t.Error(fmt.Sprintf("Number of intact (%d) + rogue (%d) sequences is not the same than the total number of sequences (%d)", len(intacts), len(rogues), a.NbSequences()))
