@@ -5,6 +5,8 @@ import (
 )
 
 var siteRate float64
+var siteRogue float64
+var siteRogueNameFile string
 
 // sitesCmd represents the sites command
 var sitesCmd = &cobra.Command{
@@ -30,10 +32,16 @@ goalign shuffle sites -i align.fasta -r 0.5
 `,
 	Run: func(cmd *cobra.Command, args []string) {
 		f := openWriteFile(shuffleOutput)
+		nameFile := openWriteFile(siteRogueNameFile)
 		for al := range rootaligns {
-			al.ShuffleSites(siteRate)
+			names := al.ShuffleSites(siteRate, siteRogue)
 			writeAlign(al, f)
+			for _, n := range names {
+				nameFile.WriteString(n)
+				nameFile.WriteString("\n")
+			}
 		}
+		nameFile.Close()
 		f.Close()
 	},
 }
@@ -41,4 +49,6 @@ goalign shuffle sites -i align.fasta -r 0.5
 func init() {
 	shuffleCmd.AddCommand(sitesCmd)
 	sitesCmd.PersistentFlags().Float64VarP(&siteRate, "rate", "r", 0.5, "Rate of shuffled sites (>=0 and <=1)")
+	sitesCmd.PersistentFlags().Float64Var(&siteRogue, "rogue", 0.0, "If set, then will take the given proportion of taxa, and will apply shuffle again on --rate of the remaining intact sites")
+	sitesCmd.PersistentFlags().StringVar(&siteRogueNameFile, "rogue-file", "stdout", "Rogue sequence names output file")
 }

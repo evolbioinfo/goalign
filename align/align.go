@@ -32,7 +32,7 @@ type Alignment interface {
 	NbSequences() int
 	Length() int
 	ShuffleSequences()
-	ShuffleSites(rate float64)
+	ShuffleSites(rate float64, roguerate float64) []string
 	SimulateRogue(prop float64, proplen float64) ([]string, []string)
 	RemoveGaps(cutoff float64)
 	Sample(nb int) (Alignment, error)
@@ -163,15 +163,31 @@ func (a *align) ShuffleSequences() {
 // Shuffles vertically rate sites of the alignment
 // randomly
 // rate must be >=0 and <=1
-func (a *align) ShuffleSites(rate float64) {
+// Then, take roguerate proportion of the taxa, and will shuffle rate sites among the
+// remaining intact sites
+// Output: List of tax names that are more shuffled than others (length=roguerate*nbsequences)
+func (a *align) ShuffleSites(rate float64, roguerate float64) []string {
 	if rate < 0 || rate > 1 {
 		io.ExitWithMessage(errors.New("Shuffle site rate must be >=0 and <=1"))
 	}
-	permutation := rand.Perm(a.Length())
-	nb_to_shuffle := int(rate * float64(a.Length()))
+	if roguerate < 0 || roguerate > 1 {
+		io.ExitWithMessage(errors.New("Shuffle rogue rate must be >=0 and <=1"))
+	}
+
+	nb_sites_to_shuffle := int(rate * float64(a.Length()))
+	nb_rogue_sites_to_shuffle := int(rate * (1.0 - rate) * (float64(a.Length())))
+	nb_rogue_seq_to_shuffle := int(roguerate * float64(a.NbSequences()))
+	sitepermutation := rand.Perm(a.Length())
+	taxpermutation := rand.Perm(a.NbSequences())
+	rogues := make([]string, nb_rogue_seq_to_shuffle)
+
+	if nb_rogue_seq_to_shuffle+nb_sites_to_shuffle > a.Length() {
+		io.ExitWithMessage(errors.New("Too many sites to shuffle"))
+	}
+
 	var temp rune
-	for i := 0; i < nb_to_shuffle; i++ {
-		site := permutation[i]
+	for i := 0; i < nb_sites_to_shuffle; i++ {
+		site := sitepermutation[i]
 		var n int = a.NbSequences()
 		for n > 1 {
 			r := rand.Intn(n)
@@ -181,6 +197,18 @@ func (a *align) ShuffleSites(rate float64) {
 			a.seqs[r].sequence[site] = temp
 		}
 	}
+	// We shuffle more sites for "rogue" taxa
+	for i := 0; i < nb_rogue_sites_to_shuffle; i++ {
+		site := sitepermutation[i+nb_sites_to_shuffle]
+		for r := 0; r < nb_rogue_seq_to_shuffle; r++ {
+			j := rand.Intn(r + 1)
+			seq1 := a.seqs[taxpermutation[r]]
+			seq2 := a.seqs[taxpermutation[j]]
+			seq1.sequence[site], seq2.sequence[site] = seq2.sequence[site], seq1.sequence[site]
+			rogues[r] = seq1.name
+		}
+	}
+	return rogues
 }
 
 // Removes positions constituted of [cutoff*100%,100%] Gaps
