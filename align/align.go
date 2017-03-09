@@ -181,8 +181,9 @@ func (a *align) ShuffleSites(rate float64, roguerate float64) []string {
 	taxpermutation := rand.Perm(a.NbSequences())
 	rogues := make([]string, nb_rogue_seq_to_shuffle)
 
-	if nb_rogue_seq_to_shuffle+nb_sites_to_shuffle > a.Length() {
-		io.ExitWithMessage(errors.New("Too many sites to shuffle"))
+	if (nb_rogue_sites_to_shuffle + nb_sites_to_shuffle) > a.Length() {
+		io.ExitWithMessage(errors.New(fmt.Sprintf("Too many sites to shuffle (%d+%d>%d)",
+			nb_rogue_sites_to_shuffle, nb_sites_to_shuffle, a.Length())))
 	}
 
 	var temp rune
