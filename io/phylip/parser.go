@@ -66,14 +66,16 @@ func (p *Parser) Parse() (align.Alignment, error) {
 	var al align.Alignment = nil
 	var err error
 
-	// The first token should be a Number
-	tok, lit := p.scan()
-	if tok == WS {
-		tok, lit = p.scan()
+	// We skip all WS and EOL at the beginning
+	tok, lit := p.scanWithEOL()
+	for tok == WS || tok == ENDOFLINE {
+		tok, lit = p.scanWithEOL()
 	}
 	if tok == EOF {
 		return nil, nil
 	}
+
+	// The first token different from WS and EOL should be a Number
 	if tok != NUMERIC {
 		return nil, errors.New("Phylip file must begin with the number of sequences : " + fmt.Sprintf("%d", tok))
 	} else {
@@ -175,6 +177,8 @@ func (p *Parser) Parse() (align.Alignment, error) {
 		}
 		b++
 	}
+	tok, lit = p.scanWithEOL()
+	p.unscan()
 
 	for i, name := range names {
 		seq := seqs[i].String()
