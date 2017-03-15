@@ -12,7 +12,27 @@ var entropyAverage bool
 var entropyCmd = &cobra.Command{
 	Use:   "entropy",
 	Short: "Computes entropy of a given alignment",
-	Long:  `Computes entropy of a given alignment.`,
+	Long: `Computes entropy of a given alignment.
+
+Example: 
+goalign compute entropy -i alignment.fa
+goalign compute entropy -i alignment.phy -p
+
+It is possible to compute the average entropy:
+goalign compute entropy -i alignment.phy -p -a
+
+Which will print one average entropy per alignment in the input file:
+Alignment \t AvgEntropy
+
+
+Otherwise, it will print one entropy per alignment site, in a tab separated form:
+Alignment \t Site \t Entropy
+
+the computation does not take into account the following characters:
+
+-> '*'
+-> '-'
+`,
 	Run: func(cmd *cobra.Command, args []string) {
 		nb := 0
 		if entropyAverage {
