@@ -39,7 +39,7 @@ type Alignment interface {
 	RemoveGaps(cutoff float64)
 	Sample(nb int) (Alignment, error)
 	BuildBootstrap() Alignment
-	Entropy(site int) (float64, error) // Entropy of the given site
+	Entropy(site int, removegaps bool) (float64, error) // Entropy of the given site
 	Swap(rate float64)
 	Recombine(rate float64, lenprop float64)
 	Rename(namemap map[string]string)
@@ -606,7 +606,8 @@ func (a *align) AvgAllelesPerSite() float64 {
 }
 
 // Entropy of the given site. If the site number is < 0 or > length -> returns an error
-func (a *align) Entropy(site int) (float64, error) {
+// if removegaps is true, do not take into account gap characters
+func (a *align) Entropy(site int, removegaps bool) (float64, error) {
 	if site < 0 || site > a.Length() {
 		return 1.0, errors.New("Site position is outside alignment")
 	}
@@ -617,7 +618,7 @@ func (a *align) Entropy(site int) (float64, error) {
 	entropy := 0.0
 	for seq := 0; seq < a.NbSequences(); seq++ {
 		s := a.seqs[seq].sequence[site]
-		if s != GAP && s != OTHER {
+		if s != OTHER && (!removegaps || s != GAP) {
 			nb, ok := occur[s]
 			if !ok {
 				occur[s] = 1

@@ -406,7 +406,7 @@ func TestEntropy(t *testing.T) {
 		a.SetSequenceChar(i, 0, 'R')
 		a.SetSequenceChar(i, 1, alldifferent[i])
 	}
-	e, err := a.Entropy(0)
+	e, err := a.Entropy(0, false)
 	if err != nil {
 		t.Error(err)
 	}
@@ -414,7 +414,7 @@ func TestEntropy(t *testing.T) {
 		t.Error(fmt.Sprintf("Entropy should be 0.0 and is %f", e))
 	}
 
-	e, err = a.Entropy(1)
+	e, err = a.Entropy(1, false)
 	if err != nil {
 		t.Error(err)
 	}

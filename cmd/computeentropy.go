@@ -8,6 +8,7 @@ import (
 )
 
 var entropyAverage bool
+var entropyRemoveGaps bool
 
 // entropyCmd represents the entropy command
 var entropyCmd = &cobra.Command{
@@ -25,18 +26,15 @@ goalign compute entropy -i alignment.phy -p -a
 Which will print one average entropy per alignment in the input file:
 Alignment \t AvgEntropy
 
-
 Otherwise, it will print one entropy per alignment site, in a tab separated form:
 Alignment \t Site \t Entropy
 
 the computation does not take into account the following characters:
-
 -> '*'
--> '-'
+-> '-' (if --remove-gaps is given)
 
-If a site is made fully of '-' or '*', then its entropy will be "NaN", and it will not
-be taken into account in the average.
-
+If a site is made fully of '-' (if --remove-gaps is given) or '*', then its entropy will be "NaN",
+and it will not be taken into account in the average.
 `,
 	Run: func(cmd *cobra.Command, args []string) {
 		nb := 0
@@ -49,7 +47,7 @@ be taken into account in the average.
 		for align := range rootaligns {
 			total := 0
 			for i := 0; i < align.Length(); i++ {
-				if e, err := align.Entropy(i); err != nil {
+				if e, err := align.Entropy(i, entropyRemoveGaps); err != nil {
 					panic(err)
 				} else {
 					if entropyAverage {
@@ -73,4 +71,5 @@ be taken into account in the average.
 func init() {
 	computeCmd.AddCommand(entropyCmd)
 	entropyCmd.PersistentFlags().BoolVarP(&entropyAverage, "average", "a", false, "Compute only the average entropy of input alignment")
+	entropyCmd.PersistentFlags().BoolVarP(&entropyRemoveGaps, "remove-gaps", "g", false, "If true, then do not take into account gaps in the computation")
 }
