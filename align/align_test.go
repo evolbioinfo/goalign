@@ -2,6 +2,7 @@ package align
 
 import (
 	"fmt"
+	"math"
 	"strings"
 	"testing"
 )
@@ -390,5 +391,35 @@ func TestRogue3(t *testing.T) {
 		if seq == seq2 {
 			t.Error("Rogue sequence is the same after simulation (should be shuffled)...")
 		}
+	}
+}
+
+func TestEntropy(t *testing.T) {
+	length := 3
+	nbseqs := 5
+	a, err := RandomAlignment(AMINOACIDS, length, nbseqs)
+
+	alldifferent := []rune{'A', 'R', 'N', 'D', 'C'}
+	// First site: only 'R' => Entropy 0.0
+	// Second site: Only different aminoacids => Entropy 1.0
+	for i := 0; i < 5; i++ {
+		a.SetSequenceChar(i, 0, 'R')
+		a.SetSequenceChar(i, 1, alldifferent[i])
+	}
+	e, err := a.Entropy(0)
+	if err != nil {
+		t.Error(err)
+	}
+	if e != 0.0 {
+		t.Error(fmt.Sprintf("Entropy should be 0.0 and is %f", e))
+	}
+
+	e, err = a.Entropy(1)
+	if err != nil {
+		t.Error(err)
+	}
+	expected := -1.0 * float64(nbseqs) * 1.0 / float64(nbseqs) * math.Log(1.0/float64(nbseqs))
+	if int(e*10000000) != int(expected*10000000) {
+		t.Error(fmt.Sprintf("Entropy should be %.7f and is %.7f", expected, e))
 	}
 }

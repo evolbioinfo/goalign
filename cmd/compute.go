@@ -6,8 +6,8 @@ import (
 
 var computeCmd = &cobra.Command{
 	Use:   "compute",
-	Short: "Different computations (distances, etc.)",
-	Long: `Different computations (distances, etc.)
+	Short: "Different computations (distances, entropy, etc.)",
+	Long: `Different computations (distances, entropy, etc.)
 `,
 }
 

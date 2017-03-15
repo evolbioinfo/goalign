@@ -15,6 +15,7 @@ const (
 	AMINOACIDS = 0 // Amino acid sequence alphabet
 	NUCLEOTIDS = 1 // Nucleotid sequence alphabet
 	GAP        = '-'
+	OTHER      = '*'
 )
 
 var stdaminoacid = []rune{'A', 'R', 'N', 'D', 'C', 'Q', 'E', 'G', 'H', 'I', 'L', 'K', 'M', 'F', 'P', 'S', 'T', 'W', 'Y', 'V'}
@@ -26,6 +27,7 @@ type Alignment interface {
 	GetSequence(name string) (string, bool)
 	GetSequenceChar(ith int) ([]rune, bool)
 	GetSequenceName(ith int) (string, bool)
+	SetSequenceChar(ithAlign, ithSite int, char rune) error
 	Iterate(it func(name string, sequence string))
 	IterateChar(it func(name string, sequence []rune))
 	IterateAll(it func(name string, sequence []rune, comment string))
@@ -37,6 +39,7 @@ type Alignment interface {
 	RemoveGaps(cutoff float64)
 	Sample(nb int) (Alignment, error)
 	BuildBootstrap() Alignment
+	Entropy(site int) (float64, error) // Entropy of the given site
 	Swap(rate float64)
 	Recombine(rate float64, lenprop float64)
 	Rename(namemap map[string]string)
@@ -134,6 +137,18 @@ func (a *align) GetSequenceName(ith int) (string, bool) {
 		return a.seqs[ith].Name(), true
 	}
 	return "", false
+}
+
+func (a *align) SetSequenceChar(ithAlign, ithSite int, char rune) error {
+	if ithAlign < 0 || ithAlign > a.NbSequences() {
+		return errors.New("Sequence index is outside alignment")
+	}
+	if ithSite < 0 || ithSite > a.Length() {
+		return errors.New("Site index is outside alignment")
+	}
+
+	a.seqs[ithAlign].sequence[ithSite] = char
+	return nil
 }
 
 // If sequence exists in alignment, return true,sequence
@@ -588,4 +603,37 @@ func (a *align) AvgAllelesPerSite() float64 {
 		nballeles += len(alleles)
 	}
 	return float64(nballeles) / float64(nbsites)
+}
+
+// Entropy of the given site. If the site number is < 0 or > length -> returns an error
+func (a *align) Entropy(site int) (float64, error) {
+	if site < 0 || site > a.Length() {
+		return 1.0, errors.New("Site position is outside alignment")
+	}
+
+	// Number of occurences of each different aa/nt
+	occur := make(map[rune]int)
+	total := 0
+	entropy := 0.0
+	for seq := 0; seq < a.NbSequences(); seq++ {
+		s := a.seqs[seq].sequence[site]
+		if s != GAP && s != OTHER {
+			nb, ok := occur[s]
+			if !ok {
+				occur[s] = 1
+			} else {
+				occur[s] = nb + 1
+			}
+			total++
+		}
+	}
+
+	for _, v := range occur {
+		proba := float64(v) / float64(total)
+		entropy += proba * math.Log(proba)
+	}
+	if entropy != 0 {
+		entropy = -1.0 * entropy
+	}
+	return entropy, nil
 }
