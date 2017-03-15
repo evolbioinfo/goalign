@@ -635,5 +635,8 @@ func (a *align) Entropy(site int) (float64, error) {
 	if entropy != 0 {
 		entropy = -1.0 * entropy
 	}
+	if total == 0 {
+		return math.NaN(), nil
+	}
 	return entropy, nil
 }

@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"fmt"
+	"math"
 
 	"github.com/spf13/cobra"
 )
@@ -32,6 +33,10 @@ the computation does not take into account the following characters:
 
 -> '*'
 -> '-'
+
+If a site is made fully of '-' or '*', then its entropy will be "NaN", and it will not
+be taken into account in the average.
+
 `,
 	Run: func(cmd *cobra.Command, args []string) {
 		nb := 0
@@ -42,19 +47,23 @@ the computation does not take into account the following characters:
 		}
 		avg := 0.0
 		for align := range rootaligns {
+			total := 0
 			for i := 0; i < align.Length(); i++ {
 				if e, err := align.Entropy(i); err != nil {
 					panic(err)
 				} else {
 					if entropyAverage {
-						avg += e
+						if !math.IsNaN(e) {
+							avg += e
+							total++
+						}
 					} else {
 						fmt.Println(fmt.Sprintf("%d\t%d\t%.3f", nb, i, e))
 					}
 				}
 			}
 			if entropyAverage {
-				fmt.Println(fmt.Sprintf("%d\t%.3f", nb, avg/float64(align.Length())))
+				fmt.Println(fmt.Sprintf("%d\t%.3f", nb, avg/float64(total)))
 			}
 			nb++
 		}
