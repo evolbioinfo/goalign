@@ -4,11 +4,12 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
-	"github.com/fredericlemoine/goalign/io"
 	"math"
 	"math/rand"
 	"sort"
 	"strings"
+
+	"github.com/fredericlemoine/goalign/io"
 )
 
 const (
@@ -16,6 +17,11 @@ const (
 	NUCLEOTIDS = 1 // Nucleotid sequence alphabet
 	GAP        = '-'
 	OTHER      = '*'
+
+	PSSM_NORM_NONE = 0 // No normalization
+	PSSM_NORM_FREQ = 1 // Normalization by freq in the site
+	PSSM_NORM_DATA = 2 // Normalization by aa/nt frequency in data
+	PSSM_NORM_UNIF = 3 // Normalization by uniform frequency
 )
 
 var stdaminoacid = []rune{'A', 'R', 'N', 'D', 'C', 'Q', 'E', 'G', 'H', 'I', 'L', 'K', 'M', 'F', 'P', 'S', 'T', 'W', 'Y', 'V'}
@@ -43,12 +49,14 @@ type Alignment interface {
 	Swap(rate float64)
 	Recombine(rate float64, lenprop float64)
 	Rename(namemap map[string]string)
+	Pssm(log bool, pseudocount float64, normalization int) (pssm map[rune][]float64, err error) // Normalization: PSSM_NORM_NONE, PSSM_NORM_UNIF, PSSM_NORM_DATA
 	TrimNames(size int) (map[string]string, error)
 	TrimSequences(trimsize int, fromStart bool) error
 	AppendSeqIdentifier(identifier string, right bool)
 	AvgAllelesPerSite() float64
 	CharStats() map[rune]int64
 	Alphabet() int
+	AlphabetCharacters() []rune
 	Clone() (Alignment, error)
 }
 
@@ -640,4 +648,101 @@ func (a *align) Entropy(site int, removegaps bool) (float64, error) {
 		return math.NaN(), nil
 	}
 	return entropy, nil
+}
+
+// Computes a position-specific scoring matrix (PSSM)matrix
+// (see https://en.wikipedia.org/wiki/Position_weight_matrix)
+// This matrix may be in log2 scale or not (log argument)
+// A pseudo count may be added to values (to avoid log2(0))) with pseudocount argument
+// values may be normalized: normalization arg: PSSM_NORM_NONE, PSSM_NORM_UNIF, PSSM_NORM_DATA
+func (a *align) Pssm(log bool, pseudocount float64, normalization int) (pssm map[rune][]float64, err error) {
+	// Number of occurences of each different aa/nt
+	pssm = make(map[rune][]float64)
+	var alphabet []rune
+	var normfactors map[rune]float64
+
+	alphabet = a.AlphabetCharacters()
+
+	for _, c := range alphabet {
+		if _, ok := pssm[c]; !ok {
+			pssm[c] = make([]float64, a.Length())
+		}
+	}
+	normfactors = make(map[rune]float64)
+	switch normalization {
+	case PSSM_NORM_NONE:
+		for _, c := range alphabet {
+			normfactors[c] = 1.0
+		}
+	case PSSM_NORM_UNIF:
+		for _, c := range alphabet {
+			normfactors[c] = 1.0 / (float64(a.NbSequences()) + pseudocount) / (1.0 / float64(len(alphabet)))
+		}
+	case PSSM_NORM_FREQ:
+		for _, c := range alphabet {
+			normfactors[c] = 1.0 / (float64(a.NbSequences()) + pseudocount)
+		}
+	case PSSM_NORM_DATA:
+		stats := a.CharStats()
+		total := 0.0
+		for _, c := range alphabet {
+			if s, ok := stats[c]; !ok {
+				err = errors.New(fmt.Sprintf("No charchacter %c in alignment statistics", c))
+				return
+			} else {
+				total += float64(s)
+			}
+		}
+		for _, c := range alphabet {
+			s, _ := stats[c]
+			normfactors[c] = 1.0 / (float64(a.NbSequences()) + pseudocount) / (float64(s) / total)
+		}
+	default:
+		err = errors.New("Unknown normalization option")
+		return
+	}
+
+	for site := 0; site < a.Length(); site++ {
+		for seq := 0; seq < a.NbSequences(); seq++ {
+			s := a.seqs[seq].sequence[site]
+			if _, ok := normfactors[s]; ok {
+				if _, ok := pssm[s]; ok {
+					pssm[s][site] += 1.0
+				}
+			}
+		}
+	}
+
+	if pseudocount > 0 {
+		for _, v := range pssm {
+			for i, _ := range v {
+				v[i] += pseudocount
+			}
+		}
+	}
+
+	// Normalization
+	for k, v := range pssm {
+		for i, _ := range v {
+			v[i] = v[i] * normfactors[k]
+		}
+	}
+
+	if log {
+		for _, v := range pssm {
+			for i, _ := range v {
+				v[i] = math.Log(v[i]) / math.Log(2)
+			}
+		}
+	}
+
+	return
+}
+
+func (a *align) AlphabetCharacters() (alphabet []rune) {
+	if a.Alphabet() == AMINOACIDS {
+		return stdaminoacid
+	} else {
+		return stdnucleotides
+	}
 }
