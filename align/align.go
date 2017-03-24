@@ -650,11 +650,16 @@ func (a *align) Entropy(site int, removegaps bool) (float64, error) {
 	return entropy, nil
 }
 
-// Computes a position-specific scoring matrix (PSSM)matrix
-// (see https://en.wikipedia.org/wiki/Position_weight_matrix)
-// This matrix may be in log2 scale or not (log argument)
-// A pseudo count may be added to values (to avoid log2(0))) with pseudocount argument
-// values may be normalized: normalization arg: PSSM_NORM_NONE, PSSM_NORM_UNIF, PSSM_NORM_DATA
+/* Computes a position-specific scoring matrix (PSSM)matrix
+(see https://en.wikipedia.org/wiki/Position_weight_matrix)
+This matrix may be in log2 scale or not (log argument)
+A pseudo count may be added to values (to avoid log2(0))) with pseudocount argument
+values may be normalized: normalization arg:
+   PSSM_NORM_NONE = 0 => No normalization
+   PSSM_NORM_FREQ = 1 => Normalization by frequency in the site
+   PSSM_NORM_DATA = 2 => Normalization by frequency in the site and divided by aa/nt frequency in data
+   PSSM_NORM_UNIF = 3 => Normalization by frequency in the site and divided by uniform frequency (1/4 or 1/20)
+*/
 func (a *align) Pssm(log bool, pseudocount float64, normalization int) (pssm map[rune][]float64, err error) {
 	// Number of occurences of each different aa/nt
 	pssm = make(map[rune][]float64)
@@ -662,12 +667,12 @@ func (a *align) Pssm(log bool, pseudocount float64, normalization int) (pssm map
 	var normfactors map[rune]float64
 
 	alphabet = a.AlphabetCharacters()
-
 	for _, c := range alphabet {
 		if _, ok := pssm[c]; !ok {
 			pssm[c] = make([]float64, a.Length())
 		}
 	}
+	/* We compute normalization factors (takes into account pseudo counts) */
 	normfactors = make(map[rune]float64)
 	switch normalization {
 	case PSSM_NORM_NONE:
@@ -702,6 +707,7 @@ func (a *align) Pssm(log bool, pseudocount float64, normalization int) (pssm map
 		return
 	}
 
+	/* We count nt/aa occurences at each site */
 	for site := 0; site < a.Length(); site++ {
 		for seq := 0; seq < a.NbSequences(); seq++ {
 			s := a.seqs[seq].sequence[site]
@@ -713,6 +719,7 @@ func (a *align) Pssm(log bool, pseudocount float64, normalization int) (pssm map
 		}
 	}
 
+	/* We add pseudo counts */
 	if pseudocount > 0 {
 		for _, v := range pssm {
 			for i, _ := range v {
@@ -721,13 +728,14 @@ func (a *align) Pssm(log bool, pseudocount float64, normalization int) (pssm map
 		}
 	}
 
-	// Normalization
+	/* Applying normalization factors */
 	for k, v := range pssm {
 		for i, _ := range v {
 			v[i] = v[i] * normfactors[k]
 		}
 	}
 
+	/* Applying log2 transform */
 	if log {
 		for _, v := range pssm {
 			for i, _ := range v {

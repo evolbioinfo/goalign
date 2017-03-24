@@ -27,9 +27,9 @@ Different normalizations are possible with --normalization (-n):
 	--normalization 2: By column frequency compared to alignment frequency: same as -n 1, but divides by frequency of the nt/aa in the whole alignment
 	--normalization 3: By column frequency compared to uniform frequency: same as -n 1, but divides by uniform frequency of the nt/aa (1/4 for nt, 1/20 for aa)
 
-Possible to add pseudo count to (normalized) values with --pseudo-count (-c)
+Possible to add pseudo counts (before normalization) with --pseudo-count (-c)
 
-Possible to log2 transform the (normalized|+pseudo-count) value with --log (-l).
+Possible to log2 transform the (normalized) value with --log (-l).
 
 `,
 	Run: func(cmd *cobra.Command, args []string) {
