@@ -17,5 +17,5 @@ func isEndOfLine(ch rune) bool {
 }
 
 func isIdent(ch rune) bool {
-	return ch != '\n'
+	return ch != '\n' && ch != '\r'
 }
