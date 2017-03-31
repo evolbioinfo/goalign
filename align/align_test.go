@@ -423,3 +423,31 @@ func TestEntropy(t *testing.T) {
 		t.Error(fmt.Sprintf("Entropy should be %.7f and is %.7f", expected, e))
 	}
 }
+
+func TestSubAlign(t *testing.T) {
+	length := 200
+	nbseqs := 1001
+	a, err := RandomAlignment(AMINOACIDS, length, nbseqs)
+
+	/* We put only A from index 9 to index 99 */
+	for i := 0; i < 1001; i++ {
+		for aa := 9; aa < 99; aa++ {
+			a.SetSequenceChar(i, aa, 'A')
+		}
+	}
+
+	subalign, err := a.SubAlign(9, 90)
+	if err != nil {
+		t.Error(err)
+	}
+	subalign.IterateChar(func(name string, sequence []rune) {
+		if len(sequence) != 90 {
+			t.Error(fmt.Sprintf("Length of subsequence must be %d and is %d", 90, len(sequence)))
+		}
+		for i, a := range sequence {
+			if a != 'A' {
+				t.Error(fmt.Sprintf("Character at position %d must be %c and is %c", i, 'A', a))
+			}
+		}
+	})
+}

@@ -57,6 +57,7 @@ type Alignment interface {
 	CharStats() map[rune]int64
 	Alphabet() int
 	AlphabetCharacters() []rune
+	SubAlign(start, length int) (Alignment, error) // Extract a subalignment from this alignment
 	Clone() (Alignment, error)
 }
 
@@ -753,4 +754,20 @@ func (a *align) AlphabetCharacters() (alphabet []rune) {
 	} else {
 		return stdnucleotides
 	}
+}
+
+// Extract a subalignment from this alignment
+func (a *align) SubAlign(start, length int) (Alignment, error) {
+	if start < 0 || start > a.Length() {
+		return nil, errors.New("Start is outside the alignment")
+	}
+	if start+length < 0 || start+length > a.Length() {
+		return nil, errors.New("Start+Length is outside the alignment")
+	}
+	subalign := NewAlign(a.alphabet)
+	for i := 0; i < a.NbSequences(); i++ {
+		seq := a.seqs[i]
+		subalign.AddSequenceChar(seq.name, seq.SequenceChar()[start:start+length], seq.Comment())
+	}
+	return subalign, nil
 }
