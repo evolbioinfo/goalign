@@ -22,6 +22,8 @@ const (
 	PSSM_NORM_FREQ = 1 // Normalization by freq in the site
 	PSSM_NORM_DATA = 2 // Normalization by aa/nt frequency in data
 	PSSM_NORM_UNIF = 3 // Normalization by uniform frequency
+	PSSM_NORM_LOGO = 4 // Normalization like LOGO : v(site)=freq*(log2(alphabet)-H(site)-pseudocount
+
 )
 
 var stdaminoacid = []rune{'A', 'R', 'N', 'D', 'C', 'Q', 'E', 'G', 'H', 'I', 'L', 'K', 'M', 'F', 'P', 'S', 'T', 'W', 'Y', 'V'}
@@ -660,19 +662,22 @@ values may be normalized: normalization arg:
    PSSM_NORM_FREQ = 1 => Normalization by frequency in the site
    PSSM_NORM_DATA = 2 => Normalization by frequency in the site and divided by aa/nt frequency in data
    PSSM_NORM_UNIF = 3 => Normalization by frequency in the site and divided by uniform frequency (1/4 or 1/20)
+   PSSM_NORM_LOGO = 4 => Normalization like "Logo"
 */
 func (a *align) Pssm(log bool, pseudocount float64, normalization int) (pssm map[rune][]float64, err error) {
 	// Number of occurences of each different aa/nt
 	pssm = make(map[rune][]float64)
 	var alphabet []rune
 	var normfactors map[rune]float64
-
+	/* Entropy at each position */
+	var entropy []float64
 	alphabet = a.AlphabetCharacters()
 	for _, c := range alphabet {
 		if _, ok := pssm[c]; !ok {
 			pssm[c] = make([]float64, a.Length())
 		}
 	}
+
 	/* We compute normalization factors (takes into account pseudo counts) */
 	normfactors = make(map[rune]float64)
 	switch normalization {
@@ -682,11 +687,15 @@ func (a *align) Pssm(log bool, pseudocount float64, normalization int) (pssm map
 		}
 	case PSSM_NORM_UNIF:
 		for _, c := range alphabet {
-			normfactors[c] = 1.0 / (float64(a.NbSequences()) + pseudocount) / (1.0 / float64(len(alphabet)))
+			normfactors[c] = 1.0 / (float64(a.NbSequences()) + (float64(len(pssm)) * pseudocount)) / (1.0 / float64(len(alphabet)))
 		}
 	case PSSM_NORM_FREQ:
 		for _, c := range alphabet {
-			normfactors[c] = 1.0 / (float64(a.NbSequences()) + pseudocount)
+			normfactors[c] = 1.0 / (float64(a.NbSequences()) + (float64(len(pssm)) * pseudocount))
+		}
+	case PSSM_NORM_LOGO:
+		for _, c := range alphabet {
+			normfactors[c] = 1.0 / float64(a.NbSequences())
 		}
 	case PSSM_NORM_DATA:
 		stats := a.CharStats()
@@ -701,7 +710,7 @@ func (a *align) Pssm(log bool, pseudocount float64, normalization int) (pssm map
 		}
 		for _, c := range alphabet {
 			s, _ := stats[c]
-			normfactors[c] = 1.0 / (float64(a.NbSequences()) + pseudocount) / (float64(s) / total)
+			normfactors[c] = 1.0 / (float64(a.NbSequences()) + (float64(len(pssm)) * pseudocount)) / (float64(s) / total)
 		}
 	default:
 		err = errors.New("Unknown normalization option")
@@ -729,18 +738,32 @@ func (a *align) Pssm(log bool, pseudocount float64, normalization int) (pssm map
 		}
 	}
 
+	/* Initialize entropy if NORM_LOGO*/
+	entropy = make([]float64, a.Length())
 	/* Applying normalization factors */
 	for k, v := range pssm {
 		for i, _ := range v {
 			v[i] = v[i] * normfactors[k]
+			if normalization == PSSM_NORM_LOGO {
+				entropy[i] += -v[i] * math.Log(v[i]) / math.Log(2)
+			}
 		}
 	}
 
-	/* Applying log2 transform */
-	if log {
+	/* We compute the logo */
+	if normalization == PSSM_NORM_LOGO {
 		for _, v := range pssm {
 			for i, _ := range v {
-				v[i] = math.Log(v[i]) / math.Log(2)
+				v[i] = v[i] * (math.Log(float64(len(alphabet)))/math.Log(2) - entropy[i])
+			}
+		}
+	} else {
+		/* Applying log2 transform */
+		if log {
+			for _, v := range pssm {
+				for i, _ := range v {
+					v[i] = math.Log(v[i]) / math.Log(2)
+				}
 			}
 		}
 	}

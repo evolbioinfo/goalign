@@ -24,17 +24,19 @@ var pssmCmd = &cobra.Command{
 Different normalizations are possible with --normalization (-n):
 	--normalization 0: None, means raw counts
 	--normalization 1: By column frequency, i.e. frequency of nt/aa per site/column
-	--normalization 2: By column frequency compared to alignment frequency: same as -n 1, but divides by frequency of the nt/aa in the whole alignment
-	--normalization 3: By column frequency compared to uniform frequency: same as -n 1, but divides by uniform frequency of the nt/aa (1/4 for nt, 1/20 for aa)
+	--normalization 2: By column frequency compared to alignment frequency: same as -n 1,
+                           but divides by frequency of the nt/aa in the whole alignment
+	--normalization 3: By column frequency compared to uniform frequency: same as -n 1, 
+                           but divides by uniform frequency of the nt/aa (1/4 for nt, 1/20 for aa)
+	--normalization 4: Normalization "Logo"
 
 Possible to add pseudo counts (before normalization) with --pseudo-count (-c)
 
-Possible to log2 transform the (normalized) value with --log (-l).
-
+Possible to log2 transform the (normalized) value with --log (-l). Not taken into account with logo normalization
 `,
 	Run: func(cmd *cobra.Command, args []string) {
 		switch pssmnorm {
-		case align.PSSM_NORM_UNIF, align.PSSM_NORM_NONE, align.PSSM_NORM_FREQ, align.PSSM_NORM_DATA:
+		case align.PSSM_NORM_UNIF, align.PSSM_NORM_NONE, align.PSSM_NORM_FREQ, align.PSSM_NORM_DATA, align.PSSM_NORM_LOGO:
 			for al := range rootaligns {
 				if pssm, err := al.Pssm(pssmlog, pssmpseudocount, pssmnorm); err != nil {
 					io.ExitWithMessage(err)
