@@ -642,11 +642,9 @@ func (a *align) Entropy(site int, removegaps bool) (float64, error) {
 
 	for _, v := range occur {
 		proba := float64(v) / float64(total)
-		entropy += proba * math.Log(proba)
+		entropy -= proba * math.Log(proba)
 	}
-	if entropy != 0 {
-		entropy = -1.0 * entropy
-	}
+
 	if total == 0 {
 		return math.NaN(), nil
 	}
