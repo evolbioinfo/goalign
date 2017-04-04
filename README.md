@@ -56,6 +56,7 @@ The `goalign` executable should be located in the `$GOPATH/bin` folder.
   * nalign
   * nseq
   * taxa
+* subseq:      Extract a subsequence from the alignment
 * subset:      Take a subset of sequences from the input alignment
 * trim:        This command trims names of sequences or sequences themselves
   * name
