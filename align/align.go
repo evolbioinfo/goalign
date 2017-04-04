@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
+	"log"
 	"math"
 	"math/rand"
 	"sort"
@@ -111,16 +112,23 @@ func (a *align) AddSequence(name string, sequence string, comment string) error 
 
 func (a *align) AddSequenceChar(name string, sequence []rune, comment string) error {
 	_, ok := a.seqmap[name]
-	if ok {
-		return errors.New("Sequence " + name + " already exists in alignment")
+	idx := 0
+	tmpname := name
+	/* If the sequence name already exists, we add a 4 digit index at the end and print a warning on stderr */
+	for ok {
+		idx++
+		log.Print(fmt.Sprintf("Warning: sequence \"%s\" already exists in alignment, renamed in \"%s_%04d\"", tmpname, name, idx))
+		tmpname = fmt.Sprintf("%s_%04d", name, idx)
+		_, ok = a.seqmap[tmpname]
+		/*return errors.New("Sequence " + name + " already exists in alignment")*/
 	}
 
 	if a.length != -1 && a.length != len(sequence) {
-		return errors.New("Sequence " + name + " does not have same length as other sequences")
+		return errors.New("Sequence " + tmpname + " does not have same length as other sequences")
 	}
 	a.length = len(sequence)
-	seq := NewSequence(name, sequence, comment)
-	a.seqmap[name] = seq
+	seq := NewSequence(tmpname, sequence, comment)
+	a.seqmap[tmpname] = seq
 	a.seqs = append(a.seqs, seq)
 	return nil
 }
