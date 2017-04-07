@@ -17,6 +17,7 @@ const (
 	AMINOACIDS = 0 // Amino acid sequence alphabet
 	NUCLEOTIDS = 1 // Nucleotid sequence alphabet
 	GAP        = '-'
+	POINT      = '.'
 	OTHER      = '*'
 
 	PSSM_NORM_NONE = 0 // No normalization
@@ -537,7 +538,7 @@ func DetectAlphabet(seq string) int {
 		couldbent := false
 		couldbeaa := false
 		switch nt {
-		case 'A', 'C', 'B', 'R', 'G', '?', '-', 'D', 'K', 'S', 'H', 'M', 'N', 'V', 'X', 'T', 'W', 'Y':
+		case 'A', 'C', 'B', 'R', 'G', '?', GAP, POINT, OTHER, 'D', 'K', 'S', 'H', 'M', 'N', 'V', 'X', 'T', 'W', 'Y':
 			couldbent = true
 			couldbeaa = true
 		case 'U', 'O':
@@ -611,7 +612,7 @@ func (a *align) AvgAllelesPerSite() float64 {
 		onlygap := true
 		for seq := 0; seq < a.NbSequences(); seq++ {
 			s := a.seqs[seq].sequence[site]
-			if s != GAP {
+			if s != GAP && s != POINT && s != OTHER {
 				alleles[s] = true
 				onlygap = false
 			}
@@ -637,7 +638,7 @@ func (a *align) Entropy(site int, removegaps bool) (float64, error) {
 	entropy := 0.0
 	for seq := 0; seq < a.NbSequences(); seq++ {
 		s := a.seqs[seq].sequence[site]
-		if s != OTHER && (!removegaps || s != GAP) {
+		if s != OTHER && s != POINT && (!removegaps || s != GAP) {
 			nb, ok := occur[s]
 			if !ok {
 				occur[s] = 1
