@@ -64,7 +64,7 @@ The `goalign` executable should be located in the `$GOPATH/bin` folder.
 * unalign:     Unaligns input alignment
 * version:     Prints the current version of goalign
 
-### Examples
+### Goalign commandline examples
 
 * Generate a random alignemnt and print statistics
 ```
@@ -96,6 +96,30 @@ goalign random  | goalign addid -r -n "_Dataset1"
 ```
 goalign random -n 10000 | goalign sample -n 10
 ```
+* Extract all sequences whose name starts with "mammal"
+```
+goalign subset -e '^mammal.*$' -i align.fasta
+```
+* Extract all sequences whose name does match the regexp
+```
+goalign subset -r -e '^mammal.*$' -i align.fasta
+```
+* Extract a sub sequences going from position 10 and with a length of 100
+```
+goalign subseq -i align.fasta -s 9 -l 10
+```
+* Compute a "logo" like consensus
+```
+goalign compute pssm -n 4 -i align.fasta
+```
+* Compute an evolutionary distance matrix (dna alignment only, 5 threads)
+```
+goalign compute distance -m k2p -i align.fasta -t 5
+```
+* Compute site entropry
+```
+goalign compute entropy -i align.fasta
+```
 * Build 100 bootstrap alignments from an input alignment, in a single tar.gz file (5 threads)
 ```
 goalign random -n 500 | goalign build seqboot -S -n 100 --gz --tar -t 5 -o boot
@@ -104,3 +128,182 @@ goalign random -n 500 | goalign build seqboot -S -n 100 --gz --tar -t 5 -o boot
 ```
 goalign random -n 500 | goalign build seqboot -S -n 100 --gz -t 5 -o boot
 ```
+
+
+### Goalign api usage examples
+* Parse a Phylip single alignment file and export it in Fasta
+```go
+package main
+
+import (
+	"fmt"
+	"os"
+
+	"github.com/fredericlemoine/goalign/align"
+	"github.com/fredericlemoine/goalign/io/fasta"
+	"github.com/fredericlemoine/goalign/io/phylip"
+)
+
+func main() {
+	var err error
+	var f *os.File
+	var align align.Alignment
+
+	f, err = os.Open("f.phy")
+	if err != nil {
+		panic(err)
+	}
+	if align, err = phylip.NewParser(f).Parse(); err != nil {
+		panic(err)
+	} else {
+		fmt.Println(fasta.WriteSequences(align))
+	}
+}
+```
+
+* Parse a Phylip multi alignments file and export it in Fasta
+```go
+package main
+
+import (
+	"fmt"
+	"os"
+
+	"github.com/fredericlemoine/goalign/align"
+	"github.com/fredericlemoine/goalign/io/fasta"
+	"github.com/fredericlemoine/goalign/io/phylip"
+)
+
+func main() {
+	var f *os.File
+	var aligns chan align.Alignment
+	var err error
+
+	f, err = os.Open("f.phy")
+	if err != nil {
+		panic(err)
+	}
+	aligns = make(chan align.Alignment, 15)
+	if err = phylip.NewParser(f).ParseMultiple(aligns); err != nil {
+		panic(err)
+	} else {
+		for al := range aligns {
+			fmt.Println(fasta.WriteSequences(al))
+		}
+	}
+}
+```
+* Parse a Fasta file and export it in Nexus
+```go
+package main
+
+import (
+	"fmt"
+	"os"
+
+	"github.com/fredericlemoine/goalign/align"
+	"github.com/fredericlemoine/goalign/io/fasta"
+	"github.com/fredericlemoine/goalign/io/nexus"
+)
+
+func main() {
+	var f *os.File
+	var align align.Alignment
+	var err error
+
+	f, err = os.Open("f.fasta")
+	if err != nil {
+		panic(err)
+	}
+	if align, err = fasta.NewParser(f).Parse(); err != nil {
+		panic(err)
+	} else {
+		fmt.Println(nexus.WriteAlignment(align))
+	}
+}
+```
+* Parse a Fasta file and export it in Phylip
+```go
+package main
+
+import (
+	"fmt"
+	"os"
+
+	"github.com/fredericlemoine/goalign/align"
+	"github.com/fredericlemoine/goalign/io/fasta"
+	"github.com/fredericlemoine/goalign/io/phylip"
+)
+
+func main() {
+	var f *os.File
+	var align align.Alignment
+	var err error
+
+	f, err = os.Open("f.fasta")
+	if err != nil {
+		panic(err)
+	}
+	if align, err = fasta.NewParser(f).Parse(); err != nil {
+		panic(err)
+	} else {
+		fmt.Println(phylip.WriteAlignment(align, false))
+	}
+}
+```
+* Iterating over alignment sequences
+```go
+	align.IterateChar(func(name string, sequence []rune) {
+		fmt.Printf("Sequence: %s\n", name)
+	})
+```
+* Append identifier at the beginning of all sequence names
+```go
+align.AppendSeqIdentifier("IDENT", false)
+```
+* Alignment statistics
+```go
+var n int = align.NbSequences()
+var l int = align.Length()
+```
+* Extract a sub alignment
+```go
+var subalign align.Alignment
+var err error
+subalign,err = align.SubAlign(0, 100)
+```
+* Copy/Clone the alignment
+```go
+var clonealign align.Alignment
+var err error
+clonealign,err = align.Clone()
+```
+* Get the sequence having a specific name
+```go
+var sequence string
+var err error
+sequence,err = align.GetSequence("nameofsequence")
+```
+* Build a bootstrap replicate
+```go
+var bootstrap align.Alignment
+bootstrap = align.BuildBootstrap()
+```
+* Randomly shuffle sequence order of alignment
+```go
+align.ShuffleSequences()
+```
+* Compute evolutionary ditance matrix (5 threads)
+```go
+import "github.com/fredericlemoine/goalign/distance"
+//...
+var model distance.DistModel
+var distMatrix [][]float64
+model = distance.Model("k2p", false)
+distance.Model(computedistModel, computedistRemoveGaps)
+distmatrix = distance.DistMatrix(align, nil, model, 5)
+```
+
+* Other functions
+
+Other functions are described in the godoc.
