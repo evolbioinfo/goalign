@@ -3,12 +3,15 @@ package cmd
 import (
 	"errors"
 	"fmt"
+	"log"
+	"math"
+	"os"
+	"time"
+
 	"github.com/fredericlemoine/goalign/align"
 	"github.com/fredericlemoine/goalign/distance"
 	"github.com/fredericlemoine/goalign/io"
 	"github.com/spf13/cobra"
-	"os"
-	"time"
 )
 
 var computedistSeed int64
@@ -95,12 +98,21 @@ func writeDistMatrix(al align.Alignment, matrix [][]float64, f *os.File) {
 
 func writeDistAverage(al align.Alignment, matrix [][]float64, f *os.File) {
 	sum := 0.0
+	total := 0
+	nan := 0
 	for i := 0; i < len(matrix); i++ {
 		for j := i + 1; j < len(matrix); j++ {
-			sum += matrix[i][j]
+			if math.IsNaN(matrix[i][j]) {
+				nan++
+			} else {
+				sum += matrix[i][j]
+				total++
+			}
 		}
 	}
-	l := float64(len(matrix))
-	sum /= l * (l - 1) / 2.0
+	if nan > 0 {
+		log.Print(fmt.Sprintf("Warning: The average distance hides %d NaN distances", nan))
+	}
+	sum /= float64(total)
 	f.WriteString(fmt.Sprintf("%.12f\n", sum))
 }
