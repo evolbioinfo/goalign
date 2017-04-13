@@ -27,16 +27,16 @@ and with a given length.
 		rand.Seed(siteseed)
 
 		al := <-rootaligns
-		var name string = subseqout
-		var extension string = ".fa"
+		var name string = siteout
+		var extension string = "fa"
 		if rootphylip {
-			extension = ".phy"
+			extension = "phy"
 		}
 		for i := 0; i < sitenb; i++ {
 			if sitenb > 1 {
-				name = fmt.Sprintf("%s_%d.%s", name, i, extension)
+				name = fmt.Sprintf("%s_%d.%s", siteout, i, extension)
 			}
-			out := openWriteFile(subseqout)
+			out := openWriteFile(name)
 			subalign, err := al.RandSubAlign(sitelength)
 			if err != nil {
 				io.ExitWithMessage(err)
