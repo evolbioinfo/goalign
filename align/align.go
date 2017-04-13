@@ -62,6 +62,7 @@ type Alignment interface {
 	Alphabet() int
 	AlphabetCharacters() []rune
 	SubAlign(start, length int) (Alignment, error) // Extract a subalignment from this alignment
+	RandSubAlign(length int) (Alignment, error)    // Extract a random subalignment with given length from this alignment
 	Clone() (Alignment, error)
 }
 
@@ -795,6 +796,24 @@ func (a *align) SubAlign(start, length int) (Alignment, error) {
 		return nil, errors.New("Start+Length is outside the alignment")
 	}
 	subalign := NewAlign(a.alphabet)
+	for i := 0; i < a.NbSequences(); i++ {
+		seq := a.seqs[i]
+		subalign.AddSequenceChar(seq.name, seq.SequenceChar()[start:start+length], seq.Comment())
+	}
+	return subalign, nil
+}
+
+// Extract a subalignment with given length and a random start position from this alignment
+func (a *align) RandSubAlign(length int) (Alignment, error) {
+	if length > a.Length() {
+		return nil, errors.New("sub alignment is larger than original alignment ")
+	}
+	if length <= 0 {
+		return nil, errors.New("sub alignment cannot have 0 or negative length")
+	}
+
+	subalign := NewAlign(a.alphabet)
+	start := rand.Intn(a.Length() - length + 1)
 	for i := 0; i < a.NbSequences(); i++ {
 		seq := a.seqs[i]
 		subalign.AddSequenceChar(seq.name, seq.SequenceChar()[start:start+length], seq.Comment())
