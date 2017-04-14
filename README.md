@@ -43,8 +43,9 @@ The `goalign` executable should be located in the `$GOPATH/bin` folder.
   * phylip
   * tnt
 * rename:      Rename sequences of the input alignment, given a map file
-* sample:      Randomly samples a subset of sequences from the input alignment
-* samplesites: Extracts a sub-sample starting a a random position, and with a given length
+* sample: Samples sequences or subalignments
+  * seqs: Randomly samples a subset of sequences from the input alignment
+  * sites: Extracts a sub-alignment starting a a random position, and with a given length
 * shuffle:     A set of commands to shuffle an alignment
   * recomb: Recombine some sequences (copy/paste)
   * rogue: simulate sort of rogue taxa by shuffling some sequences
