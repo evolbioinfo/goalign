@@ -34,6 +34,7 @@ The `goalign` executable should be located in the `$GOPATH/bin` folder.
   * distances: compute evolutionary distances for nucleotide alignment
   * entropy: compute entropy of alignment sites
   * pssm: compute position-specific scoring matrix
+* concat:      Concatenates several alignments
 * divide:      Divide an input alignment in several output files (one per alignment)
 * random:      Generate random sequences
 * reformat:    Reformats input alignment into phylip of fasta format
