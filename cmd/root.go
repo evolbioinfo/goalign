@@ -48,45 +48,52 @@ It allows to :
 `,
 	PersistentPreRun: func(cmd *cobra.Command, args []string) {
 		runtime.GOMAXPROCS(rootcpus)
-		rootaligns = make(chan align.Alignment, 15)
-		var fi *os.File
-		var r *bufio.Reader
-		var err error
-		if infile == "stdin" || infile == "-" {
-			fi = os.Stdin
-		} else {
-			fi, err = os.Open(infile)
-			if err != nil {
-				io.ExitWithMessage(err)
-			}
+		rootaligns = readalign(infile)
+	},
+}
+
+func readalign(file string) chan align.Alignment {
+	alchan := make(chan align.Alignment, 15)
+	var fi *os.File
+	var r *bufio.Reader
+	var err error
+	if file == "stdin" || file == "-" {
+		fi = os.Stdin
+	} else {
+		fi, err = os.Open(file)
+		if err != nil {
+			io.ExitWithMessage(err)
 		}
-		if strings.HasSuffix(infile, ".gz") {
-			if gr, err := gzip.NewReader(fi); err != nil {
-				io.ExitWithMessage(err)
-			} else {
-				r = bufio.NewReader(gr)
-			}
+	}
+	if strings.HasSuffix(infile, ".gz") {
+		if gr, err := gzip.NewReader(fi); err != nil {
+			io.ExitWithMessage(err)
 		} else {
-			r = bufio.NewReader(fi)
+			r = bufio.NewReader(gr)
 		}
-		var al align.Alignment
-		var err2 error
-		if rootphylip {
-			go func() {
-				err2 = phylip.NewParser(r).ParseMultiple(rootaligns)
-				if err2 != nil {
-					io.ExitWithMessage(err2)
-				}
-			}()
-		} else {
-			al, err2 = fasta.NewParser(r).Parse()
+	} else {
+		r = bufio.NewReader(fi)
+	}
+	var al align.Alignment
+	var err2 error
+	if rootphylip {
+		go func() {
+			err2 = phylip.NewParser(r).ParseMultiple(alchan)
 			if err2 != nil {
 				io.ExitWithMessage(err2)
 			}
-			rootaligns <- al
-			close(rootaligns)
+			fi.Close()
+		}()
+	} else {
+		al, err2 = fasta.NewParser(r).Parse()
+		if err2 != nil {
+			io.ExitWithMessage(err2)
 		}
-	},
+		alchan <- al
+		fi.Close()
+		close(alchan)
+	}
+	return alchan
 }
 
 // Execute adds all child commands to the root command sets flags appropriately.

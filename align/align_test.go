@@ -451,3 +451,42 @@ func TestSubAlign(t *testing.T) {
 		}
 	})
 }
+
+func TestConcat(t *testing.T) {
+	var err error
+	var a Alignment
+	var a2 Alignment
+	var acopy Alignment
+	length := 200
+	nbseqs := 1001
+	a, err = RandomAlignment(AMINOACIDS, length, nbseqs)
+	if err != nil {
+		t.Error(err)
+	}
+	a2, err = RandomAlignment(AMINOACIDS, length*2, nbseqs)
+	if err != nil {
+		t.Error(err)
+	}
+
+	acopy, err = a.Clone()
+	if err != nil {
+		t.Error(err)
+	}
+
+	err = a.Concat(a2)
+	if err != nil {
+		t.Error(err)
+	}
+
+	if a.Length() != length*3 {
+		t.Error(fmt.Sprintf("Concatenated alignment should have a length of %d and not %d", length*3, a.Length()))
+	}
+
+	a.IterateChar(func(name string, sequence []rune) {
+		s, _ := acopy.GetSequence(name)
+		s2, _ := a2.GetSequence(name)
+		if string(sequence) != s+s2 {
+			t.Error(fmt.Sprintf("Concatenated sequence %d is not correct"))
+		}
+	})
+}

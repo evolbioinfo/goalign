@@ -51,6 +51,7 @@ type Alignment interface {
 	BuildBootstrap() Alignment
 	Entropy(site int, removegaps bool) (float64, error) // Entropy of the given site
 	Swap(rate float64)
+	Concat(Alignment) error // concatenates the given alignment with this alignment
 	Recombine(rate float64, lenprop float64)
 	Rename(namemap map[string]string)
 	Pssm(log bool, pseudocount float64, normalization int) (pssm map[rune][]float64, err error) // Normalization: PSSM_NORM_NONE, PSSM_NORM_UNIF, PSSM_NORM_DATA
@@ -135,11 +136,24 @@ func (a *align) AddSequenceChar(name string, sequence []rune, comment string) er
 	return nil
 }
 
+/* It appends the given sequence to the sequence having given name */
+func (a *align) appendToSequence(name string, sequence []rune) error {
+	seq, ok := a.seqmap[name]
+	if !ok {
+		return errors.New(fmt.Sprintf("Sequence with name %s does not exist in alignment", name))
+	}
+	seq.sequence = append(seq.sequence, sequence...)
+	return nil
+}
+
 // If sequence exists in alignment, return true,sequence
 // Otherwise, return false,nil
 func (a *align) GetSequence(name string) (string, bool) {
 	seq, ok := a.seqmap[name]
-	return seq.Sequence(), ok
+	if ok {
+		return seq.Sequence(), ok
+	}
+	return "", ok
 }
 
 // If ith >=0 && i < nbSequences() return sequence,true
@@ -819,4 +833,60 @@ func (a *align) RandSubAlign(length int) (Alignment, error) {
 		subalign.AddSequenceChar(seq.name, seq.SequenceChar()[start:start+length], seq.Comment())
 	}
 	return subalign, nil
+}
+
+/*
+Concatenates both alignments. It appends the given alignment to this alignment
+Returns an error if the set of sequence names are not the same between both alignments
+*/
+func (a *align) Concat(c Alignment) (err error) {
+	if a.Alphabet() != c.Alphabet() {
+		return errors.New("Alignments do not have the same alphabet")
+	}
+
+	if a.NbSequences() != c.NbSequences() {
+		return errors.New(fmt.Sprintf("Alignments do not have the same number of sequences %d!=%d", a.NbSequences(), c.NbSequences()))
+	}
+	a.Iterate(func(name, sequence string) {
+		_, ok := c.GetSequence(name)
+		if !ok {
+			err = errors.New(fmt.Sprintf("Sequence %s does not exist in the given alignment", name))
+			return
+		}
+	})
+	if err != nil {
+		return err
+	}
+	c.Iterate(func(name, sequence string) {
+		_, ok := a.GetSequence(name)
+		if !ok {
+			err = errors.New(fmt.Sprintf("Sequence %s does not exist in this alignment", name))
+		}
+		return
+	})
+	if err != nil {
+		return err
+	}
+
+	/* Now We append the sequences */
+	c.IterateChar(func(name string, sequence []rune) {
+		err = a.appendToSequence(name, sequence)
+	})
+	if err != nil {
+		return err
+	}
+
+	leng := -1
+	a.IterateChar(func(name string, sequence []rune) {
+		if leng == -1 {
+			leng = len(sequence)
+		} else {
+			if leng != len(sequence) {
+				err = errors.New("Sequences of the new alignment do not have the same length...")
+			}
+		}
+	})
+	a.length = leng
+
+	return err
 }
