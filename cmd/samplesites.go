@@ -16,7 +16,7 @@ var sitenb int
 
 // samplesitesCmd represents the samplesites command
 var samplesitesCmd = &cobra.Command{
-	Use:   "samplesites",
+	Use:   "sites",
 	Short: "Take a random subalignment",
 	Long: `Take a random subalignment.
 
@@ -48,7 +48,7 @@ and with a given length.
 }
 
 func init() {
-	RootCmd.AddCommand(samplesitesCmd)
+	sampleCmd.AddCommand(samplesitesCmd)
 	samplesitesCmd.PersistentFlags().Int64VarP(&siteseed, "seed", "s", time.Now().UTC().UnixNano(), "Initial Random Seed")
 	samplesitesCmd.PersistentFlags().StringVarP(&siteout, "output", "o", "stdout", "Alignment output file")
 	samplesitesCmd.PersistentFlags().IntVarP(&sitelength, "length", "l", 10, "Length of the random sub alignment")
