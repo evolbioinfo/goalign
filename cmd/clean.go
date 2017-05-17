@@ -15,11 +15,15 @@
 package cmd
 
 import (
+	"fmt"
+
+	"github.com/fredericlemoine/goalign/io"
 	"github.com/spf13/cobra"
 )
 
 var cleanOutput string
 var cleanCutoff float64
+var cleanQuiet bool
 
 // cleanCmd represents the clean command
 var cleanCmd = &cobra.Command{
@@ -41,9 +45,17 @@ will be removed.
 `,
 	Run: func(cmd *cobra.Command, args []string) {
 		f := openWriteFile(cleanOutput)
+		i := 0
 		for al := range rootaligns {
+			beforelength := al.Length()
 			al.RemoveGaps(cleanCutoff)
+			afterlength := al.Length()
 			writeAlign(al, f)
+			if !cleanQuiet {
+				io.PrintMessage(fmt.Sprintf("Alignment (%d) length before cleaning=%d", i, beforelength))
+				io.PrintMessage(fmt.Sprintf("Alignment (%d) length after cleaning=%d", i, afterlength))
+				io.PrintMessage(fmt.Sprintf("Alignment (%d) number of gaps=%d", i, beforelength-afterlength))
+			}
 		}
 		f.Close()
 
@@ -54,4 +66,5 @@ func init() {
 	RootCmd.AddCommand(cleanCmd)
 	cleanCmd.PersistentFlags().StringVarP(&cleanOutput, "output", "o", "stdout", "Cleaned alignment output file")
 	cleanCmd.PersistentFlags().Float64VarP(&cleanCutoff, "cutoff", "c", 0, "Cutoff for gap deletion : 0 remove sites with > 0 gap, 1 remove sites with 100% gaps)")
+	cleanCmd.PersistentFlags().BoolVarP(&cleanQuiet, "quiet", "q", false, "Do not print results on stderr")
 }
