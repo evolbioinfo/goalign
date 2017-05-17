@@ -53,6 +53,7 @@ type Alignment interface {
 	Swap(rate float64)
 	Concat(Alignment) error // concatenates the given alignment with this alignment
 	Recombine(rate float64, lenprop float64)
+	AddGaps(rate, lenprop float64)
 	Rename(namemap map[string]string)
 	Pssm(log bool, pseudocount float64, normalization int) (pssm map[rune][]float64, err error) // Normalization: PSSM_NORM_NONE, PSSM_NORM_UNIF, PSSM_NORM_DATA
 	TrimNames(size int) (map[string]string, error)
@@ -269,7 +270,6 @@ func (a *align) ShuffleSites(rate float64, roguerate float64) []string {
 // other cutoffs : ]0,1] mean that positions with >= cutoff gaps will be removed
 func (a *align) RemoveGaps(cutoff float64) {
 	var nbgaps int
-
 	if cutoff < 0 || cutoff > 1 {
 		cutoff = 0
 	}
@@ -371,6 +371,31 @@ func (a *align) Recombine(prop float64, lenprop float64) {
 		seq2 = a.seqs[permutation[i+nb]]
 		for j := pos; j < pos+lentorecomb; j++ {
 			seq1.sequence[j] = seq2.sequence[j]
+		}
+	}
+}
+
+// Add prop*100% gaps to lenprop*100% of the sequences
+// if prop < 0 || lenprop<0 : does nothing
+// if prop > 1 || lenprop>1 : does nothing
+func (a *align) AddGaps(lenprop float64, prop float64) {
+	if prop < 0 || prop > 1 {
+		return
+	}
+	if lenprop < 0 || lenprop > 1 {
+		return
+	}
+
+	nb := int(prop * float64(a.NbSequences()))
+	nbgaps := int(lenprop * float64(a.Length()))
+	permseqs := rand.Perm(a.NbSequences())
+
+	// We take a random position in the sequences between min and max
+	for i := 0; i < nb; i++ {
+		permsites := rand.Perm(a.Length())
+		seq := a.seqs[permseqs[i]]
+		for j := 0; j < nbgaps; j++ {
+			seq.sequence[permsites[j]] = GAP
 		}
 	}
 }

@@ -47,6 +47,7 @@ The `goalign` executable should be located in the `$GOPATH/bin` folder.
   * seqs: Randomly samples a subset of sequences from the input alignment
   * sites: Extracts a sub-alignment starting a a random position, and with a given length
 * shuffle:     A set of commands to shuffle an alignment
+  * gaps: Adds random (uniformly) gaps
   * recomb: Recombine some sequences (copy/paste)
   * rogue: simulate sort of rogue taxa by shuffling some sequences
   * seqs: Shuffle sequence order in the alignment
