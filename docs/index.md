@@ -33,46 +33,47 @@ The `goalign` executable should be located in the `$GOPATH/bin` folder.
 
 Here is the list of all commands, with the link to the full description, and a link to a snippet that does it in GO.
 
-Command                                                            | Subcommand        |        Description
--------------------------------------------------------------------|-------------------|-------------------------------------------------------------------------------------------------
-[addid](commands/addid.md) ([api](api/addid.md))                   |                   | Adds a string to each sequence identifier of the input alignment
-[build](commands/build.md) ([api](api/build.md))                   |                   | Command to build output files : bootstrap for example
-                                                                   | distboot          | Builds bootstrap distances matrices from input alignment (nt only)
-																   | seqboot           | Builds bootstrap alignments from input alignment
-[clean](commands/clean.md) ([api](api/clean.md))                   |                   | Removes gap sites
-[compute](commands/compute.md) ([api](api/compute.md))             |                   | Different computations (distances, entropy, etc.)
-                                                                   | distance          | Computes distance matrix from inpu alignment
-																   | entropy           | Computes entropy of sites of a given alignment
-                                                                   | pssm              | Computes and prints a Position specific scoring matrix
-[concat](commands/concat.md) ([api](api/concat.md))                |                   | Concatenates a set of alignment
-[divide](commands/divide.md) ([api](api/divide.md))                |                   | Divide an input alignment in several output files
-[random](commands/random.md) ([api](api/random.md))                |                   | Generate random sequences
-[reformat](commands/reformat.md) ([api](api/reformat.md))          |                   | Reformats input alignment into phylip of fasta format
-                                                                   | fasta             | Reformats an input alignment into Fasta
-																   | nexus             | Reformats an input alignment into nexus
-                                                                   | phylip            | Reformats an input alignment into Phylip
-																   | tnt               | Reformats an input alignment into TNT input file
-[rename](commands/rename.md) ([api](api/rename.md))                |                   | Rename sequences of the input alignment, given a map file
-[sample](commands/sample.md) ([api](api/sample.md))                |                   | Samples sequences or sites from an input alignment
-																   | seqs              | Samples a subset of sequences from the input alignment
-                                                                   | sites             | Take a random subalignment
-[shuffle](commands/shuffle.md) ([api](api/shuffle.md))             |                   | A set of commands to shuffle an alignment
-																   | recomb            | Recombines sequences in the input alignment (copy/paste)
-                                                                   | rogue             | Simulates rogue taxa
-																   | seqs              | Shuffles sequence order in alignment
-                                                                   | sites             | Shuffles n alignment sites vertically
-																   | swap              | Swaps portion of sequences in the input alignment (cut/paste)
-[stats](commands/stats.md) ([api](api/stats.md))                   |                   | Prints different characteristics of the alignment
-																   | alleles           | Prints the average number of alleles per sites of the alignment
-                                                                   | char              | Prints frequence of different characters (aa/nt) of the alignment
-																   | length            | Prints the length of sequences in the alignment
-                                                                   | nalign            | Prints the number of alignments in the input file (phylip)
-																   | nseq              | Prints the number of sequences in the alignment
-																   | taxa              | Prints index (position) and name of taxa of the alignment file
-[subseq](commands/subseq.md) ([api](api/subseq.md))                |                   | Take a sub-alignment from the input alignment
-[subset](commands/subset.md) ([api](api/subset.md))                |                   | Take a subset of sequences from the input alignment
-[trim](commands/trim.md) ([api](api/trim.md))                      |                   | This command trims names of sequences or sequences themselves
-																   | name              | Trims names of sequences
-																   | seq               | Trims sequences of the input alignment
-[unalign](commands/unalign.md) ([api](api/unalign.md))             |                   | Unaligns input alignment
-[version](commands/version.md) ([api](api/version.md))             |                   | Prints the current version of goalign
+Command                                                     | Subcommand |        Description
+------------------------------------------------------------|------------|-----------------------------------------------------------------------
+[addid](commands/addid.md) ([api](api/addid.md))            |            | Adds a string to each sequence identifier of the input alignment
+[build](commands/build.md) ([api](api/build.md))            |            | Command to build output files : bootstrap for example
+--                                                          | distboot   | Builds bootstrap distances matrices from input alignment (nt only)
+--                                                          | seqboot    | Builds bootstrap alignments from input alignment
+[clean](commands/clean.md) ([api](api/clean.md))            |            | Removes gap sites
+[compute](commands/compute.md) ([api](api/compute.md))      |            | Different computations (distances, entropy, etc.)
+--                                                          | distance   | Computes distance matrix from inpu alignment
+--                                                          | entropy    | Computes entropy of sites of a given alignment
+--                                                          | pssm       | Computes and prints a Position specific scoring matrix
+[concat](commands/concat.md) ([api](api/concat.md))         |            | Concatenates a set of alignment
+[divide](commands/divide.md) ([api](api/divide.md))         |            | Divide an input alignment in several output files
+[random](commands/random.md) ([api](api/random.md))         |            | Generate random sequences
+[reformat](commands/reformat.md) ([api](api/reformat.md))   |            | Reformats input alignment into phylip of fasta format
+--                                                          | fasta      | Reformats an input alignment into Fasta
+--                                                          | nexus      | Reformats an input alignment into nexus
+--                                                          | phylip     | Reformats an input alignment into Phylip
+--                                                          | tnt        | Reformats an input alignment into TNT input file
+[rename](commands/rename.md) ([api](api/rename.md))         |            | Rename sequences of the input alignment, given a map file
+[sample](commands/sample.md) ([api](api/sample.md))         |            | Samples sequences or sites from an input alignment
+--                                                          | seqs       | Samples a subset of sequences from the input alignment
+--                                                          | sites      | Take a random subalignment
+[shuffle](commands/shuffle.md) ([api](api/shuffle.md))      |            | A set of commands to shuffle an alignment
+--                                                          | gaps       | Adds random (uniformly) gaps on an input alignment
+--                                                          | recomb     | Recombines sequences in the input alignment (copy/paste)
+--                                                          | rogue      | Simulates rogue taxa
+--                                                          | seqs       | Shuffles sequence order in alignment
+--                                                          | sites      | Shuffles n alignment sites vertically
+--                                                          | swap       | Swaps portion of sequences in the input alignment (cut/paste)
+[stats](commands/stats.md) ([api](api/stats.md))            |            | Prints different characteristics of the alignment
+--                                                          | alleles    | Prints the average number of alleles per sites of the alignment
+--                                                          | char       | Prints frequence of different characters (aa/nt) of the alignment
+--                                                          | length     | Prints the length of sequences in the alignment
+--                                                          | nalign     | Prints the number of alignments in the input file (phylip)
+--                                                          | nseq       | Prints the number of sequences in the alignment
+--                                                          | taxa       | Prints index (position) and name of taxa of the alignment file
+[subseq](commands/subseq.md) ([api](api/subseq.md))         |            | Take a sub-alignment from the input alignment
+[subset](commands/subset.md) ([api](api/subset.md))         |            | Take a subset of sequences from the input alignment
+[trim](commands/trim.md) ([api](api/trim.md))               |            | This command trims names of sequences or sequences themselves
+--                                                          | name       | Trims names of sequences
+--                                                          | seq        | Trims sequences of the input alignment
+[unalign](commands/unalign.md) ([api](api/unalign.md))      |            | Unaligns input alignment
+[version](commands/version.md) ([api](api/version.md))      |            | Prints the current version of goalign
