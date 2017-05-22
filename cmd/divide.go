@@ -16,7 +16,7 @@ var divideCmd = &cobra.Command{
 	Long: `Divide an input alignment in several output files
 
 If the alignment is in fasta format : will create 1 file
-Otherwize, will create one file per alignment in the input file
+Otherwise, will create one file per alignment in the input file
 
 -o : is the prefix of output files
 if -o div, it will create files div_0.ph...div_n.ph
