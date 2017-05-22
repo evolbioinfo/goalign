@@ -19,7 +19,7 @@ Global Flags:
 
 #### Examples
 
-* Generating a random tree with 5 tips ([Gotree](https://github.com/fredericlemoine/gotree)), simulating 3 alignments from this tree ([seq-gen](https://github.com/rambaut/Seq-Gen), shuffle sequence order, and concatenating them:
+* Generating a random tree with 5 tips ([Gotree](https://github.com/fredericlemoine/gotree)), simulating 3 alignments from this tree ([seq-gen](https://github.com/rambaut/Seq-Gen)), shuffle sequence order, and concatenating them:
 ```
 gotree generate yuletree -l 5 -s 1 -o true_tree.nw
 seq-gen -op -mGTR -l500 -z 2 -n 3 true_tree.nw | goalign shuffle seqs -p > alignment.phy
