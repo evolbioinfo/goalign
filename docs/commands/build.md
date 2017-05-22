@@ -3,7 +3,7 @@
 ## Commands
 
 ### build
-This command computes bootstrap replicates from an input alignment (fasta or phylip) on different ways with different sub-commands:
+This command builds bootstrap replicates from an input alignment (fasta or phylip) on different ways with different sub-commands:
 1. `goalign build seqboot` : Builds bootstrap alignments from an input alignment (nt or aa). Sequence order may be shuffled with option `-S`. Output alignments may be written in compressed files (`--gz`) and/or added in a tar archive (`--tar`).
 2. `goalign build distboot`: Builds bootstrap distance matrices based on different models, from an input alignment (nt only). It builds n bootstrap alignments and computes a distance matrix for each replicate. All distance matrices are written in the output file. If the input alignment file contains several alignments, it will take the first one only. The following models for distance computation are available:
     - pdist
