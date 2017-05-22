@@ -5,11 +5,6 @@
 ### concat
 This command concatenates several alignments in one global alignment. Input alignments may be in phylip or fasta format. If input format is phylip, the file may contain several alignments to concatenate : `goalign concat -i several.phy`. If format is Fasta, all fasta files must be given independently with `goalign concat -i first.fa [second.fa, third.fa, ...]` or `goalign -i none [first.fa, second.Fa, third.fa, ...]`. The order of sequences in alignments may be different, `concat` command will match sequences based on their name.
 
-Examples:
-- With a cutoff of 0.5: a site with 5 gaps over 10 sequences will be removed;
-- With a cutoff of 0.5: a site with 4 gaps over 10 sequences will not be removed;
-- With a cutoff of 0.0 a site with 1 gap over 10 sequences will be removed.
-
 #### Usage
 ```
 Usage:
