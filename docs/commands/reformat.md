@@ -3,7 +3,7 @@
 ## Commands
 
 ### reformat
-This command reformats an input alignment (phylip or fasta) in different formats depending on the sub-command:
+This command reformats an input alignment (fasta by default or phylip with `-p`) in different formats depending on the sub-command:
 1. `goalign reformat fasta`: reformats input alignment in fasta;
 2. `goalign reformat nexus`: reformats input alignment in nexus;
 3. `goalign reformat phylip`: reformats input alignment in phylip;
