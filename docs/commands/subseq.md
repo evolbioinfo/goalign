@@ -3,9 +3,9 @@
 ## Commands
 
 ### subseq
-This command takes a sub-alignment from the input alignment.
+This command takes a sub-alignment (slice) from the input alignment.
 
-It takes an alignment and extract sub-sequences from it, given a start position (0-based inclusive) and a length. If the length is after the end of the alignment, will stop at the end of the alignment.
+It takes an alignment and extracts sub-sequences from it, given a start position (0-based inclusive) and a length. If the length is after the end of the alignment, will stop at the end of the alignment.
 
 #### Usage
 ```
