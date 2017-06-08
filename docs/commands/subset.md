@@ -63,3 +63,9 @@ CCGTAGGCCA
 >Seq0002
 GAATCTGAAG
 ```
+
+
+* Generating a random alignment and keeping only sequences 0001 to 0009
+```
+goalign random -n 4000 -s 10 -l 10 | goalign subset -e "Seq000[1-9]"
+```
