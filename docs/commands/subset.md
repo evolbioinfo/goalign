@@ -13,7 +13,7 @@ There are two ways of specifying sequence names:
 
 In both ways (`-f` or via command line arguments), if option `-e` is given, names are treated as regexps. For example, it is possible to keep only sequences whose name contains "human" with: `goalign subset -i align.fa -e "human"`, or with the case insensitive regexp : `goalign subset -i align.fa -e "(?i)human"`. 
 
-If several names are given, it is considered a "OR", then to get all sequences whose name contains human OR mouse (case insensitive): `goalign subset -i align.fa -e "(?i)human" "(?i)human"`.
+If several names are given, it is considered a "OR", then to get all sequences whose name contains human OR mouse (case insensitive): `goalign subset -i align.fa -e "(?i)human" "(?i)mouse"`.
 
 Finally, one can revert the matching with `-r` option. In that case, given sequences are removed instead.
 
