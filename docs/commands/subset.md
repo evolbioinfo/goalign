@@ -9,7 +9,7 @@ It takes an alignment and a set of sequence names, and prints the alignments cor
 
 There are two ways of specifying sequence names:
 1) Via `-f` option; file should be formated with one sequence name per line and or coma separated. If the file contains names that do not exist in the alignment, they won't be taken into account.
-2) Via arguments on command line.
+2) Via arguments on command line (ex: `goalign subset -i align.fa Seq0001 Seq0002`).
 
 #### Usage
 ```
