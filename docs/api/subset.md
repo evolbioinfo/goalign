@@ -26,12 +26,12 @@ func main() {
 	var err error
 	var al align.Alignment
 	var filtered align.Alignment = nil
-	var subset map[string]int
+	var subset map[string]bool
 
 	/* Sequence names to keep */
-	subset = make(map[string]int)
+	subset = make(map[string]bool)
 	for _, name := range []string{"Seq0001", "Seq0002"} {
-		subset[name] = 1
+		subset[name] = true
 	}
 
 	/* Get reader (plain text or gzip) */
