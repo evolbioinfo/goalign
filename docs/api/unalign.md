@@ -26,17 +26,20 @@ func main() {
 	var err error
 	var al align.Alignment
 
+	/* Get reader (plain text or gzip) */
 	fi, r, err = utils.GetReader("align.fa")
 	if err != nil {
 		io.ExitWithMessage(err)
 	}
 
+	/* Parse Fasta */
 	al, err = fasta.NewParser(r).Parse()
 	if err != nil {
 		io.ExitWithMessage(err)
 	}
 	fi.Close()
 
+	/* Printing unaligned sequences */
 	fmt.Println(fasta.WriteSequences(al))
 }
 ```

@@ -76,4 +76,4 @@ Command                                                     | Subcommand |      
 --                                                          | name       | Trims names of sequences
 --                                                          | seq        | Trims sequences of the input alignment
 [unalign](commands/unalign.md) ([api](api/unalign.md))      |            | Unaligns input alignment
-[version](commands/version.md) ([api](api/version.md))      |            | Prints the current version of goalign
+[version](commands/version.md)                              |            | Prints the current version of goalign
