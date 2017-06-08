@@ -14,6 +14,7 @@ import (
 	"github.com/fredericlemoine/goalign/io/fasta"
 	"github.com/fredericlemoine/goalign/io/nexus"
 	"github.com/fredericlemoine/goalign/io/phylip"
+	"github.com/fredericlemoine/goalign/io/utils"
 	"github.com/spf13/cobra"
 )
 
@@ -56,26 +57,12 @@ func readalign(file string) chan align.Alignment {
 	alchan := make(chan align.Alignment, 15)
 	var fi *os.File
 	var r *bufio.Reader
-	var err error
-	if file == "stdin" || file == "-" {
-		fi = os.Stdin
-	} else {
-		fi, err = os.Open(file)
-		if err != nil {
-			io.ExitWithMessage(err)
-		}
+	var err, err2 error
+
+	fi, r, err = utils.GetReader(file)
+	if err != nil {
+		io.ExitWithMessage(err)
 	}
-	if strings.HasSuffix(infile, ".gz") {
-		if gr, err := gzip.NewReader(fi); err != nil {
-			io.ExitWithMessage(err)
-		} else {
-			r = bufio.NewReader(gr)
-		}
-	} else {
-		r = bufio.NewReader(fi)
-	}
-	var al align.Alignment
-	var err2 error
 	if rootphylip {
 		go func() {
 			err2 = phylip.NewParser(r).ParseMultiple(alchan)
@@ -85,6 +72,7 @@ func readalign(file string) chan align.Alignment {
 			fi.Close()
 		}()
 	} else {
+		var al align.Alignment
 		al, err2 = fasta.NewParser(r).Parse()
 		if err2 != nil {
 			io.ExitWithMessage(err2)
