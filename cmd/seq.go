@@ -10,15 +10,15 @@ var trimFromStart bool
 // seqCmd represents the seq command
 var seqCmd = &cobra.Command{
 	Use:   "seq",
-	Short: "A brief description of your command",
-	Long: `A longer description that spans multiple lines and likely contains examples
-and usage of using your command. For example:
+	Short: "Trims sequences of the alignment",
+	Long: `Trims sequences of the alignemnt
 
-If the input alignment contains several alignments, will process all of them
+It trims n (--nb-char, -n) characters from the beginning (--from-start, -s) or from the end (default) of the input alignment.
 
-Cobra is a CLI library for Go that empowers applications.
-This application is a tool to generate the needed files
-to quickly create a Cobra application.`,
+Example:
+goalign trim seq -i align.fa -o trimed.fa -s -n 10
+
+`,
 	Run: func(cmd *cobra.Command, args []string) {
 		f := openWriteFile(trimAlignOut)
 		for al := range rootaligns {
