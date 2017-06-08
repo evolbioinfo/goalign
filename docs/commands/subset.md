@@ -11,6 +11,10 @@ There are two ways of specifying sequence names:
 1) Via `-f` option; file should be formated with one sequence name per line and or coma separated. If the file contains names that do not exist in the alignment, they won't be taken into account.
 2) Via arguments on command line (ex: `goalign subset -i align.fa Seq0001 Seq0002`).
 
+In both ways (`-f` or via command line arguments), if option `-e` is given, names are treated as regexps. For example, it is possible to keep only sequences whose name contains "human" with: `goalign subset -i align.fa -e "human"`, or with the case insensitive regexp : `goalign subset -i align.fa -e "(?i)human"`.
+
+Finally, one can revert the matching with `-r` option. In that case, given sequences are removed instead.
+
 #### Usage
 ```
 Usage:
