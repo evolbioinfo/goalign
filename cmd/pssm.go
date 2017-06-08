@@ -18,8 +18,8 @@ var pssmnorm int
 // pssmCmd represents the pssm command
 var pssmCmd = &cobra.Command{
 	Use:   "pssm",
-	Short: "Compute and print a Position specific scoring matrix",
-	Long: `Compute and print a Position specific scoring matrix.
+	Short: "Computes and prints a Position specific scoring matrix",
+	Long: `Computes and prints a Position specific scoring matrix.
 
 Different normalizations are possible with --normalization (-n):
 	--normalization 0: None, means raw counts
