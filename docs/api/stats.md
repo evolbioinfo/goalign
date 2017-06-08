@@ -39,9 +39,13 @@ func main() {
 	}
 	fi.Close()
 
+	/* Print alignment length*/
 	fmt.Printf("Length=%d\n", al.Length())
+	/* Print number of sequences */
 	fmt.Printf("#Seqs=%d\n", al.NbSequences())
+	/* Print avg allements per sites */
 	fmt.Printf("Avg alleles/sites=%f\n", al.AvgAllelesPerSite())
+	/* Print number of occurences of each characters */
 	for nt, nb := range al.CharStats() {
 		fmt.Printf("%c = %d\n", nt, nb)
 	}

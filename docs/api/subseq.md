@@ -46,7 +46,8 @@ func main() {
 	if err != nil {
 		io.ExitWithMessage(err)
 	}
-
+	
+	/* Printing alignment in Fasta */
 	fmt.Print(fasta.WriteAlignment(subalign))
 }
 ```
