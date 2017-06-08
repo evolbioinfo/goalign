@@ -4,7 +4,7 @@
 
 ### trim name
 
-Trimming names of sequences
+Trimming names of sequences (to 3 characters)
 
 ```go
 package main
