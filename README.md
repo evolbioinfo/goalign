@@ -36,6 +36,9 @@ The `goalign` executable should be located in the `$GOPATH/bin` folder.
   * pssm: compute position-specific scoring matrix
 * concat:      Concatenates several alignments
 * divide:      Divide an input alignment in several output files (one per alignment)
+* mutate: Adds substitutions (~sequencing errors), or gaps, uniformly in an input alignment
+  * gaps: Adds gaps uniformly in an input alignment
+  * snvs: Adds substitutions uniformly in an input alignment
 * random:      Generate random sequences
 * reformat:    Reformats input alignment into phylip of fasta format
   * fasta
@@ -47,7 +50,6 @@ The `goalign` executable should be located in the `$GOPATH/bin` folder.
   * seqs: Randomly samples a subset of sequences from the input alignment
   * sites: Extracts a sub-alignment starting a a random position, and with a given length
 * shuffle:     A set of commands to shuffle an alignment
-  * gaps: Adds random (uniformly) gaps
   * recomb: Recombine some sequences (copy/paste)
   * rogue: simulate sort of rogue taxa by shuffling some sequences
   * seqs: Shuffle sequence order in the alignment
