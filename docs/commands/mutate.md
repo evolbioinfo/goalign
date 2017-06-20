@@ -31,33 +31,30 @@ Global Flags:
 * gaps command:
 ```
 Usage:
-  goalign shuffle gaps [flags]
+  goalign mutate gaps [flags]
 
 Flags:
-  -r, --gap-rate float   Proportion of gaps to add per sequences (default 0.5)
-  -n, --prop-seq float   Proportion of the sequences to add gaps in (default 0.5)
+  -n, --prop-seq float   Proportion of the sequences in which to add gaps (default 0.5)
 
 Global Flags:
   -i, --align string    Alignment input file (default "stdin")
-  -o, --output string   Shuffled alignment output file (default "stdout")
+  -o, --output string   Mutated alignment output file (default "stdout")
   -p, --phylip          Alignment is in phylip? False=Fasta
+  -r, --rate float      Mutation rate per nucleotide/amino acid (default 0.1)
   -s, --seed int        Initial Random Seed (default: number of nanoseconds elapsed since January 1, 1970 UTC)
 ```
 
 * snvs command:
 ```
 Usage:
-  goalign shuffle recomb [flags]
-
-Flags:
-  -l, --prop-length float   Proportion of length of sequences to recombine (default 0.5)
-  -n, --prop-seq float      Proportion of the  sequences to recombine (default 0.5)
+  goalign mutate snvs [flags]
 
 Global Flags:
   -i, --align string    Alignment input file (default "stdin")
-  -o, --output string   Shuffled alignment output file (default "stdout")
+  -o, --output string   Mutated alignment output file (default "stdout")
   -p, --phylip          Alignment is in phylip? False=Fasta
-  -s, --seed int        Initial Random Seed (default 1495021613485404707)
+  -r, --rate float      Mutation rate per nucleotide/amino acid (default 0.1)
+  -s, --seed int        Initial Random Seed (default: number of nanoseconds elapsed since January 1, 1970 UTC)
 ```
 
 #### Examples
