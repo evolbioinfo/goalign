@@ -46,6 +46,9 @@ Command                                                     | Subcommand |      
 --                                                          | pssm       | Computes and prints a Position specific scoring matrix
 [concat](commands/concat.md) ([api](api/concat.md))         |            | Concatenates a set of alignment
 [divide](commands/divide.md) ([api](api/divide.md))         |            | Divide an input alignment in several output files
+[mutate](commands/mutate.md) ([api](api/mutate.md))         |            | Adds substitutions (~sequencing errors), or gaps, uniformly in an input alignment
+--                                                          | gaps       | Adds gaps uniformly in an input alignment
+--                                                          | snvs       | Adds substitutions uniformly in an input alignment
 [random](commands/random.md) ([api](api/random.md))         |            | Generate random sequences
 [reformat](commands/reformat.md) ([api](api/reformat.md))   |            | Reformats input alignment into phylip of fasta format
 --                                                          | fasta      | Reformats an input alignment into Fasta
@@ -57,7 +60,6 @@ Command                                                     | Subcommand |      
 --                                                          | seqs       | Samples a subset of sequences from the input alignment
 --                                                          | sites      | Take a random subalignment
 [shuffle](commands/shuffle.md) ([api](api/shuffle.md))      |            | A set of commands to shuffle an alignment
---                                                          | gaps       | Adds random (uniformly) gaps on an input alignment
 --                                                          | recomb     | Recombines sequences in the input alignment (copy/paste)
 --                                                          | rogue      | Simulates rogue taxa
 --                                                          | seqs       | Shuffles sequence order in alignment

@@ -4,7 +4,6 @@
 
 ### shuffle
 This command adds different type of noises in an input alignment, with these sub-commands:
-* `goalign shuffle gaps` : Adds a given proportion of gaps to a given proportion of the sequences randomly in the input alignment (uniformly).
 * `goalign shuffle recomb`:Recombine a given proportion of the length of a given proportion of the sequences with other sequences (copy/paste). 
     Example:
 	```
@@ -40,7 +39,6 @@ Usage:
   goalign shuffle [command]
 
 Available Commands:
-  gaps        Adds random (uniformly) gaps
   recomb      Recombine sequences in the input alignment
   rogue       Simulate rogue taxa
   seqs        Shuffles sequence order in alignment
@@ -55,22 +53,6 @@ Flags:
 Global Flags:
   -i, --align string   Alignment input file (default "stdin")
   -p, --phylip         Alignment is in phylip? False=Fasta
-```
-
-* gaps command:
-```
-Usage:
-  goalign shuffle gaps [flags]
-
-Flags:
-  -r, --gap-rate float   Proportion of gaps to add per sequences (default 0.5)
-  -n, --prop-seq float   Proportion of the sequences to add gaps in (default 0.5)
-
-Global Flags:
-  -i, --align string    Alignment input file (default "stdin")
-  -o, --output string   Shuffled alignment output file (default "stdout")
-  -p, --phylip          Alignment is in phylip? False=Fasta
-  -s, --seed int        Initial Random Seed (default: number of nanoseconds elapsed since January 1, 1970 UTC)
 ```
 
 * recomb command:
@@ -152,35 +134,6 @@ Global Flags:
 ```
 
 #### Examples
-* Generating a random (uniform) alignment and adding gaps:
-```
-goalign random -l 20 -s10| goalign shuffle gaps -n 0.5 -r 0.2 -s10
-```
-
-Should give:
-```
->Seq0000
-GATTAATTTGCCGTAGGCCA
->Seq0001
-G-ATCTGAAGA-CG-A-ACT
->Seq0002
-TTAAGTTTT-AC--CTAA-G
->Seq0003
-GAGAGGACTAGTTCATACTT
->Seq0004
-TT-AAACA-TTTTA-A-CGA
->Seq0005
-TGTCGGACCTAAGTATTGAG
->Seq0006
-TAC-A-G-TGTATT-CAGCG
->Seq0007
-GTGGAGAGGTCTATTTTTCC
->Seq0008
-GGTTGAAG-ACT-TA-AGC-
->Seq0009
-GTAAAGGGTATGGCCATGTG
-```
-
 * Recombining 0.25% of the sequences on 0.5% of their length
 ```
 # Writing alignment

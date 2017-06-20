@@ -43,6 +43,7 @@ type Alignment interface {
 	IterateAll(it func(name string, sequence []rune, comment string))
 	NbSequences() int
 	Length() int
+	Mutate(rate float64) // Adds uniform substitutions in the alignment (~sequencing errors)
 	ShuffleSequences()
 	ShuffleSites(rate float64, roguerate float64) []string
 	SimulateRogue(prop float64, proplen float64) ([]string, []string)
@@ -396,6 +397,40 @@ func (a *align) AddGaps(lenprop float64, prop float64) {
 		seq := a.seqs[permseqs[i]]
 		for j := 0; j < nbgaps; j++ {
 			seq.sequence[permsites[j]] = GAP
+		}
+	}
+}
+
+// Add substitutions uniformly to the alignment
+// if rate < 0 : does nothing
+// if rate > 1 : rate=1
+func (a *align) Mutate(rate float64) {
+	if rate <= 0 {
+		return
+	}
+	if rate > 1 {
+		rate = 1
+	}
+	r := 0.0
+	newchar := 0
+	leng := a.Length()
+	nb := a.NbSequences()
+	// We take a random position in the sequences between min and max
+	for i := 0; i < nb; i++ {
+		seq := a.seqs[i]
+		for j := 0; j < leng; j++ {
+			r = rand.Float64()
+			// We mutate only if rand is <= rate
+			// taking a random nucleotide or amino acid uniformly
+			if r <= rate {
+				if a.Alphabet() == AMINOACIDS {
+					newchar = rand.Intn(len(stdaminoacid))
+					seq.sequence[j] = stdaminoacid[newchar]
+				} else {
+					newchar = rand.Intn(len(stdnucleotides))
+					seq.sequence[j] = stdnucleotides[newchar]
+				}
+			}
 		}
 	}
 }
