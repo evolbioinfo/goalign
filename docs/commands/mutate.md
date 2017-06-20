@@ -5,7 +5,7 @@
 ### mutate
 This command adds different type of noises in an input alignment, with these sub-commands:
 * `goalign mutate gaps` : Adds a given proportion of gaps to a given proportion of the sequences randomly in the input alignment (uniformly).
-* `goalign mutate snvs`: Substitute nucleotides/aminoacids by random (uniform) nucleotides/aminoacids with a given rate.
+* `goalign mutate snvs`: Substitute nucleotides/aminoacids by random (uniform) nucleotides/aminoacids with a given rate. Does not apply to gaps or other special characters.
 
 #### Usage
 * General command:
