@@ -404,6 +404,7 @@ func (a *align) AddGaps(lenprop float64, prop float64) {
 // Add substitutions uniformly to the alignment
 // if rate < 0 : does nothing
 // if rate > 1 : rate=1
+// It does not apply to gaps or other special characters
 func (a *align) Mutate(rate float64) {
 	if rate <= 0 {
 		return
@@ -420,9 +421,10 @@ func (a *align) Mutate(rate float64) {
 		seq := a.seqs[i]
 		for j := 0; j < leng; j++ {
 			r = rand.Float64()
-			// We mutate only if rand is <= rate
-			// taking a random nucleotide or amino acid uniformly
-			if r <= rate {
+			// We mutate only if rand is <= rate && character is not a gap
+			// or a special character.
+			// It takes a random nucleotide or amino acid uniformly
+			if r <= rate && seq.sequence[j] != GAP && seq.sequence[j] != POINT && seq.sequence[j] != OTHER {
 				if a.Alphabet() == AMINOACIDS {
 					newchar = rand.Intn(len(stdaminoacid))
 					seq.sequence[j] = stdaminoacid[newchar]
