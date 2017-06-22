@@ -37,7 +37,7 @@ gotree divide -i align.ph -p -o out
 				f.Close()
 			} else {
 				f := openWriteFile(fmt.Sprintf("%s_%03d.ph", divideOutput, i))
-				writeAlignPhylip(al, f, false)
+				writeAlignPhylip(al, f)
 				f.Close()
 			}
 			i++

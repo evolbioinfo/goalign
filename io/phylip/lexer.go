@@ -19,6 +19,21 @@ func NewScanner(r io.Reader) *Scanner {
 	return &Scanner{r: bufio.NewReader(r)}
 }
 
+// reads the next n runes from the bufferred reader.
+func (s *Scanner) Read(n int) string {
+	var buf bytes.Buffer
+
+	for i := 0; i < 10; i++ {
+		ch, _, err := s.r.ReadRune()
+		buf.WriteRune(ch)
+		if err != nil {
+			buf.WriteRune(eof)
+			break
+		}
+	}
+	return buf.String()
+}
+
 // read reads the next rune from the bufferred reader.
 // Returns the rune(0) if an error occurs (or io.EOF is returned).
 func (s *Scanner) read() rune {

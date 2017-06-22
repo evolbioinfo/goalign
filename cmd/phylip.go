@@ -25,7 +25,7 @@ goalign reformat phylip -i align.fasta
 		f := openWriteFile(reformatOutput)
 		for al := range rootaligns {
 			//fmt.Println("ALIGN" + fmt.Sprintf("%d", al.NbSequences()))
-			writeAlignPhylip(al, f, phylipstrict)
+			writeAlignPhylip(al, f)
 		}
 		f.Close()
 	},
@@ -33,5 +33,4 @@ goalign reformat phylip -i align.fasta
 
 func init() {
 	reformatCmd.AddCommand(phylipCmd)
-	reformatCmd.PersistentFlags().BoolVarP(&phylipstrict, "strict", "s", false, "If it is strict phylip format")
 }

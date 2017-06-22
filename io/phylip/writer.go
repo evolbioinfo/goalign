@@ -30,11 +30,11 @@ func WriteAlignment(al align.Alignment, strict bool) string {
 		al.IterateChar(func(name string, seq []rune) {
 			if header {
 				if strict {
-					buf.WriteString(fmt.Sprintf("%-10s", name))
+					buf.WriteString(fmt.Sprintf("%-10s", name[:min_int(10, len(name))]))
 				} else {
 					buf.WriteString(name)
+					buf.WriteString("  ")
 				}
-				buf.WriteString("  ")
 			}
 
 			for i := cursize; i < cursize+PHYLIP_LINE && i < len(seq); i += PHYLIP_BLOCK {

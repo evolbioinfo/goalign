@@ -4,16 +4,19 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
-	"github.com/fredericlemoine/goalign/align"
-	alignio "github.com/fredericlemoine/goalign/io"
 	"io"
 	"strconv"
+	"strings"
+
+	"github.com/fredericlemoine/goalign/align"
+	alignio "github.com/fredericlemoine/goalign/io"
 )
 
 // Parser represents a parser.
 type Parser struct {
-	s   *Scanner
-	buf struct {
+	s      *Scanner
+	strict bool
+	buf    struct {
 		tok Token  // last read token
 		lit string // last read literal
 		n   int    // buffer size (max=1)
@@ -21,8 +24,8 @@ type Parser struct {
 }
 
 // NewParser returns a new instance of Parser.
-func NewParser(r io.Reader) *Parser {
-	return &Parser{s: NewScanner(r)}
+func NewParser(r io.Reader, strict bool) *Parser {
+	return &Parser{s: NewScanner(r), strict: strict}
 }
 
 // scan returns the next token from the underlying scanner.
@@ -112,11 +115,24 @@ func (p *Parser) Parse() (align.Alignment, error) {
 
 	// Then names of the sequences and sequences
 	for i := 0; i < int(nbseq); i++ {
-		tok, lit = p.scan()
-		if tok != IDENTIFIER && tok != NUMERIC {
-			return nil, errors.New("Bad Phylip format, we should have an sequence identifier after the header : " + lit)
+		if p.strict {
+			// if strict
+			name := p.s.Read(10)
+			if name == "" {
+				return nil, errors.New("Bad Phylip format, we should have an sequence identifier after the header : " + lit)
+			}
+			// We remove spaces from names...
+			name = strings.Replace(name, " ", "", -1)
+			names[i] = name
+		} else {
+
+			tok, lit = p.scan()
+			if tok != IDENTIFIER && tok != NUMERIC {
+				return nil, errors.New("Bad Phylip format, we should have an sequence identifier after the header : " + lit)
+			}
+			names[i] = lit
+
 		}
-		names[i] = lit
 		tok, lit = p.scan()
 		seqs[i] = new(bytes.Buffer)
 		for tok != ENDOFLINE {

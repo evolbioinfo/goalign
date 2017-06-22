@@ -23,6 +23,8 @@ var infile string
 var rootaligns chan align.Alignment
 var rootphylip bool
 var rootcpus int
+var rootinputstrict bool = false
+var rootoutputstrict bool = false
 
 var Version string = "Unset"
 
@@ -65,7 +67,7 @@ func readalign(file string) chan align.Alignment {
 	}
 	if rootphylip {
 		go func() {
-			err2 = phylip.NewParser(r).ParseMultiple(alchan)
+			err2 = phylip.NewParser(r, rootinputstrict).ParseMultiple(alchan)
 			if err2 != nil {
 				io.ExitWithMessage(err2)
 			}
@@ -99,6 +101,8 @@ func init() {
 	RootCmd.PersistentFlags().StringVarP(&infile, "align", "i", "stdin", "Alignment input file")
 	RootCmd.PersistentFlags().BoolVarP(&rootphylip, "phylip", "p", false, "Alignment is in phylip? False=Fasta")
 	RootCmd.PersistentFlags().IntVarP(&rootcpus, "threads", "t", 1, "Number of threads")
+	RootCmd.PersistentFlags().BoolVar(&rootinputstrict, "input-strict", false, "Strict phylip input format")
+	RootCmd.PersistentFlags().BoolVar(&rootoutputstrict, "output-strict", false, "Strict phylip output format")
 
 	RootCmd.SetHelpTemplate(helptemplate)
 }
@@ -110,7 +114,7 @@ func initConfig() {
 
 func writeAlign(al align.Alignment, f *os.File) {
 	if rootphylip {
-		f.WriteString(phylip.WriteAlignment(al, false))
+		f.WriteString(phylip.WriteAlignment(al, rootoutputstrict))
 	} else {
 		f.WriteString(fasta.WriteAlignment(al))
 	}
@@ -120,8 +124,8 @@ func writeAlignFasta(al align.Alignment, f *os.File) {
 	f.WriteString(fasta.WriteAlignment(al))
 }
 
-func writeAlignPhylip(al align.Alignment, f *os.File, strict bool) {
-	f.WriteString(phylip.WriteAlignment(al, strict))
+func writeAlignPhylip(al align.Alignment, f *os.File) {
+	f.WriteString(phylip.WriteAlignment(al, rootoutputstrict))
 }
 
 func writeAlignNexus(al align.Alignment, f *os.File) {
