@@ -32,6 +32,14 @@ The `goalign` executable should be located in the `$GOPATH/bin` folder.
 ## Commands
 
 Here is the list of all commands, with the link to the full description, and a link to a snippet that does it in GO.
+Almost all commands can have the following arguments:
+
+* `-p`: input is in phylip format (default fasta)
+* `--input-strict`: if `-p` is also given, then input is considered phylip strict, i.e:
+    * sequence names are maximum 10 character long. goalign removes spaces in sequence names;
+	* sequence starts at position 11 (just after sequence name).
+* `--output-strict`: if `-p` is also given, then output alignments are written in strict phylip format, i.e:
+    * sequence names are maximum 10 character long, otherwise they are truncated.
 
 Command                                                     | Subcommand |        Description
 ------------------------------------------------------------|------------|-----------------------------------------------------------------------

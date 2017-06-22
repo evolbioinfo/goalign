@@ -53,6 +53,8 @@ Flags:
 Global Flags:
   -i, --align string   Alignment input file (default "stdin")
   -p, --phylip         Alignment is in phylip? False=Fasta
+  --input-strict       Strict phylip input format (only used with -p)
+  --output-strict      Strict phylip output format  (only used with -p)
 ```
 
 * recomb command:
@@ -69,6 +71,9 @@ Global Flags:
   -o, --output string   Shuffled alignment output file (default "stdout")
   -p, --phylip          Alignment is in phylip? False=Fasta
   -s, --seed int        Initial Random Seed (default 1495021613485404707)
+  --input-strict        Strict phylip input format (only used with -p)
+  --output-strict       Strict phylip output format  (only used with -p)
+
 ```
 
 * rogue command:
@@ -86,6 +91,9 @@ Global Flags:
   -o, --output string   Shuffled alignment output file (default "stdout")
   -p, --phylip          Alignment is in phylip? False=Fasta
   -s, --seed int        Initial Random Seed (default 1495022447513391592)
+  --input-strict        Strict phylip input format (only used with -p)
+  --output-strict       Strict phylip output format  (only used with -p)
+
 ```
 
 * seqs command:
@@ -98,6 +106,9 @@ Global Flags:
   -o, --output string   Shuffled alignment output file (default "stdout")
   -p, --phylip          Alignment is in phylip? False=Fasta
   -s, --seed int        Initial Random Seed (default 1495022604538616837)
+  --input-strict        Strict phylip input format (only used with -p)
+  --output-strict       Strict phylip output format  (only used with -p)
+
 ```
 
 * sites command:
@@ -115,6 +126,9 @@ Global Flags:
   -o, --output string   Shuffled alignment output file (default "stdout")
   -p, --phylip          Alignment is in phylip? False=Fasta
   -s, --seed int        Initial Random Seed (default 1495022638306057739)
+  --input-strict        Strict phylip input format (only used with -p)
+  --output-strict       Strict phylip output format  (only used with -p)
+
 ```
 
 * swap command:
@@ -131,6 +145,8 @@ Global Flags:
   -p, --phylip          Alignment is in phylip? False=Fasta
   -s, --seed int        Initial Random Seed (default 1495022654265868607)
   -t, --threads int     Number of threads (default 1)
+  --input-strict       Strict phylip input format (only used with -p)
+  --output-strict      Strict phylip output format  (only used with -p)
 ```
 
 #### Examples

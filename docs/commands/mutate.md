@@ -26,6 +26,8 @@ Flags:
 Global Flags:
   -i, --align string   Alignment input file (default "stdin")
   -p, --phylip         Alignment is in phylip? False=Fasta
+  --input-strict       Strict phylip input format (only used with -p)
+  --output-strict      Strict phylip output format  (only used with -p)
 ```
 
 * gaps command:
@@ -42,6 +44,8 @@ Global Flags:
   -p, --phylip          Alignment is in phylip? False=Fasta
   -r, --rate float      Mutation rate per nucleotide/amino acid (default 0.1)
   -s, --seed int        Initial Random Seed (default: number of nanoseconds elapsed since January 1, 1970 UTC)
+  --input-strict        Strict phylip input format (only used with -p)
+  --output-strict       Strict phylip output format  (only used with -p)
 ```
 
 * snvs command:
@@ -55,6 +59,8 @@ Global Flags:
   -p, --phylip          Alignment is in phylip? False=Fasta
   -r, --rate float      Mutation rate per nucleotide/amino acid (default 0.1)
   -s, --seed int        Initial Random Seed (default: number of nanoseconds elapsed since January 1, 1970 UTC)
+  --input-strict        Strict phylip input format (only used with -p)
+  --output-strict       Strict phylip output format  (only used with -p)
 ```
 
 #### Examples

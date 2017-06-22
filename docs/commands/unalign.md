@@ -34,6 +34,7 @@ Global Flags:
   -i, --align string   Alignment input file (default "stdin")
   -p, --phylip         Alignment is in phylip? False=Fasta
   -t, --threads int    Number of threads (default 1)
+  --input-strict       Strict phylip input format (only used with -p)
 ```
 
 #### Examples

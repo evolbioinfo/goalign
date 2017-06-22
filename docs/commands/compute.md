@@ -38,6 +38,7 @@ Flags:
 Global Flags:
   -i, --align string   Alignment input file (default "stdin")
   -p, --phylip         Alignment is in phylip? False=Fasta
+  --input-strict       Strict phylip input format (only used with -p)
 ```
 
 * distance command
@@ -53,6 +54,7 @@ Flags:
 Global Flags:
   -i, --align string   Alignment input file (default "stdin")
   -p, --phylip         Alignment is in phylip? False=Fasta
+  --input-strict       Strict phylip input format (only used with -p)
 ```
 
 * pssm command

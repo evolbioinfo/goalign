@@ -22,6 +22,8 @@ Flags:
 Global Flags:
   -i, --align string   Alignment input file (default "stdin")
   -p, --phylip         Alignment is in phylip? False=Fasta
+  --input-strict       Strict phylip input format (only used with -p)
+  --output-strict      Strict phylip output format  (only used with -p)
 ```
 
 #### Examples
