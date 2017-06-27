@@ -22,7 +22,7 @@ func WriteAlignment(al align.Alignment, strict bool) string {
 	var buf bytes.Buffer
 	var header bool = true
 	cursize := 0
-	buf.WriteString(fmt.Sprintf("  %d   %d\n", al.NbSequences(), al.Length()))
+	buf.WriteString(fmt.Sprintf("   %d   %d\n", al.NbSequences(), al.Length()))
 	for cursize < al.Length() {
 		if cursize > 0 {
 			buf.WriteString("\n")
@@ -41,7 +41,11 @@ func WriteAlignment(al align.Alignment, strict bool) string {
 				if i > cursize {
 					buf.WriteString(" ")
 				} else if !header {
-					buf.WriteString("   ")
+					if strict {
+						buf.WriteString("          ")
+					} else {
+						buf.WriteString("   ")
+					}
 				}
 				end := min_int(i+PHYLIP_BLOCK, len(seq))
 				for j := i; j < end; j++ {
