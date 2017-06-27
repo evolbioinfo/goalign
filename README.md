@@ -25,6 +25,8 @@ make
 The `goalign` executable should be located in the `$GOPATH/bin` folder.
 
 ## Usage
+You may go to the [doc](docs/index.md) for a more detailed documentation of the commands.
+
 ### List of commands
 * addid:      Adds a string to each sequence identifier of the input alignment
 * build:       Command to build output files : bootstrap for example
