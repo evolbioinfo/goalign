@@ -3,6 +3,8 @@
 
 Goalign is a set of command line tools to manipulate multiple alignments. It is implemented in [Go](https://golang.org/) language.
 
+See also [Gotree](https://github.com/fredericlemoine/gotree) for handling phylogenetic trees.
+
 ## Installation
 ### Binaries
 You can download already compiled binaries for the latest release in the [release](https://github.com/fredericlemoine/goalign/releases) section.
