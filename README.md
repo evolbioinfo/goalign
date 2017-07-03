@@ -1,5 +1,6 @@
 # Goalign
-https://travis-ci.org/fredericlemoine/goalign.svg?branch=master
+![build](https://travis-ci.org/fredericlemoine/goalign.svg?branch=master)
+
 Goalign is a set of command line tools to manipulate multiple alignments. It is implemented in [Go](https://golang.org/) language.
 
 ## Installation
