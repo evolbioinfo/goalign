@@ -43,6 +43,6 @@ The output format is the same than input format.
 func init() {
 	RootCmd.AddCommand(subseqCmd)
 	subseqCmd.PersistentFlags().StringVarP(&subseqout, "output", "o", "stdout", "Alignment output file")
-	subseqCmd.PersistentFlags().IntVarP(&subseqstart, "start", "s", 0, "Start position")
+	subseqCmd.PersistentFlags().IntVarP(&subseqstart, "start", "s", 0, "Start position (0-based inclusive)")
 	subseqCmd.PersistentFlags().IntVarP(&subseqlength, "length", "l", 10, "Length of the sub alignment")
 }
