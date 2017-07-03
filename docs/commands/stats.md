@@ -8,7 +8,8 @@ Without any subcommand, it prints the following information:
 1. Length of alignment;
 2. Number of sequences;
 3. Average number of alleles per site;
-4. Character frequencies.
+4. Number of variables sites (does ot take into account gaps or special characters);
+5. Character frequencies.
 
 Different sub-commands:
 * `goalign stats alleles`: Prints the average number of alleles per site of the alignment;

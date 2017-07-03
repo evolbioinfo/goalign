@@ -14,8 +14,11 @@ var statsCmd = &cobra.Command{
 	Short: "Prints different characteristics of the alignment",
 	Long: `Prints different characteristics of the alignment.
 
-1 - Length
-2 - Number of sequences
+1. Length of alignment;
+2. Number of sequences;
+3. Average number of alleles per site;
+4. Number of variables sites (does ot take into account gaps or special characters);
+5. Character frequencies.
 
 If the input alignment contains several alignments, will process all of them
 

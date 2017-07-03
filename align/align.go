@@ -954,6 +954,10 @@ func (a *align) Concat(c Alignment) (err error) {
 	return err
 }
 
+/*
+ Returns the number of variable sites in the alignment.
+It does not take into account gaps and other charactes like "."
+*/
 func (a *align) NbVariableSites() int {
 	nbinfo := 0
 	for site := 0; site < a.Length(); site++ {
