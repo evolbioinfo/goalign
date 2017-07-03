@@ -5,7 +5,7 @@ VERSION_PACKAGE := github.com/fredericlemoine/goalign/cmd.Version
 NAME := goalign
 PACKAGE:=github.com/fredericlemoine/goalign
 
-all: build test install 
+all: build test install testcommands
 
 build:
 	${GO_EXECUTABLE} build -o ${NAME} -ldflags "-X ${VERSION_PACKAGE}=${VERSION}" ${PACKAGE}
@@ -16,6 +16,9 @@ install:
 
 test:
 	${GO_EXECUTABLE} test ${PACKAGE}/...
+
+testcommands:
+	bash ./test.sh
 
 .PHONY: deploy deploydir deploywinamd deploywin386 deploylinuxamd deploylinux386 deploydarwinamd deploydarwin386
 
