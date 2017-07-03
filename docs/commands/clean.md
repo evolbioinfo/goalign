@@ -30,7 +30,7 @@ Global Flags:
 
 * Generating a gapped alignment, and removing positions having at least one gap:
 ```
-goalign random -s 10 | goalign shuffle gaps -n 1 -r 0.1 -s 10 |  goalign clean
+goalign random -s 10 | goalign mutate gaps -n 1 -r 0.1 -s 10 |  goalign clean
 ```
 
 Should give on stdout:
