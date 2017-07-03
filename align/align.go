@@ -42,6 +42,7 @@ type Alignment interface {
 	IterateChar(it func(name string, sequence []rune))
 	IterateAll(it func(name string, sequence []rune, comment string))
 	NbSequences() int
+	NbVariableSites() int
 	Length() int
 	Mutate(rate float64) // Adds uniform substitutions in the alignment (~sequencing errors)
 	ShuffleSequences()
@@ -951,4 +952,25 @@ func (a *align) Concat(c Alignment) (err error) {
 	a.length = leng
 
 	return err
+}
+
+func (a *align) NbVariableSites() int {
+	nbinfo := 0
+	for site := 0; site < a.Length(); site++ {
+		charmap := make(map[rune]bool)
+		variable := false
+		for _, seq := range a.seqs {
+			if seq.sequence[site] != GAP && seq.sequence[site] != POINT && seq.sequence[site] != OTHER {
+				charmap[seq.sequence[site]] = true
+			}
+			if len(charmap) > 1 {
+				variable = true
+				break
+			}
+		}
+		if variable {
+			nbinfo++
+		}
+	}
+	return nbinfo
 }

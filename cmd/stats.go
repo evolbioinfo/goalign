@@ -25,6 +25,7 @@ If the input alignment contains several alignments, will process all of them
 			fmt.Fprintf(os.Stdout, "length\t%d\n", al.Length())
 			fmt.Fprintf(os.Stdout, "nseqs\t%d\n", al.NbSequences())
 			fmt.Fprintf(os.Stdout, "avgalleles\t%.4f\n", al.AvgAllelesPerSite())
+			fmt.Fprintf(os.Stdout, "variable sites\t%d\n", al.NbVariableSites())
 			printCharStats(al)
 		}
 	},
