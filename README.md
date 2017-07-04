@@ -35,7 +35,9 @@ You may go to the [doc](docs/index.md) for a more detailed documentation of the 
 * addid:      Adds a string to each sequence identifier of the input alignment
 * build:       Command to build output files : bootstrap for example
   * seqboot : Generate bootstrap alignments
-* clean:       Removes gap sites
+* clean:       Removes gap sites/sequences
+  * sites : Removes sites with gaps
+  * seqs : Removes sequences with gaps
 * compute:     Different computations (distances, etc.)
   * distances: compute evolutionary distances for nucleotide alignment
   * entropy: compute entropy of alignment sites

@@ -45,7 +45,7 @@ func TestAppendIdentifier(t *testing.T) {
 	})
 }
 
-func TestRemoveOneGaps(t *testing.T) {
+func TestRemoveOneGapSite(t *testing.T) {
 	a, err := RandomAlignment(AMINOACIDS, 300, 300)
 	if err != nil {
 		t.Error(err)
@@ -59,7 +59,7 @@ func TestRemoveOneGaps(t *testing.T) {
 		pos++
 	})
 
-	a.RemoveGaps(0.0)
+	a.RemoveGapSites(0.0)
 
 	if a.Length() != 0 {
 		t.Error("We should have removed all positions")
@@ -71,7 +71,7 @@ func TestRemoveOneGaps(t *testing.T) {
 	})
 }
 
-func TestRemoveAllGaps(t *testing.T) {
+func TestRemoveAllGapSites(t *testing.T) {
 	a, err := RandomAlignment(AMINOACIDS, 300, 300)
 	if err != nil {
 		t.Error(err)
@@ -97,7 +97,7 @@ func TestRemoveAllGaps(t *testing.T) {
 	/* Remove position 20 */
 	backupseq = append(backupseq[:20], backupseq[21:]...)
 
-	a.RemoveGaps(1.0)
+	a.RemoveGapSites(1.0)
 
 	if a.Length() != 299 {
 		t.Error("We should have removed only one position")
@@ -121,6 +121,96 @@ func TestRemoveAllGaps(t *testing.T) {
 	}
 }
 
+func TestRemoveOneGapSequence(t *testing.T) {
+	a, err := RandomAlignment(AMINOACIDS, 300, 300)
+	if err != nil {
+		t.Error(err)
+
+	}
+
+	/* We add 1 gap per site on all sequences*/
+	pos := 0
+	a.IterateChar(func(name string, sequence []rune) {
+		sequence[pos] = GAP
+		pos++
+	})
+
+	a.RemoveGapSeqs(0.0)
+
+	if a.NbSequences() != 0 {
+		t.Error("We should have removed all sequences")
+	}
+}
+
+func TestRemoveOneGapSequence2(t *testing.T) {
+	a, err := RandomAlignment(AMINOACIDS, 300, 300)
+	if err != nil {
+		t.Error(err)
+
+	}
+
+	/* We add 1 gap per site on half of the sequences*/
+	pos := 0
+	a.IterateChar(func(name string, sequence []rune) {
+		if pos%2 == 0 {
+			sequence[pos] = GAP
+		}
+		pos++
+	})
+
+	a.RemoveGapSeqs(0.0)
+
+	if a.NbSequences() != 150 {
+		t.Error("We should have removed half of sequences")
+	}
+}
+
+func TestRemoveAllGapSequences(t *testing.T) {
+	a, err := RandomAlignment(AMINOACIDS, 300, 300)
+	if err != nil {
+		t.Error(err)
+
+	}
+	seq0, found := a.GetSequenceChar(0)
+	if !found {
+		t.Error("Problem finding first sequence")
+	}
+
+	for i := 0; i < a.Length(); i++ {
+		seq0[i] = GAP
+	}
+
+	a.RemoveGapSeqs(1.0)
+
+	if a.NbSequences() != 299 {
+		t.Error("We should have removed only one sequence")
+	}
+}
+
+func TestRemoveHalfGapSequences(t *testing.T) {
+	a, err := RandomAlignment(AMINOACIDS, 300, 300)
+	if err != nil {
+		t.Error(err)
+
+	}
+	seq0, found := a.GetSequenceChar(0)
+	if !found {
+		t.Error("Problem finding first sequence")
+	}
+
+	for i := 0; i < a.Length(); i++ {
+		if i%2 == 0 {
+			seq0[i] = GAP
+		}
+	}
+
+	a.RemoveGapSeqs(0.5)
+
+	if a.NbSequences() != 299 {
+		t.Error("We should have removed only one sequence")
+	}
+}
+
 func TestClone(t *testing.T) {
 	a, err := RandomAlignment(AMINOACIDS, 300, 300)
 	if err != nil {
@@ -140,7 +230,7 @@ func TestClone(t *testing.T) {
 		t.Error(err2)
 	}
 
-	a.RemoveGaps(0.0)
+	a.RemoveGapSites(0.0)
 
 	a2.IterateChar(func(name string, sequence []rune) {
 		if len(sequence) != 300 {

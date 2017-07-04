@@ -48,7 +48,8 @@ type Alignment interface {
 	ShuffleSequences()
 	ShuffleSites(rate float64, roguerate float64) []string
 	SimulateRogue(prop float64, proplen float64) ([]string, []string)
-	RemoveGaps(cutoff float64)
+	RemoveGapSites(cutoff float64) // Removes sites having >= cutoff gaps
+	RemoveGapSeqs(cutoff float64)  // Removes sequences having >= cutoff gaps
 	Sample(nb int) (Alignment, error)
 	BuildBootstrap() Alignment
 	Entropy(site int, removegaps bool) (float64, error) // Entropy of the given site
@@ -270,7 +271,7 @@ func (a *align) ShuffleSites(rate float64, roguerate float64) []string {
 // Cutoff must be between 0 and 1, otherwise set to 0.
 // 0 means that positions with > 0 gaps will be removed
 // other cutoffs : ]0,1] mean that positions with >= cutoff gaps will be removed
-func (a *align) RemoveGaps(cutoff float64) {
+func (a *align) RemoveGapSites(cutoff float64) {
 	var nbgaps int
 	if cutoff < 0 || cutoff > 1 {
 		cutoff = 0
@@ -296,6 +297,36 @@ func (a *align) RemoveGaps(cutoff float64) {
 		}
 	}
 	a.length -= len(toremove)
+}
+
+// Removes sequences constituted of [cutoff*100%,100%] Gaps
+// Exception fo a cutoff of 0: does not remove sequences with 0% gaps
+// Cutoff must be between 0 and 1, otherwise set to 0.
+// 0 means that sequences with > 0 gaps will be removed
+// other cutoffs : ]0,1] mean that sequences with >= cutoff gaps will be removed
+func (a *align) RemoveGapSeqs(cutoff float64) {
+	var nbgaps int
+	if cutoff < 0 || cutoff > 1 {
+		cutoff = 0
+	}
+
+	toremove := make([]int, 0, 10)
+	for seq := 0; seq < a.NbSequences(); seq++ {
+		nbgaps = 0
+		for site := 0; site < a.Length(); site++ {
+			if a.seqs[seq].sequence[site] == GAP {
+				nbgaps++
+			}
+		}
+		if (cutoff > 0.0 && float64(nbgaps) >= cutoff*float64(a.Length())) || (cutoff == 0 && nbgaps > 0) {
+			toremove = append(toremove, seq)
+		}
+	}
+	/* Now we remove gap sequences, starting at the end */
+	sort.Ints(toremove)
+	for i := (len(toremove) - 1); i >= 0; i-- {
+		a.seqs = append(a.seqs[:toremove[i]], a.seqs[toremove[i]+1:]...)
+	}
 }
 
 // This function renames sequences of the alignment based on the map in argument

@@ -47,7 +47,9 @@ Command                                                     | Subcommand |      
 [build](commands/build.md) ([api](api/build.md))            |            | Command to build output files : bootstrap for example
 --                                                          | distboot   | Builds bootstrap distances matrices from input alignment (nt only)
 --                                                          | seqboot    | Builds bootstrap alignments from input alignment
-[clean](commands/clean.md) ([api](api/clean.md))            |            | Removes gap sites
+[clean](commands/clean.md) ([api](api/clean.md))            |            | Removes gap sites/sequences
+--                                                          | sites      | Removes sequences with gaps
+--                                                          | seqs       | Removes sites with gaps
 [compute](commands/compute.md) ([api](api/compute.md))      |            | Different computations (distances, entropy, etc.)
 --                                                          | distance   | Computes distance matrix from inpu alignment
 --                                                          | entropy    | Computes entropy of sites of a given alignment

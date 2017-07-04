@@ -28,7 +28,7 @@ diff result expected
 rm -f expected result mapfile
 
 
-echo "->goalign clean"
+echo "->goalign clean sites"
 cat > expected <<EOF
 >Seq0000
 ATATGGCGATCAAAGTTCCAATGAGATACTTCCTTTACG
@@ -56,8 +56,34 @@ cat > expectedlog <<EOF
 [Warning] in cmd/clean.go (line 56), message: Alignment (0) length after cleaning=39
 [Warning] in cmd/clean.go (line 57), message: Alignment (0) number of gaps=61
 EOF
+goalign random -s 10 | goalign mutate gaps -n 1 -r 0.1 -s 10 |  goalign clean sites > result 2>log
+diff result expected
+rm -f expected result mapfile log expectedlog
 
-goalign random -s 10 | goalign mutate gaps -n 1 -r 0.1 -s 10 |  goalign clean > result 2>log
+echo "->goalign clean seqs"
+cat > expected <<EOF
+>Seq0000
+GATTAATTTGCCGTAGGCCAGAATCTGAAGATCGAACACTTTAAGTTTTCACTTCTAATGGAGAGGACTAGTTCATACTT
+TTTAAACACTTTTACATCGA
+>Seq0003
+GAGTGGAGGCTTTATGGCACAAGGTATTAGAGACTGAGGGGCACCCCGGCATGGTAAGCAGGAGCCATCGCGAAGGCTTC
+AGGTATCTTCCTGTGTTACC
+>Seq0005
+AGTTTGACTATGAGCGCCGGCTTAGTGCTGACAGTGATGCTCCGTTGTAAGGGTCCTGATGTTCTTGTGCTCGCGCATAT
+TAGAGCTGAGTTTCCCAAAG
+>Seq0007
+CTGGTAATACCTGCGCTATTTCGTCAGTTCGTGTACGGGTAACGATAGCGGTTAATGCTTATTCCGATCAGCTCACACCC
+ATGAAGGTGGCTCTGGAGCC
+>Seq0009
+ACCTACGGCTCTAGACAGCTGAAGTCCGGTTCCGAGCACTGTACGGAAACTTGAAAAGGCTCGACGGAGGCTTGTTCCGC
+AGAGTGGGACTATAACATAC
+EOF
+cat > expectedlog <<EOF
+[Warning] in cmd/cleanseqs.go (line 36), message: Alignment (0) #seqs before cleaning=10
+[Warning] in cmd/cleanseqs.go (line 37), message: Alignment (0) #seqs after cleaning=5
+[Warning] in cmd/cleanseqs.go (line 38), message: Alignment (0) removed sequences=5
+EOF
+goalign random -s 10 | goalign mutate gaps -n 0.5 -r 0.7 -s 10 |  goalign clean seqs > result 2>log
 diff result expected
 rm -f expected result mapfile log expectedlog
 
@@ -87,7 +113,6 @@ EOF
 goalign random -s 10 -l 20 > result
 diff result expected
 rm -f expected result mapfile
-
 
 echo "->goalign reformat fasta"
 cat > expected <<EOF
