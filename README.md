@@ -57,6 +57,7 @@ You may go to the [doc](docs/index.md) for a more detailed documentation of the 
 * sample: Samples sequences or subalignments
   * seqs: Randomly samples a subset of sequences from the input alignment
   * sites: Extracts a sub-alignment starting a a random position, and with a given length
+  * rarefy: Down-samples input alignment, taking into accounts weights/counts of all sequences
 * shuffle:     A set of commands to shuffle an alignment
   * recomb: Recombine some sequences (copy/paste)
   * rogue: simulate sort of rogue taxa by shuffling some sequences
