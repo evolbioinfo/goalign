@@ -69,6 +69,7 @@ Command                                                     | Subcommand |      
 [sample](commands/sample.md) ([api](api/sample.md))         |            | Samples sequences or sites from an input alignment
 --                                                          | seqs       | Samples a subset of sequences from the input alignment
 --                                                          | sites      | Take a random subalignment
+--                                                          | rarefy     | Take a sample taking into accounts weights
 [shuffle](commands/shuffle.md) ([api](api/shuffle.md))      |            | A set of commands to shuffle an alignment
 --                                                          | recomb     | Recombines sequences in the input alignment (copy/paste)
 --                                                          | rogue      | Simulates rogue taxa

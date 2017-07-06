@@ -6,6 +6,7 @@
 This command samples sites or sequences from an input alignment (fasta by default or phylip with `-p`):
 1. `goalign sample sites`: take a random subsequence starting at a random position and with the given length from the input alignment;
 2. `goalign sample seqs`: take a random subset of the sequences from an input alignment;
+3. `goalign sample rarefy`: Take a new sample taking into accounts weights. Each sequence in the alignment has associated counts. The sum s of the counts represents the number of sequences in the underlying initial dataset. The goal is to downsample (rarefy) the initial dataset, by sampling n sequences from s (n<s), and taking the alignment corresponding to this new sample, i.e by taking only unique (different) sequences from it.
 
 If the input alignment contains several alignments (phylip), will process all of them.
 
@@ -59,6 +60,24 @@ Usage:
 	-p, --phylip         Alignment is in phylip? False=Fasta
     --input-strict       Strict phylip input format (only used with -p)
     --output-strict      Strict phylip output format  (only used with -p)
+```
+
+* rarefy command
+```
+Usage:
+  goalign sample rarefy [flags]
+
+Flags:
+  -c, --counts string   Count file (tab separated), one line per sequence: seqname\tcount (default "stdin")
+  -n, --nb-seq int      Number of sequences to sample from the repeated dataset (from counts) (default 1)
+  -o, --output string   Rarefied alignment output file (default "stdout")
+  -s, --seed int        Initial Random Seed (default 1499337865919564301)
+
+Global Flags:
+  -i, --align string    Alignment input file (default "stdin")
+      --input-strict    Strict phylip input format (only used with -p)
+      --output-strict   Strict phylip output format (only used with -p)
+  -p, --phylip          Alignment is in phylip? False=Fasta
 ```
 
 #### Examples

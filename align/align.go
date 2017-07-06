@@ -53,6 +53,7 @@ type Alignment interface {
 	RemoveGapSites(cutoff float64) // Removes sites having >= cutoff gaps
 	RemoveGapSeqs(cutoff float64)  // Removes sequences having >= cutoff gaps
 	Sample(nb int) (Alignment, error)
+	Rarefy(nb int, counts map[string]int) (Alignment, error) // Take a new rarefied sample taking into accounts weights
 	BuildBootstrap() Alignment
 	Entropy(site int, removegaps bool) (float64, error) // Entropy of the given site
 	Swap(rate float64)
@@ -637,6 +638,79 @@ func (a *align) Sample(nb int) (Alignment, error) {
 		seq := a.seqs[permutation[i]]
 		sample.AddSequenceChar(seq.name, seq.SequenceChar(), seq.Comment())
 	}
+	return sample, nil
+}
+
+/*
+Each sequence in the alignment has an associated number of occurence. The sum s of the counts
+represents the number of sequences in the underlying initial dataset.
+
+The goal is to downsample (rarefy) the initial dataset, by sampling n sequences
+from s (n<s), and taking the alignment corresponding to this new sample, i.e by
+taking only unique (different) sequences from it.
+
+Parameters are:
+* nb: the number of sequences to sample from the underlying full dataset (different
+from the number of sequences in the output alignment)
+* counts: counts associated to each sequence (if the count of a sequence is missing, it
+is considered as 0). Sum of counts of all sequences must be > n.
+*/
+func (a *align) Rarefy(nb int, counts map[string]int) (Alignment, error) {
+	// Sequences that will be selected
+	selected := make(map[string]bool)
+	total := 0
+	// We copy the count map to modify it
+	tmpcounts := make(map[string]int)
+	tmpcountskeys := make([]string, len(counts))
+	i := 0
+	for k, v := range counts {
+		tmpcountskeys[i] = k
+		if v <= 0 {
+			return nil, errors.New("Sequence counts must be positive")
+		}
+		tmpcounts[k] = v
+		total += v
+		i++
+	}
+
+	sort.Strings(tmpcountskeys)
+
+	if nb >= total {
+		return nil, errors.New(fmt.Sprintf("Number of sequences to sample %d is >= sum of the counts %d", nb, total))
+	}
+
+	// We sample a new sequence nb times
+	for i := 0; i < nb; i++ {
+		proba := 0.0
+		// random num
+		unif := rand.Float64()
+		for idk, k := range tmpcountskeys {
+			v, ok := tmpcounts[k]
+			if !ok {
+				return nil, errors.New(fmt.Sprintf("No sequence named %s is present in the tmp count map"))
+			}
+			proba += float64(v) / float64(total)
+			if unif < proba {
+				selected[k] = true
+				if v-1 == 0 {
+					delete(tmpcounts, k)
+					tmpcountskeys = append(tmpcountskeys[:idk], tmpcountskeys[idk+1:]...)
+				} else {
+					tmpcounts[k] = v - 1
+				}
+				break
+			}
+		}
+		total--
+	}
+
+	sample := NewAlign(a.alphabet)
+	a.IterateAll(func(name string, sequence []rune, comment string) {
+		if _, ok := selected[name]; ok {
+			sample.AddSequenceChar(name, sequence, comment)
+		}
+	})
+
 	return sample, nil
 }
 
