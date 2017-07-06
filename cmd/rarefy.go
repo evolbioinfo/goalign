@@ -18,6 +18,7 @@ var rarefyNb int
 var rarefySeed int64
 var rarefyOutput string
 var rarefyCounts string
+var rarefyReplicates int
 
 // rarefyCmd represents the rarefy command
 var rarefyCmd = &cobra.Command{
@@ -37,6 +38,7 @@ Parameters are:
 from the number of sequences in the output alignment)
 * c: counts associated to each sequence (if the count of a sequence is missing, it 
 is considered as 0). Sum of counts of all sequences must be > n.
+* r: the number of replicates to generate (if r>1, output format will be phylip anyway)
 
 Output: An alignment (phylip or fasta).
 `,
@@ -45,10 +47,15 @@ Output: An alignment (phylip or fasta).
 		counts := parseCountFile(rarefyCounts)
 		f := openWriteFile(rarefyOutput)
 		for al := range rootaligns {
-			if sample, err := al.Rarefy(rarefyNb, counts); err != nil {
-				io.ExitWithMessage(err)
-			} else {
-				writeAlign(sample, f)
+			if rarefyReplicates > 1 {
+				rootphylip = true
+			}
+			for i := 0; i < rarefyReplicates; i++ {
+				if sample, err := al.Rarefy(rarefyNb, counts); err != nil {
+					io.ExitWithMessage(err)
+				} else {
+					writeAlign(sample, f)
+				}
 			}
 		}
 		f.Close()
@@ -61,6 +68,7 @@ func init() {
 	rarefyCmd.PersistentFlags().Int64VarP(&rarefySeed, "seed", "s", time.Now().UTC().UnixNano(), "Initial Random Seed")
 	rarefyCmd.PersistentFlags().StringVarP(&rarefyOutput, "output", "o", "stdout", "Rarefied alignment output file")
 	rarefyCmd.PersistentFlags().StringVarP(&rarefyCounts, "counts", "c", "stdin", "Count file (tab separated), one line per sequence: seqname\\tcount")
+	rarefyCmd.PersistentFlags().IntVarP(&rarefyReplicates, "replicates", "r", 1, "Number of replicates to generate")
 }
 
 func parseCountFile(file string) map[string]int {
