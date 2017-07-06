@@ -668,6 +668,9 @@ func (a *align) Rarefy(nb int, counts map[string]int) (Alignment, error) {
 		if v <= 0 {
 			return nil, errors.New("Sequence counts must be positive")
 		}
+		if _, ok := a.GetSequenceChar(k); !ok {
+			return nil, errors.New(fmt.Sprintf("Sequence %s does not exist in the alignment", k))
+		}
 		tmpcounts[k] = v
 		total += v
 		i++
