@@ -84,7 +84,7 @@ func init() {
 func writeDistMatrix(al align.Alignment, matrix [][]float64, f *os.File) {
 	f.WriteString(fmt.Sprintf("%d\n", len(matrix)))
 	for i := 0; i < len(matrix); i++ {
-		if name, ok := al.GetSequenceName(i); ok {
+		if name, ok := al.GetSequenceNameById(i); ok {
 			f.WriteString(fmt.Sprintf("%s", name))
 		} else {
 			io.ExitWithMessage(errors.New(fmt.Sprintf("Sequence %d does not exist in the alignment", i)))

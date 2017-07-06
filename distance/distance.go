@@ -105,9 +105,9 @@ func DistMatrix(al align.Alignment, weights []float64, model DistModel, cpus int
 
 	go func() {
 		for i := 0; i < al.NbSequences(); i++ {
-			seq1, _ := al.GetSequenceChar(i)
+			seq1, _ := al.GetSequenceCharById(i)
 			for j := i + 1; j < al.NbSequences(); j++ {
-				seq2, _ := al.GetSequenceChar(j)
+				seq2, _ := al.GetSequenceCharById(j)
 				distchan <- seqpairdist{i, j, seq1, seq2, model, weights}
 			}
 		}
@@ -228,7 +228,7 @@ func probaNt(al align.Alignment, selectedSites []bool, weights []float64) []floa
 			w = weights[pos]
 		}
 		for i := 0; i < al.NbSequences(); i++ {
-			seq1, _ := al.GetSequenceChar(i)
+			seq1, _ := al.GetSequenceCharById(i)
 			char := seq1[pos]
 			if selectedSites[pos] {
 				if isNuc(seq1[pos]) {
@@ -280,9 +280,9 @@ func probaNtPairs(al align.Alignment, selectedSites []bool, weights []float64) [
 	psi := init2DFloat(4, 4)
 	total := 0.0
 	for i := 0; i < al.NbSequences(); i++ {
-		seq1, _ := al.GetSequenceChar(i)
+		seq1, _ := al.GetSequenceCharById(i)
 		for j := i + 1; j < al.NbSequences(); j++ {
-			seq2, _ := al.GetSequenceChar(j)
+			seq2, _ := al.GetSequenceCharById(j)
 			total += countNtPairs2Seq(seq1, seq2, selectedSites, weights, psi)
 		}
 	}
@@ -354,7 +354,7 @@ func selectedSites(al align.Alignment, weights []float64, removeGappedPositions 
 		}
 		selectedSites[l] = true
 		for i := 0; i < al.NbSequences() && removeGappedPositions; i++ {
-			seq, _ := al.GetSequenceChar(i)
+			seq, _ := al.GetSequenceCharById(i)
 			if !isNuc(seq[l]) || seq[l] == '*' || seq[l] == '?' || seq[l] == '-' {
 				selectedSites[l] = false
 			}

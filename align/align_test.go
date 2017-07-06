@@ -79,7 +79,7 @@ func TestRemoveAllGapSites(t *testing.T) {
 	}
 
 	backupseq := make([]rune, 0, 300)
-	seq0, found := a.GetSequenceChar(0)
+	seq0, found := a.GetSequenceCharById(0)
 	if !found {
 		t.Error("Problem finding first sequence")
 	}
@@ -109,7 +109,7 @@ func TestRemoveAllGapSites(t *testing.T) {
 		}
 	})
 
-	newseq, found2 := a.GetSequenceChar(0)
+	newseq, found2 := a.GetSequenceCharById(0)
 	if !found2 {
 		t.Error("Problem finding first seqence")
 	}
@@ -171,7 +171,7 @@ func TestRemoveAllGapSequences(t *testing.T) {
 		t.Error(err)
 
 	}
-	seq0, found := a.GetSequenceChar(0)
+	seq0, found := a.GetSequenceCharById(0)
 	if !found {
 		t.Error("Problem finding first sequence")
 	}
@@ -193,7 +193,7 @@ func TestRemoveHalfGapSequences(t *testing.T) {
 		t.Error(err)
 
 	}
-	seq0, found := a.GetSequenceChar(0)
+	seq0, found := a.GetSequenceCharById(0)
 	if !found {
 		t.Error("Problem finding first sequence")
 	}
@@ -253,8 +253,8 @@ func TestClone2(t *testing.T) {
 
 	i := 0
 	a2.IterateChar(func(name string, sequence []rune) {
-		s2, ok := a.GetSequenceChar(i)
-		n2, ok2 := a.GetSequenceName(i)
+		s2, ok := a.GetSequenceCharById(i)
+		n2, ok2 := a.GetSequenceNameById(i)
 
 		if !ok || !ok2 {
 			t.Error(fmt.Sprintf("Sequence not found in clone alignment: %s", name))

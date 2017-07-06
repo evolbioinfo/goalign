@@ -35,8 +35,10 @@ type Alignment interface {
 	AddSequence(name string, sequence string, comment string) error
 	AddSequenceChar(name string, sequence []rune, comment string) error
 	GetSequence(name string) (string, bool)
-	GetSequenceChar(ith int) ([]rune, bool)
-	GetSequenceName(ith int) (string, bool)
+	GetSequenceById(ith int) (string, bool)
+	GetSequenceChar(name string) ([]rune, bool)
+	GetSequenceCharById(ith int) ([]rune, bool)
+	GetSequenceNameById(ith int) (string, bool)
 	SetSequenceChar(ithAlign, ithSite int, char rune) error
 	Iterate(it func(name string, sequence string))
 	IterateChar(it func(name string, sequence []rune))
@@ -160,18 +162,37 @@ func (a *align) GetSequence(name string) (string, bool) {
 	return "", ok
 }
 
+// If sequence exists in alignment, return sequence,true
+// Otherwise, return "",false
+func (a *align) GetSequenceById(ith int) (string, bool) {
+	if ith >= 0 && ith < a.NbSequences() {
+		return a.seqs[ith].Sequence(), true
+	}
+	return "", false
+}
+
 // If ith >=0 && i < nbSequences() return sequence,true
 // Otherwise, return nil, false
-func (a *align) GetSequenceChar(ith int) ([]rune, bool) {
+func (a *align) GetSequenceCharById(ith int) ([]rune, bool) {
 	if ith >= 0 && ith < a.NbSequences() {
 		return a.seqs[ith].SequenceChar(), true
 	}
 	return nil, false
 }
 
+// If sequence exists in alignment, return sequence, true
+// Otherwise, return nil,false
+func (a *align) GetSequenceChar(name string) ([]rune, bool) {
+	seq, ok := a.seqmap[name]
+	if ok {
+		return seq.SequenceChar(), ok
+	}
+	return nil, false
+}
+
 // If ith >=0 && i < nbSequences() return name,true
 // Otherwise, return "", false
-func (a *align) GetSequenceName(ith int) (string, bool) {
+func (a *align) GetSequenceNameById(ith int) (string, bool) {
 	if ith >= 0 && ith < a.NbSequences() {
 		return a.seqs[ith].Name(), true
 	}
@@ -942,7 +963,7 @@ func (a *align) Concat(c Alignment) (err error) {
 		return errors.New(fmt.Sprintf("Alignments do not have the same number of sequences %d!=%d", a.NbSequences(), c.NbSequences()))
 	}
 	a.Iterate(func(name, sequence string) {
-		_, ok := c.GetSequence(name)
+		_, ok := c.GetSequenceChar(name)
 		if !ok {
 			err = errors.New(fmt.Sprintf("Sequence %s does not exist in the given alignment", name))
 			return
@@ -952,7 +973,7 @@ func (a *align) Concat(c Alignment) (err error) {
 		return err
 	}
 	c.Iterate(func(name, sequence string) {
-		_, ok := a.GetSequence(name)
+		_, ok := a.GetSequenceChar(name)
 		if !ok {
 			err = errors.New(fmt.Sprintf("Sequence %s does not exist in this alignment", name))
 		}

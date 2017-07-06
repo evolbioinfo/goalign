@@ -77,7 +77,7 @@ func init() {
 func writeDistBootMatrix(matrix [][]float64, a align.Alignment, f *os.File) {
 	f.WriteString(fmt.Sprintf("%d\n", len(matrix)))
 	for i := 0; i < len(matrix); i++ {
-		name, ok := a.GetSequenceName(i)
+		name, ok := a.GetSequenceNameById(i)
 		if !ok {
 			f.WriteString(fmt.Sprintf("%d", i))
 		} else {
