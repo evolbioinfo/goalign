@@ -43,8 +43,8 @@ and it will not be taken into account in the average.
 		} else {
 			fmt.Println("Alignment\tSite\tEntropy")
 		}
-		avg := 0.0
 		for align := range rootaligns {
+			avg := 0.0
 			total := 0
 			for i := 0; i < align.Length(); i++ {
 				if e, err := align.Entropy(i, entropyRemoveGaps); err != nil {
