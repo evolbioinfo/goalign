@@ -16,9 +16,11 @@ import (
 const (
 	AMINOACIDS = 0 // Amino acid sequence alphabet
 	NUCLEOTIDS = 1 // Nucleotid sequence alphabet
-	GAP        = '-'
-	POINT      = '.'
-	OTHER      = '*'
+	UNKNOWN    = 2 // Unkown alphabet
+
+	GAP   = '-'
+	POINT = '.'
+	OTHER = '*'
 
 	PSSM_NORM_NONE = 0 // No normalization
 	PSSM_NORM_FREQ = 1 // Normalization by freq in the site
@@ -78,12 +80,12 @@ type align struct {
 	length   int             // Length of alignment
 	seqmap   map[string]*seq // Map of sequences
 	seqs     []*seq          // Set of sequences (to preserve order)
-	alphabet int             // AMINOACIDS OR NUCLEOTIDS
+	alphabet int             // AMINOACIDS , NUCLEOTIDS or UNKOWN
 }
 
 func NewAlign(alphabet int) *align {
 	switch alphabet {
-	case AMINOACIDS, NUCLEOTIDS:
+	case AMINOACIDS, NUCLEOTIDS, UNKNOWN:
 		// OK
 	default:
 		io.ExitWithMessage(errors.New("Unexpected sequence alphabet type"))
@@ -93,6 +95,17 @@ func NewAlign(alphabet int) *align {
 		make(map[string]*seq),
 		make([]*seq, 0, 100),
 		alphabet,
+	}
+}
+
+func AlphabetFromString(alphabet string) int {
+	switch strings.ToLower(alphabet) {
+	case "dna", "rna", "nucleotide":
+		return NUCLEOTIDS
+	case "protein":
+		return AMINOACIDS
+	default:
+		return UNKNOWN
 	}
 }
 
@@ -755,9 +768,7 @@ func DetectAlphabet(seq string) int {
 		}
 		isaa = isaa && couldbeaa
 		isnt = isnt && couldbent
-		if !(isaa || isnt) {
-			io.ExitWithMessage(errors.New("Unknown character state in alignment : " + string(nt)))
-		}
+		return UNKNOWN
 	}
 
 	if isnt {

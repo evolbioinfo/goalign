@@ -169,8 +169,8 @@ func (p *Parser) Parse() (align.Alignment, error) {
 			}
 
 			if tok != IDENTIFIER {
-				fmt.Println("Block: ")
-				fmt.Println(b)
+				// fmt.Println("Block: ")
+				// fmt.Println(b)
 				return nil, errors.New("Bad Phylip format, we should have a sequence block here")
 			}
 			for tok != ENDOFLINE {
