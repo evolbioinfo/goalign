@@ -130,6 +130,8 @@ func initConfig() {
 func writeAlign(al align.Alignment, f *os.File) {
 	if rootphylip {
 		f.WriteString(phylip.WriteAlignment(al, rootoutputstrict))
+	} else if rootnexus {
+		f.WriteString(nexus.WriteAlignment(al))
 	} else {
 		f.WriteString(fasta.WriteAlignment(al))
 	}
