@@ -745,3 +745,88 @@ goalign random -s 10 -p | goalign mutate gaps -s 10 -p | goalign unalign -p > re
 diff result expected
 rm -f expected result 
 
+
+echo "->goalign reformat newick 1"
+cat > nexus <<EOF
+#NEXUS
+BEGIN TAXA;
+      TaxLabels fish frog snake mouse;
+END;
+
+BEGIN CHARACTERS;
+      Dimensions NChar=40;
+      Format DataType=DNA;
+      Matrix
+        fish   ACATA GAGGG TACCT CTAAA
+        frog   ACATA GAGGG TACCT CTAAC
+        snake  ACATA GAGGG TACCT CTAAG
+        mouse  ACATA GAGGG TACCT CTAAT
+
+        fish   ACATA GAGGG TACCT CTAAG
+        frog   CCATA GAGGG TACCT CTAAG
+        snake  GCATA GAGGG TACCT CTAAG
+        mouse  TCATA GAGGG TACCT CTAAG
+;
+END;
+
+BEGIN TREES;
+      Tree best=(fish, (frog, (snake, mouse)));
+END;
+EOF
+cat > expected <<EOF
+>fish
+ACATAGAGGGTACCTCTAAAACATAGAGGGTACCTCTAAG
+>frog
+ACATAGAGGGTACCTCTAACCCATAGAGGGTACCTCTAAG
+>snake
+ACATAGAGGGTACCTCTAAGGCATAGAGGGTACCTCTAAG
+>mouse
+ACATAGAGGGTACCTCTAATTCATAGAGGGTACCTCTAAG
+EOF
+goalign reformat fasta -i nexus -x -o result
+diff expected result
+rm -f expected result nexus
+
+
+echo "->goalign reformat newick 2"
+cat > nexus <<EOF
+#NEXUS
+BEGIN TAXA;
+      TaxLabels fish frog snake mouse;
+END;
+
+BEGIN CHARACTERS;
+      Dimensions NChar=40;
+      Format DataType=DNA;
+      Matrix
+        fish   ACATA GAGGG TACCT CTAAA
+        fish   ACATA GAGGG TACCT CTAAG
+
+        frog   ACATA GAGGG TACCT CTAAC
+        frog   CCATA GAGGG TACCT CTAAG
+
+        snake  ACATA GAGGG TACCT CTAAG
+        snake  GCATA GAGGG TACCT CTAAG
+
+        mouse  ACATA GAGGG TACCT CTAAT
+        mouse  TCATA GAGGG TACCT CTAAG
+;
+END;
+
+BEGIN TREES;
+      Tree best=(fish, (frog, (snake, mouse)));
+END;
+EOF
+cat > expected <<EOF
+>fish
+ACATAGAGGGTACCTCTAAAACATAGAGGGTACCTCTAAG
+>frog
+ACATAGAGGGTACCTCTAACCCATAGAGGGTACCTCTAAG
+>snake
+ACATAGAGGGTACCTCTAAGGCATAGAGGGTACCTCTAAG
+>mouse
+ACATAGAGGGTACCTCTAATTCATAGAGGGTACCTCTAAG
+EOF
+goalign reformat fasta -i nexus -x -o result
+diff expected result
+rm -f expected result nexus
