@@ -768,7 +768,10 @@ func DetectAlphabet(seq string) int {
 		}
 		isaa = isaa && couldbeaa
 		isnt = isnt && couldbent
-		return UNKNOWN
+
+		if !(isaa || isnt) {
+			return UNKNOWN
+		}
 	}
 
 	if isnt {
