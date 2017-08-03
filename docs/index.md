@@ -4,7 +4,7 @@
 ## Introduction
 Goalign is a set of command line tools to manipulate multiple alignments. It is implemented in [Go](https://golang.org/) language.
 
-The goal is to handle multiple alignments in different input (Fasta and Phylip) and output (Fasta, Nexus, Phylip) formats through several basic commands. Each command may print result (usually an alignment) in the standard output, and thus can be piped to the standard input of the next Goalign command.
+The goal is to handle multiple alignments in different input and output formats (Fasta, Phylip and Nexus) through several basic commands. Each command may print result (usually an alignment) in the standard output, and thus can be piped to the standard input of the next Goalign command.
 
 ## Installation
 ### Binaries
@@ -34,7 +34,8 @@ The `goalign` executable should be located in the `$GOPATH/bin` folder.
 Here is the list of all commands, with the link to the full description, and a link to a snippet that does it in GO.
 Almost all commands can have the following arguments:
 
-* `-p`: input is in phylip format (default fasta)
+* `-p`: input is in phylip format (default fasta). Output format will also be phylip in this case;
+* `-x`: input is in nexus format (default fasta), lower priority than `-p`. Output format will also be nexus in this case;
 * `--input-strict`: if `-p` is also given, then input is considered phylip strict, i.e:
     * sequence names are maximum 10 character long. goalign removes spaces in sequence names;
 	* sequence starts at position 11 (just after sequence name).
