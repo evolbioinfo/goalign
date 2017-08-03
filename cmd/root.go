@@ -15,6 +15,7 @@ import (
 	"github.com/fredericlemoine/goalign/io/nexus"
 	"github.com/fredericlemoine/goalign/io/phylip"
 	"github.com/fredericlemoine/goalign/io/utils"
+	tnexus "github.com/fredericlemoine/gotree/io/nexus"
 	"github.com/spf13/cobra"
 )
 
@@ -22,6 +23,7 @@ var cfgFile string
 var infile string
 var rootaligns chan align.Alignment
 var rootphylip bool
+var rootnexus bool
 var rootcpus int
 var rootinputstrict bool = false
 var rootoutputstrict bool = false
@@ -73,6 +75,17 @@ func readalign(file string) chan align.Alignment {
 			}
 			fi.Close()
 		}()
+	} else if rootnexus {
+		nex, err3 := tnexus.NewParser(r).Parse()
+		if err3 != nil {
+			io.ExitWithMessage(err3)
+		}
+		if !nex.HasAlignment {
+			io.ExitWithMessage(errors.New("Nexus file has no alignment"))
+		}
+		alchan <- nex.Alignment()
+		fi.Close()
+		close(alchan)
 	} else {
 		var al align.Alignment
 		al, err2 = fasta.NewParser(r).Parse()
@@ -99,7 +112,9 @@ func init() {
 	cobra.OnInitialize(initConfig)
 
 	RootCmd.PersistentFlags().StringVarP(&infile, "align", "i", "stdin", "Alignment input file")
-	RootCmd.PersistentFlags().BoolVarP(&rootphylip, "phylip", "p", false, "Alignment is in phylip? False=Fasta")
+	RootCmd.PersistentFlags().BoolVarP(&rootphylip, "phylip", "p", false, "Alignment is in phylip? default fasta")
+	RootCmd.PersistentFlags().BoolVarP(&rootnexus, "nexus", "x", false, "Alignment is in nexus? default fasta")
+
 	RootCmd.PersistentFlags().IntVarP(&rootcpus, "threads", "t", 1, "Number of threads")
 	RootCmd.PersistentFlags().BoolVar(&rootinputstrict, "input-strict", false, "Strict phylip input format (only used with -p)")
 	RootCmd.PersistentFlags().BoolVar(&rootoutputstrict, "output-strict", false, "Strict phylip output format (only used with -p)")
