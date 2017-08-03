@@ -7,3 +7,4 @@ go:
 
 install:
   - go get -u github.com/spf13/cobra
+  - go get -u github.com/fredericlemoine/gotree
