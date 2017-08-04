@@ -355,7 +355,7 @@ diff result expected
 rm -f expected result restmp
 
 
-echo "->goalign concat"
+echo "->goalign concat 1"
 cat > expected <<EOF
 >Seq0000
 GATTAATTTGGATTAATTTG
@@ -382,7 +382,7 @@ goalign random -l 10 -s 10 | goalign concat  <(goalign random -l 10 -s 10 | goal
 diff result expected
 rm -f expected result
 
-echo "->goalign concat"
+echo "->goalign concat 2"
 cat > expected <<EOF
 >Seq0000
 GATTAATTTGGATTAATTTG
@@ -526,6 +526,59 @@ GTTCATACTT----------
 TTTAAACACT----------
 >Seq0009
 TTTACATCGA----------
+EOF
+goalign concat -i none input1 input2 > result
+diff result expected
+rm -f expected result input1 input2
+
+echo "->goalign concat (missing sequences in both)"
+cat > input2 <<EOF
+>Seq0000
+GACATGGCAG
+>Seq0001
+AATAGAATAG
+>Seq0002
+TCGATGTCTT
+>Seq0003
+CGCGAGCCTC
+>Seq0004
+AGAAGCTTTA
+EOF
+cat > input1 <<EOF
+>Seq0004
+TTAAGTTTTC
+>Seq0005
+ACTTCTAATG
+>Seq0006
+GAGAGGACTA
+>Seq0007
+GTTCATACTT
+>Seq0008
+TTTAAACACT
+>Seq0009
+TTTACATCGA
+EOF
+cat > expected <<EOF
+>Seq0004
+TTAAGTTTTCAGAAGCTTTA
+>Seq0005
+ACTTCTAATG----------
+>Seq0006
+GAGAGGACTA----------
+>Seq0007
+GTTCATACTT----------
+>Seq0008
+TTTAAACACT----------
+>Seq0009
+TTTACATCGA----------
+>Seq0000
+----------GACATGGCAG
+>Seq0001
+----------AATAGAATAG
+>Seq0002
+----------TCGATGTCTT
+>Seq0003
+----------CGCGAGCCTC
 EOF
 goalign concat -i none input1 input2 > result
 diff result expected
