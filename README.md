@@ -315,7 +315,6 @@ import "github.com/fredericlemoine/goalign/distance"
 var model distance.DistModel
 var distMatrix [][]float64
 model = distance.Model("k2p", false)
-distance.Model(computedistModel, computedistRemoveGaps)
 distmatrix = distance.DistMatrix(align, nil, model, 5)
 ```
 
