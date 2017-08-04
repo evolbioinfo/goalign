@@ -1042,40 +1042,35 @@ func (a *align) RandSubAlign(length int) (Alignment, error) {
 }
 
 /*
-Concatenates both alignments. It appends the given alignment to this alignment
-Returns an error if the set of sequence names are not the same between both alignments
+Concatenates both alignments. It appends the given alignment to this alignment.
+If a sequence is present in this alignment and not in c, then it adds a full gap sequence.
+If a sequence is present in c alignment and not in this, then it appends the new sequence
+to a full gap sequence.
+Returns an error if the sequences do not have the same alphabet.
 */
 func (a *align) Concat(c Alignment) (err error) {
 	if a.Alphabet() != c.Alphabet() {
 		return errors.New("Alignments do not have the same alphabet")
 	}
-
-	if a.NbSequences() != c.NbSequences() {
-		return errors.New(fmt.Sprintf("Alignments do not have the same number of sequences %d!=%d", a.NbSequences(), c.NbSequences()))
-	}
-	a.Iterate(func(name, sequence string) {
+	a.IterateAll(func(name string, sequence []rune, comment string) {
 		_, ok := c.GetSequenceChar(name)
 		if !ok {
-			err = errors.New(fmt.Sprintf("Sequence %s does not exist in the given alignment", name))
-			return
+			// This sequence is present in a but not in c
+			// So we append full gap sequence to a
+			a.appendToSequence(name, []rune(strings.Repeat(string(GAP), c.Length())))
 		}
 	})
 	if err != nil {
 		return err
 	}
-	c.Iterate(func(name, sequence string) {
+	c.IterateAll(func(name string, sequence []rune, comment string) {
 		_, ok := a.GetSequenceChar(name)
 		if !ok {
-			err = errors.New(fmt.Sprintf("Sequence %s does not exist in this alignment", name))
+			// This sequence is present in c but not in a
+			// So we add it to a, with gaps only
+			a.AddSequence(name, strings.Repeat(string(GAP), a.Length()), comment)
 		}
-		return
-	})
-	if err != nil {
-		return err
-	}
-
-	/* Now We append the sequences */
-	c.IterateChar(func(name string, sequence []rune) {
+		// Then we append the c sequence to a
 		err = a.appendToSequence(name, sequence)
 	})
 	if err != nil {
