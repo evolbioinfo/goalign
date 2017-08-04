@@ -666,7 +666,8 @@ Parameters are:
 * nb: the number of sequences to sample from the underlying full dataset (different
 from the number of sequences in the output alignment)
 * counts: counts associated to each sequence (if the count of a sequence is missing, it
-is considered as 0). Sum of counts of all sequences must be > n.
+is considered as 0, if the count of an unkown sequence is present, it will return an error).
+ Sum of counts of all sequences must be > n.
 */
 func (a *align) Rarefy(nb int, counts map[string]int) (Alignment, error) {
 	// Sequences that will be selected
