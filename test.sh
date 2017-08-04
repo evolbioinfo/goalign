@@ -409,6 +409,128 @@ goalign random -l 10 -s 10 | goalign concat  <(goalign random -l 10 -s 10 | goal
 diff result expected
 rm -f expected result
 
+echo "->goalign concat (missing sequences in 1)"
+cat > input1 <<EOF
+>Seq0000
+GACATGGCAG
+>Seq0001
+AATAGAATAG
+>Seq0002
+TCGATGTCTT
+>Seq0003
+CGCGAGCCTC
+>Seq0004
+AGAAGCTTTA
+EOF
+cat > input2 <<EOF
+>Seq0000
+GATTAATTTG
+>Seq0001
+CCGTAGGCCA
+>Seq0002
+GAATCTGAAG
+>Seq0003
+ATCGAACACT
+>Seq0004
+TTAAGTTTTC
+>Seq0005
+ACTTCTAATG
+>Seq0006
+GAGAGGACTA
+>Seq0007
+GTTCATACTT
+>Seq0008
+TTTAAACACT
+>Seq0009
+TTTACATCGA
+EOF
+cat > expected <<EOF
+>Seq0000
+GACATGGCAGGATTAATTTG
+>Seq0001
+AATAGAATAGCCGTAGGCCA
+>Seq0002
+TCGATGTCTTGAATCTGAAG
+>Seq0003
+CGCGAGCCTCATCGAACACT
+>Seq0004
+AGAAGCTTTATTAAGTTTTC
+>Seq0005
+----------ACTTCTAATG
+>Seq0006
+----------GAGAGGACTA
+>Seq0007
+----------GTTCATACTT
+>Seq0008
+----------TTTAAACACT
+>Seq0009
+----------TTTACATCGA
+EOF
+goalign concat -i none input1 input2 > result
+diff result expected
+rm -f expected result input1 input2
+
+echo "->goalign concat (missing sequences in 2)"
+cat > input2 <<EOF
+>Seq0000
+GACATGGCAG
+>Seq0001
+AATAGAATAG
+>Seq0002
+TCGATGTCTT
+>Seq0003
+CGCGAGCCTC
+>Seq0004
+AGAAGCTTTA
+EOF
+cat > input1 <<EOF
+>Seq0000
+GATTAATTTG
+>Seq0001
+CCGTAGGCCA
+>Seq0002
+GAATCTGAAG
+>Seq0003
+ATCGAACACT
+>Seq0004
+TTAAGTTTTC
+>Seq0005
+ACTTCTAATG
+>Seq0006
+GAGAGGACTA
+>Seq0007
+GTTCATACTT
+>Seq0008
+TTTAAACACT
+>Seq0009
+TTTACATCGA
+EOF
+cat > expected <<EOF
+>Seq0000
+GATTAATTTGGACATGGCAG
+>Seq0001
+CCGTAGGCCAAATAGAATAG
+>Seq0002
+GAATCTGAAGTCGATGTCTT
+>Seq0003
+ATCGAACACTCGCGAGCCTC
+>Seq0004
+TTAAGTTTTCAGAAGCTTTA
+>Seq0005
+ACTTCTAATG----------
+>Seq0006
+GAGAGGACTA----------
+>Seq0007
+GTTCATACTT----------
+>Seq0008
+TTTAAACACT----------
+>Seq0009
+TTTACATCGA----------
+EOF
+goalign concat -i none input1 input2 > result
+diff result expected
+rm -f expected result input1 input2
+
 
 echo "->goalign divide"
 cat > expected <<EOF
@@ -746,7 +868,7 @@ diff result expected
 rm -f expected result 
 
 
-echo "->goalign reformat newick 1"
+echo "->goalign reformat nexus 1"
 cat > nexus <<EOF
 #NEXUS
 BEGIN TAXA;
@@ -788,7 +910,7 @@ diff expected result
 rm -f expected result nexus
 
 
-echo "->goalign reformat newick 2"
+echo "->goalign reformat nexus 2"
 cat > nexus <<EOF
 #NEXUS
 BEGIN TAXA;
