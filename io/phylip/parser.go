@@ -86,6 +86,12 @@ func (p *Parser) Parse() (align.Alignment, error) {
 		if err != nil {
 			return nil, errors.New("The numeric is not parsable: " + lit)
 		}
+		if nbseq == 0 {
+			return nil, errors.New("No sequences in the alignment")
+		}
+		if nbseq < 0 {
+			return nil, fmt.Errorf("Wrong number of sequences in the alignment: %d", nbseq)
+		}
 	}
 
 	names := make([]string, nbseq)
@@ -104,6 +110,12 @@ func (p *Parser) Parse() (align.Alignment, error) {
 		lenseq, err = strconv.ParseInt(lit, 10, 64)
 		if err != nil {
 			return nil, errors.New("The numeric is not parsable: " + lit)
+		}
+		if lenseq == 0 {
+			return nil, errors.New("0 Length sequences defined in the header")
+		}
+		if nbseq < 0 {
+			return nil, fmt.Errorf("Wrong sequence length in the header: %d", lenseq)
 		}
 	}
 
