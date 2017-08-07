@@ -6,8 +6,8 @@ Goalign is a set of command line tools to manipulate multiple alignments. It is 
 See also [Gotree](https://github.com/fredericlemoine/gotree) for handling phylogenetic trees.
 
 ## Installation
-### Binaries
-You can download already compiled binaries for the latest release in the [release](https://github.com/fredericlemoine/goalign/releases) section.
+### Easy way: Binaries
+You can download ready to run binaries for the latest release in the [release](https://github.com/fredericlemoine/goalign/releases) section.
 Binaries are available for MacOS, Linux, and Windows (32 and 64 bits).
 
 Once downloaded, you can just run the executable without any other downloads.
