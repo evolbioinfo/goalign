@@ -9,6 +9,7 @@ import (
 	"math/rand"
 	"sort"
 	"strings"
+	"unicode"
 
 	"github.com/fredericlemoine/goalign/io"
 )
@@ -21,6 +22,7 @@ const (
 	GAP   = '-'
 	POINT = '.'
 	OTHER = '*'
+	AMBIG = 'X'
 
 	PSSM_NORM_NONE = 0 // No normalization
 	PSSM_NORM_FREQ = 1 // Normalization by freq in the site
@@ -74,6 +76,7 @@ type Alignment interface {
 	SubAlign(start, length int) (Alignment, error) // Extract a subalignment from this alignment
 	RandSubAlign(length int) (Alignment, error)    // Extract a random subalignment with given length from this alignment
 	Clone() (Alignment, error)
+	CharToIndex(c rune) int // Returns index of the character (nt or aa) in the AlphabetCharacters() array
 }
 
 type align struct {
@@ -1003,8 +1006,10 @@ func (a *align) Pssm(log bool, pseudocount float64, normalization int) (pssm map
 func (a *align) AlphabetCharacters() (alphabet []rune) {
 	if a.Alphabet() == AMINOACIDS {
 		return stdaminoacid
-	} else {
+	} else if a.Alphabet() == NUCLEOTIDS {
 		return stdnucleotides
+	} else {
+		return make([]rune, 0)
 	}
 }
 
@@ -1116,4 +1121,72 @@ func (a *align) NbVariableSites() int {
 		}
 	}
 	return nbinfo
+}
+
+// Returns index of the character (nt or aa) in the AlphabetCharacters() array
+// If character does not exist or alphabet is unkown, then returns -1
+func (a *align) CharToIndex(c rune) int {
+	switch a.Alphabet() {
+	case AMINOACIDS:
+		switch unicode.ToUpper(c) {
+		case 'A':
+			return 0
+		case 'R':
+			return 1
+		case 'N':
+			return 2
+		case 'D':
+			return 3
+		case 'C':
+			return 4
+		case 'Q':
+			return 5
+		case 'E':
+			return 6
+		case 'G':
+			return 7
+		case 'H':
+			return 8
+		case 'I':
+			return 9
+		case 'L':
+			return 10
+		case 'K':
+			return 11
+		case 'M':
+			return 12
+		case 'F':
+			return 13
+		case 'P':
+			return 14
+		case 'S':
+			return 15
+		case 'T':
+			return 16
+		case 'W':
+			return 17
+		case 'Y':
+			return 18
+		case 'V':
+			return 19
+		default:
+			return -1
+		}
+	case NUCLEOTIDS:
+		switch unicode.ToUpper(c) {
+		case 'A':
+			return 0
+		case 'C':
+			return 1
+		case 'G':
+
+			return 2
+		case 'T':
+			return 3
+		default:
+			return -1
+		}
+	default:
+		return -1
+	}
 }
