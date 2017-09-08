@@ -1005,3 +1005,21 @@ EOF
 goalign reformat fasta -i nexus -x -o result
 diff expected result
 rm -f expected result nexus
+
+
+echo "->goalign sort"
+cat > expected <<EOF
+>Seq0000
+GATTAATTTG
+>Seq0001
+CCGTAGGCCA
+>Seq0002
+GAATCTGAAG
+>Seq0003
+ATCGAACACT
+>Seq0004
+TTAAGTTTTC
+EOF
+goalign random -s 10 -l 10 -n 5 | goalign shuffle seqs | goalign sort > result
+diff expected result
+rm -f expected result
