@@ -287,6 +287,10 @@ var subalign align.Alignment
 var err error
 subalign,err = align.SubAlign(0, 100)
 ```
+* Sort sequences by alphanumerical order
+```go
+align.Sort()
+```
 * Copy/Clone the alignment
 ```go
 var clonealign align.Alignment

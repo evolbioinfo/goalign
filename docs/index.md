@@ -77,6 +77,7 @@ Command                                                     | Subcommand |      
 --                                                          | seqs       | Shuffles sequence order in alignment
 --                                                          | sites      | Shuffles n alignment sites vertically
 --                                                          | swap       | Swaps portion of sequences in the input alignment (cut/paste)
+[sort](commands/sort.md) ([api](api/sort.md))               |            | Sorts the alignment by sequence name
 [stats](commands/stats.md) ([api](api/stats.md))            |            | Prints different characteristics of the alignment
 --                                                          | alleles    | Prints the average number of alleles per sites of the alignment
 --                                                          | char       | Prints frequence of different characters (aa/nt) of the alignment

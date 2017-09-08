@@ -52,6 +52,7 @@ type Alignment interface {
 	ShuffleSequences()
 	ShuffleSites(rate float64, roguerate float64) []string
 	SimulateRogue(prop float64, proplen float64) ([]string, []string)
+	Sort()                         // Sorts the alignment by sequence name
 	RemoveGapSites(cutoff float64) // Removes sites having >= cutoff gaps
 	RemoveGapSeqs(cutoff float64)  // Removes sequences having >= cutoff gaps
 	Sample(nb int) (Alignment, error)
@@ -299,6 +300,23 @@ func (a *align) ShuffleSites(rate float64, roguerate float64) []string {
 		}
 	}
 	return rogues
+}
+
+// Sorts the alignment by sequence name
+func (a *align) Sort() {
+	names := make([]string, len(a.seqs))
+
+	// Get sequence names
+	for i, seq := range a.seqs {
+		names[i] = seq.Name()
+	}
+
+	// Sort names
+	sort.Strings(names)
+	for i, n := range names {
+		s, _ := a.seqmap[n]
+		a.seqs[i] = s
+	}
 }
 
 // Removes positions constituted of [cutoff*100%,100%] Gaps
