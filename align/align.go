@@ -50,7 +50,7 @@ type Alignment interface {
 	Length() int
 	Mutate(rate float64) // Adds uniform substitutions in the alignment (~sequencing errors)
 	ShuffleSequences()
-	ShuffleSites(rate float64, roguerate float64) []string
+	ShuffleSites(rate float64, roguerate float64, randroguefirst bool) []string
 	SimulateRogue(prop float64, proplen float64) ([]string, []string)
 	Sort()                         // Sorts the alignment by sequence name
 	RemoveGapSites(cutoff float64) // Removes sites having >= cutoff gaps
@@ -255,8 +255,13 @@ func (a *align) ShuffleSequences() {
 // rate must be >=0 and <=1
 // Then, take roguerate proportion of the taxa, and will shuffle rate sites among the
 // remaining intact sites
+// randroguefirst: If true, then with a given seed, rogues will always be the same with all alignments
+// having sequences in the same order. It may not be the case if false, especially when alignemnts
+// have different lengths.
 // Output: List of tax names that are more shuffled than others (length=roguerate*nbsequences)
-func (a *align) ShuffleSites(rate float64, roguerate float64) []string {
+func (a *align) ShuffleSites(rate float64, roguerate float64, randroguefirst bool) []string {
+	var sitepermutation, taxpermutation []int
+
 	if rate < 0 || rate > 1 {
 		io.ExitWithMessage(errors.New("Shuffle site rate must be >=0 and <=1"))
 	}
@@ -267,8 +272,14 @@ func (a *align) ShuffleSites(rate float64, roguerate float64) []string {
 	nb_sites_to_shuffle := int(rate * float64(a.Length()))
 	nb_rogue_sites_to_shuffle := int(rate * (1.0 - rate) * (float64(a.Length())))
 	nb_rogue_seq_to_shuffle := int(roguerate * float64(a.NbSequences()))
-	sitepermutation := rand.Perm(a.Length())
-	taxpermutation := rand.Perm(a.NbSequences())
+	if randroguefirst {
+		taxpermutation = rand.Perm(a.NbSequences())
+		sitepermutation = rand.Perm(a.Length())
+	} else {
+		sitepermutation = rand.Perm(a.Length())
+		taxpermutation = rand.Perm(a.NbSequences())
+	}
+
 	rogues := make([]string, nb_rogue_seq_to_shuffle)
 
 	if (nb_rogue_sites_to_shuffle + nb_sites_to_shuffle) > a.Length() {

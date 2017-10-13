@@ -836,6 +836,46 @@ diff result expected
 diff rogueexpected rogues.txt
 rm -f expected result rogueexpected rogues.txt
 
+echo "->goalign shuffle sites rogues stables"
+cat > expected <<EOF
+>Seq0000
+CATTTATTTGCGGACGTCGTGAAAGTGTAGTTCAAACACATCAAACTGGC
+>Seq0001
+CCTTATACCGGAGGATACAAATGGAATAATATTTAGATCTTCAGAAAGCC
+>Seq0002
+AGTCGCAGCTAAGTATGGGTGATCTCTCTGAATACTATCCGAGTCAAGGG
+>Seq0003
+CTATGTTTCCGCTGTCGGGGCTCGAGGTCTGTAGAAGGTTTGGCGATAGG
+>Seq0004
+ATGAGCGCGGGGTAAATGCCCTTTAGACGAAGTCAGCGATTCACCGTTTA
+>Seq0005
+GCGAGGATCCCCCTCGAAAAATATTAAGGATGTTATCACTATTGTTCATC
+>Seq0006
+GAATTGAAGCTGTTACGCTATACCGTGGTGGGAATAGAGGGTGACACCCT
+>Seq0007
+ATAGTAAGCAGTAAGGCTCGCGAATGCCTCAGGTACACTGCTGTCTTCGC
+>Seq0008
+CACAAGCCTTGCGTGGATCAGCCGGAGCACGGCTACTGCCACTGATCTCC
+>Seq0009
+TTTACTACTCCACGGCTACACGGACCTAGATGCTTGATTACTAGGTCTGG
+EOF
+
+cat > rogueexpected <<EOF
+Seq0001
+Seq0002
+Seq0008
+Seq0004
+Seq0006
+EOF
+
+goalign random -l 50 -s 10 | goalign shuffle sites -r 0.5 -s 10 --rogue 0.5 --rogue-file rogues.txt --stable-rogues  > result
+goalign random -l 30 -s 11 | goalign shuffle sites -r 0.5 -s 10 --rogue 0.5 --rogue-file rogues2.txt --stable-rogues  > /dev/null
+diff result expected
+diff rogueexpected rogues.txt
+# Should be the same list of rogues, even if random gen seed is
+# different and length is different (initial seq order is the same)
+diff rogues.txt rogues2.txt
+rm -f expected result rogueexpected rogues.txt
 
 echo "->goalign stats"
 cat > expected <<EOF

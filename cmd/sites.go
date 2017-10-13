@@ -7,6 +7,7 @@ import (
 var siteRate float64
 var siteRogue float64
 var siteRogueNameFile string
+var stableRogues bool
 
 // sitesCmd represents the sites command
 var sitesCmd = &cobra.Command{
@@ -34,7 +35,7 @@ goalign shuffle sites -i align.fasta -r 0.5
 		f := openWriteFile(shuffleOutput)
 		nameFile := openWriteFile(siteRogueNameFile)
 		for al := range rootaligns {
-			names := al.ShuffleSites(siteRate, siteRogue)
+			names := al.ShuffleSites(siteRate, siteRogue, stableRogues)
 			writeAlign(al, f)
 			for _, n := range names {
 				nameFile.WriteString(n)
@@ -51,4 +52,5 @@ func init() {
 	sitesCmd.PersistentFlags().Float64VarP(&siteRate, "rate", "r", 0.5, "Rate of shuffled sites (>=0 and <=1)")
 	sitesCmd.PersistentFlags().Float64Var(&siteRogue, "rogue", 0.0, "If set, then will take the given proportion of taxa, and will apply shuffle again on --rate of the remaining intact sites")
 	sitesCmd.PersistentFlags().StringVar(&siteRogueNameFile, "rogue-file", "stdout", "Rogue sequence names output file")
+	sitesCmd.PersistentFlags().BoolVar(&stableRogues, "stable-rogues", false, "If true, then with a given seed, rogues will always be the same with all alignments having sequences in the same order. It may not be the case if false, especially when alignemnts have different lengths.")
 }
