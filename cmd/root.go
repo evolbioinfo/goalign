@@ -27,6 +27,7 @@ var rootnexus bool
 var rootcpus int
 var rootinputstrict bool = false
 var rootoutputstrict bool = false
+var rootAutoDetectInputFormat bool
 
 var Version string = "Unset"
 
@@ -50,6 +51,17 @@ It allows to :
 4 - Print informations about alignments
 5 - Generate bootstrap alignments
 
+Input alignment file formats:
+1. Fasta (default)
+2. Phylip (-p option)
+3. Nexus (-x option)
+4. Auto detect (--auto-detect option). In that case, it will test input formats in the following order:
+    1. Fasta
+    2. Nexus
+    3. Phylip
+    If none of these formats is recognized, then will exit with an error 
+
+Please note that in --auto-detect mode, phylip format is considered as not strict!
 `,
 	PersistentPreRun: func(cmd *cobra.Command, args []string) {
 		runtime.GOMAXPROCS(rootcpus)
@@ -61,40 +73,79 @@ func readalign(file string) chan align.Alignment {
 	alchan := make(chan align.Alignment, 15)
 	var fi *os.File
 	var r *bufio.Reader
-	var err, err2 error
+	var err error
+	var nex *tnexus.Nexus
+	var firstbyte byte
 
-	fi, r, err = utils.GetReader(file)
-	if err != nil {
+	if fi, r, err = utils.GetReader(file); err != nil {
 		io.ExitWithMessage(err)
 	}
-	if rootphylip {
-		go func() {
-			err2 = phylip.NewParser(r, rootinputstrict).ParseMultiple(alchan)
-			if err2 != nil {
-				io.ExitWithMessage(err2)
-			}
-			fi.Close()
-		}()
-	} else if rootnexus {
-		nex, err3 := tnexus.NewParser(r).Parse()
-		if err3 != nil {
-			io.ExitWithMessage(err3)
-		}
-		if !nex.HasAlignment {
-			io.ExitWithMessage(errors.New("Nexus file has no alignment"))
-		}
-		alchan <- nex.Alignment()
-		fi.Close()
-		close(alchan)
-	} else {
+	if rootAutoDetectInputFormat {
 		var al align.Alignment
-		al, err2 = fasta.NewParser(r).Parse()
-		if err2 != nil {
-			io.ExitWithMessage(err2)
+		if firstbyte, err = r.ReadByte(); err != nil {
+			io.ExitWithMessage(err)
 		}
-		alchan <- al
-		fi.Close()
-		close(alchan)
+		if err = r.UnreadByte(); err != nil {
+			io.ExitWithMessage(err)
+		}
+		// First test Fasta format
+		if firstbyte == '>' {
+			if al, err = fasta.NewParser(r).Parse(); err != nil {
+				io.ExitWithMessage(err)
+			}
+			alchan <- al
+			fi.Close()
+			close(alchan)
+		} else if firstbyte == '#' {
+			if nex, err = tnexus.NewParser(r).Parse(); err != nil {
+				io.ExitWithMessage(err)
+			}
+			rootnexus = true
+			// Then test nexus
+			if !nex.HasAlignment {
+				io.ExitWithMessage(errors.New("Nexus file has no alignment"))
+			}
+			alchan <- nex.Alignment()
+			fi.Close()
+			close(alchan)
+		} else {
+			rootphylip = true
+			// Finally test Phylip
+			go func() {
+				if err := phylip.NewParser(r, rootinputstrict).ParseMultiple(alchan); err != nil {
+					io.ExitWithMessage(err)
+				}
+				fi.Close()
+			}()
+		}
+	} else {
+		if rootphylip {
+			go func() {
+				if err := phylip.NewParser(r, rootinputstrict).ParseMultiple(alchan); err != nil {
+					io.ExitWithMessage(err)
+				}
+				fi.Close()
+			}()
+		} else if rootnexus {
+			if nex, err = tnexus.NewParser(r).Parse(); err != nil {
+				io.ExitWithMessage(err)
+			}
+			if !nex.HasAlignment {
+				io.ExitWithMessage(errors.New("Nexus file has no alignment"))
+			}
+			alchan <- nex.Alignment()
+			fi.Close()
+			close(alchan)
+		} else {
+			var al align.Alignment
+			al, err = fasta.NewParser(r).Parse()
+			if err != nil {
+				io.ExitWithMessage(err)
+			}
+			alchan <- al
+			fi.Close()
+			close(alchan)
+		}
 	}
 	return alchan
 }
@@ -118,6 +169,8 @@ func init() {
 	RootCmd.PersistentFlags().IntVarP(&rootcpus, "threads", "t", 1, "Number of threads")
 	RootCmd.PersistentFlags().BoolVar(&rootinputstrict, "input-strict", false, "Strict phylip input format (only used with -p)")
 	RootCmd.PersistentFlags().BoolVar(&rootoutputstrict, "output-strict", false, "Strict phylip output format (only used with -p)")
+
+	RootCmd.PersistentFlags().BoolVar(&rootAutoDetectInputFormat, "auto-detect", false, "Auto detects input format (overrides -p and -x)")
 
 	RootCmd.SetHelpTemplate(helptemplate)
 }

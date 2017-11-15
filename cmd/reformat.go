@@ -13,8 +13,9 @@ var reformatCmd = &cobra.Command{
 	Short: "Reformats input alignment into phylip of fasta format",
 	Long: `Reformats input alignment into phylip of fasta format.
 
-Allows to convert formats between phylip and fasta, but also reformat 
+Allows to convert formats between phylip, fasta and nexus, but also reformats
 fasta and phylip, such as 60 characters per line, etc.
+
 `,
 }
 

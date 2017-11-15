@@ -41,6 +41,11 @@ Almost all commands can have the following arguments:
 	* sequence starts at position 11 (just after sequence name).
 * `--output-strict`: if `-p` is also given, then output alignments are written in strict phylip format, i.e:
     * sequence names are maximum 10 character long, otherwise they are truncated.
+* `--auto-detect` (overrides -p and -x): It will test input formats in the following order:
+    1. Fasta
+    2. Nexus
+    3. Phylip
+    If none of these formats is recognized, then will exit with an error. Please also note that in `--auto-detect` mode, phylip format is considered as not strict.
 
 Command                                                     | Subcommand |        Description
 ------------------------------------------------------------|------------|-----------------------------------------------------------------------

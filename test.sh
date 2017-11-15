@@ -131,7 +131,6 @@ goalign random -n 5 -l 5 -s 10 -p | goalign reformat fasta -p > result
 diff result expected
 rm -f expected result mapfile
 
-
 echo "->goalign reformat fasta strict"
 cat > expected <<EOF
 >Seq0000
@@ -163,7 +162,6 @@ goalign random -n 5 -l 5 -s 10 | goalign reformat phylip > result
 diff result expected
 rm -f expected result mapfile
 
-
 echo "->goalign reformat phylip strict"
 cat > expected <<EOF
    5   5
@@ -176,7 +174,6 @@ EOF
 goalign random -n 5 -l 5 -s 10 | goalign reformat phylip --output-strict > result
 diff result expected
 rm -f expected result mapfile
-
 
 echo "->goalign reformat nexus"
 cat > expected <<EOF
@@ -197,7 +194,6 @@ goalign random -n 5 -l 5 -s 10 | goalign reformat nexus > result
 diff result expected
 rm -f expected result mapfile
 
-
 echo "->goalign reformat tnt"
 cat > expected <<EOF
 xread
@@ -215,6 +211,87 @@ EOF
 goalign random -n 5 -l 5 -s 10 | goalign reformat tnt > result
 diff result expected
 rm -f expected result mapfile
+
+echo "->goalign reformat tnt auto"
+cat > expected <<EOF
+xread
+
+'Tnt input file'
+
+5 5
+Seq0000 GATTA
+Seq0001 ATTTG
+Seq0002 CCGTA
+Seq0003 GGCCA
+Seq0004 GAATC
+;
+EOF
+goalign random -n 5 -l 5 -s 10 | goalign reformat tnt --auto-detect > result
+diff result expected
+rm -f expected result mapfile
+
+echo "->goalign reformat auto from nexus"
+cat > expected <<EOF
+#NEXUS
+begin data;
+dimensions ntax=5 nchar=5;
+format datatype=nucleotide;
+matrix
+Seq0000 GATTA
+Seq0001 ATTTG
+Seq0002 CCGTA
+Seq0003 GGCCA
+Seq0004 GAATC
+;
+end;
+EOF
+goalign random -n 5 -l 5 -s 10 -x | goalign reformat nexus --auto-detect > result
+diff result expected
+rm -f expected result mapfile
+
+echo "->goalign reformat auto from phylip strict"
+cat > expected <<EOF
+   5   5
+Seq0000   GATTA
+Seq0001   ATTTG
+Seq0002   CCGTA
+Seq0003   GGCCA
+Seq0004   GAATC
+EOF
+goalign random -n 5 -l 5 -s 10 | goalign reformat phylip --output-strict | goalign reformat phylip --output-strict --auto-detect > result
+diff result expected
+rm -f expected result mapfile
+
+echo "->goalign reformat auto from phylip"
+cat > expected <<EOF
+   5   5
+Seq0000  GATTA
+Seq0001  ATTTG
+Seq0002  CCGTA
+Seq0003  GGCCA
+Seq0004  GAATC
+EOF
+goalign random -n 5 -l 5 -s 10 -p | goalign reformat phylip --auto-detect > result
+diff result expected
+rm -f expected result mapfile
+
+echo "->goalign reformat auto from fasta"
+cat > expected <<EOF
+>Seq0000
+GATTA
+>Seq0001
+ATTTG
+>Seq0002
+CCGTA
+>Seq0003
+GGCCA
+>Seq0004
+GAATC
+EOF
+goalign random -n 5 -l 5 -s 10 | goalign reformat fasta --auto-detect > result
+diff result expected
+rm -f expected result mapfile
+
 
 echo "->goalign compute distance -m f81"
 cat > expected <<EOF
