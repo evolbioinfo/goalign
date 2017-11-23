@@ -36,7 +36,7 @@ If align contains 3 alignments, this will generate 3 files:
 	Run: func(cmd *cobra.Command, args []string) {
 		i := 1
 		filename := unalignOutput
-		for al := range rootaligns {
+		for al := range rootaligns.Achan {
 			if filename != "stdout" && filename != "-" {
 				filename = fmt.Sprintf("%s_%.6d.fa", unalignOutput, i)
 			}

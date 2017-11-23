@@ -14,7 +14,7 @@ var sortCmd = &cobra.Command{
 `,
 	Run: func(cmd *cobra.Command, args []string) {
 		f := openWriteFile(sortOutput)
-		for al := range rootaligns {
+		for al := range rootaligns.Achan {
 			al.Sort()
 			writeAlign(al, f)
 		}

@@ -2,9 +2,8 @@ package cmd
 
 import (
 	"fmt"
-	"math"
-
 	"github.com/spf13/cobra"
+	"math"
 )
 
 var entropyAverage bool
@@ -43,7 +42,7 @@ and it will not be taken into account in the average.
 		} else {
 			fmt.Println("Alignment\tSite\tEntropy")
 		}
-		for align := range rootaligns {
+		for align := range rootaligns.Achan {
 			avg := 0.0
 			total := 0
 			for i := 0; i < align.Length(); i++ {

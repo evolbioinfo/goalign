@@ -6,14 +6,15 @@ import (
 	"compress/gzip"
 	"errors"
 	"fmt"
-	"github.com/fredericlemoine/goalign/io"
-	"github.com/fredericlemoine/goalign/io/fasta"
-	"github.com/fredericlemoine/goalign/io/phylip"
 	"github.com/spf13/cobra"
 	"math/rand"
 	"os"
 	"sync"
 	"time"
+
+	"github.com/fredericlemoine/goalign/io"
+	"github.com/fredericlemoine/goalign/io/fasta"
+	"github.com/fredericlemoine/goalign/io/phylip"
 )
 
 var bootstrapSeed int64
@@ -64,7 +65,10 @@ goalign build seqboot -i align.phylip -p -n 500 -o boot_
 		var tw *tar.Writer
 		var gw *gzip.Writer
 
-		align := <-rootaligns
+		align, _ := <-rootaligns.Achan
+		if rootaligns.Err != nil {
+			io.ExitWithMessage(rootaligns.Err)
+		}
 
 		bootidx := make(chan int, 100)
 		outchan := make(chan outboot, 100)

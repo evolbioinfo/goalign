@@ -1,9 +1,10 @@
 package cmd
 
 import (
+	"github.com/spf13/cobra"
+
 	"github.com/fredericlemoine/goalign/align"
 	"github.com/fredericlemoine/goalign/io"
-	"github.com/spf13/cobra"
 )
 
 var concatout string
@@ -22,7 +23,7 @@ goalign concat -i align.phy
 If format is Fasta, it is not possible, then you must give other alignments in the form:
 goalign concat -i align.fasta others*.fasta
 
-It is possible to give only otherfils, without -i, by giving -i none
+It is possible to give only otherfiles, without -i, by giving -i none
    goalign concat -i none align*.fasta
 or goalign concat -i none -p align*.phy
 
@@ -34,7 +35,7 @@ or goalign concat -i none -p align*.phy
 		var err error
 		if infile != "none" {
 			rootaligns = readalign(infile)
-			for al := range rootaligns {
+			for al := range rootaligns.Achan {
 				if align == nil {
 					align = al
 				} else {
@@ -44,10 +45,13 @@ or goalign concat -i none -p align*.phy
 					}
 				}
 			}
+			if rootaligns.Err != nil {
+				io.ExitWithMessage(rootaligns.Err)
+			}
 		}
 		for _, otherfile := range args {
 			alchan := readalign(otherfile)
-			for al := range alchan {
+			for al := range alchan.Achan {
 				if align == nil {
 					align = al
 				} else {
@@ -56,6 +60,9 @@ or goalign concat -i none -p align*.phy
 						io.ExitWithMessage(err)
 					}
 				}
+			}
+			if alchan.Err != nil {
+				io.ExitWithMessage(rootaligns.Err)
 			}
 		}
 

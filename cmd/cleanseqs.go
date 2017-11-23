@@ -2,9 +2,9 @@ package cmd
 
 import (
 	"fmt"
+	"github.com/spf13/cobra"
 
 	"github.com/fredericlemoine/goalign/io"
-	"github.com/spf13/cobra"
 )
 
 // cleanseqsCmd represents the cleanseqs command
@@ -27,7 +27,7 @@ will be removed.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		f := openWriteFile(cleanOutput)
 		i := 0
-		for al := range rootaligns {
+		for al := range rootaligns.Achan {
 			before := al.NbSequences()
 			al.RemoveGapSeqs(cleanCutoff)
 			after := al.NbSequences()

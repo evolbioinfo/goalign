@@ -38,7 +38,7 @@ If a name that does not exist appears in the map file, it will not do anything.
 		}
 
 		f := openWriteFile(renameOutput)
-		for al := range rootaligns {
+		for al := range rootaligns.Achan {
 			al.Rename(namemap)
 			writeAlign(al, f)
 		}

@@ -26,7 +26,11 @@ and with a given length.
 	Run: func(cmd *cobra.Command, args []string) {
 		rand.Seed(siteseed)
 
-		al := <-rootaligns
+		al, _ := <-rootaligns.Achan
+		if rootaligns.Err != nil {
+			io.ExitWithMessage(rootaligns.Err)
+		}
+
 		var name string = siteout
 		var extension string = "fa"
 		if rootphylip {

@@ -4,10 +4,11 @@ package cmd
 
 import (
 	"fmt"
-	"github.com/fredericlemoine/goalign/distance"
 	"github.com/spf13/cobra"
 	"math/rand"
 	"time"
+
+	"github.com/fredericlemoine/goalign/distance"
 )
 
 var weightbootSeed int64
@@ -28,7 +29,10 @@ Weights follow a Dirichlet distribtion D(n;1,...,1)
 	Run: func(cmd *cobra.Command, args []string) {
 		rand.Seed(weightbootSeed)
 
-		al := <-rootaligns
+		al, _ := <-rootaligns
+		if rootaligns.Err != nil {
+			io.ExitWithMessage(rootaligns.Err)
+		}
 
 		f := openWriteFile(weightbootOutput)
 		for i := 0; i < weightbootnb; i++ {

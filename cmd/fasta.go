@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"github.com/fredericlemoine/goalign/io"
 	"github.com/spf13/cobra"
 )
 
@@ -22,7 +23,11 @@ goalign reformat fasta -i align.fasta
 `,
 	Run: func(cmd *cobra.Command, args []string) {
 		f := openWriteFile(reformatOutput)
-		writeAlignFasta(<-rootaligns, f)
+		a, _ := <-rootaligns.Achan
+		if rootaligns.Err != nil {
+			io.ExitWithMessage(rootaligns.Err)
+		}
+		writeAlignFasta(a, f)
 		f.Close()
 	},
 }

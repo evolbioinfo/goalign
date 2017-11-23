@@ -66,7 +66,7 @@ given in the comand line.
 			}
 		}
 
-		for al := range rootaligns {
+		for al := range rootaligns.Achan {
 			var filtered align.Alignment = nil
 			al.Iterate(func(name string, sequence string) {
 				if filtered == nil {

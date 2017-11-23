@@ -34,7 +34,7 @@ goalign shuffle sites -i align.fasta -r 0.5
 	Run: func(cmd *cobra.Command, args []string) {
 		f := openWriteFile(shuffleOutput)
 		nameFile := openWriteFile(siteRogueNameFile)
-		for al := range rootaligns {
+		for al := range rootaligns.Achan {
 			names := al.ShuffleSites(siteRate, siteRogue, stableRogues)
 			writeAlign(al, f)
 			for _, n := range names {

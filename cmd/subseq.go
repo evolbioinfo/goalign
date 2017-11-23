@@ -29,7 +29,7 @@ The output format is the same than input format.
 `,
 	Run: func(cmd *cobra.Command, args []string) {
 		out := openWriteFile(subseqout)
-		for al := range rootaligns {
+		for al := range rootaligns.Achan {
 			subalign, err := al.SubAlign(subseqstart, subseqlength)
 			if err != nil {
 				io.ExitWithMessage(err)

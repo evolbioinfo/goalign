@@ -18,7 +18,7 @@ var gapsCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		rand.Seed(mutateSeed)
 		f := openWriteFile(mutateOutput)
-		for al := range rootaligns {
+		for al := range rootaligns.Achan {
 			al.Mutate(mutateRate)
 			writeAlign(al, f)
 		}

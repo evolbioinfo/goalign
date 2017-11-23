@@ -21,7 +21,7 @@ goalign trim seq -i align.fa -o trimed.fa -s -n 10
 `,
 	Run: func(cmd *cobra.Command, args []string) {
 		f := openWriteFile(trimAlignOut)
-		for al := range rootaligns {
+		for al := range rootaligns.Achan {
 			if err := al.TrimSequences(trimNb, trimFromStart); err != nil {
 				io.ExitWithMessage(err)
 			} else {

@@ -37,7 +37,7 @@ Possible to log2 transform the (normalized) value with --log (-l). Not taken int
 	Run: func(cmd *cobra.Command, args []string) {
 		switch pssmnorm {
 		case align.PSSM_NORM_UNIF, align.PSSM_NORM_NONE, align.PSSM_NORM_FREQ, align.PSSM_NORM_DATA, align.PSSM_NORM_LOGO:
-			for al := range rootaligns {
+			for al := range rootaligns.Achan {
 				if pssm, err := al.Pssm(pssmlog, pssmpseudocount, pssmnorm); err != nil {
 					io.ExitWithMessage(err)
 				} else {

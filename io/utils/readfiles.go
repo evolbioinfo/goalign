@@ -3,6 +3,7 @@ package utils
 import (
 	"bufio"
 	"compress/gzip"
+	"io"
 	"os"
 	"strings"
 )
@@ -28,7 +29,7 @@ func GetReader(inputfile string) (*os.File, *bufio.Reader, error) {
 		return nil, nil, err
 	} else {
 
-		if strings.HasSuffix(f.Name(), ".gz") {
+		if GzipExtension(f.Name()) {
 			if gr, err := gzip.NewReader(f); err != nil {
 				return nil, nil, err
 			} else {
@@ -39,4 +40,23 @@ func GetReader(inputfile string) (*os.File, *bufio.Reader, error) {
 		}
 		return f, reader, nil
 	}
+}
+
+/* Returns a buffered reader (gzip or not) for the given reader */
+func GetReaderFromReader(gzipped bool, rd io.Reader) (reader *bufio.Reader, err error) {
+	var gr *gzip.Reader
+	if gzipped {
+		if gr, err = gzip.NewReader(rd); err != nil {
+			return
+		}
+		reader = bufio.NewReader(gr)
+	} else {
+		reader = bufio.NewReader(rd)
+	}
+	return
+}
+
+func GzipExtension(name string) (gzipped bool) {
+	gzipped = strings.HasSuffix(name, ".gz")
+	return
 }

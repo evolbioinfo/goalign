@@ -1,9 +1,8 @@
 package cmd
 
 import (
-	"math/rand"
-
 	"github.com/spf13/cobra"
+	"math/rand"
 )
 
 var gapnbseqs float64
@@ -20,7 +19,7 @@ goalign mutate gaps -i align.fa -n 0.5 -r 0.5
 	Run: func(cmd *cobra.Command, args []string) {
 		rand.Seed(mutateSeed)
 		f := openWriteFile(mutateOutput)
-		for al := range rootaligns {
+		for al := range rootaligns.Achan {
 			al.AddGaps(mutateRate, gapnbseqs)
 			writeAlign(al, f)
 		}

@@ -4,11 +4,13 @@ package cmd
 
 import (
 	"fmt"
-	"github.com/fredericlemoine/goalign/distance"
 	"github.com/spf13/cobra"
 	"math/rand"
 	"os"
 	"time"
+
+	"github.com/fredericlemoine/goalign/distance"
+	"github.com/fredericlemoine/goalign/io"
 )
 
 // tntweightbootCmd represents the tntweightboot command
@@ -23,7 +25,10 @@ Weights follow a Dirichlet distribution D(n;1,...,1)
 	Run: func(cmd *cobra.Command, args []string) {
 		rand.Seed(weightbootSeed)
 
-		al := <-rootaligns
+		al, _ := <-rootaligns
+		if rootaligns.Err != nil {
+			io.ExitWithMessage(rootaligns.Err)
+		}
 
 		mintnt := 1.0
 		maxtnt := 1000.0

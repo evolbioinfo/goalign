@@ -34,7 +34,7 @@ goalign shuffle swap -i align.fasta -r 0.5
 `,
 	Run: func(cmd *cobra.Command, args []string) {
 		f := openWriteFile(shuffleOutput)
-		for al := range rootaligns {
+		for al := range rootaligns.Achan {
 			al.Swap(swapRate)
 			writeAlign(al, f)
 		}

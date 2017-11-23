@@ -2,12 +2,14 @@ package cmd
 
 import (
 	"fmt"
-	"github.com/fredericlemoine/goalign/align"
-	"github.com/fredericlemoine/goalign/distance"
 	"github.com/spf13/cobra"
 	"math/rand"
 	"os"
 	"time"
+
+	"github.com/fredericlemoine/goalign/align"
+	"github.com/fredericlemoine/goalign/distance"
+	"github.com/fredericlemoine/goalign/io"
 )
 
 var distbootSeed int64
@@ -45,7 +47,10 @@ goalign build distboot -m k2p -i align.fa -o mats.txt
 	Run: func(cmd *cobra.Command, args []string) {
 		rand.Seed(distbootSeed)
 		f := openWriteFile(distbootOutput)
-		align := <-rootaligns
+		align, _ := <-rootaligns.Achan
+		if rootaligns.Err != nil {
+			io.ExitWithMessage(rootaligns.Err)
+		}
 
 		model := distance.Model(distbootmodel, distboolRemoveGaps)
 		for i := 0; i < distbootnb; i++ {

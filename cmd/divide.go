@@ -30,7 +30,7 @@ gotree divide -i align.ph -p -o out
 `,
 	Run: func(cmd *cobra.Command, args []string) {
 		i := 0
-		for al := range rootaligns {
+		for al := range rootaligns.Achan {
 			if divideoutputFasta {
 				f := openWriteFile(fmt.Sprintf("%s_%03d.fa", divideOutput, i))
 				writeAlignFasta(al, f)

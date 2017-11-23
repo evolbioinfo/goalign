@@ -3,6 +3,7 @@ package cmd
 import (
 	"fmt"
 
+	"github.com/fredericlemoine/goalign/io"
 	"github.com/spf13/cobra"
 )
 
@@ -22,7 +23,11 @@ goalign stats taxa -i align.fasta
 `,
 	Run: func(cmd *cobra.Command, args []string) {
 		// TODO: Work your own magic here
-		al := <-rootaligns
+		al, _ := <-rootaligns.Achan
+		if rootaligns.Err != nil {
+			io.ExitWithMessage(rootaligns.Err)
+		}
+
 		i := 0
 		al.Iterate(func(name string, sequence string) {
 			fmt.Print(fmt.Sprintf("%d\t%s\n", i, name))

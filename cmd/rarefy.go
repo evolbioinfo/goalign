@@ -46,7 +46,7 @@ Output: An alignment (phylip or fasta).
 		rand.Seed(rarefySeed)
 		counts := parseCountFile(rarefyCounts)
 		f := openWriteFile(rarefyOutput)
-		for al := range rootaligns {
+		for al := range rootaligns.Achan {
 			if rarefyReplicates > 1 {
 				rootphylip = true
 			}

@@ -2,6 +2,8 @@ package cmd
 
 import (
 	"github.com/spf13/cobra"
+
+	"github.com/fredericlemoine/goalign/io"
 )
 
 // charCmd represents the char command
@@ -17,7 +19,11 @@ goalign stats char -i align.phylip -p
 goalign stats char -i align.fasta
 `,
 	Run: func(cmd *cobra.Command, args []string) {
-		printCharStats(<-rootaligns)
+		al, _ := <-rootaligns.Achan
+		if rootaligns.Err != nil {
+			io.ExitWithMessage(rootaligns.Err)
+		}
+		printCharStats(al)
 	},
 }
 

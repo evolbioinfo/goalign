@@ -27,7 +27,11 @@ goalign trim name -i align.phy -p -n 10 -m map.txt
 
 `,
 	Run: func(cmd *cobra.Command, args []string) {
-		al := <-rootaligns
+		al, _ := <-rootaligns.Achan
+		if rootaligns.Err != nil {
+			io.ExitWithMessage(rootaligns.Err)
+		}
+
 		f := openWriteFile(trimAlignOut)
 		if namemap, err := al.TrimNames(trimNb); err != nil {
 			io.ExitWithMessage(err)

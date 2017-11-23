@@ -3,6 +3,7 @@ package cmd
 import (
 	"fmt"
 
+	"github.com/fredericlemoine/goalign/io"
 	"github.com/spf13/cobra"
 )
 
@@ -22,7 +23,11 @@ goalign reformat tnt -i align.fasta
 `,
 	Run: func(cmd *cobra.Command, args []string) {
 		f := openWriteFile(reformatOutput)
-		al := <-rootaligns
+		al, _ := <-rootaligns.Achan
+		if rootaligns.Err != nil {
+			io.ExitWithMessage(rootaligns.Err)
+		}
+
 		f.WriteString("xread\n\n")
 		f.WriteString("'Tnt input file'\n\n")
 		f.WriteString(fmt.Sprintf("%d %d\n", al.Length(), al.NbSequences()))

@@ -27,7 +27,7 @@ As output, writes an alignment containing a sample of the sequences
 	Run: func(cmd *cobra.Command, args []string) {
 		rand.Seed(sampleseqSeed)
 		f := openWriteFile(sampleseqOutput)
-		for al := range rootaligns {
+		for al := range rootaligns.Achan {
 			if sample, err := al.Sample(sampleseqNb); err != nil {
 				io.ExitWithMessage(err)
 			} else {

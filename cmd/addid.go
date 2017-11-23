@@ -18,7 +18,7 @@ The string may be added to the left or to the right of each sequence identifier.
 `,
 	Run: func(cmd *cobra.Command, args []string) {
 		f := openWriteFile(addIdOutput)
-		for al := range rootaligns {
+		for al := range rootaligns.Achan {
 			al.AppendSeqIdentifier(addIdName, addIdRight)
 			writeAlign(al, f)
 		}

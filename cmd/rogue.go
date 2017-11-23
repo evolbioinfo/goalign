@@ -43,7 +43,7 @@ S4 12345678    S4 1234567
 	Run: func(cmd *cobra.Command, args []string) {
 		f := openWriteFile(shuffleOutput)
 		nameFile := openWriteFile(rogueNameFile)
-		for al := range rootaligns {
+		for al := range rootaligns.Achan {
 			names, _ := al.SimulateRogue(rogueNb, rogueLength)
 			writeAlign(al, f)
 			for _, n := range names {

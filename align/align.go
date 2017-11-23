@@ -28,6 +28,9 @@ const (
 	PSSM_NORM_UNIF = 3 // Normalization by uniform frequency
 	PSSM_NORM_LOGO = 4 // Normalization like LOGO : v(site)=freq*(log2(alphabet)-H(site)-pseudocount
 
+	FORMAT_FASTA  = 0
+	FORMAT_PHYLIP = 1
+	FORMAT_NEXUS  = 2
 )
 
 var stdaminoacid = []rune{'A', 'R', 'N', 'D', 'C', 'Q', 'E', 'G', 'H', 'I', 'L', 'K', 'M', 'F', 'P', 'S', 'T', 'W', 'Y', 'V'}
@@ -82,6 +85,11 @@ type align struct {
 	seqmap   map[string]*seq // Map of sequences
 	seqs     []*seq          // Set of sequences (to preserve order)
 	alphabet int             // AMINOACIDS , NUCLEOTIDS or UNKOWN
+}
+
+type AlignChannel struct {
+	Achan chan Alignment
+	Err   error
 }
 
 func NewAlign(alphabet int) *align {

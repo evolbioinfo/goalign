@@ -21,7 +21,7 @@ goalign reformat nexus -i align.fasta
 `,
 	Run: func(cmd *cobra.Command, args []string) {
 		f := openWriteFile(reformatOutput)
-		for al := range rootaligns {
+		for al := range rootaligns.Achan {
 			//fmt.Println("ALIGN" + fmt.Sprintf("%d", al.NbSequences()))
 			writeAlignNexus(al, f)
 		}

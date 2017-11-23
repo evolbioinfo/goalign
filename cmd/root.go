@@ -21,7 +21,7 @@ import (
 
 var cfgFile string
 var infile string
-var rootaligns chan align.Alignment
+var rootaligns align.AlignChannel
 var rootphylip bool
 var rootnexus bool
 var rootcpus int
@@ -67,61 +67,38 @@ Please note that in --auto-detect mode, phylip format is considered as not stric
 		runtime.GOMAXPROCS(rootcpus)
 		rootaligns = readalign(infile)
 	},
+	PersistentPostRun: func(cmd *cobra.Command, args []string) {
+		if rootaligns.Err != nil {
+			io.ExitWithMessage(rootaligns.Err)
+		}
+	},
 }
 
-func readalign(file string) chan align.Alignment {
-	alchan := make(chan align.Alignment, 15)
+func readalign(file string) align.AlignChannel {
 	var fi *os.File
 	var r *bufio.Reader
 	var err error
 	var nex *tnexus.Nexus
-	var firstbyte byte
+	var format int
+	var alchan align.AlignChannel
 
 	if fi, r, err = utils.GetReader(file); err != nil {
 		io.ExitWithMessage(err)
 	}
 	if rootAutoDetectInputFormat {
-		var al align.Alignment
-		if firstbyte, err = r.ReadByte(); err != nil {
+		if alchan, format, err = utils.ParseMultiAlignmentsAuto(fi, r, rootinputstrict); err != nil {
 			io.ExitWithMessage(err)
 		}
-		if err = r.UnreadByte(); err != nil {
-			io.ExitWithMessage(err)
-		}
-		// First test Fasta format
-		if firstbyte == '>' {
-			if al, err = fasta.NewParser(r).Parse(); err != nil {
-				io.ExitWithMessage(err)
-			}
-			alchan <- al
-			fi.Close()
-			close(alchan)
-		} else if firstbyte == '#' {
-			if nex, err = tnexus.NewParser(r).Parse(); err != nil {
-				io.ExitWithMessage(err)
-			}
-			rootnexus = true
-			// Then test nexus
-			if !nex.HasAlignment {
-				io.ExitWithMessage(errors.New("Nexus file has no alignment"))
-			}
-			alchan <- nex.Alignment()
-			fi.Close()
-			close(alchan)
-		} else {
+		if format == align.FORMAT_PHYLIP {
 			rootphylip = true
-			// Finally test Phylip
-			go func() {
-				if err := phylip.NewParser(r, rootinputstrict).ParseMultiple(alchan); err != nil {
-					io.ExitWithMessage(err)
-				}
-				fi.Close()
-			}()
+		} else if format == align.FORMAT_NEXUS {
+			rootnexus = true
 		}
 	} else {
+		alchan.Achan = make(chan align.Alignment, 15)
 		if rootphylip {
 			go func() {
-				if err := phylip.NewParser(r, rootinputstrict).ParseMultiple(alchan); err != nil {
+				if err := phylip.NewParser(r, rootinputstrict).ParseMultiple(alchan.Achan); err != nil {
 					io.ExitWithMessage(err)
 				}
 				fi.Close()
@@ -133,18 +110,18 @@ func readalign(file string) chan align.Alignment {
 			if !nex.HasAlignment {
 				io.ExitWithMessage(errors.New("Nexus file has no alignment"))
 			}
-			alchan <- nex.Alignment()
+			alchan.Achan <- nex.Alignment()
 			fi.Close()
-			close(alchan)
+			close(alchan.Achan)
 		} else {
 			var al align.Alignment
 			al, err = fasta.NewParser(r).Parse()
 			if err != nil {
 				io.ExitWithMessage(err)
 			}
-			alchan <- al
+			alchan.Achan <- al
 			fi.Close()
-			close(alchan)
+			close(alchan.Achan)
 		}
 	}
 	return alchan

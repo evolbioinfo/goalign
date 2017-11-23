@@ -36,7 +36,7 @@ goalign shuffle recomb -i align.fasta -r 0.5 -n 1 -l 0.5
 `,
 	Run: func(cmd *cobra.Command, args []string) {
 		f := openWriteFile(shuffleOutput)
-		for al := range rootaligns {
+		for al := range rootaligns.Achan {
 			al.Recombine(recombNb, recombProp)
 			writeAlign(al, f)
 		}

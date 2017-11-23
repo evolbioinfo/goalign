@@ -3,6 +3,7 @@ package cmd
 import (
 	"errors"
 	"fmt"
+	"github.com/spf13/cobra"
 	"log"
 	"math"
 	"os"
@@ -11,7 +12,6 @@ import (
 	"github.com/fredericlemoine/goalign/align"
 	"github.com/fredericlemoine/goalign/distance"
 	"github.com/fredericlemoine/goalign/io"
-	"github.com/spf13/cobra"
 )
 
 var computedistSeed int64
@@ -60,7 +60,7 @@ if -a is given: display only the average distance
 		}
 
 		model := distance.Model(computedistModel, computedistRemoveGaps)
-		for align := range rootaligns {
+		for align := range rootaligns.Achan {
 			var distMatrix [][]float64 = distance.DistMatrix(align, nil, model, rootcpus)
 			if computedistAverage {
 				writeDistAverage(align, distMatrix, f)
