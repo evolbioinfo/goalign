@@ -40,12 +40,15 @@ func ParseAlignmentAuto(r *bufio.Reader, rootinputstrict bool) (al align.Alignme
 		format = align.FORMAT_FASTA
 		al, err = fasta.NewParser(r).Parse()
 	} else if firstbyte == '#' {
-		nex, err = tnexus.NewParser(r).Parse()
+		if nex, err = tnexus.NewParser(r).Parse(); err != nil {
+			return
+		}
 		format = align.FORMAT_NEXUS
 		// Then test nexus
 		if !nex.HasAlignment {
 			err = errors.New("Nexus format has no alignment")
 		}
+		al = nex.Alignment()
 	} else {
 		// Finally test Phylip
 		format = align.FORMAT_PHYLIP
