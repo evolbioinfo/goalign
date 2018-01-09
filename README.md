@@ -18,12 +18,14 @@ In order to compile Goalign, you must first [download](https://golang.org/dl/) a
 Then you just have to type :
 ```
 go get github.com/fredericlemoine/goalign/
+go get -u github.com/golang/dep/cmd/dep
 ```
 This will download GoAlign sources from github, and all its dependencies.
 
 You can then build it with:
 ```
 cd $GOPATH/src/github.com/fredericlemoine/goalign/
+dep ensure
 make
 ```
 The `goalign` executable should be located in the `$GOPATH/bin` folder.

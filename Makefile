@@ -1,11 +1,17 @@
 GO_EXECUTABLE := go
+DEP_EXECUTABLE := dep
 VERSION := $(shell git describe --abbrev=10 --dirty --always --tags)
 DIST_DIRS := find * -type d -exec
 VERSION_PACKAGE := github.com/fredericlemoine/goalign/cmd.Version
 NAME := goalign
 PACKAGE:=github.com/fredericlemoine/goalign
 
-all: build test install testcommands
+all: dep build test install testcommands
+
+dep:
+	cd ${GOPATH}/src//${PACKAGE}
+	${DEP_EXECUTABLE} ensure
+	cd -
 
 build:
 	${GO_EXECUTABLE} build -o ${NAME} -ldflags "-X ${VERSION_PACKAGE}=${VERSION}" ${PACKAGE}
