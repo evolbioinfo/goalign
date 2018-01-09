@@ -15,7 +15,6 @@ import (
 	"github.com/fredericlemoine/goalign/io/nexus"
 	"github.com/fredericlemoine/goalign/io/phylip"
 	"github.com/fredericlemoine/goalign/io/utils"
-	tnexus "github.com/fredericlemoine/gotree/io/nexus"
 	"github.com/spf13/cobra"
 )
 
@@ -78,7 +77,6 @@ func readalign(file string) align.AlignChannel {
 	var fi *os.File
 	var r *bufio.Reader
 	var err error
-	var nex *tnexus.Nexus
 	var format int
 	var alchan align.AlignChannel
 
@@ -104,13 +102,11 @@ func readalign(file string) align.AlignChannel {
 				fi.Close()
 			}()
 		} else if rootnexus {
-			if nex, err = tnexus.NewParser(r).Parse(); err != nil {
+			var al align.Alignment
+			if al, err = nexus.NewParser(r).Parse(); err != nil {
 				io.ExitWithMessage(err)
 			}
-			if !nex.HasAlignment {
-				io.ExitWithMessage(errors.New("Nexus file has no alignment"))
-			}
-			alchan.Achan <- nex.Alignment()
+			alchan.Achan <- al
 			fi.Close()
 			close(alchan.Achan)
 		} else {
