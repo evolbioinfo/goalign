@@ -9,9 +9,7 @@ PACKAGE:=github.com/fredericlemoine/goalign
 all: dep build test install testcommands
 
 dep:
-	cd ${GOPATH}/src//${PACKAGE}
 	${DEP_EXECUTABLE} ensure
-	cd -
 
 build:
 	${GO_EXECUTABLE} build -o ${NAME} -ldflags "-X ${VERSION_PACKAGE}=${VERSION}" ${PACKAGE}
