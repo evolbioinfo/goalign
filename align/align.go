@@ -69,6 +69,7 @@ type Alignment interface {
 	Rename(namemap map[string]string)
 	Pssm(log bool, pseudocount float64, normalization int) (pssm map[rune][]float64, err error) // Normalization: PSSM_NORM_NONE, PSSM_NORM_UNIF, PSSM_NORM_DATA
 	TrimNames(size int) (map[string]string, error)
+	CleanNames() // Removes spaces and tabs from sequence names
 	TrimSequences(trimsize int, fromStart bool) error
 	AppendSeqIdentifier(identifier string, right bool)
 	AvgAllelesPerSite() float64
@@ -672,6 +673,14 @@ func (a *align) AppendSeqIdentifier(identifier string, right bool) {
 				seq.name = identifier + seq.name
 			}
 		}
+	}
+}
+
+// Removes spaces and tabs from sequence names
+func (a *align) CleanNames() {
+	for _, seq := range a.seqs {
+		seq.name = strings.Replace(seq.name, " ", "", -1)
+		seq.name = strings.Replace(seq.name, "\t", "", -1)
 	}
 }
 

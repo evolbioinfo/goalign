@@ -162,6 +162,33 @@ goalign random -n 5 -l 5 -s 10 | goalign reformat phylip > result
 diff result expected
 rm -f expected result mapfile
 
+
+echo "->goalign reformat phylip spaces tabs"
+cat > expected <<EOF
+   5   5
+Seq0000  GATTA
+Seq0001  ATTTG
+Seq0002  CCGTA
+Seq0003  GGCCA
+Seq0004  GAATC
+EOF
+cat > input.fa <<EOF
+> S e q 0	0	00
+GATTA
+>	Se    q00 0 1     
+ATTTG
+>	Se    q00 0 2    
+CCGTA
+>Seq00     03
+GGCCA
+>Seq		0004
+GAATC
+EOF
+goalign reformat phylip -i input.fa --clean-names > result
+diff result expected
+rm -f expected result mapfile input.fa
+
+
 echo "->goalign reformat phylip strict"
 cat > expected <<EOF
    5   5
