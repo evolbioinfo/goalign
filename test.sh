@@ -166,20 +166,20 @@ rm -f expected result mapfile
 echo "->goalign reformat phylip spaces tabs"
 cat > expected <<EOF
    5   5
-Seq0000  GATTA
-Seq0001  ATTTG
-Seq0002  CCGTA
-Seq0003  GGCCA
-Seq0004  GAATC
+S_e_q_0_0_00  GATTA
+Se_q00_0_1  ATTTG
+Se_q00_0_2  CCGTA
+Seq00_03  GGCCA
+Seq_0004  GAATC
 EOF
 cat > input.fa <<EOF
 > S e q 0	0	00
 GATTA
->	Se    q00 0 1     
+> 	 Se    q00 0 1    	 
 ATTTG
->	Se    q00 0 2    
+>	 Se    q00 0 2    	 	
 CCGTA
->Seq00     03
+>		Seq00     03
 GGCCA
 >Seq		0004
 GAATC

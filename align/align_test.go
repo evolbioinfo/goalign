@@ -45,6 +45,30 @@ func TestAppendIdentifier(t *testing.T) {
 	})
 }
 
+func TestCleanNames(t *testing.T) {
+	a, err := RandomAlignment(AMINOACIDS, 300, 50)
+	if err != nil {
+		t.Error(err)
+
+	}
+	a2, _ := a.Clone()
+	a.AppendSeqIdentifier("\t \t", false)
+	a.AppendSeqIdentifier("\t \t", true)
+
+	a.CleanNames()
+	i := 0
+	a.IterateChar(func(name string, sequence []rune) {
+		expected, found := a2.GetSequenceNameById(i)
+		if !found {
+			t.Error("Unknown sequence name after clean")
+		}
+		if name != expected {
+			t.Error("Unexpected sequence name after clean")
+		}
+		i++
+	})
+}
+
 func TestRemoveOneGapSite(t *testing.T) {
 	a, err := RandomAlignment(AMINOACIDS, 300, 300)
 	if err != nil {
