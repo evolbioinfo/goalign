@@ -1013,6 +1013,91 @@ goalign random -n 4 -s 10 -l 10000 | goalign subseq -l 10 -s 5 > result
 diff result expected
 rm -f expected result
 
+echo "->goalign subseq window phylip"
+cat > input <<EOF
+   10   5
+Seq0000  GGAGT
+Seq0001  AAGTA
+Seq0002  ACGGT
+Seq0003  GCACA
+Seq0004  AGTAC
+Seq0005  GAAGG
+Seq0006  CCTTA
+Seq0007  AGCAC
+Seq0008  GTACG
+Seq0009  GAATA
+   10   5
+Seq0000  AGAGT
+Seq0001  AAGTT
+Seq0002  ACGGT
+Seq0003  ACACT
+Seq0004  AGTAT
+Seq0005  AAAGT
+Seq0006  ACTTT
+Seq0007  AGCAT
+Seq0008  ATACT
+Seq0009  AAATT
+EOF
+cat > expected.1 <<EOF
+   10   4
+Seq0000  GGAG
+Seq0001  AAGT
+Seq0002  ACGG
+Seq0003  GCAC
+Seq0004  AGTA
+Seq0005  GAAG
+Seq0006  CCTT
+Seq0007  AGCA
+Seq0008  GTAC
+Seq0009  GAAT
+EOF
+cat > expected.2 <<EOF
+   10   4
+Seq0000  GAGT
+Seq0001  AGTA
+Seq0002  CGGT
+Seq0003  CACA
+Seq0004  GTAC
+Seq0005  AAGG
+Seq0006  CTTA
+Seq0007  GCAC
+Seq0008  TACG
+Seq0009  AATA
+EOF
+cat > expected.3 <<EOF
+   10   4
+Seq0000  AGAG
+Seq0001  AAGT
+Seq0002  ACGG
+Seq0003  ACAC
+Seq0004  AGTA
+Seq0005  AAAG
+Seq0006  ACTT
+Seq0007  AGCA
+Seq0008  ATAC
+Seq0009  AAAT
+EOF
+cat > expected.4 <<EOF
+   10   4
+Seq0000  GAGT
+Seq0001  AGTT
+Seq0002  CGGT
+Seq0003  CACT
+Seq0004  GTAT
+Seq0005  AAGT
+Seq0006  CTTT
+Seq0007  GCAT
+Seq0008  TACT
+Seq0009  AATT
+EOF
+goalign subseq -i input -p -l 4 -s 0 --step 1 -o output.phylip
+diff output.phylip expected.1
+diff output_sub1.phylip expected.2
+diff output_al1.phylip expected.3
+diff output_al1_sub1.phylip expected.4
+rm -f input expected.{1,2,3,4} \
+   output.phylip output_sub1.phylip \
+   output_al1.phylip output_al1_sub1.phylip
 
 echo "->goalign subset"
 cat > expected <<EOF

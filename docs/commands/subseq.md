@@ -5,7 +5,59 @@
 ### subseq
 This command takes a sub-alignment (slice) from the input alignment.
 
-It takes an alignment and extracts sub-sequences from it, given a start position (0-based inclusive) and a length. If the length is after the end of the alignment, will stop at the end of the alignment.
+It takes an alignment and extracts sub-sequences from it, given
+a start position (0-based inclusive) and a length.
+If the length is after the end of the alignment, will stop at the 
+end of the alignment.
+
+For example:
+```
+goalign subseq -p -i al.phy -s 9 -l 10
+```
+
+This will extract a sub-alignment going from 10th position, with a length of 10.
+
+The output format is the same than input format.
+
+Sliding window:
+---------------
+
+If `--step` is given and > 0, then Several sub-alignments will be produced,
+and corresponding to all alignments in windows of sizes -l, and with starts:
+[start, start+step, ..., end-length].
+
+Example with an alignment al.phy of size 10 (0123456789)
+
+```
+goalign subseq -i al.phy -s 0 -l 5 --step 1
+```
+will produce alignments with positions:
+
+```
+01234
+ 12345
+  23456
+   34567
+    45678
+     56789
+```
+
+Warning: If output is stdout, it works only if input format is Phylip, because 
+it is possible to split alignments afterwards (with `goalign divide` for example).
+
+Several alignments:
+------------------
+
+If several alignments are present in the input file and the output is a file (not stdout or -) , then :
+
+* First alignment, first subalignment: results will be placed in the given file
+  (ex out.fasta)
+* First alignment, other subalignments (sliding windows): results will be placed
+  in file with the given name with `_sub<i>` suffix (ex: `out_sub1.fasta`, `out_sub2.fasta`, etc.)
+* Other alignments, first subalignment: results will be placed in the given file
+  with `_al<i>` suffix (ex `out_al1.fasta`, `out_al2.fasta`, etc.)
+* Other alignments, other subalignments: results will be placed in the given file
+  with `_al<i>` and `_sub<i>` suffixes (ex `out_al1_sub1.fasta`, `out_al1_sub2.fasta`, etc.)
 
 #### Usage
 ```
@@ -13,15 +65,18 @@ Usage:
   goalign subseq [flags]
   
 Flags:
-	-l, --length int      Length of the sub alignment (default 10)
-	-o, --output string   Alignment output file (default "stdout")
-	-s, --start int       Start position
-		
+  -l, --length int      Length of the sub alignment (default 10)
+  -o, --output string   Alignment output file (default "stdout")
+  -s, --start int       Start position
+  --step int            Step: If > 0, then will generate several alignments, 
+                        for each window of length l, with starts: 
+                        [start,start+step, ..., end-l]*
+
 Global Flags:
-	-i, --align string   Alignment input file (default "stdin")
-	-p, --phylip         Alignment is in phylip? False=Fasta
-    --input-strict       Strict phylip input format (only used with -p)
-    --output-strict      Strict phylip output format  (only used with -p)
+  -i, --align string   Alignment input file (default "stdin")
+  -p, --phylip         Alignment is in phylip? False=Fasta
+  --input-strict       Strict phylip input format (only used with -p)
+  --output-strict      Strict phylip output format  (only used with -p)
 ```
 
 #### Examples
