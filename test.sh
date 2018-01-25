@@ -1134,6 +1134,28 @@ diff <(sort mapfile) <(sort expectedmap)
 rm -f expected result expectedmap mapfile
 
 
+echo "->goalign trim name auto"
+cat > expected <<EOF
+>S1
+GATTA
+>S2
+ATTTG
+>S3
+CCGTA
+>S4
+GGCCA
+EOF
+cat > expectedmap <<EOF
+Seq0002	S3
+Seq0003	S4
+Seq0000	S1
+Seq0001	S2
+EOF
+goalign random -s 10 -n 4 -l 5 | goalign trim name -a -m mapfile > result
+diff result expected
+diff <(sort mapfile) <(sort expectedmap)
+rm -f expected result expectedmap mapfile
+
 echo "->goalign trim seq"
 cat > expected <<EOF
 >Seq0000

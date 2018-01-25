@@ -6,6 +6,7 @@ import (
 )
 
 var trimMapout string
+var trimAuto bool
 
 // nameCmd represents the name command
 var nameCmd = &cobra.Command{
@@ -25,20 +26,30 @@ Example of usage:
 
 goalign trim name -i align.phy -p -n 10 -m map.txt
 
+Id -a is given, then names are generated with the pattern "S000<i>".
 `,
 	Run: func(cmd *cobra.Command, args []string) {
+		var err error
+		var namemap map[string]string
+
 		al, _ := <-rootaligns.Achan
 		if rootaligns.Err != nil {
 			io.ExitWithMessage(rootaligns.Err)
 		}
 
 		f := openWriteFile(trimAlignOut)
-		if namemap, err := al.TrimNames(trimNb); err != nil {
-			io.ExitWithMessage(err)
+
+		if trimAuto {
+			if namemap, err = al.TrimNamesAuto(); err != nil {
+				io.ExitWithMessage(err)
+			}
 		} else {
-			writeAlign(al, f)
-			writeNameMap(namemap, trimMapout)
+			if namemap, err = al.TrimNames(trimNb); err != nil {
+				io.ExitWithMessage(err)
+			}
 		}
+		writeAlign(al, f)
+		writeNameMap(namemap, trimMapout)
 		f.Close()
 	},
 }
@@ -58,4 +69,5 @@ func init() {
 	trimCmd.AddCommand(nameCmd)
 	nameCmd.PersistentFlags().StringVarP(&trimMapout, "out-map", "m", "none", "Mapping output file")
 	nameCmd.PersistentFlags().IntVarP(&trimNb, "nb-char", "n", 1, "Number of characters to keep in sequence names")
+	nameCmd.PersistentFlags().BoolVarP(&trimAuto, "auto", "a", false, "Automatically generates sequence identifiers (priority over --nb-cchar)")
 }

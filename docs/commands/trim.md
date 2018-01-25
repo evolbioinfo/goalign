@@ -6,7 +6,7 @@
 This command trims names of sequences or sequences themselves.
 
 Two sub-commands:
-* `goalign trim name`: trims sequence names to n characters. It will also output the correspondance between old names and new names into a map file as well as the new alignment.
+* `goalign trim name`: trims sequence names to n characters. It will also output the correspondance between old names and new names into a map file as well as the new alignment. If `-a` is given, then generates sequence names automatically.
 * `goalign trim seq`: trims sequences from the left or from the right side, by n characters.
 
 #### Usage
@@ -33,6 +33,7 @@ Usage:
   goalign trim name [flags]
 
 Flags:
+  -a, --auto             Automatically generates random sequence identifiers (priority over --nb-cchar)
   -n, --nb-char int      Number of characters to keep in sequence names (default 1)
   -m, --out-map string   Mapping output file (default "none")
 

@@ -70,6 +70,7 @@ type Alignment interface {
 	Rename(namemap map[string]string)
 	Pssm(log bool, pseudocount float64, normalization int) (pssm map[rune][]float64, err error) // Normalization: PSSM_NORM_NONE, PSSM_NORM_UNIF, PSSM_NORM_DATA
 	TrimNames(size int) (map[string]string, error)
+	TrimNamesAuto() (map[string]string, error)
 	CleanNames() // Removes spaces and tabs at beginning and end of sequence names and replaces others by "_"
 	TrimSequences(trimsize int, fromStart bool) error
 	AppendSeqIdentifier(identifier string, right bool)
@@ -639,6 +640,21 @@ func (a *align) TrimNames(size int) (map[string]string, error) {
 	}
 
 	return finalshort, nil
+}
+
+func (a *align) TrimNamesAuto() (namemap map[string]string, err error) {
+	namemap = make(map[string]string)
+	curid := 1
+	length := int(math.Ceil(math.Log10(float64(a.NbSequences() + 1))))
+	for _, seq := range a.seqs {
+		if _, ok := namemap[seq.Name()]; !ok {
+			newname := fmt.Sprintf(fmt.Sprintf("S%%0%dd", (length)), curid)
+			namemap[seq.Name()] = newname
+			seq.name = newname
+			curid++
+		}
+	}
+	return
 }
 
 // Trims alignment sequences.
