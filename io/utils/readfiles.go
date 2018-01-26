@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"compress/gzip"
 	"io"
+	"net/http"
 	"os"
 	"strings"
 )
@@ -23,23 +24,34 @@ func OpenFile(inputfile string) (*os.File, error) {
 }
 
 /* Returns the opened file and a buffered reader (gzip or not) for the file */
-func GetReader(inputfile string) (*os.File, *bufio.Reader, error) {
+func GetReader(inputfile string) (io.Closer, *bufio.Reader, error) {
 	var reader *bufio.Reader
-	if f, err := OpenFile(inputfile); err != nil {
-		return nil, nil, err
-	} else {
 
-		if GzipExtension(f.Name()) {
-			if gr, err := gzip.NewReader(f); err != nil {
-				return nil, nil, err
-			} else {
-				reader = bufio.NewReader(gr)
-			}
-		} else {
-			reader = bufio.NewReader(f)
+	var err error
+	var f io.ReadCloser
+
+	if isHttpFile(inputfile) {
+		var res *http.Response
+		if res, err = http.Get(inputfile); err != nil {
+			return nil, nil, err
 		}
-		return f, reader, nil
+		f = res.Body
+	} else {
+		if f, err = OpenFile(inputfile); err != nil {
+			return nil, nil, err
+		}
 	}
+
+	if GzipExtension(inputfile) {
+		if gr, err := gzip.NewReader(f); err != nil {
+			return nil, nil, err
+		} else {
+			reader = bufio.NewReader(gr)
+		}
+	} else {
+		reader = bufio.NewReader(f)
+	}
+	return f, reader, nil
 }
 
 /* Returns a buffered reader (gzip or not) for the given reader */
@@ -59,4 +71,9 @@ func GetReaderFromReader(gzipped bool, rd io.Reader) (reader *bufio.Reader, err 
 func GzipExtension(name string) (gzipped bool) {
 	gzipped = strings.HasSuffix(name, ".gz")
 	return
+}
+
+func isHttpFile(file string) bool {
+	return strings.HasPrefix(file, "http://") ||
+		strings.HasPrefix(file, "https://")
 }

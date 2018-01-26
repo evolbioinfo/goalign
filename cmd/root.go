@@ -5,6 +5,7 @@ import (
 	"compress/gzip"
 	"errors"
 	"fmt"
+	goio "io"
 	"os"
 	"runtime"
 	"strings"
@@ -74,7 +75,7 @@ Please note that in --auto-detect mode, phylip format is considered as not stric
 }
 
 func readalign(file string) align.AlignChannel {
-	var fi *os.File
+	var fi goio.Closer
 	var r *bufio.Reader
 	var err error
 	var format int
