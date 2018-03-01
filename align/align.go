@@ -708,8 +708,11 @@ func (a *align) CleanNames() {
 // And returns this new alignment
 // If nb < 1 or nb > nbsequences returns nil and an error
 func (a *align) Sample(nb int) (Alignment, error) {
-	if a.NbSequences() < nb || nb < 1 {
-		return nil, errors.New("Number of sequences to sample is not compatible with alignment")
+	if a.NbSequences() < nb {
+		return nil, errors.New("Number of sequences to sample is greater than alignment size")
+	}
+	if nb < 1 {
+		return nil, errors.New("Cannot sample less than 1 sequence")
 	}
 	sample := NewAlign(a.alphabet)
 	permutation := rand.Perm(a.NbSequences())
