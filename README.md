@@ -12,6 +12,24 @@ Binaries are available for MacOS, Linux, and Windows (32 and 64 bits).
 
 Once downloaded, you can just run the executable without any other downloads.
 
+### Docker
+Goalign Docker image is accessible from [docker hub](https://hub.docker.com/r/evolbioinfo/goalign/). You may use it as following:
+
+```[bash]
+# Display goalign help
+docker run -v $PWD:$PWD -w $PWD -i -t evolbioinfo/goalign:v0.2.6 -h
+```
+
+### Singularity
+Goalign [docker image](https://hub.docker.com/r/evolbioinfo/goalign/) is usable from singularity . You may use it as following:
+
+```[bash]
+# Pull image from docker hub
+singularity pull docker://evolbioinfo/goalign:v0.2.6
+# Display goalign help
+./goalign-v0.2.6.simg -h
+```
+
 ### From sources
 In order to compile Goalign, you must first [download](https://golang.org/dl/) and [install](https://golang.org/doc/install) Go on your system.
 
