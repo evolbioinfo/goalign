@@ -64,6 +64,8 @@ You may go to the [doc](docs/index.md) for a more detailed documentation of the 
   * pssm: compute position-specific scoring matrix
 * concat:      Concatenates several alignments
 * divide:      Divide an input alignment in several output files (one per alignment)
+* draw:   Draw alignments
+  * biojs:     Display an input alignment in an html file using [BioJS](http://msa.biojs.net/)
 * mutate: Adds substitutions (~sequencing errors), or gaps, uniformly in an input alignment
   * gaps: Adds gaps uniformly in an input alignment
   * snvs: Adds substitutions uniformly in an input alignment
