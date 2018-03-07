@@ -62,6 +62,8 @@ Command                                                     | Subcommand |      
 --                                                          | pssm       | Computes and prints a Position specific scoring matrix
 [concat](commands/concat.md) ([api](api/concat.md))         |            | Concatenates a set of alignment
 [divide](commands/divide.md) ([api](api/divide.md))         |            | Divide an input alignment in several output files
+[draw](commands/draw.md) ([api](api/draw.md))               |            | Draws an input alignment
+--                                                          | biojs      | Displays an input alignment in an html file using biojs
 [mutate](commands/mutate.md) ([api](api/mutate.md))         |            | Adds substitutions (~sequencing errors), or gaps, uniformly in an input alignment
 --                                                          | gaps       | Adds gaps uniformly in an input alignment
 --                                                          | snvs       | Adds substitutions uniformly in an input alignment
