@@ -70,9 +70,10 @@ You may go to the [doc](docs/index.md) for a more detailed documentation of the 
   * gaps: Adds gaps uniformly in an input alignment
   * snvs: Adds substitutions uniformly in an input alignment
 * random:      Generate random sequences
-* reformat:    Reformats input alignment into phylip of fasta format
+* reformat:    Reformats input alignment into several formats
   * fasta
   * nexus
+  * paml
   * phylip
   * tnt
 * rename:      Rename sequences of the input alignment, given a map file
