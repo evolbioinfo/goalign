@@ -12,16 +12,15 @@ package main
 import (
 	"bufio"
 	"fmt"
-	"os"
+	"io"
 
 	"github.com/fredericlemoine/goalign/align"
-	"github.com/fredericlemoine/goalign/io"
 	"github.com/fredericlemoine/goalign/io/fasta"
 	"github.com/fredericlemoine/goalign/io/utils"
 )
 
 func main() {
-	var fi *os.File
+	var fi io.Closer
 	var r *bufio.Reader
 	var err error
 	var al align.Alignment
@@ -37,13 +36,13 @@ func main() {
 	/* Get reader (plain text or gzip) */
 	fi, r, err = utils.GetReader("align.fa")
 	if err != nil {
-		io.ExitWithMessage(err)
+		panic(err)
 	}
 
 	/* Parse Fasta */
 	al, err = fasta.NewParser(r).Parse()
 	if err != nil {
-		io.ExitWithMessage(err)
+		panic(err)
 	}
 	fi.Close()
 

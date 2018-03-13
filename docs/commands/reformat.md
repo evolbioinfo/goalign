@@ -20,6 +20,7 @@ Available Commands:
   fasta       Reformats an input alignment into Fasta
   nexus       Reformats an input alignment into nexus
   phylip      Reformats an input alignment into Phylip
+  paml        Reformats an input alignment into input data for PAML
   tnt         Reformats an input alignment into input data for TNT
 
 Flags:

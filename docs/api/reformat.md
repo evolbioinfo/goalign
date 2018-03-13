@@ -2,9 +2,9 @@
 
 ## API
 
-### subseq
+### reformat
 
-Extracting sub-alignment (position 10 0-based inclusive, and with length 15) from an input alignment:
+Reformat a fasta input alignment into different formats
 
 ```go
 package main
@@ -16,6 +16,9 @@ import (
 
 	"github.com/fredericlemoine/goalign/align"
 	"github.com/fredericlemoine/goalign/io/fasta"
+	"github.com/fredericlemoine/goalign/io/nexus"
+	"github.com/fredericlemoine/goalign/io/paml"
+	"github.com/fredericlemoine/goalign/io/phylip"
 	"github.com/fredericlemoine/goalign/io/utils"
 )
 
@@ -24,7 +27,6 @@ func main() {
 	var r *bufio.Reader
 	var err error
 	var al align.Alignment
-	var subalign align.Alignment = nil
 
 	/* Get reader (plain text or gzip) */
 	fi, r, err = utils.GetReader("align.fa")
@@ -39,14 +41,13 @@ func main() {
 	}
 	fi.Close()
 
-	/* Subalignment from position 10 (0-based inclusive),
-	and with length 15 */
-	subalign, err = al.SubAlign(10, 15)
-	if err != nil {
-		panic(err)
-	}
-
-	/* Printing alignment in Fasta */
-	fmt.Print(fasta.WriteAlignment(subalign))
+	/* Printing FASTA alignment */
+	fmt.Println(fasta.WriteAlignment(al))
+	/* Printing PHYLIP alignment */
+	fmt.Println(phylip.WriteAlignment(al, false))
+	/* Printing NEXUS alignment */
+	fmt.Println(nexus.WriteAlignment(al))
+	/* Printing PAML format alignment */
+	fmt.Println(paml.WriteAlignment(al))
 }
 ```

@@ -71,6 +71,7 @@ Command                                                     | Subcommand |      
 [reformat](commands/reformat.md) ([api](api/reformat.md))   |            | Reformats input alignment into phylip of fasta format
 --                                                          | fasta      | Reformats an input alignment into Fasta
 --                                                          | nexus      | Reformats an input alignment into nexus
+--                                                          | paml       | Reformats an input alignment into PAML input format
 --                                                          | phylip     | Reformats an input alignment into Phylip
 --                                                          | tnt        | Reformats an input alignment into TNT input file
 [rename](commands/rename.md) ([api](api/rename.md))         |            | Rename sequences of the input alignment, given a map file

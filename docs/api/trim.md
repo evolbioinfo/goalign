@@ -4,7 +4,7 @@
 
 ### trim name
 
-Trimming names of sequences (to 3 characters)
+Trimming names of sequences (to 10 characters)
 
 ```go
 package main
@@ -12,16 +12,15 @@ package main
 import (
 	"bufio"
 	"fmt"
-	"os"
+	"io"
 
 	"github.com/fredericlemoine/goalign/align"
-	"github.com/fredericlemoine/goalign/io"
 	"github.com/fredericlemoine/goalign/io/fasta"
 	"github.com/fredericlemoine/goalign/io/utils"
 )
 
 func main() {
-	var fi *os.File
+	var fi io.Closer
 	var r *bufio.Reader
 	var err error
 	var al align.Alignment
@@ -31,19 +30,68 @@ func main() {
 	/* Get reader (plain text or gzip) */
 	fi, r, err = utils.GetReader("align.fa")
 	if err != nil {
-		io.ExitWithMessage(err)
+		panic(err)
 	}
 
 	/* Parse Fasta */
 	al, err = fasta.NewParser(r).Parse()
 	if err != nil {
-		io.ExitWithMessage(err)
+		panic(err)
 	}
 	fi.Close()
 
 	/* Trim names */
-	if namemap, err = al.TrimNames(3); err != nil {
-		io.ExitWithMessage(err)
+	if namemap, err = al.TrimNames(10); err != nil {
+		panic(err)
+	} else {
+		fmt.Println(fasta.WriteAlignment(al))
+	}
+
+	/* Old names => New names */
+	for k, v := range namemap {
+		fmt.Println(k + "=>" + v)
+	}
+}
+```
+
+Automatically generate names of sequences
+```go
+package main
+
+import (
+	"bufio"
+	"fmt"
+	"io"
+
+	"github.com/fredericlemoine/goalign/align"
+	"github.com/fredericlemoine/goalign/io/fasta"
+	"github.com/fredericlemoine/goalign/io/utils"
+)
+
+func main() {
+	var fi io.Closer
+	var r *bufio.Reader
+	var err error
+	var al align.Alignment
+
+	var namemap map[string]string
+
+	/* Get reader (plain text or gzip) */
+	fi, r, err = utils.GetReader("align.fa")
+	if err != nil {
+		panic(err)
+	}
+
+	/* Parse Fasta */
+	al, err = fasta.NewParser(r).Parse()
+	if err != nil {
+		panic(err)
+	}
+	fi.Close()
+
+	/* Trim names */
+	if namemap, err = al.TrimNamesAuto(); err != nil {
+		panic(err)
 	} else {
 		fmt.Println(fasta.WriteAlignment(al))
 	}
@@ -65,36 +113,35 @@ package main
 import (
 	"bufio"
 	"fmt"
-	"os"
+	"io"
 
 	"github.com/fredericlemoine/goalign/align"
-	"github.com/fredericlemoine/goalign/io"
 	"github.com/fredericlemoine/goalign/io/fasta"
 	"github.com/fredericlemoine/goalign/io/utils"
 )
 
 func main() {
-	var fi *os.File
+	var fi io.Closer
 	var r *bufio.Reader
 	var err error
 	var al align.Alignment
-	
+
 	/* Get reader (plain text or gzip) */
 	fi, r, err = utils.GetReader("align.fa")
 	if err != nil {
-		io.ExitWithMessage(err)
+		panic(err)
 	}
 
 	/* Parse fasta */
 	al, err = fasta.NewParser(r).Parse()
 	if err != nil {
-		io.ExitWithMessage(err)
+		panic(err)
 	}
 	fi.Close()
 
 	/* Trim sequences */
 	if err := al.TrimSequences(10, false); err != nil {
-		io.ExitWithMessage(err)
+		panic(err)
 	} else {
 		fmt.Println(fasta.WriteAlignment(al))
 	}
