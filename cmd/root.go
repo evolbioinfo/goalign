@@ -14,6 +14,7 @@ import (
 	"github.com/fredericlemoine/goalign/io"
 	"github.com/fredericlemoine/goalign/io/fasta"
 	"github.com/fredericlemoine/goalign/io/nexus"
+	"github.com/fredericlemoine/goalign/io/paml"
 	"github.com/fredericlemoine/goalign/io/phylip"
 	"github.com/fredericlemoine/goalign/io/utils"
 	"github.com/spf13/cobra"
@@ -178,6 +179,10 @@ func writeAlignNexus(al align.Alignment, f *os.File) {
 
 func writeUnAlignFasta(al align.Alignment, f *os.File) {
 	f.WriteString(fasta.WriteSequences(al))
+}
+
+func writeAlignPaml(al align.Alignment, f *os.File) {
+	f.WriteString(paml.WriteAlignment(al))
 }
 
 func openWriteFile(file string) *os.File {

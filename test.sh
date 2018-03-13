@@ -319,6 +319,32 @@ goalign random -n 5 -l 5 -s 10 | goalign reformat fasta --auto-detect > result
 diff result expected
 rm -f expected result mapfile
 
+echo "->goalign reformat paml from phylip"
+cat > input.test <<EOF
+   5   5
+Seq0000  GATTA
+Seq0001  ATTTG
+Seq0002  CCGTA
+Seq0003  GGCCA
+Seq0004  GAATC
+EOF
+cat > expected <<EOF
+  5 5  I
+Seq0000
+Seq0001
+Seq0002
+Seq0003
+Seq0004
+
+GATTA
+ATTTG
+CCGTA
+GGCCA
+GAATC
+EOF
+goalign reformat paml -i input.test -p > output.paml
+diff output.paml expected
+rm -f expected output.paml intput.test
 
 echo "->goalign compute distance -m f81"
 cat > expected <<EOF
