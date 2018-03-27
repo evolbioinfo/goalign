@@ -16,7 +16,7 @@ func min_int(a int, b int) int {
 func WriteAlignment(al align.Alignment) string {
 	var buf bytes.Buffer
 
-	var seqtype string = "nucleotide"
+	var seqtype string = "dna"
 
 	if al.Alphabet() == align.AMINOACIDS {
 		seqtype = "protein"
