@@ -148,6 +148,63 @@ goalign random -n 5 -l 5 -s 10 -p --input-strict | goalign reformat fasta -p > r
 diff result expected
 rm -f expected result mapfile
 
+echo "->goalign reformat fasta names with spaces"
+cat > input <<EOF
+> Seq0000
+GATTA
+> Seq0001
+ATTTG
+> Seq0002
+CCGTA
+> Seq0003
+GGCCA
+> Seq0004
+GAATC
+EOF
+cat > expected <<EOF
+>Seq0000
+GATTA
+>Seq0001
+ATTTG
+>Seq0002
+CCGTA
+>Seq0003
+GGCCA
+>Seq0004
+GAATC
+EOF
+goalign reformat fasta -i input -o result
+diff result expected
+rm -f expected input result
+
+echo "->goalign reformat fasta sequences with spaces"
+cat > input <<EOF
+>    Seq0000
+GA    T TA
+>    Seq0001
+A     TT TG
+>    Seq0002
+CC G TA
+>    Seq0003
+GG CC A
+>    Seq0004
+G AA T C
+EOF
+cat > expected <<EOF
+>Seq0000
+GATTA
+>Seq0001
+ATTTG
+>Seq0002
+CCGTA
+>Seq0003
+GGCCA
+>Seq0004
+GAATC
+EOF
+goalign reformat fasta -i input -o result
+diff result expected
+rm -f expected input result
 
 echo "->goalign reformat phylip"
 cat > expected <<EOF

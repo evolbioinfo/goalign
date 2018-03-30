@@ -3,8 +3,11 @@ package fasta
 import (
 	"bytes"
 	"errors"
-	"github.com/fredericlemoine/goalign/align"
 	"io"
+	"regexp"
+	"strings"
+
+	"github.com/fredericlemoine/goalign/align"
 )
 
 // Parser represents a parser.
@@ -62,7 +65,7 @@ func (p *Parser) Parse() (align.Alignment, error) {
 	var al align.Alignment = nil
 	var curseq bytes.Buffer
 	curname := ""
-
+	firstSpaces := regexp.MustCompile("^( +)")
 	for tok != EOF {
 		tok, lit = p.scanIgnoreEndOfLine()
 
@@ -85,9 +88,9 @@ func (p *Parser) Parse() (align.Alignment, error) {
 			} else if curname != "" {
 				return nil, errors.New("A Fasta entry has a name but no sequence (" + curname + ")")
 			}
-			curname = lit
+			curname = firstSpaces.ReplaceAllString(lit, "")
 		case IDENTIFIER:
-			curseq.WriteString(lit)
+			curseq.WriteString(strings.Replace(lit, " ", "", -1))
 		case EOF:
 			if curseq.Len() > 0 {
 				s := curseq.String()
