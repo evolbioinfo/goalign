@@ -27,6 +27,9 @@ goalign reformat fasta -i align.fasta
 		if rootaligns.Err != nil {
 			io.ExitWithMessage(rootaligns.Err)
 		}
+		if reformatCleanNames {
+			a.CleanNames()
+		}
 		writeAlignFasta(a, f)
 		f.Close()
 	},

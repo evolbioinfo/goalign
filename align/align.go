@@ -71,7 +71,7 @@ type Alignment interface {
 	Pssm(log bool, pseudocount float64, normalization int) (pssm map[rune][]float64, err error) // Normalization: PSSM_NORM_NONE, PSSM_NORM_UNIF, PSSM_NORM_DATA
 	TrimNames(size int) (map[string]string, error)
 	TrimNamesAuto() (map[string]string, error)
-	CleanNames() // Removes spaces and tabs at beginning and end of sequence names and replaces others by "_"
+	CleanNames() // Removes spaces and tabs at beginning and end of sequence names and replace all newick special characters \s\t()[];,.: by "-"
 	TrimSequences(trimsize int, fromStart bool) error
 	AppendSeqIdentifier(identifier string, right bool)
 	AvgAllelesPerSite() float64
@@ -693,14 +693,15 @@ func (a *align) AppendSeqIdentifier(identifier string, right bool) {
 	}
 }
 
-// Removes spaces and tabs from sequence names
+// Removes spaces and tabs at beginning and end of sequence names
+// and replaces newick special characters \s\t()[];,.: by "-"
 func (a *align) CleanNames() {
 	firstlast := regexp.MustCompile("(^[\\s\\t]+|[\\s\\t]+$)")
-	inside := regexp.MustCompile("[\\s\\t]+")
+	inside := regexp.MustCompile("[\\s\\t,\\[\\]\\(\\),;\\.:]+")
 
 	for _, seq := range a.seqs {
 		seq.name = firstlast.ReplaceAllString(seq.name, "")
-		seq.name = inside.ReplaceAllString(seq.name, "_")
+		seq.name = inside.ReplaceAllString(seq.name, "-")
 	}
 }
 

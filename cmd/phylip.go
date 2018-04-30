@@ -5,7 +5,6 @@ import (
 )
 
 var phylipstrict bool
-var phylipcleannames bool
 
 // phylipCmd represents the phylip command
 var phylipCmd = &cobra.Command{
@@ -25,8 +24,7 @@ goalign reformat phylip -i align.fasta
 	Run: func(cmd *cobra.Command, args []string) {
 		f := openWriteFile(reformatOutput)
 		for al := range rootaligns.Achan {
-			//fmt.Println("ALIGN" + fmt.Sprintf("%d", al.NbSequences()))
-			if phylipcleannames {
+			if reformatCleanNames {
 				al.CleanNames()
 			}
 			writeAlignPhylip(al, f)
@@ -37,5 +35,4 @@ goalign reformat phylip -i align.fasta
 
 func init() {
 	reformatCmd.AddCommand(phylipCmd)
-	phylipCmd.PersistentFlags().BoolVar(&phylipcleannames, "clean-names", false, "Removes special characters (tabs, spaces) from input sequence names before writing phylip format")
 }

@@ -22,7 +22,9 @@ goalign reformat nexus -i align.fasta
 	Run: func(cmd *cobra.Command, args []string) {
 		f := openWriteFile(reformatOutput)
 		for al := range rootaligns.Achan {
-			//fmt.Println("ALIGN" + fmt.Sprintf("%d", al.NbSequences()))
+			if reformatCleanNames {
+				al.CleanNames()
+			}
 			writeAlignNexus(al, f)
 		}
 		f.Close()

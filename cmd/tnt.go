@@ -27,7 +27,9 @@ goalign reformat tnt -i align.fasta
 		if rootaligns.Err != nil {
 			io.ExitWithMessage(rootaligns.Err)
 		}
-
+		if reformatCleanNames {
+			al.CleanNames()
+		}
 		f.WriteString("xread\n\n")
 		f.WriteString("'Tnt input file'\n\n")
 		f.WriteString(fmt.Sprintf("%d %d\n", al.Length(), al.NbSequences()))

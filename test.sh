@@ -219,15 +219,14 @@ goalign random -n 5 -l 5 -s 10 | goalign reformat phylip > result
 diff result expected
 rm -f expected result mapfile
 
-
 echo "->goalign reformat phylip spaces tabs"
 cat > expected <<EOF
    5   5
-S_e_q_0_0_00  GATTA
-Se_q00_0_1  ATTTG
-Se_q00_0_2  CCGTA
-Seq00_03  GGCCA
-Seq_0004  GAATC
+S-e-q-0-0-00  GATTA
+Se-q00-0-1  ATTTG
+Se-q00-0-2  CCGTA
+Seq00-03  GGCCA
+Seq-0004  GAATC
 EOF
 cat > input.fa <<EOF
 > S e q 0	0	00
@@ -245,6 +244,48 @@ goalign reformat phylip -i input.fa --clean-names > result
 diff result expected
 rm -f expected result mapfile input.fa
 
+
+echo "->goalign reformat fasta spaces tabs"
+cat > expected <<EOF
+>S-e-q-0-0-00-
+GATTA
+>Se-q00-0-2-
+CCGTA
+>Seq00-03-
+GGCCA
+>Se-q-0004
+GAATC
+EOF
+cat > input.fa <<EOF
+> S e q 0	0	00[]();.,
+GATTA
+>	 Se    q00 0 2    	 	[]();.,
+CCGTA
+>		Seq00     03[]();.,
+GGCCA
+>Se		q[]();.,0004
+GAATC
+EOF
+goalign reformat fasta -i input.fa --clean-names > result
+diff result expected
+rm -f expected result mapfile input.fa
+
+echo "->goalign reformat fasta spaces tabs"
+cat > expected <<EOF
+>seq1-A-simple-comment-to-be-removed?-
+GATTA
+>seq2-A-second-comment-Maybe-a-wrong-sequence-to-be-updated?-
+CCGTA
+EOF
+cat > input.fa <<EOF
+> seq1 [A simple comment; to be removed?]
+GATTA
+> seq2 [A second comment] (Maybe a wrong sequence: to be updated?)
+CCGTA
+EOF
+goalign reformat fasta -i input.fa --clean-names > result
+diff result expected
+rm -f expected result mapfile input.fa
 
 echo "->goalign reformat phylip strict"
 cat > expected <<EOF

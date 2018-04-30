@@ -21,6 +21,9 @@ goalign reformat paml -i align.fasta
 	Run: func(cmd *cobra.Command, args []string) {
 		f := openWriteFile(reformatOutput)
 		for al := range rootaligns.Achan {
+			if reformatCleanNames {
+				al.CleanNames()
+			}
 			writeAlignPaml(al, f)
 		}
 		f.Close()

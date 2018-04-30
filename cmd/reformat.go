@@ -6,6 +6,7 @@ import (
 
 var reformatOutput string
 var reformatOutputString string
+var reformatCleanNames bool
 
 // reformatCmd represents the reformat command
 var reformatCmd = &cobra.Command{
@@ -22,4 +23,5 @@ fasta and phylip, such as 60 characters per line, etc.
 func init() {
 	RootCmd.AddCommand(reformatCmd)
 	reformatCmd.PersistentFlags().StringVarP(&reformatOutput, "output", "o", "stdout", "Reformated alignment output file")
+	reformatCmd.PersistentFlags().BoolVar(&reformatCleanNames, "clean-names", false, "Replaces special characters (tabs, spaces, newick characters) with '-' from input sequence names before writing output alignment")
 }
