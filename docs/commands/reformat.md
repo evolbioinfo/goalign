@@ -24,6 +24,8 @@ Available Commands:
   tnt         Reformats an input alignment into input data for TNT
 
 Flags:
+  --clean-names     Replaces special characters (tabs, spaces, newick characters) with '-'
+                    from input sequence names before writing output alignment
   -o, --output string   Reformated alignment output file (default "stdout")
   -s, --strict          If it is strict phylip format
 
@@ -33,6 +35,7 @@ Global Flags:
   --input-strict       Strict phylip input format (only used with -p)
   --output-strict      Strict phylip output format  (only used with -p)
 ```
+If `--clean-names` option is given, special characters in sequence names (that may conflict with newick format after tree inference) are replaced by `-`.
 
 #### Examples
 
