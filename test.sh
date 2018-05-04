@@ -457,6 +457,21 @@ goalign compute distance -m f81 -i tests/data/test_distance.phy.gz -p > result
 diff result expected
 rm -f expected result mapfile
 
+
+echo "->goalign compute distance -m rawdist"
+cat > expected <<EOF
+5
+Tip4	0.000000000000	4.000000000000	3.000000000000	3.000000000000	4.000000000000
+Tip0	4.000000000000	0.000000000000	1.000000000000	1.000000000000	2.000000000000
+Tip3	3.000000000000	1.000000000000	0.000000000000	0.000000000000	1.000000000000
+Tip2	3.000000000000	1.000000000000	0.000000000000	0.000000000000	1.000000000000
+Tip1	4.000000000000	2.000000000000	1.000000000000	1.000000000000	0.000000000000
+EOF
+goalign compute distance -m rawdist -i tests/data/test_rawdistance.phy.gz -p > result
+diff result expected
+rm -f expected result mapfile
+
+
 echo "->goalign compute distance -m pdist"
 cat > expected <<EOF
 5
