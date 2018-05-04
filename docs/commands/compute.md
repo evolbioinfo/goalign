@@ -6,11 +6,12 @@
 This command implements different computations:
 1. `goalign compute distance` : Computes a distance matrix from an input DNA alignment, with different evolutionary models:
     - pdist
-    - jc   : Juke-Cantor
-    - k2p  : Kimura 2 Parameters
-    - f81  : Felsenstein 81
-    - f84  : Felsenstein 84
-    - tn93 : Tamura and Nei 1993
+	- rawdist : Raw distance (like pdist, without normalization by length)
+    - jc      : Juke-Cantor
+    - k2p     : Kimura 2 Parameters
+    - f81     : Felsenstein 81
+    - f84     : Felsenstein 84
+    - tn93    : Tamura and Nei 1993
 2. `goalign compute entropy`: Computes the entropy of each sites of the input alignment or the average entropy of all sites (`-a` option).
 2. `goalign compute pssm`: Computes and prints a Position specific scoring matrix. Different kind of matrices may be computed, depending on `-n` option:
     - `-n 0` : None, means raw counts
