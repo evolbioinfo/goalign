@@ -21,17 +21,18 @@ func NewK2PModel(removegaps bool) *K2PModel {
 }
 
 /* computes K2P distance between 2 sequences */
-func (m *K2PModel) Distance(seq1 []rune, seq2 []rune, weights []float64) float64 {
+func (m *K2PModel) Distance(seq1 []rune, seq2 []rune, weights []float64) (float64, error) {
 	trS, trV, _, _, total := countMutations(seq1, seq2, m.selectedSites, weights)
 	trS, trV = trS/total, trV/total
 	dist := -0.5*math.Log(1.0-2.0*trS-trV) - 0.25*math.Log(1.0-2.0*trV)
 	if dist > 0 {
-		return (dist)
+		return dist, nil
 	} else {
-		return (0)
+		return 0, nil
 	}
 }
 
-func (m *K2PModel) InitModel(al align.Alignment, weights []float64) {
+func (m *K2PModel) InitModel(al align.Alignment, weights []float64) (err error) {
 	m.numSites, m.selectedSites = selectedSites(al, weights, m.removegaps)
+	return
 }

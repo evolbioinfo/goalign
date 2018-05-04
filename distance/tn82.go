@@ -23,12 +23,15 @@ func NewTN82Model(removegaps bool) *TN82Model {
 }
 
 /* computes TN82 distance between 2 sequences */
-func (m *TN82Model) Distance(seq1 []rune, seq2 []rune, weights []float64) float64 {
+func (m *TN82Model) Distance(seq1 []rune, seq2 []rune, weights []float64) (float64, error) {
 	diff, total := countDiffs(seq1, seq2, m.selectedSites, weights)
 	diff = diff / total
 
 	psi := init2DFloat(4, 4)
-	totalPairs := countNtPairs2Seq(seq1, seq2, m.selectedSites, weights, psi)
+	totalPairs, err := countNtPairs2Seq(seq1, seq2, m.selectedSites, weights, psi)
+	if err != nil {
+		return 0.0, err
+	}
 	for i := 0; i < 4; i++ {
 		for j := 0; j < 4; j++ {
 			psi[i][j] = psi[i][j] / totalPairs
@@ -43,13 +46,14 @@ func (m *TN82Model) Distance(seq1 []rune, seq2 []rune, weights []float64) float6
 	b1 := diff * diff / denom
 	dist := -1.0 * b1 * math.Log(1.0-diff/b1)
 	if dist > 0 {
-		return (dist)
+		return dist, nil
 	} else {
-		return (0)
+		return 0, nil
 	}
 }
 
-func (m *TN82Model) InitModel(al align.Alignment, weights []float64) {
+func (m *TN82Model) InitModel(al align.Alignment, weights []float64) (err error) {
 	m.numSites, m.selectedSites = selectedSites(al, weights, m.removegaps)
-	m.pi = probaNt(al, m.selectedSites, weights)
+	m.pi, err = probaNt(al, m.selectedSites, weights)
+	return
 }

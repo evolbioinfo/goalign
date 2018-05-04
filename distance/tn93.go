@@ -23,7 +23,7 @@ func NewTN93Model(removegaps bool) *TN93Model {
 }
 
 /* computes TN93 distance between 2 sequences */
-func (m *TN93Model) Distance(seq1 []rune, seq2 []rune, weights []float64) float64 {
+func (m *TN93Model) Distance(seq1 []rune, seq2 []rune, weights []float64) (float64, error) {
 	trS, trV, p1, p2, total := countMutations(seq1, seq2, m.selectedSites, weights)
 	trS, trV, p1, p2 = trS/total, trV/total, p1/total, p2/total
 
@@ -39,13 +39,14 @@ func (m *TN93Model) Distance(seq1 []rune, seq2 []rune, weights []float64) float6
 
 	dist := 2*(m.pi[0]*m.pi[2]+m.pi[1]*m.pi[3])*(y*b1+(1-y)*b2) + 2*pir*piy*b3
 	if dist > 0 {
-		return (dist)
+		return dist, nil
 	} else {
-		return (0)
+		return 0, nil
 	}
 }
 
-func (m *TN93Model) InitModel(al align.Alignment, weights []float64) {
+func (m *TN93Model) InitModel(al align.Alignment, weights []float64) (err error) {
 	m.numSites, m.selectedSites = selectedSites(al, weights, m.removegaps)
-	m.pi = probaNt(al, m.selectedSites, weights)
+	m.pi, err = probaNt(al, m.selectedSites, weights)
+	return
 }

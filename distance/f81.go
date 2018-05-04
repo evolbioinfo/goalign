@@ -24,24 +24,27 @@ func NewF81Model(removegaps bool) *F81Model {
 }
 
 /* computes F81 distance between 2 sequences */
-func (m *F81Model) Distance(seq1 []rune, seq2 []rune, weights []float64) float64 {
+func (m *F81Model) Distance(seq1 []rune, seq2 []rune, weights []float64) (float64, error) {
 	diff, total := countDiffs(seq1, seq2, m.selectedSites, weights)
 	diff = diff / total
 
 	dist := -1.0 * m.b1 * math.Log(1.0-diff/m.b1)
 	if dist > 0 {
-		return (dist)
+		return dist, nil
 	} else {
-		return (0)
+		return 0, nil
 	}
 }
 
-func (m *F81Model) InitModel(al align.Alignment, weights []float64) {
+func (m *F81Model) InitModel(al align.Alignment, weights []float64) (err error) {
 	m.numSites, m.selectedSites = selectedSites(al, weights, m.removegaps)
 	m.b1 = 0.0
-	m.pi = probaNt(al, m.selectedSites, weights)
-	for i, _ := range m.pi {
-		m.b1 += m.pi[i] * m.pi[i]
+	m.pi, err = probaNt(al, m.selectedSites, weights)
+	if err == nil {
+		for i, _ := range m.pi {
+			m.b1 += m.pi[i] * m.pi[i]
+		}
+		m.b1 = 1 - m.b1
 	}
-	m.b1 = 1 - m.b1
+	return
 }

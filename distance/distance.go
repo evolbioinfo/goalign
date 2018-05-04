@@ -3,16 +3,16 @@ package distance
 import (
 	"errors"
 	"fmt"
-	"github.com/fredericlemoine/goalign/align"
-	"github.com/fredericlemoine/goalign/io"
-	"github.com/fredericlemoine/goalign/stats"
 	"sync"
 	"unicode"
+
+	"github.com/fredericlemoine/goalign/align"
+	"github.com/fredericlemoine/goalign/stats"
 )
 
 type DistModel interface {
-	InitModel(al align.Alignment, weights []float64)
-	Distance(seq1 []rune, seq2 []rune, weigths []float64) float64
+	InitModel(al align.Alignment, weights []float64) error
+	Distance(seq1 []rune, seq2 []rune, weigths []float64) (float64, error)
 }
 
 type seqpairdist struct {
@@ -31,8 +31,7 @@ func init2DFloat(dim1, dim2 int) [][]float64 {
 }
 
 /* Returns the right model depending on the args */
-func Model(modelType string, removegaps bool) DistModel {
-	var model DistModel
+func Model(modelType string, removegaps bool) (model DistModel, err error) {
 	switch modelType {
 	case "jc":
 		model = NewJCModel(removegaps)
@@ -40,6 +39,8 @@ func Model(modelType string, removegaps bool) DistModel {
 		model = NewK2PModel(removegaps)
 	case "pdist":
 		model = NewPDistModel(removegaps)
+	case "rawdist":
+		model = NewRawDistModel(removegaps)
 	case "f81":
 		model = NewF81Model(removegaps)
 	case "tn82":
@@ -49,9 +50,9 @@ func Model(modelType string, removegaps bool) DistModel {
 	case "f84":
 		model = NewF84Model(removegaps)
 	default:
-		io.ExitWithMessage(errors.New("This model is not implemented : " + modelType))
+		err = errors.New("This model is not implemented : " + modelType)
 	}
-	return model
+	return
 }
 
 /* Return a normalized vector of weights following a Gamma distribution*/
@@ -91,14 +92,15 @@ func BuildWeightsDirichlet(al align.Alignment) []float64 {
 
 /* Compute a matrix distance, with weights associated to each alignment positions */
 /* If weights == nil, then all weights are considered 1 */
-func DistMatrix(al align.Alignment, weights []float64, model DistModel, cpus int) [][]float64 {
+func DistMatrix(al align.Alignment, weights []float64, model DistModel, cpus int) (outmatrix [][]float64, err error) {
 	if al.Alphabet() != align.NUCLEOTIDS {
-		io.ExitWithMessage(errors.New("The alignment is not nucleotidic"))
+		err = errors.New("The alignment is not nucleotidic")
+		return
 	}
 	model.InitModel(al, weights)
 	distchan := make(chan seqpairdist, 100)
 
-	outmatrix := make([][]float64, al.NbSequences())
+	outmatrix = make([][]float64, al.NbSequences())
 	for i := 0; i < al.NbSequences(); i++ {
 		outmatrix[i] = make([]float64, al.NbSequences())
 	}
@@ -122,7 +124,9 @@ func DistMatrix(al align.Alignment, weights []float64, model DistModel, cpus int
 				if sp.i == sp.j {
 					outmatrix[sp.i][sp.i] = 0
 				} else {
-					outmatrix[sp.i][sp.j] = model.Distance(sp.seq1, sp.seq2, sp.weights)
+					if outmatrix[sp.i][sp.j], err = model.Distance(sp.seq1, sp.seq2, sp.weights); err != nil {
+						return
+					}
 					outmatrix[sp.j][sp.i] = outmatrix[sp.i][sp.j]
 				}
 			}
@@ -131,7 +135,7 @@ func DistMatrix(al align.Alignment, weights []float64, model DistModel, cpus int
 	}
 	wg.Wait()
 
-	return outmatrix
+	return
 }
 
 /* Returns true if it is a transition, false otherwize */
@@ -218,7 +222,7 @@ C=1
 G=2
 T=3
 */
-func probaNt(al align.Alignment, selectedSites []bool, weights []float64) []float64 {
+func probaNt(al align.Alignment, selectedSites []bool, weights []float64) ([]float64, error) {
 	pi := make([]float64, 4)
 	total := 0.0
 
@@ -232,7 +236,11 @@ func probaNt(al align.Alignment, selectedSites []bool, weights []float64) []floa
 			char := seq1[pos]
 			if selectedSites[pos] {
 				if isNuc(seq1[pos]) {
-					pi[indexNt(char)] += w
+					if idx, err := indexNt(char); err != nil {
+						return nil, err
+					} else {
+						pi[idx] += w
+					}
 				}
 				total += w
 			}
@@ -242,7 +250,7 @@ func probaNt(al align.Alignment, selectedSites []bool, weights []float64) []floa
 	for i, _ := range pi {
 		pi[i] /= total
 	}
-	return pi
+	return pi, nil
 }
 
 /*Returns the proba of each nts for the 2 sequences considered
@@ -251,7 +259,7 @@ C=1
 G=2
 T=3
 */
-func probaNt2Seqs(seq1 []rune, seq2 []rune, selectedSites []bool, weights []float64) []float64 {
+func probaNt2Seqs(seq1 []rune, seq2 []rune, selectedSites []bool, weights []float64) ([]float64, error) {
 	pi := make([]float64, 4)
 	total := 0.0
 
@@ -262,8 +270,16 @@ func probaNt2Seqs(seq1 []rune, seq2 []rune, selectedSites []bool, weights []floa
 		}
 		if selectedSites[pos] {
 			if isNuc(seq1[pos]) && isNuc(seq2[pos]) {
-				pi[indexNt(seq1[pos])] += w
-				pi[indexNt(seq2[pos])] += w
+				if idx, err := indexNt(seq1[pos]); err != nil {
+					return nil, err
+				} else {
+					pi[idx] += w
+				}
+				if idx, err := indexNt(seq2[pos]); err != nil {
+					return nil, err
+				} else {
+					pi[idx] += w
+				}
 			}
 			total += 2 * w
 		}
@@ -272,18 +288,22 @@ func probaNt2Seqs(seq1 []rune, seq2 []rune, selectedSites []bool, weights []floa
 	for i, _ := range pi {
 		pi[i] /= total
 	}
-	return pi
+	return pi, nil
 }
 
 /* Compute freq (weighted) of all pairs of nt in all pairs of sequences */
-func probaNtPairs(al align.Alignment, selectedSites []bool, weights []float64) [][]float64 {
+func probaNtPairs(al align.Alignment, selectedSites []bool, weights []float64) ([][]float64, error) {
 	psi := init2DFloat(4, 4)
 	total := 0.0
 	for i := 0; i < al.NbSequences(); i++ {
 		seq1, _ := al.GetSequenceCharById(i)
 		for j := i + 1; j < al.NbSequences(); j++ {
 			seq2, _ := al.GetSequenceCharById(j)
-			total += countNtPairs2Seq(seq1, seq2, selectedSites, weights, psi)
+			if nb, err := countNtPairs2Seq(seq1, seq2, selectedSites, weights, psi); err == nil {
+				total += nb
+			} else {
+				return nil, err
+			}
 		}
 	}
 
@@ -292,11 +312,11 @@ func probaNtPairs(al align.Alignment, selectedSites []bool, weights []float64) [
 			psi[i][j] /= total
 		}
 	}
-	return psi
+	return psi, nil
 }
 
 /* Compute freq (weighted) of all pairs of nt in this pair of sequences */
-func countNtPairs2Seq(seq1, seq2 []rune, selectedSites []bool, weights []float64, psi [][]float64) float64 {
+func countNtPairs2Seq(seq1, seq2 []rune, selectedSites []bool, weights []float64, psi [][]float64) (float64, error) {
 	total := 0.0
 	w := 1.0
 	for pos, char1 := range seq1 {
@@ -305,15 +325,22 @@ func countNtPairs2Seq(seq1, seq2 []rune, selectedSites []bool, weights []float64
 		}
 		if selectedSites[pos] {
 			if isNuc(char1) && isNuc(seq2[pos]) {
-				id1 := indexNt(char1)
-				id2 := indexNt(seq2[pos])
+				var id1, id2 int
+				var err1, err2 error
+
+				if id1, err1 = indexNt(char1); err1 != nil {
+					return 0.0, err1
+				}
+				if id2, err2 = indexNt(seq2[pos]); err2 != nil {
+					return 0.0, err2
+				}
 				psi[id1][id2] += w
 				psi[id2][id1] += w
 			}
 			total += w
 		}
 	}
-	return total
+	return total, nil
 }
 
 /*
@@ -323,19 +350,20 @@ C=1
 G=2
 T=3
 */
-func indexNt(nt rune) int {
+func indexNt(nt rune) (idx int, err error) {
 	switch unicode.ToUpper(nt) {
 	case 'A':
-		return 0
+		idx = 0
 	case 'C':
-		return 1
+		idx = 1
 	case 'G':
-		return 2
+		idx = 2
 	case 'T':
-		return 3
+		idx = 3
+	default:
+		err = errors.New(fmt.Sprintf("No index for character: %c", nt))
 	}
-	io.ExitWithMessage(errors.New(fmt.Sprintf("No index for character: %c", nt)))
-	return -1
+	return
 }
 
 func isNuc(r rune) bool {

@@ -45,6 +45,9 @@ goalign build distboot -m k2p -i align.fa -o mats.txt
 	//`,
 
 	Run: func(cmd *cobra.Command, args []string) {
+		var err error
+		var model distance.DistModel
+
 		rand.Seed(distbootSeed)
 		f := openWriteFile(distbootOutput)
 		align, _ := <-rootaligns.Achan
@@ -52,16 +55,26 @@ goalign build distboot -m k2p -i align.fa -o mats.txt
 			io.ExitWithMessage(rootaligns.Err)
 		}
 
-		model := distance.Model(distbootmodel, distboolRemoveGaps)
+		model, err = distance.Model(distbootmodel, distboolRemoveGaps)
+		if err != nil {
+			io.ExitWithMessage(err)
+		}
 		for i := 0; i < distbootnb; i++ {
 			var weights []float64 = nil
+			var distMatrix [][]float64
 			if distbootcontinuous {
 				weights = distance.BuildWeightsDirichlet(align)
-				distMatrix := distance.DistMatrix(align, weights, model, rootcpus)
+				distMatrix, err = distance.DistMatrix(align, weights, model, rootcpus)
+				if err != nil {
+					io.ExitWithMessage(err)
+				}
 				writeDistBootMatrix(distMatrix, align, f)
 			} else {
 				boot := align.BuildBootstrap()
-				distMatrix := distance.DistMatrix(boot, nil, model, rootcpus)
+				distMatrix, err = distance.DistMatrix(boot, nil, model, rootcpus)
+				if err != nil {
+					io.ExitWithMessage(err)
+				}
 				writeDistBootMatrix(distMatrix, align, f)
 			}
 		}

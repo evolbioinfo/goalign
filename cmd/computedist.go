@@ -32,11 +32,12 @@ for all of them.
 Available Distances:
 
 - pdist
-- jc   : Juke-Cantor
-- k2p  : Kimura 2 Parameters
-- f81  : Felsenstein 81
-- f84  : Felsenstein 84
-- tn93 : Tamura and Nei 1993
+- rawdist : raw distance (like pdist, without normalization by length)
+- jc      : Juke-Cantor
+- k2p     : Kimura 2 Parameters
+- f81     : Felsenstein 81
+- f84     : Felsenstein 84
+- tn93    : Tamura and Nei 1993
 
 For example:
 
@@ -49,6 +50,7 @@ if -a is given: display only the average distance
 	Run: func(cmd *cobra.Command, args []string) {
 		var f *os.File
 		var err error
+		var model distance.DistModel
 
 		if computedistOutput == "stdout" || computedistOutput == "-" {
 			f = os.Stdout
@@ -59,9 +61,16 @@ if -a is given: display only the average distance
 			}
 		}
 
-		model := distance.Model(computedistModel, computedistRemoveGaps)
+		model, err = distance.Model(computedistModel, computedistRemoveGaps)
+		if err != nil {
+			io.ExitWithMessage(err)
+		}
 		for align := range rootaligns.Achan {
-			var distMatrix [][]float64 = distance.DistMatrix(align, nil, model, rootcpus)
+			var distMatrix [][]float64
+			distMatrix, err = distance.DistMatrix(align, nil, model, rootcpus)
+			if err != nil {
+				io.ExitWithMessage(err)
+			}
 			if computedistAverage {
 				writeDistAverage(align, distMatrix, f)
 			} else {
