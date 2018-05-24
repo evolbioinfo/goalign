@@ -14,29 +14,6 @@ import (
 	"github.com/fredericlemoine/goalign/io"
 )
 
-const (
-	AMINOACIDS = 0 // Amino acid sequence alphabet
-	NUCLEOTIDS = 1 // Nucleotid sequence alphabet
-	UNKNOWN    = 2 // Unkown alphabet
-
-	GAP   = '-'
-	POINT = '.'
-	OTHER = '*'
-
-	PSSM_NORM_NONE = 0 // No normalization
-	PSSM_NORM_FREQ = 1 // Normalization by freq in the site
-	PSSM_NORM_DATA = 2 // Normalization by aa/nt frequency in data
-	PSSM_NORM_UNIF = 3 // Normalization by uniform frequency
-	PSSM_NORM_LOGO = 4 // Normalization like LOGO : v(site)=freq*(log2(alphabet)-H(site)-pseudocount
-
-	FORMAT_FASTA  = 0
-	FORMAT_PHYLIP = 1
-	FORMAT_NEXUS  = 2
-)
-
-var stdaminoacid = []rune{'A', 'R', 'N', 'D', 'C', 'Q', 'E', 'G', 'H', 'I', 'L', 'K', 'M', 'F', 'P', 'S', 'T', 'W', 'Y', 'V'}
-var stdnucleotides = []rune{'A', 'C', 'G', 'T'}
-
 type Alignment interface {
 	AddSequence(name string, sequence string, comment string) error
 	AddSequenceChar(name string, sequence []rune, comment string) error
@@ -69,6 +46,7 @@ type Alignment interface {
 	AddGaps(rate, lenprop float64)
 	Rename(namemap map[string]string)
 	Pssm(log bool, pseudocount float64, normalization int) (pssm map[rune][]float64, err error) // Normalization: PSSM_NORM_NONE, PSSM_NORM_UNIF, PSSM_NORM_DATA
+	Translate(phase int) (transAl *align, err error)                                            // Translates nt sequence if possible
 	TrimNames(size int) (map[string]string, error)
 	TrimNamesAuto() (map[string]string, error)
 	CleanNames() // Removes spaces and tabs at beginning and end of sequence names and replace all newick special characters \s\t()[];,.: by "-"
@@ -1186,4 +1164,37 @@ func (a *align) NbVariableSites() int {
 		}
 	}
 	return nbinfo
+}
+
+/*
+Translates the given alignment in aa, in the given phase (0,1,2)
+
+- if the phase is 1 or 2 : it will remove the first or the 2 firsts characters
+- if the alphabet is not NUCLEOTIDS: returns an error
+
+*/
+func (a *align) Translate(phase int) (transAl *align, err error) {
+	if a.Alphabet() != NUCLEOTIDS {
+		return nil, errors.New("Wring alphabet, cannot translate to AA")
+	}
+	if a.Length() < 3+phase {
+		return nil, errors.New("Cannot translate an alignment with length < 3+phase")
+	}
+
+	transAl = NewAlign(a.Alphabet())
+
+	a.IterateAll(func(name string, sequence []rune, comment string) {
+		var buffer bytes.Buffer
+		for i := phase; i < len(sequence)-1; i += 3 {
+			codon := string(sequence[i : i+3])
+			aa, found := standardcode[strings.Replace(strings.ToUpper(codon), "U", "T", -1)]
+			if !found {
+				err = errors.New("No genetic code corresponds to " + codon)
+			} else {
+				buffer.WriteRune(aa)
+			}
+		}
+		err = transAl.AddSequence(name, buffer.String(), comment)
+	})
+	return transAl, nil
 }
