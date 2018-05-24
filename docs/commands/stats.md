@@ -15,6 +15,7 @@ Different sub-commands:
 * `goalign stats alleles`: Prints the average number of alleles per site of the alignment;
 * `goalign stats char`: Prints the character frequencies;
 * `goalign stats length`: Prints alignment length;
+* `goalign stats maxchar`: Prints max occurence char for each alignment site
 * `goalign stats nalign`: Prints the number of alignments in the input file (Phylip);
 * `goalign stats nseq`: Prints the number of sequences in the input alignment;
 * `goalign stats taxa`: Lists taxa in the input alignment.

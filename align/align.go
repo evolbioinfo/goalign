@@ -54,6 +54,7 @@ type Alignment interface {
 	AppendSeqIdentifier(identifier string, right bool)
 	AvgAllelesPerSite() float64
 	CharStats() map[rune]int64
+	MaxCharStats() ([]rune, []int)
 	Alphabet() int
 	AlphabetCharacters() []rune
 	SubAlign(start, length int) (Alignment, error) // Extract a subalignment from this alignment
@@ -841,6 +842,29 @@ func (a *align) CharStats() map[rune]int64 {
 	}
 
 	return outmap
+}
+
+// Returns the Character with the most occurences
+// for each site of the alignment
+func (a *align) MaxCharStats() (out []rune, occur []int) {
+	out = make([]rune, a.Length())
+	occur = make([]int, a.Length())
+	for site := 0; site < a.Length(); site++ {
+		mapstats := make(map[rune]int)
+		max := 0
+		for _, seq := range a.seqs {
+			mapstats[seq.sequence[site]]++
+		}
+		for k, v := range mapstats {
+			if v > max {
+				out[site] = k
+				occur[site] = v
+				max = v
+			}
+		}
+	}
+
+	return out, occur
 }
 
 func (a *align) Alphabet() int {

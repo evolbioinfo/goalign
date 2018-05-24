@@ -90,6 +90,7 @@ Command                                                     | Subcommand |      
 --                                                          | alleles    | Prints the average number of alleles per sites of the alignment
 --                                                          | char       | Prints frequence of different characters (aa/nt) of the alignment
 --                                                          | length     | Prints the length of sequences in the alignment
+--                                                          | maxchar    | Prints max occurence char for each alignment site
 --                                                          | nalign     | Prints the number of alignments in the input file (phylip)
 --                                                          | nseq       | Prints the number of sequences in the alignment
 --                                                          | taxa       | Prints index (position) and name of taxa of the alignment file

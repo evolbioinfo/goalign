@@ -51,6 +51,17 @@ func printCharStats(rootalign align.Alignment) {
 	}
 }
 
+// Prints the Character with the most frequency
+// for each site of the alignment
+func printMaxCharStats(rootalign align.Alignment) {
+	maxchars, occur := rootalign.MaxCharStats()
+
+	fmt.Fprintf(os.Stdout, "site\tchar\tnb\n")
+	for i, c := range maxchars {
+		fmt.Fprintf(os.Stdout, "%d\t%c\t%d\n", i, c, occur[i])
+	}
+}
+
 func init() {
 	RootCmd.AddCommand(statsCmd)
 }
