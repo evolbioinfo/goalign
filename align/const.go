@@ -24,6 +24,7 @@ var stdaminoacid = []rune{'A', 'R', 'N', 'D', 'C', 'Q', 'E', 'G', 'H', 'I', 'L',
 var stdnucleotides = []rune{'A', 'C', 'G', 'T'}
 
 var standardcode = map[string]rune{
+	"---": '-',
 	"GCT": 'A', "GCC": 'A', "GCA": 'A', "GCG": 'A',
 	"TTA": 'L', "TTG": 'L', "CTT": 'L', "CTC": 'L', "CTA": 'L', "CTG": 'L',
 	"CGT": 'R', "CGC": 'R', "CGA": 'R', "CGG": 'R', "AGA": 'R', "AGG": 'R',

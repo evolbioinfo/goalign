@@ -1185,16 +1185,17 @@ func (a *align) Translate(phase int) (transAl *align, err error) {
 
 	a.IterateAll(func(name string, sequence []rune, comment string) {
 		var buffer bytes.Buffer
-		for i := phase; i < len(sequence)-1; i += 3 {
-			codon := string(sequence[i : i+3])
-			aa, found := standardcode[strings.Replace(strings.ToUpper(codon), "U", "T", -1)]
+		for i := phase; i < len(sequence)-2; i += 3 {
+			codon := strings.Replace(strings.ToUpper(string(sequence[i:i+3])), "U", "T", -1)
+			aa, found := standardcode[codon]
 			if !found {
-				err = errors.New("No genetic code corresponds to " + codon)
-			} else {
-				buffer.WriteRune(aa)
+				aa = 'X'
 			}
+			buffer.WriteRune(aa)
 		}
-		err = transAl.AddSequence(name, buffer.String(), comment)
+		if err2 := transAl.AddSequence(name, buffer.String(), comment); err != nil {
+			err = err2
+		}
 	})
-	return transAl, nil
+	return transAl, err
 }
