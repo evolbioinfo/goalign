@@ -1170,7 +1170,9 @@ func (a *align) NbVariableSites() int {
 Translates the given alignment in aa, in the given phase (0,1,2)
 
 - if the phase is 1 or 2 : it will remove the first or the 2 firsts characters
-- if the alphabet is not NUCLEOTIDS: returns an error
+- if the alphabet is not NUCLEOTIDES: returns an error
+
+It only translates using the standard code so far
 
 */
 func (a *align) Translate(phase int) (transAl *align, err error) {

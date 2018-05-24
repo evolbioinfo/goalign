@@ -4,7 +4,7 @@
 
 ### translate
 This command translates an input sequence into amino acids.
-
+It only translates using the standard genetic code so far.
 
 #### Usage
 ```

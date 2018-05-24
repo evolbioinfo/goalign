@@ -18,6 +18,9 @@ If the input alignment is not nucleotides, then returns an error.
 
 It is possible to drop a given number of characters from the start 
 of the alignment, by specifying the '--phase' option.
+
+It only translates using the standard genetic code so far.
+
 `,
 	Run: func(cmd *cobra.Command, args []string) {
 		f := openWriteFile(translateOutput)
