@@ -1464,3 +1464,19 @@ EOF
 goalign random -s 10 -l 10 -n 5 | goalign shuffle seqs | goalign sort > result
 diff expected result
 rm -f expected result
+
+echo "->goalign translate"
+cat > input <<EOF
+>allcodons
+GCTGCCGCAGCGTTATTGCTTCTCCTACTGCGTCGCCGACGGAGAAGGAAAAAGAATAACATG
+GATGACTTTTTCTGTTGCCCTCCCCCACCGCAACAGTCTTCCTCATCGAGTAGCGAAGAGACT
+ACCACAACGGGTGGCGGAGGGTGGCATCACTATTACATTATCATAGTTGTCGTAGTGTAATGA
+TAG
+EOF
+cat > expected <<EOF
+>allcodons
+AAAALLLLLLRRRRRRKKNNMDDFFCCPPPPQQSSSSSSEETTTTGGGGWHHYYIIIVVVV***
+EOF
+goalign translate -i input --phase 0 -o result
+diff expected result
+rm -f input expected result
