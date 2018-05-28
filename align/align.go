@@ -10,6 +10,7 @@ import (
 	"regexp"
 	"sort"
 	"strings"
+	"unicode"
 
 	"github.com/fredericlemoine/goalign/io"
 )
@@ -54,6 +55,7 @@ type Alignment interface {
 	AppendSeqIdentifier(identifier string, right bool)
 	AvgAllelesPerSite() float64
 	CharStats() map[rune]int64
+	CharStatsSite(site int) (map[rune]int, error)
 	MaxCharStats() ([]rune, []int)
 	Alphabet() int
 	AlphabetCharacters() []rune
@@ -837,11 +839,27 @@ func (a *align) CharStats() map[rune]int64 {
 
 	for _, seq := range a.seqs {
 		for _, r := range seq.sequence {
-			outmap[r]++
+			outmap[unicode.ToUpper(r)]++
 		}
 	}
 
 	return outmap
+}
+
+// Returns the distribution of characters at a given site
+// if the site index is outside alignment, returns an error
+func (a *align) CharStatsSite(site int) (outmap map[rune]int, err error) {
+	outmap = make(map[rune]int)
+
+	if site < 0 || site >= a.Length() {
+		err = errors.New("Cannot compute site char statistics: Site index is outside alignment")
+	} else {
+
+		for _, s := range a.seqs {
+			outmap[unicode.ToUpper(s.sequence[site])]++
+		}
+	}
+	return outmap, err
 }
 
 // Returns the Character with the most occurences
@@ -853,7 +871,7 @@ func (a *align) MaxCharStats() (out []rune, occur []int) {
 		mapstats := make(map[rune]int)
 		max := 0
 		for _, seq := range a.seqs {
-			mapstats[seq.sequence[site]]++
+			mapstats[unicode.ToUpper(seq.sequence[site])]++
 		}
 		for k, v := range mapstats {
 			if v > max {

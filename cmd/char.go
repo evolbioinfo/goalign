@@ -6,6 +6,8 @@ import (
 	"github.com/fredericlemoine/goalign/io"
 )
 
+var charstatpersites bool
+
 // charCmd represents the char command
 var charCmd = &cobra.Command{
 	Use:   "char",
@@ -23,10 +25,15 @@ goalign stats char -i align.fasta
 		if rootaligns.Err != nil {
 			io.ExitWithMessage(rootaligns.Err)
 		}
-		printCharStats(al)
+		if charstatpersites {
+			printSiteCharStats(al)
+		} else {
+			printCharStats(al)
+		}
 	},
 }
 
 func init() {
 	statsCmd.AddCommand(charCmd)
+	charCmd.PersistentFlags().BoolVar(&charstatpersites, "per-sites", false, "Prints char statistics per alignment site")
 }

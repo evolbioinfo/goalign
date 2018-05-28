@@ -1,9 +1,11 @@
 package cmd
 
 import (
-	"fmt"
 	"github.com/fredericlemoine/goalign/align"
+	"github.com/fredericlemoine/goalign/io"
 	"github.com/spf13/cobra"
+
+	"fmt"
 	"os"
 	"sort"
 )
@@ -48,6 +50,32 @@ func printCharStats(rootalign align.Alignment) {
 	for _, k := range keys {
 		nb := charmap[rune(k[0])]
 		fmt.Fprintf(os.Stdout, "%s\t%d\t%f\n", k, nb, float64(nb)/float64(total))
+	}
+}
+
+func printSiteCharStats(rootalign align.Alignment) {
+	charmap := rootalign.CharStats()
+	keys := make([]string, 0, len(charmap))
+	for k, _ := range charmap {
+		keys = append(keys, string(k))
+	}
+	sort.Strings(keys)
+	fmt.Fprintf(os.Stdout, "site")
+	for _, v := range keys {
+		fmt.Fprintf(os.Stdout, "\t%s", v)
+	}
+	fmt.Fprintf(os.Stdout, "\n")
+	for site := 0; site < rootalign.Length(); site++ {
+		sitemap, err := rootalign.CharStatsSite(site)
+		if err != nil {
+			io.ExitWithMessage(err)
+		}
+		fmt.Fprintf(os.Stdout, "%d", site)
+		for _, k := range keys {
+			nb := sitemap[rune(k[0])]
+			fmt.Fprintf(os.Stdout, "\t%d", nb)
+		}
+		fmt.Fprintf(os.Stdout, "\n")
 	}
 }
 
