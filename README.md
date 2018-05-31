@@ -30,6 +30,13 @@ singularity pull docker://evolbioinfo/goalign:v0.2.6
 ./goalign-v0.2.6.simg -h
 ```
 
+### Conda
+Goalign is also available on [bioconda](https://anaconda.org/bioconda/goalign). Just type:
+
+```
+conda install -c bioconda goalign
+```
+
 ### From sources
 In order to compile Goalign, you must first [download](https://golang.org/dl/) and [install](https://golang.org/doc/install) Go on your system.
 
