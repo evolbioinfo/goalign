@@ -49,8 +49,8 @@ type Alignment interface {
 	RenameRegexp(regex, replace string, namemap map[string]string) error
 	Pssm(log bool, pseudocount float64, normalization int) (pssm map[rune][]float64, err error) // Normalization: PSSM_NORM_NONE, PSSM_NORM_UNIF, PSSM_NORM_DATA
 	Translate(phase int) (transAl *align, err error)                                            // Translates nt sequence if possible
-	TrimNames(size int) (map[string]string, error)
-	TrimNamesAuto() (map[string]string, error)
+	TrimNames(namemap map[string]string, size int) error
+	TrimNamesAuto(namemap map[string]string, curid *int) error
 	CleanNames() // Removes spaces and tabs at beginning and end of sequence names and replace all newick special characters \s\t()[];,.: by "-"
 	TrimSequences(trimsize int, fromStart bool) error
 	AppendSeqIdentifier(identifier string, right bool)
@@ -583,72 +583,68 @@ func (a *align) SimulateRogue(prop float64, proplen float64) ([]string, []string
 	return seqlist, intactlist
 }
 
-func (a *align) TrimNames(size int) (map[string]string, error) {
-	shortmap := make(map[string][]string)
-	finalshort := make(map[string]string)
+func (a *align) TrimNames(namemap map[string]string, size int) error {
+	shortmap := make(map[string]bool)
 	if math.Pow10(size-2) < float64(a.NbSequences()) {
-		return nil, errors.New("New name size (" + fmt.Sprintf("%d", size-2) + ") does not allow to identify that amount of sequences (" + fmt.Sprintf("%d", a.NbSequences()) + ")")
+		return errors.New("New name size (" + fmt.Sprintf("%d", size-2) + ") does not allow to identify that amount of sequences (" + fmt.Sprintf("%d", a.NbSequences()) + ")")
 	}
-
+	// If previous short names, we take them into account for uniqueness
+	for _, v := range namemap {
+		shortmap[v] = true
+	}
 	for _, seq := range a.seqs {
-		n := seq.Name()
-		n = strings.Replace(n, ":", "", -1)
-		n = strings.Replace(n, "_", "", -1)
-		// Possible to have 100 Identical shortnames
-		if len(n) >= size-2 {
-			n = n[0 : size-2]
-		} else {
-			target := len(n)
-			for m := 0; m < (size - 2 - target); m++ {
-				n = n + "x"
+		newname, ok := namemap[seq.Name()]
+		if !ok {
+			newname = seq.Name()
+			newname = strings.Replace(newname, ":", "", -1)
+			newname = strings.Replace(newname, "_", "", -1)
+			if len(newname) >= size-2 {
+				newname = newname[0 : size-2]
+			} else {
+				for m := 0; m < (size - 2 - len(newname)); m++ {
+					newname = newname + "x"
+				}
 			}
+			id := 1
+			_, ok2 := shortmap[fmt.Sprintf("%s%02d", newname, id)]
+			for ok2 {
+				id++
+				if id > 99 {
+					return errors.New("More than 100 identical short names (" + newname + "), cannot shorten the names")
+				}
+				_, ok2 = shortmap[fmt.Sprintf("%s%02d", newname, id)]
+			}
+			newname = fmt.Sprintf("%s%02d", newname, id)
+			shortmap[newname] = true
+			namemap[seq.Name()] = newname
 		}
-		if _, ok := shortmap[n]; !ok {
-			shortmap[n] = make([]string, 0, 100)
-		}
-		shortmap[n] = append(shortmap[n], seq.Name())
+		delete(a.seqmap, seq.name)
+		seq.name = newname
+		a.seqmap[seq.name] = seq
 	}
 
-	for short, list := range shortmap {
-		if len(list) > 100 {
-			return nil, errors.New("More than 100 identical short names (" + short + "), cannot shorten the names")
-		} else if len(list) > 1 {
-			i := 1
-			for _, longname := range list {
-				finalshort[longname] = short + fmt.Sprintf("%02d", i)
-				i++
-			}
-		} else {
-			for _, longname := range list {
-				finalshort[longname] = short + "00"
-			}
-		}
-	}
-
-	for long, short := range finalshort {
-		if seq, ok := a.seqmap[long]; !ok {
-			return nil, errors.New("The sequence with name " + long + " does not exist")
-		} else {
-			seq.name = short
-			delete(a.seqmap, long)
-			a.seqmap[short] = seq
-		}
-	}
-
-	return finalshort, nil
+	return nil
 }
 
-func (a *align) TrimNamesAuto() (namemap map[string]string, err error) {
-	namemap = make(map[string]string)
-	curid := 1
+// namemap : map that is updated during the process
+// curid : pointer to the current identifier to use for next seq names
+// it is incremented in the function.
+func (a *align) TrimNamesAuto(namemap map[string]string, curid *int) (err error) {
 	length := int(math.Ceil(math.Log10(float64(a.NbSequences() + 1))))
 	for _, seq := range a.seqs {
-		if _, ok := namemap[seq.Name()]; !ok {
-			newname := fmt.Sprintf(fmt.Sprintf("S%%0%dd", (length)), curid)
+		newname, ok := namemap[seq.Name()]
+		if !ok {
+			newname = fmt.Sprintf(fmt.Sprintf("S%%0%dd", (length)), *curid)
 			namemap[seq.Name()] = newname
-			seq.name = newname
-			curid++
+			(*curid)++
+			// In case of several alignments to rename,
+			// The number of necessary digits may be updated
+			newlength := int(math.Ceil(math.Log10(float64(*curid + 1))))
+			if newlength > length {
+				length = newlength
+			}
 		}
+		seq.name = newname
 	}
 	return
 }

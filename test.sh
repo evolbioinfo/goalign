@@ -1332,6 +1332,57 @@ diff result expected
 diff <(sort mapfile) <(sort expectedmap)
 rm -f expected result expectedmap mapfile
 
+
+echo "->goalign trim name auto several ali"
+cat > input <<EOF
+  4 5
+Seq0001 GATTA
+Seq0002 ATTTG
+Seq0003 CCGTA
+Seq0004 GGCCA
+  4 5
+Seq0005 GATTA
+Seq0002 ATTTG
+Seq0003 CCGTA
+Seq0006 GGCCA
+  4 5
+Seq0001 GATTA
+Seq0006 ATTTG
+Seq0007 CCGTA
+Seq0005 GGCCA
+EOF
+cat > expected <<EOF
+   4   5
+S1  GATTA
+S2  ATTTG
+S3  CCGTA
+S4  GGCCA
+   4   5
+S5  GATTA
+S2  ATTTG
+S3  CCGTA
+S6  GGCCA
+   4   5
+S1  GATTA
+S6  ATTTG
+S7  CCGTA
+S5  GGCCA
+EOF
+cat > mapfile <<EOF
+Seq0003	S3
+Seq0004	S4
+Seq0001	S1
+Seq0002	S2
+Seq0005	S5
+Seq0006	S6
+Seq0007	S7
+EOF
+goalign trim name -i input -a -m mapfile2 -p > result
+diff result expected
+diff <(sort mapfile) <(sort mapfile2)
+rm -f expected result mapfile input mapfile2
+
+
 echo "->goalign trim seq"
 cat > expected <<EOF
 >Seq0000
