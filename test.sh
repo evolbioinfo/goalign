@@ -955,6 +955,30 @@ goalign random -s 10 -l 20 -n 5 | goalign rename -m mapfile > result
 diff result expected
 rm -f expected result mapfile
 
+echo "->goalign rename regexp"
+cat > mapfile <<EOF
+Seq0000	New0000
+Seq0001	New0001
+Seq0002	New0002
+Seq0003	New0003
+Seq0004	New0004
+EOF
+cat > expected <<EOF
+>New0000
+GATTAATTTGCCGTAGGCCA
+>New0001
+GAATCTGAAGATCGAACACT
+>New0002
+TTAAGTTTTCACTTCTAATG
+>New0003
+GAGAGGACTAGTTCATACTT
+>New0004
+TTTAAACACTTTTACATCGA
+EOF
+goalign random -s 10 -l 20 -n 5 | goalign rename --regexp 'Seq(\d+)' --replace 'New$1' -m mapfile2 > result
+diff result expected
+diff <(sort mapfile) <(sort mapfile2)
+rm -f expected result mapfile mapfile2
 
 echo "->goalign sample seqs"
 cat > expected <<EOF

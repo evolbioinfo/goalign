@@ -10,6 +10,8 @@ import (
 var renameMap string
 var renamerevert bool
 var renameOutput string
+var renameRegexp string
+var renameReplace string
 
 // renameCmd represents the rename command
 var renameCmd = &cobra.Command{
@@ -26,23 +28,44 @@ If a sequence name does not appear in the map file, it will not be renamed.
 If a name that does not exist appears in the map file, it will not do anything.
 `,
 	Run: func(cmd *cobra.Command, args []string) {
+		var setregex, setreplace bool
+		setregex = cmd.Flags().Changed("regexp")
+		setreplace = cmd.Flags().Changed("replace")
 
 		if renameMap == "none" {
 			io.ExitWithMessage(errors.New("map file is not given"))
 		}
+		if setregex && !setreplace {
+			io.ExitWithMessage(errors.New("--replace must be given with --regexp"))
+		}
 
 		// Read map file
-		namemap, err := readMapFile(renameMap, renamerevert)
-		if err != nil {
-			io.ExitWithMessage(err)
+		var namemap map[string]string
+		var err error
+		if !setregex {
+			if namemap, err = readMapFile(renameMap, renamerevert); err != nil {
+				io.ExitWithMessage(err)
+			}
+		} else {
+			namemap = make(map[string]string)
 		}
 
 		f := openWriteFile(renameOutput)
 		for al := range rootaligns.Achan {
-			al.Rename(namemap)
+			if !setregex {
+				al.Rename(namemap)
+			} else {
+				if err = al.RenameRegexp(renameRegexp, renameReplace, namemap); err != nil {
+					io.ExitWithMessage(err)
+				}
+			}
 			writeAlign(al, f)
 		}
 		f.Close()
+
+		if setregex {
+			writeNameMap(namemap, renameMap)
+		}
 	},
 }
 
@@ -52,4 +75,6 @@ func init() {
 	renameCmd.PersistentFlags().StringVarP(&renameMap, "map-file", "m", "none", "Name Mapping infile")
 	renameCmd.PersistentFlags().BoolVarP(&renamerevert, "revert", "r", false, "Reverse orientation of mapfile")
 	renameCmd.PersistentFlags().StringVarP(&renameOutput, "output", "o", "stdout", "renamed alignment output file")
+	renameCmd.PersistentFlags().StringVarP(&renameRegexp, "regexp", "e", "none", "rename alignment using given regexp")
+	renameCmd.PersistentFlags().StringVarP(&renameReplace, "replace", "b", "none", "replaces regexp matching strings by this string")
 }

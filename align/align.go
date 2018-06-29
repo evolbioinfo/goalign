@@ -46,6 +46,7 @@ type Alignment interface {
 	Recombine(rate float64, lenprop float64)
 	AddGaps(rate, lenprop float64)
 	Rename(namemap map[string]string)
+	RenameRegexp(regex, replace string, namemap map[string]string) error
 	Pssm(log bool, pseudocount float64, normalization int) (pssm map[rune][]float64, err error) // Normalization: PSSM_NORM_NONE, PSSM_NORM_UNIF, PSSM_NORM_DATA
 	Translate(phase int) (transAl *align, err error)                                            // Translates nt sequence if possible
 	TrimNames(size int) (map[string]string, error)
@@ -398,6 +399,20 @@ func (a *align) Rename(namemap map[string]string) {
 		// 	io.PrintMessage("Sequence " + a.seqs[seq].name + " not present in the map file")
 		// }
 	}
+}
+
+// This function renames sequences of the alignment based on the given regex and replace strings
+func (a *align) RenameRegexp(regex, replace string, namemap map[string]string) error {
+	r, err := regexp.Compile(regex)
+	if err != nil {
+		return err
+	}
+	for seq := 0; seq < a.NbSequences(); seq++ {
+		newname := r.ReplaceAllString(a.seqs[seq].name, replace)
+		namemap[a.seqs[seq].name] = newname
+		a.seqs[seq].name = newname
+	}
+	return nil
 }
 
 // Swaps a rate of the sequences together
