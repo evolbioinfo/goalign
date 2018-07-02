@@ -49,7 +49,9 @@ Id -a is given, then names are generated with the pattern "S000<i>".
 			}
 			writeAlign(al, f)
 		}
-		writeNameMap(namemap, trimMapout)
+		if trimMapout != "none" {
+			writeNameMap(namemap, trimMapout)
+		}
 		f.Close()
 	},
 }
