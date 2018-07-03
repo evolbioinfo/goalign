@@ -6,6 +6,7 @@ import (
 	"errors"
 	"io"
 	"strconv"
+	"strings"
 
 	alignio "github.com/fredericlemoine/goalign/io"
 )
@@ -137,6 +138,6 @@ func (s *Scanner) scanIdent() (tok Token, lit string) {
 	case "CLUSTAL":
 		return CLUSTAL, buf.String()
 	default:
-		return IDENT, buf.String()
+		return IDENTIFIER, buf.String()
 	}
 }

@@ -1,22 +1,17 @@
 package clustal
 
 import (
-	"bytes"
 	"errors"
 	"fmt"
 	"io"
-	"strconv"
-	"strings"
 
 	"github.com/fredericlemoine/goalign/align"
-	alignio "github.com/fredericlemoine/goalign/io"
 )
 
 // Parser represents a parser.
 type Parser struct {
-	s      *Scanner
-	strict bool
-	buf    struct {
+	s   *Scanner
+	buf struct {
 		tok Token  // last read token
 		lit string // last read literal
 		n   int    // buffer size (max=1)
@@ -24,8 +19,8 @@ type Parser struct {
 }
 
 // NewParser returns a new instance of Parser.
-func NewParser(r io.Reader, strict bool) *Parser {
-	return &Parser{s: NewScanner(r), strict: strict}
+func NewParser(r io.Reader) *Parser {
+	return &Parser{s: NewScanner(r)}
 }
 
 // scan returns the next token from the underlying scanner.
@@ -38,7 +33,7 @@ func (p *Parser) scan() (tok Token, lit string) {
 	}
 
 	// Otherwise read the next token from the scanner.
-	tok, lit = p.s.Scan(considerWS)
+	tok, lit = p.s.Scan()
 
 	// Save it to the buffer in case we unscan later.
 	p.buf.tok, p.buf.lit = tok, lit
@@ -64,10 +59,8 @@ func (p *Parser) unscan() { p.buf.n = 1 }
 
 // Parse parses a clustal alignment
 func (p *Parser) Parse() (align.Alignment, error) {
-	var nbseq int64 = 0
-	var lenseq int64 = 0
+	var nbseq int = 0
 	var al align.Alignment
-	var err error
 	var nameseqmap map[string]string = make(map[string]string)
 
 	tok, lit := p.scan()
@@ -79,8 +72,7 @@ func (p *Parser) Parse() (align.Alignment, error) {
 	}
 
 	var name, seq string
-	var nbseqs = 0
-	var currentnbseqs = 0
+	var currentnbseqs int = 0
 	var nblocks = 1
 	for tok != EOF {
 		// Scan sequence name
@@ -90,13 +82,13 @@ func (p *Parser) Parse() (align.Alignment, error) {
 			if currentnbseqs == 0 {
 				return nil, errors.New("There should not be a white space here, only at last line of blocks")
 			}
-			if nbseqs != 0 && currentnbseqs != nbseqs {
+			if nbseq != 0 && currentnbseqs != nbseq {
 				return nil, errors.New(
 					fmt.Sprintf("Conservation line: Sequence block nb %d has different number of sequence (%d)",
 						nblocks, currentnbseqs))
 			}
 			for tok != ENDOFLINE && tok != EOF {
-				tok, lit = p.scanWithEOL()
+				tok, lit = p.scan()
 			}
 			if tok != ENDOFLINE {
 				return nil, errors.New("There should be a new line after degree of conservation line")
@@ -112,12 +104,12 @@ func (p *Parser) Parse() (align.Alignment, error) {
 			if tok == EOF {
 				break
 			}
-			if nbseqs != 0 && currentnbseqs != nbseqs {
+			if nbseq != 0 && currentnbseqs != nbseq {
 				return nil, errors.New(
 					fmt.Sprintf("Sequence block nb %d has different number of sequence (%d)",
 						nblocks, currentnbseqs))
 			}
-			nbseqs = currentnbseqs
+			nbseq = currentnbseqs
 			nblocks++
 			currentnbseqs = 0
 		}
@@ -136,6 +128,7 @@ func (p *Parser) Parse() (align.Alignment, error) {
 			return nil, errors.New("We expect a sequence here")
 		}
 		seq = lit
+		currentnbseqs++
 		tok, lit = p.scan()
 		if tok == NUMERIC {
 			// It is a cumulative count of residues
@@ -152,11 +145,10 @@ func (p *Parser) Parse() (align.Alignment, error) {
 		}
 	}
 
-	if length(nameseqmap) == 0 {
+	if len(nameseqmap) == 0 {
 		return nil, errors.New("No sequences in the alignment")
 	}
 
-	var alphabet int = -1
 	for k, v := range nameseqmap {
 		if al == nil {
 			al = align.NewAlign(align.DetectAlphabet(v))
