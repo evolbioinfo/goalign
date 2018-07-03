@@ -15,9 +15,10 @@ const (
 	PSSM_NORM_UNIF = 3 // Normalization by uniform frequency
 	PSSM_NORM_LOGO = 4 // Normalization like LOGO : v(site)=freq*(log2(alphabet)-H(site)-pseudocount
 
-	FORMAT_FASTA  = 0
-	FORMAT_PHYLIP = 1
-	FORMAT_NEXUS  = 2
+	FORMAT_FASTA   = 0
+	FORMAT_PHYLIP  = 1
+	FORMAT_NEXUS   = 2
+	FORMAT_CLUSTAL = 3
 )
 
 var stdaminoacid = []rune{'A', 'R', 'N', 'D', 'C', 'Q', 'E', 'G', 'H', 'I', 'L', 'K', 'M', 'F', 'P', 'S', 'T', 'W', 'Y', 'V'}

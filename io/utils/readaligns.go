@@ -5,6 +5,7 @@ import (
 	"io"
 
 	"github.com/fredericlemoine/goalign/align"
+	"github.com/fredericlemoine/goalign/io/clustal"
 	"github.com/fredericlemoine/goalign/io/fasta"
 	"github.com/fredericlemoine/goalign/io/nexus"
 	"github.com/fredericlemoine/goalign/io/phylip"
@@ -42,12 +43,16 @@ func ParseAlignmentAuto(r *bufio.Reader, rootinputstrict bool) (al align.Alignme
 			return
 		}
 		format = align.FORMAT_NEXUS
+	} else if firstbyte == 'C' {
+		if al, err = clustal.NewParser(r).Parse(); err != nil {
+			return
+		}
+		format = align.FORMAT_CLUSTAL
 	} else {
 		// Finally test Phylip
 		format = align.FORMAT_PHYLIP
 		al, err = phylip.NewParser(r, rootinputstrict).Parse()
 	}
-
 	return
 }
 
@@ -90,6 +95,16 @@ func ParseMultiAlignmentsAuto(f io.Closer, r *bufio.Reader, rootinputstrict bool
 			return
 		}
 		format = align.FORMAT_NEXUS
+		alchan.Achan <- al
+		if f != nil {
+			f.Close()
+		}
+		close(alchan.Achan)
+	} else if firstbyte == 'C' {
+		if al, err = clustal.NewParser(r).Parse(); err != nil {
+			return
+		}
+		format = align.FORMAT_CLUSTAL
 		alchan.Achan <- al
 		if f != nil {
 			f.Close()

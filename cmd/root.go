@@ -12,6 +12,7 @@ import (
 
 	"github.com/fredericlemoine/goalign/align"
 	"github.com/fredericlemoine/goalign/io"
+	"github.com/fredericlemoine/goalign/io/clustal"
 	"github.com/fredericlemoine/goalign/io/fasta"
 	"github.com/fredericlemoine/goalign/io/nexus"
 	"github.com/fredericlemoine/goalign/io/paml"
@@ -25,6 +26,7 @@ var infile string
 var rootaligns align.AlignChannel
 var rootphylip bool
 var rootnexus bool
+var rootclustal bool
 var rootcpus int
 var rootinputstrict bool = false
 var rootoutputstrict bool = false
@@ -93,6 +95,8 @@ func readalign(file string) align.AlignChannel {
 			rootphylip = true
 		} else if format == align.FORMAT_NEXUS {
 			rootnexus = true
+		} else if format == align.FORMAT_CLUSTAL {
+			rootclustal = true
 		}
 	} else {
 		alchan.Achan = make(chan align.Alignment, 15)
@@ -106,6 +110,14 @@ func readalign(file string) align.AlignChannel {
 		} else if rootnexus {
 			var al align.Alignment
 			if al, err = nexus.NewParser(r).Parse(); err != nil {
+				io.ExitWithMessage(err)
+			}
+			alchan.Achan <- al
+			fi.Close()
+			close(alchan.Achan)
+		} else if rootclustal {
+			var al align.Alignment
+			if al, err = clustal.NewParser(r).Parse(); err != nil {
 				io.ExitWithMessage(err)
 			}
 			alchan.Achan <- al
@@ -140,6 +152,7 @@ func init() {
 	RootCmd.PersistentFlags().StringVarP(&infile, "align", "i", "stdin", "Alignment input file")
 	RootCmd.PersistentFlags().BoolVarP(&rootphylip, "phylip", "p", false, "Alignment is in phylip? default fasta")
 	RootCmd.PersistentFlags().BoolVarP(&rootnexus, "nexus", "x", false, "Alignment is in nexus? default fasta")
+	RootCmd.PersistentFlags().BoolVarP(&rootclustal, "clustal", "c", false, "Alignment is in clustal? default fasta")
 
 	RootCmd.PersistentFlags().IntVarP(&rootcpus, "threads", "t", 1, "Number of threads")
 	RootCmd.PersistentFlags().BoolVar(&rootinputstrict, "input-strict", false, "Strict phylip input format (only used with -p)")
