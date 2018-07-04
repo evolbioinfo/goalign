@@ -1295,7 +1295,7 @@ func (a *align) SiteConservation(position int) (conservation int, err error) {
 				}
 			}
 		}
-		if prevchar != ';' && sequence[position] != prevchar {
+		if (prevchar != ';' && sequence[position] != prevchar) || sequence[position] == GAP {
 			same = false
 		}
 		prevchar = sequence[position]

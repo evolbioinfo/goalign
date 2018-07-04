@@ -114,7 +114,7 @@ func (p *Parser) Parse() (align.Alignment, error) {
 			currentnbseqs = 0
 		}
 
-		if tok != IDENTIFIER {
+		if tok != IDENTIFIER && tok != NUMERIC {
 			return nil, errors.New("We expect a sequence identifier here")
 		}
 		name = lit
