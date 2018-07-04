@@ -144,6 +144,14 @@ func (p *Parser) Parse() (align.Alignment, error) {
 			return nil, errors.New("We expect ENDOFLINE after sequence in a block")
 		}
 		if tmpseq, ok := nameseqmap[name]; !ok {
+			if nblocks > 1 {
+				return nil, errors.New(
+					fmt.Sprintf(
+						"There should not be a new sequence name (%s) found in block nb %d",
+						name,
+						nblocks,
+					))
+			}
 			nameseqmap[name] = seq
 			seqnames = append(seqnames, name)
 		} else {
@@ -162,8 +170,11 @@ func (p *Parser) Parse() (align.Alignment, error) {
 			if al == nil {
 				al = align.NewAlign(align.DetectAlphabet(s))
 			}
-			al.AddSequence(n, s, "")
+			if err := al.AddSequence(n, s, ""); err != nil {
+				return nil, err
+			}
 		}
 	}
+
 	return al, nil
 }
