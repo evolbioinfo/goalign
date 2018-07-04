@@ -82,6 +82,7 @@ You may go to the [doc](docs/index.md) for a more detailed documentation of the 
   * fasta
   * nexus
   * paml
+  * clustal
   * phylip
   * tnt
 * rename:      Rename sequences of the input alignment, given a map file
@@ -125,6 +126,10 @@ goalign rename -i align_rename.fa -m map -r
 * Reformat a fasta alignment to phylip
 ```
 goalign random | goalign reformat phylip
+```
+* Reformat a clustal alignment to fasta
+```
+goalign random --amino-acids --clustal --nb-seqs 2 | goalign reformat fasta --clustal
 ```
 * Reformat a phylip alignment to fasta
 ```
