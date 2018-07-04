@@ -57,10 +57,12 @@ Input alignment file formats:
 1. Fasta (default)
 2. Phylip (-p option)
 3. Nexus (-x option)
+4. Clustal (-u option)
 4. Auto detect (--auto-detect option). In that case, it will test input formats in the following order:
     1. Fasta
     2. Nexus
     3. Phylip
+    4. Clustal
     If none of these formats is recognized, then will exit with an error 
 
 Please note that in --auto-detect mode, phylip format is considered as not strict!
@@ -157,7 +159,7 @@ func init() {
 	RootCmd.PersistentFlags().BoolVar(&rootinputstrict, "input-strict", false, "Strict phylip input format (only used with -p)")
 	RootCmd.PersistentFlags().BoolVar(&rootoutputstrict, "output-strict", false, "Strict phylip output format (only used with -p)")
 
-	RootCmd.PersistentFlags().BoolVar(&rootAutoDetectInputFormat, "auto-detect", false, "Auto detects input format (overrides -p and -x)")
+	RootCmd.PersistentFlags().BoolVar(&rootAutoDetectInputFormat, "auto-detect", false, "Auto detects input format (overrides -p, -x and -u)")
 
 	RootCmd.SetHelpTemplate(helptemplate)
 }

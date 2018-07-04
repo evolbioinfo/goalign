@@ -137,6 +137,8 @@ func (s *Scanner) scanIdent() (tok Token, lit string) {
 	switch strings.ToUpper(buf.String()) {
 	case "CLUSTAL":
 		return CLUSTAL, buf.String()
+	case "CLUSTALW":
+		return CLUSTAL, buf.String()
 	default:
 		return IDENTIFIER, buf.String()
 	}
