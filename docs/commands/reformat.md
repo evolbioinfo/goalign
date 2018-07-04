@@ -17,6 +17,7 @@ Usage:
   goalign reformat [command]
 
 Available Commands:
+  clustal     Reformats an input alignment into Clustal
   fasta       Reformats an input alignment into Fasta
   nexus       Reformats an input alignment into nexus
   phylip      Reformats an input alignment into Phylip
@@ -30,10 +31,13 @@ Flags:
   -s, --strict          If it is strict phylip format
 
 Global Flags:
-  -i, --align string   Alignment input file (default "stdin")
-  -p, --phylip         Alignment is in phylip? False=Fasta
-  --input-strict       Strict phylip input format (only used with -p)
-  --output-strict      Strict phylip output format  (only used with -p)
+  -i, --align string    Alignment input file (default "stdin")
+      --auto-detect     Auto detects input format (overrides -p, -x and -u)
+  -u, --clustal         Alignment is in clustal? default fasta
+      --input-strict    Strict phylip input format (only used with -p)
+  -x, --nexus           Alignment is in nexus? default fasta
+      --output-strict   Strict phylip output format (only used with -p)
+  -p, --phylip          Alignment is in phylip? default fasta
 ```
 If `--clean-names` option is given, special characters in sequence names (that may conflict with newick format after tree inference) are replaced by `-`.
 

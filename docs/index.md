@@ -4,7 +4,7 @@
 ## Introduction
 Goalign is a set of command line tools to manipulate multiple alignments. It is implemented in [Go](https://golang.org/) language.
 
-The goal is to handle multiple alignments in different input and output formats (Fasta, Phylip and Nexus) through several basic commands. Each command may print result (usually an alignment) in the standard output, and thus can be piped to the standard input of the next Goalign command.
+The goal is to handle multiple alignments in different input and output formats (Fasta, Phylip, Clustal and Nexus) through several basic commands. Each command may print result (usually an alignment) in the standard output, and thus can be piped to the standard input of the next Goalign command.
 
 ## Installation
 ### Binaries
@@ -36,15 +36,17 @@ Almost all commands can have the following arguments:
 
 * `-p`: input is in phylip format (default fasta). Output format will also be phylip in this case;
 * `-x`: input is in nexus format (default fasta), lower priority than `-p`. Output format will also be nexus in this case;
+* `-u`: input is in clustan format (default fasta), lower priority than `-p` and `-x`. Output format will also be clustal in this case;
 * `--input-strict`: if `-p` is also given, then input is considered phylip strict, i.e:
     * sequence names are maximum 10 character long. goalign removes spaces in sequence names;
 	* sequence starts at position 11 (just after sequence name).
 * `--output-strict`: if `-p` is also given, then output alignments are written in strict phylip format, i.e:
     * sequence names are maximum 10 character long, otherwise they are truncated.
-* `--auto-detect` (overrides -p and -x): It will test input formats in the following order:
+* `--auto-detect` (overrides `-p`, `-u` and `-x`): It will test input formats in the following order:
     1. Fasta
     2. Nexus
-    3. Phylip
+	3. Clustal
+    4. Phylip
     If none of these formats is recognized, then will exit with an error. Please also note that in `--auto-detect` mode, phylip format is considered as not strict.
 
 Command                                                     | Subcommand |        Description
@@ -69,6 +71,7 @@ Command                                                     | Subcommand |      
 --                                                          | snvs       | Adds substitutions uniformly in an input alignment
 [random](commands/random.md) ([api](api/random.md))         |            | Generate random sequences
 [reformat](commands/reformat.md) ([api](api/reformat.md))   |            | Reformats input alignment into phylip of fasta format
+--                                                          | clustal    | Reformats an input alignment into Clustal
 --                                                          | fasta      | Reformats an input alignment into Fasta
 --                                                          | nexus      | Reformats an input alignment into nexus
 --                                                          | paml       | Reformats an input alignment into PAML input format

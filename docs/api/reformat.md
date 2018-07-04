@@ -19,6 +19,7 @@ import (
 	"github.com/fredericlemoine/goalign/io/nexus"
 	"github.com/fredericlemoine/goalign/io/paml"
 	"github.com/fredericlemoine/goalign/io/phylip"
+	"github.com/fredericlemoine/goalign/io/clustal"
 	"github.com/fredericlemoine/goalign/io/utils"
 )
 
@@ -49,5 +50,7 @@ func main() {
 	fmt.Println(nexus.WriteAlignment(al))
 	/* Printing PAML format alignment */
 	fmt.Println(paml.WriteAlignment(al))
+    /* Printing Clustal format alignment */
+	fmt.Println(clustal.WriteAlignment(al))
 }
 ```
