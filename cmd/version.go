@@ -3,6 +3,7 @@ package cmd
 import (
 	"fmt"
 
+	"github.com/fredericlemoine/goalign/version"
 	"github.com/spf13/cobra"
 )
 
@@ -14,7 +15,7 @@ var versionCmd = &cobra.Command{
 	PersistentPreRun: func(cmd *cobra.Command, args []string) {
 	},
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println(Version)
+		fmt.Println(version.Version)
 	},
 }
 

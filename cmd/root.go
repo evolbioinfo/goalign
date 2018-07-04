@@ -18,6 +18,7 @@ import (
 	"github.com/fredericlemoine/goalign/io/paml"
 	"github.com/fredericlemoine/goalign/io/phylip"
 	"github.com/fredericlemoine/goalign/io/utils"
+	"github.com/fredericlemoine/goalign/version"
 	"github.com/spf13/cobra"
 )
 
@@ -32,11 +33,9 @@ var rootinputstrict bool = false
 var rootoutputstrict bool = false
 var rootAutoDetectInputFormat bool
 
-var Version string = "Unset"
-
 var helptemplate string = `{{with or .Long .Short }}{{. | trim}}
 
-{{end}}Version: ` + Version + `
+{{end}}Version: ` + version.Version + `
 
 {{if or .Runnable .HasSubCommands}}{{.UsageString}}{{end}}
 `
