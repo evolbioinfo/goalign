@@ -410,7 +410,7 @@ func (p *Parser) parseData() (names []string, sequences map[string]string, nchar
 			for !stopmatrix {
 				tok2, lit2 := p.scanIgnoreWhitespace()
 				switch tok2 {
-				case IDENT:
+				case IDENT, NUMERIC:
 					// We remove whitespaces in sequences if any
 					// and take into account possibly interleaved
 					// sequences
