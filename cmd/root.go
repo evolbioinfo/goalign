@@ -172,6 +172,8 @@ func writeAlign(al align.Alignment, f *os.File) {
 		f.WriteString(phylip.WriteAlignment(al, rootoutputstrict))
 	} else if rootnexus {
 		f.WriteString(nexus.WriteAlignment(al))
+	} else if rootclustal {
+		f.WriteString(clustal.WriteAlignment(al))
 	} else {
 		f.WriteString(fasta.WriteAlignment(al))
 	}
@@ -187,6 +189,10 @@ func writeAlignPhylip(al align.Alignment, f *os.File) {
 
 func writeAlignNexus(al align.Alignment, f *os.File) {
 	f.WriteString(nexus.WriteAlignment(al))
+}
+
+func writeAlignClustal(al align.Alignment, f *os.File) {
+	f.WriteString(clustal.WriteAlignment(al))
 }
 
 func writeUnAlignFasta(al align.Alignment, f *os.File) {

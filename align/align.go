@@ -60,6 +60,7 @@ type Alignment interface {
 	MaxCharStats() ([]rune, []int)
 	Alphabet() int
 	AlphabetCharacters() []rune
+	SiteConservation(position int) (int, error)    // If the site is conserved:
 	SubAlign(start, length int) (Alignment, error) // Extract a subalignment from this alignment
 	RandSubAlign(length int) (Alignment, error)    // Extract a random subalignment with given length from this alignment
 	Clone() (Alignment, error)
@@ -1253,4 +1254,69 @@ func (a *align) Translate(phase int) (transAl *align, err error) {
 		}
 	})
 	return transAl, err
+}
+
+// Compute conservation status of a given site of the alignment
+//
+// If position is outside the alignment, it returns an error
+//
+// Possible values are:
+//
+// - align.POSITION_IDENTICAL
+// - align.POSITION_CONSERVED
+// - align.POSITION_SEMI_CONSERVED
+// - align.POSITION_NOT_CONSERVED
+func (a *align) SiteConservation(position int) (conservation int, err error) {
+	conservation = POSITION_NOT_CONSERVED
+
+	if position < 0 || position >= a.Length() {
+		err = errors.New("Site conservation: Position is not in sequence length range")
+		return
+	}
+
+	tmpstronggroups := make([]int, len(strongGroups))
+	tmpweakgroups := make([]int, len(weakGroups))
+	same := true
+	prevchar := ';'
+	a.IterateChar(func(name string, sequence []rune) {
+		if a.Alphabet() == AMINOACIDS {
+			for i, g := range strongGroups {
+				for _, aa := range g {
+					if aa == unicode.ToUpper(sequence[position]) {
+						tmpstronggroups[i]++
+					}
+				}
+			}
+			for i, g := range weakGroups {
+				for _, aa := range g {
+					if aa == unicode.ToUpper(sequence[position]) {
+						tmpweakgroups[i]++
+					}
+				}
+			}
+		}
+		if prevchar != ';' && sequence[position] != prevchar {
+			same = false
+		}
+		prevchar = sequence[position]
+	})
+
+	if same {
+		conservation = POSITION_IDENTICAL
+	} else {
+		for _, nb := range tmpstronggroups {
+			if nb == a.NbSequences() {
+				conservation = POSITION_CONSERVED
+			}
+		}
+		if conservation != POSITION_CONSERVED {
+			for _, nb := range tmpweakgroups {
+				if nb == a.NbSequences() {
+					conservation = POSITION_SEMI_CONSERVED
+				}
+			}
+		}
+	}
+
+	return
 }

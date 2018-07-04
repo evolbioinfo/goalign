@@ -62,7 +62,7 @@ func (p *Parser) Parse() (align.Alignment, error) {
 	var nbseq int = 0
 	var al align.Alignment
 	var nameseqmap map[string]string = make(map[string]string)
-
+	var seqnames []string = make([]string, 0)
 	tok, lit := p.scan()
 	if tok != CLUSTAL {
 		return nil, errors.New("Clustal alignment file must start with 'CLUSTAL'")
@@ -130,16 +130,22 @@ func (p *Parser) Parse() (align.Alignment, error) {
 		seq = lit
 		currentnbseqs++
 		tok, lit = p.scan()
-		if tok == NUMERIC {
-			// It is a cumulative count of residues
-			// skip
+		if tok == WS {
 			tok, lit = p.scan()
+			if tok == NUMERIC {
+				// It is a cumulative count of residues
+				// skip
+				tok, lit = p.scan()
+			} else {
+				return nil, errors.New("We expect a current length after sequence + whitespace")
+			}
 		}
 		if tok != ENDOFLINE {
 			return nil, errors.New("We expect ENDOFLINE after sequence in a block")
 		}
 		if tmpseq, ok := nameseqmap[name]; !ok {
 			nameseqmap[name] = seq
+			seqnames = append(seqnames, name)
 		} else {
 			nameseqmap[name] = tmpseq + seq
 		}
@@ -149,11 +155,15 @@ func (p *Parser) Parse() (align.Alignment, error) {
 		return nil, errors.New("No sequences in the alignment")
 	}
 
-	for k, v := range nameseqmap {
-		if al == nil {
-			al = align.NewAlign(align.DetectAlphabet(v))
+	for _, n := range seqnames {
+		if s, ok := nameseqmap[n]; !ok {
+			return nil, errors.New("Error in clustal alignment parsing: no sequence with name " + n)
+		} else {
+			if al == nil {
+				al = align.NewAlign(align.DetectAlphabet(s))
+			}
+			al.AddSequence(n, s, "")
 		}
-		al.AddSequence(k, v, "")
 	}
 	return al, nil
 }
