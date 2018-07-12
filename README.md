@@ -100,7 +100,7 @@ source '$HOME/.goalign/completion.bash.inc'
 
 ```
 # Once
-source <(kubectl completion zsh)
+source <(goalign completion zsh)
 # Permanently
 goalign completion zsh > "${fpath[1]}/_goalign"
 ```
