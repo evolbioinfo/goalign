@@ -4,7 +4,19 @@
 
 Goalign is a set of command line tools to manipulate multiple alignments. It is implemented in [Go](https://golang.org/) language.
 
-See also [Gotree](https://github.com/fredericlemoine/gotree) for handling phylogenetic trees.
+Goalign aims to handle multiple alignments in [Phylip](https://en.wikipedia.org/wiki/PHYLIP), [Fasta](https://en.wikipedia.org/wiki/FASTA_format), [Nexus](https://en.wikipedia.org/wiki/Nexus_file), and [Clustal](https://en.wikipedia.org/wiki/Clustal) formats, through several basic commands. Each command may print result (an alignment for example) in the standard output, and thus can be piped to the standard input of the next goalign command.
+
+Input files may be local or remote files:
+
+- If file name is of the form `http(s)://<URL>`, the file is download from the given URL.
+- Otherwise, the file is considered local.
+
+Gzipped input files (`.gz` extension) are supported.
+
+
+**Note**:
+
+TO manipulate phylogenetic trees, See also [Gotree](https://github.com/fredericlemoine/gotree).
 
 ## Installation
 ### Easy way: Binaries
