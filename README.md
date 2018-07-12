@@ -73,10 +73,13 @@ The `goalign` executable should be located in the `$GOPATH/bin` folder.
 ### Bash
 * Install bash-completion:
 ```
-# MacOS
+# MacOS brew
 brew install bash-completion
-# Linux
+# MacOS port
+port install bash-completion
+# Linux /centos
 yum install bash-completion -y
+# Lunix /ubuntu
 apt-get install bash-completion
 ```
 
