@@ -22,8 +22,16 @@ Examples (Largely inspired from kubectl command):
   # Then add auto completion commands
   goalign completion bash > $(brew --prefix)/etc/bash_completion.d/goalign
 
-  
-  # Installing bash completion on Linux
+  # bash completion on macOS using macports
+  ## If running Bash 3.2 included with macOS
+  Change path to bash in Terminal preferences/path to shell:
+  /opt/local/bin/bash -l
+  ## Then in stall bash-completion
+  sudo port install bash-completion
+  # Finally add auto completion commands
+  goalign completion bash > $(brew --prefix)/etc/bash_completion.d/goalign
+
+  # bash completion on Linux
   ## Load the goalign completion code for bash into the current shell
   source <(goalign completion bash)
   ## Write bash completion code to a file and source if from .bash_profile

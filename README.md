@@ -73,10 +73,17 @@ The `goalign` executable should be located in the `$GOPATH/bin` folder.
 ### Bash
 * Install bash-completion:
 ```
-# MacOS
+# MacOS brew
 brew install bash-completion
-# Linux
+
+# MacOS port (do not forget to change
+# the path to bash command in terminal
+# preferences to /opt/local/bin/bash -l)
+sudo port install bash-completion
+
+# Centos
 yum install bash-completion -y
+# Ubuntu
 apt-get install bash-completion
 ```
 
@@ -97,7 +104,7 @@ source '$HOME/.goalign/completion.bash.inc'
 
 ```
 # Once
-source <(kubectl completion zsh)
+source <(goalign completion zsh)
 # Permanently
 goalign completion zsh > "${fpath[1]}/_goalign"
 ```
