@@ -51,7 +51,7 @@ conda install -c bioconda goalign
 ```
 
 ### From sources
-In order to compile Goalign, you must first [download](https://golang.org/dl/) and [install](https://golang.org/doc/install) Go on your system.
+In order to compile Goalign, you must first [download](https://golang.org/dl/) and [install](https://golang.org/doc/install) Go on your system ($>=1.10$).
 
 Then you just have to type :
 ```
