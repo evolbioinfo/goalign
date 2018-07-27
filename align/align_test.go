@@ -288,7 +288,7 @@ func TestClone2(t *testing.T) {
 			t.Error(fmt.Sprintf("Clone length is different from original length : %d != %d", len(sequence), len(s2)))
 		}
 		if name != n2 {
-			t.Error(fmt.Sprintf("Clone and original sequences at position %d have different names : %s != %s", name, n2))
+			t.Error(fmt.Sprintf("Clone and original sequences at position %d have different names : %s != %s", i, name, n2))
 		}
 		for j, c := range sequence {
 			if c != s2[j] {
@@ -600,7 +600,7 @@ func TestConcat(t *testing.T) {
 		s, _ := acopy.GetSequence(name)
 		s2, _ := a2.GetSequence(name)
 		if string(sequence) != s+s2 {
-			t.Error(fmt.Sprintf("Concatenated sequence %d is not correct"))
+			t.Error(fmt.Sprintf("Concatenated sequence is not correct"))
 		}
 	})
 }

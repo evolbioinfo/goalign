@@ -27,7 +27,7 @@ func isNL(ch rune) bool {
 }
 
 func isIdent(ch rune) bool {
-	return ch != '\n' && ch != ' ' && ch != '\n' && ch != '\r'
+	return ch != '\n' && ch != ' ' && ch != '\r'
 }
 
 func isWhitespace(ch rune) bool {

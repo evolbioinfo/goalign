@@ -20,16 +20,16 @@ func TestParse(t *testing.T) {
 		t.Error(err)
 	}
 	if align.Length() != 34 {
-		t.Error("Alignment length is not 34" + fmt.Sprintf("%d", align.Length()))
+		t.Errorf("Alignment length is not 34 %d", align.Length())
 	}
 	if align.NbSequences() != 1 {
-		t.Error("There is not 1 sequence in the alignment" + fmt.Sprintf("%d", align.NbSequences()))
+		t.Errorf("There is not 1 sequence in the alignment %d", align.NbSequences())
 	}
 
 	_, err2 := NewParser(strings.NewReader(fastastring2)).Parse()
 
 	if err2 == nil {
-		t.Error("There should be an error while parsing fastastring2")
+		t.Errorf("There should be an error while parsing fastastring2")
 	}
 
 	align3, err3 := NewParser(strings.NewReader(fastastring3)).Parse()
@@ -39,25 +39,24 @@ func TestParse(t *testing.T) {
 	}
 
 	if align3.NbSequences() != 2 {
-		t.Error("There are not 2 sequence in the alignment" + fmt.Sprintf("%d", align3.NbSequences()))
+		t.Errorf("There are not 2 sequence in the alignment" + fmt.Sprintf("%d", align3.NbSequences()))
 	}
 
 	_, err4 := NewParser(strings.NewReader(fastastring4)).Parse()
 
 	if err4 == nil {
-		t.Error("There should be an error while parsing fastastring4, which has different length sequences")
+		t.Errorf("There should be an error while parsing fastastring4, which has different length sequences")
 	}
 
 	var fasta bytes.Buffer
 	for i := 0; i < 1000; i++ {
-		fasta.WriteString(">s" + fmt.Sprint("%d", i) + "\n")
-		fasta.WriteString(seq)
+		fasta.WriteString(fmt.Sprintf(">s%d\n%s", i, seq))
 	}
 	align5, err5 := NewParser(strings.NewReader(fasta.String())).Parse()
 	if err5 != nil {
 		t.Error(err5)
 	}
 	if align5.NbSequences() != 1000 {
-		t.Error("Alignment has not 1000 sequences : " + fmt.Sprintf("%d", align5.NbSequences()))
+		t.Errorf("Alignment has not 1000 sequences : %d", align5.NbSequences())
 	}
 }

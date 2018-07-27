@@ -767,7 +767,7 @@ func (a *align) Rarefy(nb int, counts map[string]int) (Alignment, error) {
 		for idk, k := range tmpcountskeys {
 			v, ok := tmpcounts[k]
 			if !ok {
-				return nil, errors.New(fmt.Sprintf("No sequence named %s is present in the tmp count map"))
+				return nil, errors.New(fmt.Sprintf("No sequence named %s is present in the tmp count map", k))
 			}
 			proba += float64(v) / float64(total)
 			if unif < proba {
