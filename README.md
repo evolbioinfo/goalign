@@ -1,6 +1,7 @@
 # Goalign
 [![build](https://travis-ci.org/fredericlemoine/goalign.svg?branch=master)](https://travis-ci.org/fredericlemoine/goalign) [![Anaconda-Server Badge](https://anaconda.org/bioconda/goalign/badges/installer/conda.svg)](https://anaconda.org/bioconda/goalign) [![Docker hub](https://img.shields.io/docker/build/evolbioinfo/goalign.svg)](https://hub.docker.com/r/evolbioinfo/goalign/builds/)
 
+![Goalign Logo](images/logo.svg)
 
 Goalign is a set of command line tools to manipulate multiple alignments. It is implemented in [Go](https://golang.org/) language.
 
