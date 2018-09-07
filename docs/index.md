@@ -64,6 +64,7 @@ Command                                                     | Subcommand |      
 --                                                          | pssm       | Computes and prints a Position specific scoring matrix
 [concat](commands/concat.md) ([api](api/concat.md))         |            | Concatenates a set of alignment
 [completion](commands/completion.md)                        |            | Generates auto-completion commands for bash or zsh
+[dedup](commands/dedup.md) ([api](api/dedup.md))            |            | Deduplicate/Remove identical sequences 
 [divide](commands/divide.md) ([api](api/divide.md))         |            | Divide an input alignment in several output files
 [draw](commands/draw.md) ([api](api/draw.md))               |            | Draws an input alignment
 --                                                          | biojs      | Displays an input alignment in an html file using biojs
