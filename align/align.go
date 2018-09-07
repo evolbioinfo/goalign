@@ -64,6 +64,7 @@ type Alignment interface {
 	SubAlign(start, length int) (Alignment, error) // Extract a subalignment from this alignment
 	RandSubAlign(length int) (Alignment, error)    // Extract a random subalignment with given length from this alignment
 	Clone() (Alignment, error)
+	Deduplicate() (Alignment, error)
 }
 
 type align struct {
@@ -1318,5 +1319,27 @@ func (a *align) SiteConservation(position int) (conservation int, err error) {
 		}
 	}
 
+	return
+}
+
+// This function removes sequences that are duplicates of other
+// It keeps one copy of each sequence, with the name of the first
+// found.
+//
+// It does not modifies input alignment but
+// It returns a new alignement without duplicates
+func (a *align) Deduplicate() (out Alignment, err error) {
+	seqs := make(map[string]bool)
+	out = NewAlign(a.Alphabet())
+	for _, seq := range a.seqs {
+		s := string(seq.sequence)
+		_, ok := seqs[s]
+		if !ok {
+			if err = out.AddSequence(seq.name, s, seq.comment); err != nil {
+				return
+			}
+			seqs[s] = true
+		}
+	}
 	return
 }

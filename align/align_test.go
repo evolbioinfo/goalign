@@ -604,3 +604,34 @@ func TestConcat(t *testing.T) {
 		}
 	})
 }
+
+func TestDedup(t *testing.T) {
+	var err error
+	var a, a2 Alignment
+
+	a = NewAlign(NUCLEOTIDS)
+	a.AddSequence("A", "ACGT", "")
+	a.AddSequence("B", "ACGG", "")
+	a.AddSequence("C", "ACGT", "")
+	a.AddSequence("C", "ACGT", "")
+	a.AddSequence("D", "ACGT", "")
+
+	if a2, err = a.Deduplicate(); err != nil {
+		t.Error(err)
+	}
+
+	if a.NbSequences() != 5 {
+		t.Error("There should be 5 sequences before deduplicaion")
+	}
+
+	if a2.NbSequences() != 2 {
+		t.Error("There should be 2 sequences in the deduplicated alignment")
+	}
+
+	if a2, err = a2.Deduplicate(); err != nil {
+		t.Error(err)
+	}
+	if a2.NbSequences() != 2 {
+		t.Error("There should be 2 sequences in the de-deduplicated alignment")
+	}
+}

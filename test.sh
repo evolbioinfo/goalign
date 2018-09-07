@@ -1687,3 +1687,43 @@ EOF
 goalign translate -i input --phase 0 -o result
 diff expected result
 rm -f input expected result
+
+echo "->goalign dedup"
+cat > input <<EOF
+  5   6
+1 AAAAAA
+2 CCCCCC
+3 GGGGGG
+4 GGGGGG
+4 GGGGGG
+EOF
+cat > expected <<EOF
+   3   6
+1  AAAAAA
+2  CCCCCC
+3  GGGGGG
+EOF
+goalign dedup -i input -o result -p
+diff expected result
+rm -f input expected result
+
+echo "->goalign dedup /2"
+cat > input <<EOF
+   6   6
+3  GGGGGG
+1  AAAAAA
+1  AAAAAC
+2  CCCCCC
+4  GGGGGG
+4  GGGGGG
+EOF
+cat > expected <<EOF
+   4   6
+3  GGGGGG
+1  AAAAAA
+1_0001  AAAAAC
+2  CCCCCC
+EOF
+goalign dedup -i input -o result -p
+diff expected result
+rm -f input expected result

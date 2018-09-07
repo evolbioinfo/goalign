@@ -126,6 +126,7 @@ You may go to the [doc](docs/index.md) for a more detailed documentation of the 
   * entropy: compute entropy of alignment sites
   * pssm: compute position-specific scoring matrix
 * concat:      Concatenates several alignments
+* dedup:       Remove sequences that have the same sequence
 * divide:      Divide an input alignment in several output files (one per alignment)
 * draw:   Draw alignments
   * biojs:     Display an input alignment in an html file using [BioJS](http://msa.biojs.net/)
