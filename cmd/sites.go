@@ -40,7 +40,11 @@ goalign shuffle sites -i align.fasta -r 0.5
 		var f *os.File
 		var nameFile *os.File
 
-		aligns, err = readalign(infile)
+		if aligns, err = readalign(infile); err != nil {
+			io.LogError(err)
+			return
+		}
+
 		if f, err = openWriteFile(shuffleOutput); err != nil {
 			io.LogError(err)
 			return
