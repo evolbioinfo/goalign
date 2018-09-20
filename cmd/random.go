@@ -1,6 +1,8 @@
 package cmd
 
 import (
+	"os"
+
 	"github.com/fredericlemoine/goalign/align"
 	"github.com/fredericlemoine/goalign/io"
 	"github.com/spf13/cobra"
@@ -16,23 +18,30 @@ var randomCmd = &cobra.Command{
 	Short: "Generate random sequences",
 	Long: `Generate random sequences.
 `,
-	Run: func(cmd *cobra.Command, args []string) {
+	RunE: func(cmd *cobra.Command, args []string) (err error) {
+		var f *os.File
 		var a align.Alignment
-		var err error
-		f := openWriteFile(addIdOutput)
+
+		if f, err = openWriteFile(randomOutput); err != nil {
+			io.LogError(err)
+			return
+		}
+		defer closeWriteFile(f, randomOutput)
+
 		if !randomAA {
-			a, err = align.RandomAlignment(align.NUCLEOTIDS, randomLength, randomSize)
-			if err != nil {
-				io.ExitWithMessage(err)
+			if a, err = align.RandomAlignment(align.NUCLEOTIDS, randomLength, randomSize); err != nil {
+				io.LogError(err)
+				return
 			}
 		} else {
-			a, err = align.RandomAlignment(align.AMINOACIDS, randomLength, randomSize)
-			if err != nil {
-				io.ExitWithMessage(err)
+			if a, err = align.RandomAlignment(align.AMINOACIDS, randomLength, randomSize); err != nil {
+				io.LogError(err)
+				return
 			}
 		}
 		writeAlign(a, f)
-		f.Close()
+
+		return
 	},
 }
 

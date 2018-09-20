@@ -1,6 +1,9 @@
 package cmd
 
 import (
+	"os"
+
+	"github.com/fredericlemoine/goalign/align"
 	"github.com/fredericlemoine/goalign/io"
 	"github.com/spf13/cobra"
 )
@@ -21,17 +24,35 @@ If the input alignment contains several alignments, will process all of them
 As output, writes an alignment containing a sample of the sequences
 
 `,
-	Run: func(cmd *cobra.Command, args []string) {
-		aligns := readalign(infile)
-		f := openWriteFile(sampleseqOutput)
+	RunE: func(cmd *cobra.Command, args []string) (err error) {
+		var aligns align.AlignChannel
+		var f *os.File
+		var sample align.Alignment
+
+		if aligns, err = readalign(infile); err != nil {
+			io.LogError(err)
+			return
+		}
+		if f, err = openWriteFile(sampleseqOutput); err != nil {
+			io.LogError(err)
+			return
+		}
+		defer closeWriteFile(f, sampleseqOutput)
+
 		for al := range aligns.Achan {
-			if sample, err := al.Sample(sampleseqNb); err != nil {
-				io.ExitWithMessage(err)
+			if sample, err = al.Sample(sampleseqNb); err != nil {
+				io.LogError(err)
+				return
 			} else {
 				writeAlign(sample, f)
 			}
 		}
-		f.Close()
+
+		if aligns.Err != nil {
+			err = aligns.Err
+			io.LogError(err)
+		}
+		return
 	},
 }
 

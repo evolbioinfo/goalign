@@ -2,7 +2,10 @@ package cmd
 
 import (
 	"fmt"
+	"os"
 
+	"github.com/fredericlemoine/goalign/align"
+	"github.com/fredericlemoine/goalign/io"
 	"github.com/spf13/cobra"
 )
 
@@ -28,21 +31,40 @@ Example:
 gotree divide -i align.ph -p -o out
 
 `,
-	Run: func(cmd *cobra.Command, args []string) {
-		aligns := readalign(infile)
+	RunE: func(cmd *cobra.Command, args []string) (err error) {
+		var aligns align.AlignChannel
+		var f *os.File
+
+		if aligns, err = readalign(infile); err != nil {
+			io.LogError(err)
+			return
+		}
+
 		i := 0
 		for al := range aligns.Achan {
 			if divideoutputFasta {
-				f := openWriteFile(fmt.Sprintf("%s_%03d.fa", divideOutput, i))
+				if f, err = openWriteFile(fmt.Sprintf("%s_%03d.fa", divideOutput, i)); err != nil {
+					io.LogError(err)
+					return
+				}
 				writeAlignFasta(al, f)
 				f.Close()
 			} else {
-				f := openWriteFile(fmt.Sprintf("%s_%03d.ph", divideOutput, i))
+				if f, err = openWriteFile(fmt.Sprintf("%s_%03d.ph", divideOutput, i)); err != nil {
+					io.LogError(err)
+					return
+				}
 				writeAlignPhylip(al, f)
 				f.Close()
 			}
 			i++
 		}
+
+		if aligns.Err != nil {
+			err = aligns.Err
+			io.LogError(err)
+		}
+		return
 	},
 }
 

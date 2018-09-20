@@ -1,6 +1,10 @@
 package cmd
 
 import (
+	"os"
+
+	"github.com/fredericlemoine/goalign/align"
+	"github.com/fredericlemoine/goalign/io"
 	"github.com/spf13/cobra"
 )
 
@@ -12,14 +16,30 @@ var sortCmd = &cobra.Command{
 	Short: "sorts input alignment by sequence name",
 	Long: `sorts input algignment by sequence name.
 `,
-	Run: func(cmd *cobra.Command, args []string) {
-		aligns := readalign(infile)
-		f := openWriteFile(sortOutput)
+	RunE: func(cmd *cobra.Command, args []string) (err error) {
+		var aligns align.AlignChannel
+		var f *os.File
+
+		if aligns, err = readalign(infile); err != nil {
+			io.LogError(err)
+			return
+		}
+		if f, err = openWriteFile(sortOutput); err != nil {
+			io.LogError(err)
+			return
+		}
+		defer closeWriteFile(f, sortOutput)
+
 		for al := range aligns.Achan {
 			al.Sort()
 			writeAlign(al, f)
 		}
-		f.Close()
+
+		if aligns.Err != nil {
+			err = aligns.Err
+			io.LogError(err)
+		}
+		return
 	},
 }
 

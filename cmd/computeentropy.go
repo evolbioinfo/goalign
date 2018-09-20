@@ -2,8 +2,11 @@ package cmd
 
 import (
 	"fmt"
-	"github.com/spf13/cobra"
 	"math"
+
+	"github.com/fredericlemoine/goalign/align"
+	"github.com/fredericlemoine/goalign/io"
+	"github.com/spf13/cobra"
 )
 
 var entropyAverage bool
@@ -35,20 +38,28 @@ the computation does not take into account the following characters:
 If a site is made fully of '-' (if --remove-gaps is given) or '*', then its entropy will be "NaN",
 and it will not be taken into account in the average.
 `,
-	Run: func(cmd *cobra.Command, args []string) {
+	RunE: func(cmd *cobra.Command, args []string) (err error) {
+		var aligns align.AlignChannel
+		var e float64
+
+		if aligns, err = readalign(infile); err != nil {
+			io.LogError(err)
+			return
+		}
+
 		nb := 0
 		if entropyAverage {
 			fmt.Println("Alignment\tAvgEntropy")
 		} else {
 			fmt.Println("Alignment\tSite\tEntropy")
 		}
-		aligns := readalign(infile)
 		for align := range aligns.Achan {
 			avg := 0.0
 			total := 0
 			for i := 0; i < align.Length(); i++ {
-				if e, err := align.Entropy(i, entropyRemoveGaps); err != nil {
-					panic(err)
+				if e, err = align.Entropy(i, entropyRemoveGaps); err != nil {
+					io.LogError(err)
+					return
 				} else {
 					if entropyAverage {
 						if !math.IsNaN(e) {
@@ -65,6 +76,12 @@ and it will not be taken into account in the average.
 			}
 			nb++
 		}
+
+		if aligns.Err != nil {
+			err = aligns.Err
+			io.LogError(err)
+		}
+		return
 	},
 }
 

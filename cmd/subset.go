@@ -41,11 +41,17 @@ The output format is the same than input format.
 If -f is given, it does not take into account sequence names 
 given in the comand line.
 `,
-	Run: func(cmd *cobra.Command, args []string) {
+	RunE: func(cmd *cobra.Command, args []string) (err error) {
 		var subset map[string]int
+		var aligns align.AlignChannel
+		var f *os.File
+		var r *regexp.Regexp
+
 		// If input file
 		if namefile != "stdin" {
-			subset = parseNameFile(namefile)
+			if subset, err = parseNameFile(namefile); err != nil {
+				io.LogError(err)
+			}
 		} else {
 			subset = make(map[string]int)
 			// Else we look at cli args
@@ -54,19 +60,28 @@ given in the comand line.
 			}
 		}
 
-		out := openWriteFile(nameout)
+		if f, err = openWriteFile(nameout); err != nil {
+			io.LogError(err)
+			return
+		}
+		defer closeWriteFile(f, nameout)
+
 		regexps := make([]*regexp.Regexp, 0, 10)
 		if regexmatch {
 			for k, _ := range subset {
-				if r, err := regexp.Compile(k); err == nil {
+				if r, err = regexp.Compile(k); err == nil {
 					regexps = append(regexps, r)
 				} else {
-					io.ExitWithMessage(err)
+					io.LogError(err)
+					return
 				}
 			}
 		}
 
-		aligns := readalign(infile)
+		if aligns, err = readalign(infile); err != nil {
+			io.LogError(err)
+			return
+		}
 		for al := range aligns.Achan {
 			var filtered align.Alignment = nil
 			al.Iterate(func(name string, sequence string) {
@@ -80,29 +95,35 @@ given in the comand line.
 					filtered.AddSequence(name, sequence, "")
 				}
 			})
-			writeAlign(filtered, out)
+			writeAlign(filtered, f)
+
 		}
-		out.Close()
+		if aligns.Err != nil {
+			err = aligns.Err
+			io.LogError(err)
+		}
+		return
 	},
 }
 
-func parseNameFile(file string) map[string]int {
+func parseNameFile(file string) (subset map[string]int, err error) {
 	var f *os.File
 	var r *bufio.Reader
-	subset := make(map[string]int)
-	var err error
+	var gr *gzip.Reader
+
+	subset = make(map[string]int)
+
 	if file == "stdin" || file == "-" {
 		f = os.Stdin
 	} else {
-		f, err = os.Open(file)
-		if err != nil {
-			io.ExitWithMessage(err)
+		if f, err = os.Open(file); err != nil {
+			return
 		}
 	}
 
 	if strings.HasSuffix(file, ".gz") {
-		if gr, err := gzip.NewReader(f); err != nil {
-			io.ExitWithMessage(err)
+		if gr, err = gzip.NewReader(f); err != nil {
+			return
 		} else {
 			r = bufio.NewReader(gr)
 		}
@@ -117,7 +138,7 @@ func parseNameFile(file string) map[string]int {
 		}
 		l, e = Readln(r)
 	}
-	return subset
+	return
 }
 
 // Returns true if the name is in the map

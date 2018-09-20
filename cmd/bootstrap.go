@@ -11,6 +11,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/fredericlemoine/goalign/align"
 	"github.com/fredericlemoine/goalign/io"
 	"github.com/fredericlemoine/goalign/io/fasta"
 	"github.com/fredericlemoine/goalign/io/phylip"
@@ -52,20 +53,29 @@ Example of usage:
 goalign build seqboot -i align.phylip -p -n 500 -o boot --tar-gz
 goalign build seqboot -i align.phylip -p -n 500 -o boot_ 
 `,
-	Run: func(cmd *cobra.Command, args []string) {
-		aligns := readalign(infile)
-		if bootstrapoutprefix == "none" {
-			io.ExitWithMessage(errors.New("Output bootstrap file prefix is mandatory"))
+	RunE: func(cmd *cobra.Command, args []string) (err error) {
+		var aligns align.AlignChannel
+
+		if aligns, err = readalign(infile); err != nil {
+			io.LogError(err)
+			return
 		}
 
-		var err error
+		if bootstrapoutprefix == "none" {
+			err = errors.New("Output bootstrap file prefix is mandatory")
+			io.LogError(err)
+			return
+		}
+
 		var f *os.File
 		var tw *tar.Writer
 		var gw *gzip.Writer
 
 		align, _ := <-aligns.Achan
 		if aligns.Err != nil {
-			io.ExitWithMessage(aligns.Err)
+			err = aligns.Err
+			io.LogError(err)
+			return
 		}
 
 		bootidx := make(chan int, 100)
@@ -104,7 +114,11 @@ goalign build seqboot -i align.phylip -p -n 500 -o boot_
 					if bootstraptar {
 						outchan <- outboot{bootstring, bootid}
 					} else {
-						writenewfile(bootid, bootstrapgz, bootstring)
+						if err2 := writenewfile(bootid, bootstrapgz, bootstring); err2 != nil {
+							io.LogError(err2)
+							err = err2
+							return
+						}
 					}
 				}
 				wg.Done()
@@ -124,7 +138,8 @@ goalign build seqboot -i align.phylip -p -n 500 -o boot_
 				f, err = os.Create(bootstrapoutprefix + ".tar")
 			}
 			if err != nil {
-				io.ExitWithMessage(err)
+				io.LogError(err)
+				return
 			}
 			defer f.Close()
 			if bootstrapgz {
@@ -141,15 +156,19 @@ goalign build seqboot -i align.phylip -p -n 500 -o boot_
 		for oboot := range outchan {
 			if bootstraptar {
 				if err = addstringtotargz(tw, oboot.name, oboot.bootstr); err != nil {
-					io.ExitWithMessage(err)
+					io.LogError(err)
+					return
 				}
 			}
 			idx++
 		}
+		return
 	},
 }
 
-func writenewfile(name string, gz bool, bootstring string) {
+func writenewfile(name string, gz bool, bootstring string) (err error) {
+	var f *os.File
+
 	ext := ""
 	if rootphylip {
 		ext = ".ph"
@@ -157,8 +176,8 @@ func writenewfile(name string, gz bool, bootstring string) {
 		ext = ".fa"
 	}
 	if gz {
-		if f, err := os.Create(name + ext + ".gz"); err != nil {
-			io.ExitWithMessage(err)
+		if f, err = os.Create(name + ext + ".gz"); err != nil {
+			return
 		} else {
 			gw := gzip.NewWriter(f)
 			buf := bufio.NewWriter(gw)
@@ -168,13 +187,14 @@ func writenewfile(name string, gz bool, bootstring string) {
 			f.Close()
 		}
 	} else {
-		if f, err := os.Create(name + ext); err != nil {
-			io.ExitWithMessage(err)
+		if f, err = os.Create(name + ext); err != nil {
+			return
 		} else {
 			f.WriteString(bootstring)
 			f.Close()
 		}
 	}
+	return
 }
 
 func addstringtotargz(tw *tar.Writer, name string, align string) error {

@@ -1,6 +1,10 @@
 package cmd
 
 import (
+	"os"
+
+	"github.com/fredericlemoine/goalign/align"
+	"github.com/fredericlemoine/goalign/io"
 	"github.com/spf13/cobra"
 )
 
@@ -19,16 +23,32 @@ goalign reformat nexus -i align.phylip -p
 goalign reformat nexus -i align.fasta
 
 `,
-	Run: func(cmd *cobra.Command, args []string) {
-		aligns := readalign(infile)
-		f := openWriteFile(reformatOutput)
+	RunE: func(cmd *cobra.Command, args []string) (err error) {
+		var aligns align.AlignChannel
+		var f *os.File
+
+		if aligns, err = readalign(infile); err != nil {
+			io.LogError(err)
+			return
+		}
+		if f, err = openWriteFile(reformatOutput); err != nil {
+			io.LogError(err)
+			return
+		}
+		defer closeWriteFile(f, reformatOutput)
+
 		for al := range aligns.Achan {
 			if reformatCleanNames {
 				al.CleanNames()
 			}
 			writeAlignNexus(al, f)
 		}
-		f.Close()
+
+		if aligns.Err != nil {
+			err = aligns.Err
+			io.LogError(err)
+		}
+		return
 	},
 }
 

@@ -1,13 +1,13 @@
 package cmd
 
 import (
-	"github.com/fredericlemoine/goalign/align"
-	"github.com/fredericlemoine/goalign/io"
-	"github.com/spf13/cobra"
-
 	"fmt"
 	"os"
 	"sort"
+
+	"github.com/fredericlemoine/goalign/align"
+	"github.com/fredericlemoine/goalign/io"
+	"github.com/spf13/cobra"
 )
 
 // statsCmd represents the stats command
@@ -25,8 +25,14 @@ var statsCmd = &cobra.Command{
 If the input alignment contains several alignments, will process all of them
 
 `,
-	Run: func(cmd *cobra.Command, args []string) {
-		aligns := readalign(infile)
+	RunE: func(cmd *cobra.Command, args []string) (err error) {
+		var aligns align.AlignChannel
+
+		if aligns, err = readalign(infile); err != nil {
+			io.LogError(err)
+			return
+		}
+
 		for al := range aligns.Achan {
 			fmt.Fprintf(os.Stdout, "length\t%d\n", al.Length())
 			fmt.Fprintf(os.Stdout, "nseqs\t%d\n", al.NbSequences())
@@ -34,6 +40,12 @@ If the input alignment contains several alignments, will process all of them
 			fmt.Fprintf(os.Stdout, "variable sites\t%d\n", al.NbVariableSites())
 			printCharStats(al)
 		}
+
+		if aligns.Err != nil {
+			err = aligns.Err
+			io.LogError(err)
+		}
+		return
 	},
 }
 
@@ -54,7 +66,9 @@ func printCharStats(align align.Alignment) {
 	}
 }
 
-func printSiteCharStats(align align.Alignment) {
+func printSiteCharStats(align align.Alignment) (err error) {
+	var sitemap map[rune]int
+
 	charmap := align.CharStats()
 	keys := make([]string, 0, len(charmap))
 	for k, _ := range charmap {
@@ -67,9 +81,8 @@ func printSiteCharStats(align align.Alignment) {
 	}
 	fmt.Fprintf(os.Stdout, "\n")
 	for site := 0; site < align.Length(); site++ {
-		sitemap, err := align.CharStatsSite(site)
-		if err != nil {
-			io.ExitWithMessage(err)
+		if sitemap, err = align.CharStatsSite(site); err != nil {
+			return
 		}
 		fmt.Fprintf(os.Stdout, "%d", site)
 		for _, k := range keys {
@@ -78,6 +91,7 @@ func printSiteCharStats(align align.Alignment) {
 		}
 		fmt.Fprintf(os.Stdout, "\n")
 	}
+	return
 }
 
 // Prints the Character with the most frequency

@@ -1,6 +1,10 @@
 package cmd
 
 import (
+	"os"
+
+	"github.com/fredericlemoine/goalign/align"
+	"github.com/fredericlemoine/goalign/io"
 	"github.com/spf13/cobra"
 )
 
@@ -13,14 +17,30 @@ var gapsCmd = &cobra.Command{
       if rate <= 0 : does nothing
       if rate > 1  : then rate = 1
 `,
-	Run: func(cmd *cobra.Command, args []string) {
-		aligns := readalign(infile)
-		f := openWriteFile(mutateOutput)
+	RunE: func(cmd *cobra.Command, args []string) (err error) {
+		var aligns align.AlignChannel
+		var f *os.File
+
+		if aligns, err = readalign(infile); err != nil {
+			io.LogError(err)
+			return
+		}
+		if f, err = openWriteFile(mutateOutput); err != nil {
+			io.LogError(err)
+			return
+		}
+		defer closeWriteFile(f, mutateOutput)
+
 		for al := range aligns.Achan {
 			al.Mutate(mutateRate)
 			writeAlign(al, f)
 		}
-		f.Close()
+
+		if aligns.Err != nil {
+			err = aligns.Err
+			io.LogError(err)
+		}
+		return
 	},
 }
 

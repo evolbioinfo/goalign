@@ -2,9 +2,11 @@ package cmd
 
 import (
 	"fmt"
-	"github.com/spf13/cobra"
+	"os"
 
+	"github.com/fredericlemoine/goalign/align"
 	"github.com/fredericlemoine/goalign/io"
+	"github.com/spf13/cobra"
 )
 
 // cleansitesCmd represents the cleansites command
@@ -24,9 +26,20 @@ Examples:
 
 If cutoff is <0 or >1, it will be considered as 0, which means that every site with at least 1 gap
 will be removed.`,
-	Run: func(cmd *cobra.Command, args []string) {
-		aligns := readalign(infile)
-		f := openWriteFile(cleanOutput)
+	RunE: func(cmd *cobra.Command, args []string) (err error) {
+		var aligns align.AlignChannel
+		var f *os.File
+
+		if aligns, err = readalign(infile); err != nil {
+			io.LogError(err)
+			return
+		}
+		if f, err = openWriteFile(cleanOutput); err != nil {
+			io.LogError(err)
+			return
+		}
+		defer closeWriteFile(f, cleanOutput)
+
 		i := 0
 		for al := range aligns.Achan {
 			beforelength := al.Length()
@@ -39,7 +52,12 @@ will be removed.`,
 				io.PrintMessage(fmt.Sprintf("Alignment (%d) number of gaps=%d", i, beforelength-afterlength))
 			}
 		}
-		f.Close()
+
+		if aligns.Err != nil {
+			err = aligns.Err
+			io.LogError(err)
+		}
+		return
 	},
 }
 

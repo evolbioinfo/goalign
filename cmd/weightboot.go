@@ -4,13 +4,13 @@ package cmd
 
 import (
 	"fmt"
-	"github.com/spf13/cobra"
+	"os"
 
+	"github.com/fredericlemoine/goalign/align"
 	"github.com/fredericlemoine/goalign/distance"
+	"github.com/fredericlemoine/goalign/io"
+	"github.com/spf13/cobra"
 )
-
-var weightbootOutput string
-var weightbootnb int
 
 // weightbootCmd represents the weightboot command
 var weightbootCmd = &cobra.Command{
@@ -23,14 +23,27 @@ If the input alignment contains several alignments, will process the first one o
 Weights follow a Dirichlet distribtion D(n;1,...,1)
 
 `,
-	Run: func(cmd *cobra.Command, args []string) {
-		aligns := readalign(infile)
-		al, _ := <-aligns
+	RunE: func(cmd *cobra.Command, args []string) (err error) {
+		var f *os.File
+		var aligns align.AlignChannel
+
+		if aligns, err = readalign(infile); err != nil {
+			io.LogError(err)
+			return
+		}
+		al, _ := <-aligns.Achan
 		if aligns.Err != nil {
-			io.ExitWithMessage(aligns.Err)
+			err = aligns.Err
+			io.LogError(err)
+			return
 		}
 
-		f := openWriteFile(weightbootOutput)
+		if f, err = openWriteFile(weightbootOutput); err != nil {
+			io.LogError(err)
+			return
+		}
+		defer closeWriteFile(f, weightbootOutput)
+
 		for i := 0; i < weightbootnb; i++ {
 			var weights []float64 = nil
 			weights = distance.BuildWeightsDirichlet(al)
@@ -42,7 +55,7 @@ Weights follow a Dirichlet distribtion D(n;1,...,1)
 			}
 			f.WriteString("\n")
 		}
-		f.Close()
+		return
 	},
 }
 

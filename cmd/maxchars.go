@@ -1,9 +1,9 @@
 package cmd
 
 import (
-	"github.com/spf13/cobra"
-
+	"github.com/fredericlemoine/goalign/align"
 	"github.com/fredericlemoine/goalign/io"
+	"github.com/spf13/cobra"
 )
 
 // charCmd represents the char command
@@ -22,13 +22,23 @@ Example of usages:
 goalign stats maxchar -i align.phylip -p
 goalign stats maxchar -i align.fasta
 `,
-	Run: func(cmd *cobra.Command, args []string) {
-		aligns := readalign(infile)
+	RunE: func(cmd *cobra.Command, args []string) (err error) {
+		var aligns align.AlignChannel
+
+		if aligns, err = readalign(infile); err != nil {
+			io.LogError(err)
+			return
+		}
+
 		al, _ := <-aligns.Achan
 		if aligns.Err != nil {
-			io.ExitWithMessage(aligns.Err)
+			err = aligns.Err
+			io.LogError(err)
+			return
 		}
 		printMaxCharStats(al)
+
+		return
 	},
 }
 

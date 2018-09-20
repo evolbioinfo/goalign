@@ -2,7 +2,9 @@ package cmd
 
 import (
 	"fmt"
+	"os"
 
+	"github.com/fredericlemoine/goalign/align"
 	"github.com/fredericlemoine/goalign/io"
 	"github.com/spf13/cobra"
 )
@@ -21,13 +23,27 @@ Example of usage:
 goalign reformat tnt -i align.phylip -p
 goalign reformat tnt -i align.fasta
 `,
-	Run: func(cmd *cobra.Command, args []string) {
-		aligns := readalign(infile)
-		f := openWriteFile(reformatOutput)
+	RunE: func(cmd *cobra.Command, args []string) (err error) {
+		var aligns align.AlignChannel
+		var f *os.File
+
+		if aligns, err = readalign(infile); err != nil {
+			io.LogError(err)
+			return
+		}
+		if f, err = openWriteFile(reformatOutput); err != nil {
+			io.LogError(err)
+			return
+		}
+		defer closeWriteFile(f, reformatOutput)
+
 		al, _ := <-aligns.Achan
 		if aligns.Err != nil {
-			io.ExitWithMessage(aligns.Err)
+			err = aligns.Err
+			io.LogError(err)
+			return
 		}
+
 		if reformatCleanNames {
 			al.CleanNames()
 		}
@@ -38,7 +54,8 @@ goalign reformat tnt -i align.fasta
 			f.WriteString(fmt.Sprintf("%s %s\n", name, sequence))
 		})
 		f.WriteString(";\n")
-		f.Close()
+
+		return
 	},
 }
 

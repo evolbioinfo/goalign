@@ -1,6 +1,9 @@
 package cmd
 
 import (
+	"os"
+
+	"github.com/fredericlemoine/goalign/align"
 	"github.com/fredericlemoine/goalign/io"
 	"github.com/spf13/cobra"
 )
@@ -22,17 +25,34 @@ of the alignment, by specifying the '--phase' option.
 It only translates using the standard genetic code so far.
 
 `,
-	Run: func(cmd *cobra.Command, args []string) {
-		aligns := readalign(infile)
-		f := openWriteFile(translateOutput)
+	RunE: func(cmd *cobra.Command, args []string) (err error) {
+		var aligns align.AlignChannel
+		var f *os.File
+		var transAl align.Alignment
+
+		if aligns, err = readalign(infile); err != nil {
+			io.LogError(err)
+			return
+		}
+		if f, err = openWriteFile(translateOutput); err != nil {
+			io.LogError(err)
+			return
+		}
+		defer closeWriteFile(f, translateOutput)
+
 		for al := range aligns.Achan {
-			transAl, err := al.Translate(translatePhase)
-			if err != nil {
-				io.ExitWithMessage(err)
+			if transAl, err = al.Translate(translatePhase); err != nil {
+				io.LogError(err)
+				return
 			}
 			writeAlign(transAl, f)
 		}
-		f.Close()
+
+		if aligns.Err != nil {
+			err = aligns.Err
+			io.LogError(err)
+		}
+		return
 	},
 }
 

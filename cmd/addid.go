@@ -1,6 +1,10 @@
 package cmd
 
 import (
+	"os"
+
+	"github.com/fredericlemoine/goalign/align"
+	"github.com/fredericlemoine/goalign/io"
 	"github.com/spf13/cobra"
 )
 
@@ -16,14 +20,30 @@ var addidCmd = &cobra.Command{
 
 The string may be added to the left or to the right of each sequence identifier.
 `,
-	Run: func(cmd *cobra.Command, args []string) {
-		aligns := readalign(infile)
-		f := openWriteFile(addIdOutput)
+	RunE: func(cmd *cobra.Command, args []string) (err error) {
+		var aligns align.AlignChannel
+		var f *os.File
+
+		if aligns, err = readalign(infile); err != nil {
+			io.LogError(err)
+			return
+		}
+		if f, err = openWriteFile(addIdOutput); err != nil {
+			io.LogError(err)
+			return
+		}
+		defer closeWriteFile(f, addIdOutput)
+
 		for al := range aligns.Achan {
 			al.AppendSeqIdentifier(addIdName, addIdRight)
 			writeAlign(al, f)
 		}
-		f.Close()
+
+		if aligns.Err != nil {
+			err = aligns.Err
+			io.LogError(err)
+		}
+		return
 	},
 }
 

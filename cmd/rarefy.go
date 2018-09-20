@@ -8,6 +8,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/fredericlemoine/goalign/align"
 	"github.com/fredericlemoine/goalign/io"
 	"github.com/spf13/cobra"
 )
@@ -39,23 +40,46 @@ is considered as 0). Sum of counts of all sequences must be > n.
 
 Output: An alignment (phylip or fasta).
 `,
-	Run: func(cmd *cobra.Command, args []string) {
-		aligns := readalign(infile)
-		counts := parseCountFile(rarefyCounts)
-		f := openWriteFile(rarefyOutput)
+	RunE: func(cmd *cobra.Command, args []string) (err error) {
+		var aligns align.AlignChannel
+		var f *os.File
+		var counts map[string]int
+		var sample align.Alignment
+
+		if aligns, err = readalign(infile); err != nil {
+			io.LogError(err)
+			return
+		}
+		if f, err = openWriteFile(rarefyOutput); err != nil {
+			io.LogError(err)
+			return
+		}
+		defer closeWriteFile(f, rarefyOutput)
+
+		if counts, err = parseCountFile(rarefyCounts); err != nil {
+			io.LogError(err)
+			return
+		}
+
 		for al := range aligns.Achan {
 			if rarefyReplicates > 1 {
 				rootphylip = true
 			}
 			for i := 0; i < rarefyReplicates; i++ {
-				if sample, err := al.Rarefy(rarefyNb, counts); err != nil {
-					io.ExitWithMessage(err)
+				if sample, err = al.Rarefy(rarefyNb, counts); err != nil {
+					io.LogError(err)
+					return
 				} else {
 					writeAlign(sample, f)
 				}
 			}
 		}
-		f.Close()
+
+		if aligns.Err != nil {
+			err = aligns.Err
+			io.LogError(err)
+		}
+		return
 	},
 }
 
@@ -67,24 +91,25 @@ func init() {
 	rarefyCmd.PersistentFlags().IntVarP(&rarefyReplicates, "replicates", "r", 1, "Number of replicates to generate")
 }
 
-func parseCountFile(file string) map[string]int {
+func parseCountFile(file string) (counts map[string]int, err error) {
 	var f *os.File
 	var r *bufio.Reader
-	counts := make(map[string]int)
-	var err error
+	var gr *gzip.Reader
+	var c int
+
+	counts = make(map[string]int)
 
 	if file == "stdin" || file == "-" {
 		f = os.Stdin
 	} else {
-		f, err = os.Open(file)
-		if err != nil {
-			io.ExitWithMessage(err)
+		if f, err = os.Open(file); err != nil {
+			return
 		}
 	}
 
 	if strings.HasSuffix(file, ".gz") {
-		if gr, err := gzip.NewReader(f); err != nil {
-			io.ExitWithMessage(err)
+		if gr, err = gzip.NewReader(f); err != nil {
+			return
 		} else {
 			r = bufio.NewReader(gr)
 		}
@@ -95,14 +120,15 @@ func parseCountFile(file string) map[string]int {
 	for e == nil {
 		cols := strings.Split(l, "\t")
 		if cols == nil || len(cols) != 2 {
-			io.ExitWithMessage(errors.New("Bad format from counts: Wrong number of columns"))
+			err = errors.New("Bad format from counts: Wrong number of columns")
+			return
 		}
-		c, err := strconv.Atoi(cols[1])
-		if err != nil {
-			io.ExitWithMessage(err)
+		if c, err = strconv.Atoi(cols[1]); err != nil {
+			return
 		}
 		counts[cols[0]] = c
 		l, e = Readln(r)
 	}
-	return counts
+
+	return
 }

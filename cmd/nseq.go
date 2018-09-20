@@ -3,6 +3,8 @@ package cmd
 import (
 	"fmt"
 
+	"github.com/fredericlemoine/goalign/align"
+	"github.com/fredericlemoine/goalign/io"
 	"github.com/spf13/cobra"
 )
 
@@ -20,11 +22,23 @@ Example of usages:
 goalign stats nseq -i align.phylip -p
 goalign stats nseq -i align.fasta
 `,
-	Run: func(cmd *cobra.Command, args []string) {
-		aligns := readalign(infile)
+	RunE: func(cmd *cobra.Command, args []string) (err error) {
+		var aligns align.AlignChannel
+
+		if aligns, err = readalign(infile); err != nil {
+			io.LogError(err)
+			return
+		}
+
 		for al := range aligns.Achan {
 			fmt.Println(al.NbSequences())
 		}
+
+		if aligns.Err != nil {
+			err = aligns.Err
+			io.LogError(err)
+		}
+		return
 	},
 }
 

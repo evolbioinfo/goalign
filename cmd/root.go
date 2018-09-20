@@ -13,7 +13,6 @@ import (
 	"time"
 
 	"github.com/fredericlemoine/goalign/align"
-	"github.com/fredericlemoine/goalign/io"
 	"github.com/fredericlemoine/goalign/io/clustal"
 	"github.com/fredericlemoine/goalign/io/fasta"
 	"github.com/fredericlemoine/goalign/io/nexus"
@@ -78,19 +77,17 @@ Please note that in --auto-detect mode, phylip format is considered as not stric
 	},
 }
 
-func readalign(file string) align.AlignChannel {
+func readalign(file string) (alchan align.AlignChannel, err error) {
 	var fi goio.Closer
 	var r *bufio.Reader
-	var err error
 	var format int
-	var alchan align.AlignChannel
 
 	if fi, r, err = utils.GetReader(file); err != nil {
-		io.ExitWithMessage(err)
+		return
 	}
 	if rootAutoDetectInputFormat {
 		if alchan, format, err = utils.ParseMultiAlignmentsAuto(fi, r, rootinputstrict); err != nil {
-			io.ExitWithMessage(err)
+			return
 		}
 		if format == align.FORMAT_PHYLIP {
 			rootphylip = true
@@ -103,15 +100,15 @@ func readalign(file string) align.AlignChannel {
 		alchan.Achan = make(chan align.Alignment, 15)
 		if rootphylip {
 			go func() {
-				if err := phylip.NewParser(r, rootinputstrict).ParseMultiple(alchan.Achan); err != nil {
-					io.ExitWithMessage(err)
+				if err2 := phylip.NewParser(r, rootinputstrict).ParseMultiple(alchan.Achan); err2 != nil {
+					alchan.Err = err2
 				}
 				fi.Close()
 			}()
 		} else if rootnexus {
 			var al align.Alignment
 			if al, err = nexus.NewParser(r).Parse(); err != nil {
-				io.ExitWithMessage(err)
+				return
 			}
 			alchan.Achan <- al
 			fi.Close()
@@ -119,23 +116,22 @@ func readalign(file string) align.AlignChannel {
 		} else if rootclustal {
 			var al align.Alignment
 			if al, err = clustal.NewParser(r).Parse(); err != nil {
-				io.ExitWithMessage(err)
+				return
 			}
 			alchan.Achan <- al
 			fi.Close()
 			close(alchan.Achan)
 		} else {
 			var al align.Alignment
-			al, err = fasta.NewParser(r).Parse()
-			if err != nil {
-				io.ExitWithMessage(err)
+			if al, err = fasta.NewParser(r).Parse(); err != nil {
+				return
 			}
 			alchan.Achan <- al
 			fi.Close()
 			close(alchan.Achan)
 		}
 	}
-	return alchan
+	return
 }
 
 // Execute adds all child commands to the root command sets flags appropriately.
@@ -143,7 +139,7 @@ func readalign(file string) align.AlignChannel {
 func Execute() {
 	if err := RootCmd.Execute(); err != nil {
 		fmt.Println(err)
-		os.Exit(-1)
+		os.Exit(1)
 	}
 }
 
@@ -206,15 +202,13 @@ func writeAlignPaml(al align.Alignment, f *os.File) {
 	f.WriteString(paml.WriteAlignment(al))
 }
 
-func openWriteFile(file string) *os.File {
+func openWriteFile(file string) (f *os.File, err error) {
 	if file == "stdout" || file == "-" {
-		return os.Stdout
+		f = os.Stdout
+		return
 	} else {
-		f, err := os.Create(file)
-		if err != nil {
-			io.ExitWithMessage(err)
-		}
-		return f
+		f, err = os.Create(file)
+		return
 	}
 }
 
@@ -275,4 +269,10 @@ func readMapFile(file string, revert bool) (map[string]string, error) {
 	}
 
 	return outmap, nil
+}
+
+func closeWriteFile(f goio.Closer, filename string) {
+	if filename != "-" && filename != "stdout" {
+		f.Close()
+	}
 }

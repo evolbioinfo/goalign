@@ -1727,3 +1727,91 @@ EOF
 goalign dedup -i input -o result -p
 diff expected result
 rm -f input expected result
+
+echo "->goalign build seqboot"
+cat > expected.1 <<EOF
+>Seq0000
+ATTAT
+>Seq0001
+GTTGT
+>Seq0002
+ATGAT
+>Seq0003
+ACCAC
+EOF
+cat > expected.2 <<EOF
+>Seq0000
+AAGGT
+>Seq0001
+GGAAT
+>Seq0002
+AACCT
+>Seq0003
+AAGGC
+EOF
+goalign random --seed 10 -l 5 -n 4 -o orig.fa
+goalign build seqboot --seed 10 -i orig.fa -n 2 -o boot
+diff boot0.fa expected.1
+diff boot1.fa expected.2
+diff orig.fa expected.1 > /dev/null || echo "expected.1 ok"
+diff orig.fa expected.2 > /dev/null || echo "expected.2 ok"
+if [[ $(ls boot*.fa| wc -l) -ne 2 ]]; then echo "Wrong number of bootstrap alignments"; exit 1; fi
+rm -f boot0.fa boot1.fa expected.2 expected.1 orig.fa
+
+echo "->goalign build seqboot gz"
+cat > expected.1 <<EOF
+>Seq0000
+ATTAT
+>Seq0001
+GTTGT
+>Seq0002
+ATGAT
+>Seq0003
+ACCAC
+EOF
+cat > expected.2 <<EOF
+>Seq0000
+AAGGT
+>Seq0001
+GGAAT
+>Seq0002
+AACCT
+>Seq0003
+AAGGC
+EOF
+goalign random --seed 10 -l 5 -n 4 -o orig.fa
+goalign build seqboot --seed 10 -i orig.fa -n 2 -o boot --gz
+diff <(gunzip -c boot0.fa.gz) expected.1
+diff <(gunzip -c boot1.fa.gz) expected.2
+if [[ $(ls boot*.fa.gz| wc -l) -ne 2 ]]; then echo "Wrong number of bootstrap alignments"; exit 1; fi
+rm -f boot0.fa.gz boot1.fa.gz expected.2 expected.1 orig.fa
+
+echo "->goalign build seqboot tar gz"
+cat > expected.1 <<EOF
+>Seq0000
+ATTAT
+>Seq0001
+GTTGT
+>Seq0002
+ATGAT
+>Seq0003
+ACCAC
+EOF
+cat > expected.2 <<EOF
+>Seq0000
+AAGGT
+>Seq0001
+GGAAT
+>Seq0002
+AACCT
+>Seq0003
+AAGGC
+EOF
+goalign random --seed 10 -l 5 -n 4 -o orig.fa
+goalign build seqboot --seed 10 -i orig.fa -n 2 -o boot --gz --tar
+tar -xzf boot.tar.gz
+diff boot0.fa expected.1
+diff boot1.fa expected.2
+if [[ $(ls boot*.fa | wc -l) -ne 2 ]]; then echo "Wrong number of bootstrap alignments"; exit 1; fi
+rm -f boot0.fa boot1.fa boot.tar.gz  expected.2 expected.1 orig.fa
+

@@ -1,6 +1,9 @@
 package cmd
 
 import (
+	"os"
+
+	"github.com/fredericlemoine/goalign/align"
 	"github.com/fredericlemoine/goalign/io"
 	"github.com/spf13/cobra"
 )
@@ -29,19 +32,35 @@ goalign dedup -i ali.phy will produce:
 2 CCCCCC
 3 GGGGGG
 `,
-	Run: func(cmd *cobra.Command, args []string) {
-		aligns := readalign(infile)
-		f := openWriteFile(dedupOutput)
+	RunE: func(cmd *cobra.Command, args []string) (err error) {
+		var aligns align.AlignChannel
+		var f *os.File
+		var dedup align.Alignment
+
+		if aligns, err = readalign(infile); err != nil {
+			io.LogError(err)
+			return
+		}
+		if f, err = openWriteFile(dedupOutput); err != nil {
+			io.LogError(err)
+			return
+		}
+		defer closeWriteFile(f, dedupOutput)
+
 		for al := range aligns.Achan {
-			if out, err := al.Deduplicate(); err != nil {
-				if err != nil {
-					io.ExitWithMessage(err)
-				}
+			if dedup, err = al.Deduplicate(); err != nil {
+				io.LogError(err)
+				return
 			} else {
-				writeAlign(out, f)
+				writeAlign(dedup, f)
 			}
 		}
-		f.Close()
+
+		if aligns.Err != nil {
+			err = aligns.Err
+			io.LogError(err)
+		}
+		return
 	},
 }
 

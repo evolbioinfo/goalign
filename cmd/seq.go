@@ -1,6 +1,9 @@
 package cmd
 
 import (
+	"os"
+
+	"github.com/fredericlemoine/goalign/align"
 	"github.com/fredericlemoine/goalign/io"
 	"github.com/spf13/cobra"
 )
@@ -19,17 +22,34 @@ Example:
 goalign trim seq -i align.fa -o trimed.fa -s -n 10
 
 `,
-	Run: func(cmd *cobra.Command, args []string) {
-		aligns := readalign(infile)
-		f := openWriteFile(trimAlignOut)
+	RunE: func(cmd *cobra.Command, args []string) (err error) {
+		var aligns align.AlignChannel
+		var f *os.File
+
+		if aligns, err = readalign(infile); err != nil {
+			io.LogError(err)
+			return
+		}
+		if f, err = openWriteFile(trimAlignOut); err != nil {
+			io.LogError(err)
+			return
+		}
+		defer closeWriteFile(f, trimAlignOut)
+
 		for al := range aligns.Achan {
-			if err := al.TrimSequences(trimNb, trimFromStart); err != nil {
-				io.ExitWithMessage(err)
+			if err = al.TrimSequences(trimNb, trimFromStart); err != nil {
+				io.LogError(err)
+				return
 			} else {
 				writeAlign(al, f)
 			}
 		}
-		f.Close()
+
+		if aligns.Err != nil {
+			err = aligns.Err
+			io.LogError(err)
+		}
+		return
 	},
 }
 

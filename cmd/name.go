@@ -1,6 +1,9 @@
 package cmd
 
 import (
+	"os"
+
+	"github.com/fredericlemoine/goalign/align"
 	"github.com/fredericlemoine/goalign/io"
 	"github.com/spf13/cobra"
 )
@@ -28,45 +31,72 @@ goalign trim name -i align.phy -p -n 10 -m map.txt
 
 Id -a is given, then names are generated with the pattern "S000<i>".
 `,
-	Run: func(cmd *cobra.Command, args []string) {
-		var err error
+	RunE: func(cmd *cobra.Command, args []string) (err error) {
+		var aligns align.AlignChannel
+		var f *os.File
 
-		aligns := readalign(infile)
+		if aligns, err = readalign(infile); err != nil {
+			io.LogError(err)
+			return
+		}
+		if f, err = openWriteFile(trimAlignOut); err != nil {
+			io.LogError(err)
+			return
+		}
+		defer closeWriteFile(f, trimAlignOut)
+
 		namemap := make(map[string]string)
 		curid := 1
-		f := openWriteFile(trimAlignOut)
 		for al := range aligns.Achan {
 			if aligns.Err != nil {
-				io.ExitWithMessage(aligns.Err)
+				err = aligns.Err
+				io.LogError(err)
+				return
 			}
 
 			if trimAuto {
 				if err = al.TrimNamesAuto(namemap, &curid); err != nil {
-					io.ExitWithMessage(err)
+					io.LogError(err)
+					return
 				}
 			} else {
 				if err = al.TrimNames(namemap, trimNb); err != nil {
-					io.ExitWithMessage(err)
+					io.LogError(err)
+					return
 				}
 			}
 			writeAlign(al, f)
 		}
 		if trimMapout != "none" {
-			writeNameMap(namemap, trimMapout)
+			if err = writeNameMap(namemap, trimMapout); err != nil {
+				io.LogError(err)
+				return
+			}
 		}
-		f.Close()
+
+		if aligns.Err != nil {
+			err = aligns.Err
+			io.LogError(err)
+		}
+		return
 	},
 }
 
-func writeNameMap(namemap map[string]string, outfile string) {
-	f := openWriteFile(outfile)
+func writeNameMap(namemap map[string]string, outfile string) (err error) {
+	var f *os.File
+
+	if f, err = openWriteFile(outfile); err != nil {
+		return
+	}
+
 	for long, short := range namemap {
 		f.WriteString(long)
 		f.WriteString("\t")
 		f.WriteString(short)
 		f.WriteString("\n")
 	}
-	f.Close()
+	closeWriteFile(f, outfile)
+	return
 }
 
 func init() {

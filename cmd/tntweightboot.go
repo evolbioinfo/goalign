@@ -7,9 +7,13 @@ import (
 	"github.com/spf13/cobra"
 	"os"
 
+	"github.com/fredericlemoine/goalign/align"
 	"github.com/fredericlemoine/goalign/distance"
 	"github.com/fredericlemoine/goalign/io"
 )
+
+var weightbootnb int
+var weightbootOutput string
 
 // tntweightbootCmd represents the tntweightboot command
 var tntweightbootCmd = &cobra.Command{
@@ -20,23 +24,38 @@ var tntweightbootCmd = &cobra.Command{
 Weights follow a Dirichlet distribution D(n;1,...,1)
 
 `,
-	Run: func(cmd *cobra.Command, args []string) {
-		aligns := readalign(infile)
-		al, _ := <-aligns
+	RunE: func(cmd *cobra.Command, args []string) (err error) {
+		var aligns align.AlignChannel
+		var f *os.File
+		var weights []float64 = nil
+
+		if aligns, err = readalign(infile); err != nil {
+			io.LogError(err)
+			return
+		}
+
+		al, _ := <-aligns.Achan
 		if aligns.Err != nil {
-			io.ExitWithMessage(aligns.Err)
+			err = aligns.Err
+			io.LogError(err)
+			return
 		}
 
 		mintnt := 1.0
 		maxtnt := 1000.0
 		for i := 0; i < weightbootnb; i++ {
-			var f *os.File
 			if weightbootOutput != "stdout" && weightbootOutput != "-" {
-				f = openWriteFile(fmt.Sprintf("%s%d.tnt", weightbootOutput, i))
+				if f, err = openWriteFile(fmt.Sprintf("%s%d.tnt", weightbootOutput, i)); err != nil {
+					io.LogError(err)
+					return
+				}
+				defer f.Close()
 			} else {
-				f = openWriteFile(weightbootOutput)
+				if f, err = openWriteFile(weightbootOutput); err != nil {
+					io.LogError(err)
+					return
+				}
 			}
-			var weights []float64 = nil
 			weights = distance.BuildWeightsDirichlet(al)
 			minw := -1.0
 			maxw := -1.0
@@ -64,8 +83,8 @@ Weights follow a Dirichlet distribution D(n;1,...,1)
 			}
 			f.WriteString("\n")
 			f.WriteString(";\n")
-			f.Close()
 		}
+		return
 	},
 }
 

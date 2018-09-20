@@ -45,39 +45,48 @@ goalign compute distance -m k2p -i align.fa
 if -a is given: display only the average distance
 
 `,
-	Run: func(cmd *cobra.Command, args []string) {
+	RunE: func(cmd *cobra.Command, args []string) (err error) {
 		var f *os.File
-		var err error
 		var model distance.DistModel
+		var aligns align.AlignChannel
 
-		if computedistOutput == "stdout" || computedistOutput == "-" {
-			f = os.Stdout
-		} else {
-			f, err = os.Create(computedistOutput)
-			if err != nil {
-				io.ExitWithMessage(err)
-			}
+		if f, err = openWriteFile(computedistOutput); err != nil {
+			io.LogError(err)
+			return
+		}
+		defer closeWriteFile(f, computedistOutput)
+
+		if model, err = distance.Model(computedistModel, computedistRemoveGaps); err != nil {
+			io.LogError(err)
+			return
 		}
 
-		model, err = distance.Model(computedistModel, computedistRemoveGaps)
-		if err != nil {
-			io.ExitWithMessage(err)
+		if aligns, err = readalign(infile); err != nil {
+			io.LogError(err)
+			return
 		}
-
-		aligns := readalign(infile)
 		for align := range aligns.Achan {
 			var distMatrix [][]float64
 			distMatrix, err = distance.DistMatrix(align, nil, model, rootcpus)
 			if err != nil {
-				io.ExitWithMessage(err)
+				io.LogError(err)
+				return
 			}
 			if computedistAverage {
 				writeDistAverage(align, distMatrix, f)
 			} else {
-				writeDistMatrix(align, distMatrix, f)
+				if err = writeDistMatrix(align, distMatrix, f); err != nil {
+					io.LogError(err)
+					return
+				}
 			}
 		}
-		f.Close()
+
+		if aligns.Err != nil {
+			err = aligns.Err
+			io.LogError(err)
+		}
+		return
 	},
 }
 
@@ -89,19 +98,20 @@ func init() {
 	computedistCmd.PersistentFlags().BoolVarP(&computedistAverage, "average", "a", false, "Compute only the average distance between all pairs of sequences")
 }
 
-func writeDistMatrix(al align.Alignment, matrix [][]float64, f *os.File) {
+func writeDistMatrix(al align.Alignment, matrix [][]float64, f *os.File) (err error) {
 	f.WriteString(fmt.Sprintf("%d\n", len(matrix)))
 	for i := 0; i < len(matrix); i++ {
 		if name, ok := al.GetSequenceNameById(i); ok {
 			f.WriteString(fmt.Sprintf("%s", name))
 		} else {
-			io.ExitWithMessage(errors.New(fmt.Sprintf("Sequence %d does not exist in the alignment", i)))
+			return errors.New(fmt.Sprintf("Sequence %d does not exist in the alignment", i))
 		}
 		for j := 0; j < len(matrix); j++ {
 			f.WriteString(fmt.Sprintf("\t%.12f", matrix[i][j]))
 		}
 		f.WriteString("\n")
 	}
+	return
 }
 
 func writeDistAverage(al align.Alignment, matrix [][]float64, f *os.File) {

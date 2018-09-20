@@ -1,6 +1,10 @@
 package cmd
 
 import (
+	"os"
+
+	"github.com/fredericlemoine/goalign/align"
+	"github.com/fredericlemoine/goalign/io"
 	"github.com/spf13/cobra"
 )
 
@@ -31,10 +35,24 @@ goalign shuffle sites -i align.phylip -p -r 0.5
 goalign shuffle sites -i align.fasta -r 0.5
 
 `,
-	Run: func(cmd *cobra.Command, args []string) {
-		aligns := readalign(infile)
-		f := openWriteFile(shuffleOutput)
-		nameFile := openWriteFile(siteRogueNameFile)
+	RunE: func(cmd *cobra.Command, args []string) (err error) {
+		var aligns align.AlignChannel
+		var f *os.File
+		var nameFile *os.File
+
+		aligns, err = readalign(infile)
+		if f, err = openWriteFile(shuffleOutput); err != nil {
+			io.LogError(err)
+			return
+		}
+		defer closeWriteFile(f, shuffleOutput)
+
+		if nameFile, err = openWriteFile(siteRogueNameFile); err != nil {
+			io.LogError(err)
+			return
+		}
+		defer closeWriteFile(nameFile, siteRogueNameFile)
+
 		for al := range aligns.Achan {
 			names := al.ShuffleSites(siteRate, siteRogue, stableRogues)
 			writeAlign(al, f)
@@ -43,8 +61,12 @@ goalign shuffle sites -i align.fasta -r 0.5
 				nameFile.WriteString("\n")
 			}
 		}
-		nameFile.Close()
-		f.Close()
+
+		if aligns.Err != nil {
+			err = aligns.Err
+			io.LogError(err)
+		}
+		return
 	},
 }
 

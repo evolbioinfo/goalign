@@ -2,8 +2,10 @@ package cmd
 
 import (
 	"fmt"
+	"os"
 	"path/filepath"
 
+	"github.com/fredericlemoine/goalign/align"
 	"github.com/fredericlemoine/goalign/io"
 	"github.com/spf13/cobra"
 )
@@ -64,43 +66,66 @@ If several alignments are present in the input file and the output is a file
 * Other alignments, other subalignments: results will be placed in the given file
   with "_al<i>" and "_sub<i> suffixes (ex out_al1_sub1.fasta, out_al1_sub2.fasta, etc.)
 `,
-	Run: func(cmd *cobra.Command, args []string) {
+	RunE: func(cmd *cobra.Command, args []string) (err error) {
+		var aligns align.AlignChannel
+		var f *os.File
+		var subalign align.Alignment
+
+		if aligns, err = readalign(infile); err != nil {
+			io.LogError(err)
+			return
+		}
+		if f, err = openWriteFile(subseqout); err != nil {
+			io.LogError(err)
+			return
+		}
+
 		fileid := ""
 		filenum := 0
-
 		extension := filepath.Ext(subseqout)
 		name := subseqout[0 : len(subseqout)-len(extension)]
 
-		aligns := readalign(infile)
-		out := openWriteFile(subseqout)
 		for al := range aligns.Achan {
 			start := subseqstart
 			if filenum > 0 && subseqout != "stdout" && subseqout != "-" {
 				fileid = fmt.Sprintf("_al%d", filenum)
-				out.Close()
-				out = openWriteFile(name + fileid + extension)
+				f.Close()
+				if f, err = openWriteFile(name + fileid + extension); err != nil {
+					io.LogError(err)
+					return
+				}
 			}
 			subalignnum := 0
 			for {
-				subalign, err := al.SubAlign(start, subseqlength)
-				if err != nil {
-					io.ExitWithMessage(err)
+				if subalign, err = al.SubAlign(start, subseqlength); err != nil {
+					io.LogError(err)
+					return
 				}
-				writeAlign(subalign, out)
+				writeAlign(subalign, f)
 				start += subseqstep
 				if subseqstep == 0 || (start+subseqlength) > al.Length() {
 					break
 				} else {
 					if subseqout != "stdout" && subseqout != "-" {
 						subalignnum++
-						out.Close()
-						out = openWriteFile(fmt.Sprintf("%s%s_sub%d%s", name, fileid, subalignnum, extension))
+						f.Close()
+						n := fmt.Sprintf("%s%s_sub%d%s", name, fileid, subalignnum, extension)
+						if f, err = openWriteFile(n); err != nil {
+							io.LogError(err)
+							return
+						}
 					}
 				}
 			}
 			filenum++
 		}
-		out.Close()
+		f.Close()
+
+		if aligns.Err != nil {
+			err = aligns.Err
+			io.LogError(err)
+		}
+		return
 	},
 }
 

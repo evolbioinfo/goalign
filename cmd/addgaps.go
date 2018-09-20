@@ -1,6 +1,10 @@
 package cmd
 
 import (
+	"os"
+
+	"github.com/fredericlemoine/goalign/align"
+	"github.com/fredericlemoine/goalign/io"
 	"github.com/spf13/cobra"
 )
 
@@ -15,14 +19,30 @@ var addgapsCmd = &cobra.Command{
 Example:
 goalign mutate gaps -i align.fa -n 0.5 -r 0.5
 `,
-	Run: func(cmd *cobra.Command, args []string) {
-		aligns := readalign(infile)
-		f := openWriteFile(mutateOutput)
+	RunE: func(cmd *cobra.Command, args []string) (err error) {
+		var aligns align.AlignChannel
+		var f *os.File
+
+		if aligns, err = readalign(infile); err != nil {
+			io.LogError(err)
+			return
+		}
+		if f, err = openWriteFile(mutateOutput); err != nil {
+			io.LogError(err)
+			return
+		}
+		defer closeWriteFile(f, mutateOutput)
+
 		for al := range aligns.Achan {
 			al.AddGaps(mutateRate, gapnbseqs)
 			writeAlign(al, f)
 		}
-		f.Close()
+
+		if aligns.Err != nil {
+			err = aligns.Err
+			io.LogError(err)
+		}
+		return
 	},
 }
 

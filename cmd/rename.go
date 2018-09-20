@@ -2,7 +2,9 @@ package cmd
 
 import (
 	"errors"
+	"os"
 
+	"github.com/fredericlemoine/goalign/align"
 	"github.com/fredericlemoine/goalign/io"
 	"github.com/spf13/cobra"
 )
@@ -27,46 +29,65 @@ Map file must be tab separated with columns:
 If a sequence name does not appear in the map file, it will not be renamed. 
 If a name that does not exist appears in the map file, it will not do anything.
 `,
-	Run: func(cmd *cobra.Command, args []string) {
+	RunE: func(cmd *cobra.Command, args []string) (err error) {
 		var setregex, setreplace bool
+		var aligns align.AlignChannel
+		var f *os.File
+		var namemap map[string]string
+
 		setregex = cmd.Flags().Changed("regexp")
 		setreplace = cmd.Flags().Changed("replace")
 
 		if renameMap == "none" {
-			io.ExitWithMessage(errors.New("map file is not given"))
+			err = errors.New("map file is not given")
+			return
 		}
 		if setregex && !setreplace {
-			io.ExitWithMessage(errors.New("--replace must be given with --regexp"))
+			err = errors.New("--replace must be given with --regexp")
+			return
 		}
 
-		// Read map file
-		var namemap map[string]string
-		var err error
+		// Read Map File
 		if !setregex {
 			if namemap, err = readMapFile(renameMap, renamerevert); err != nil {
-				io.ExitWithMessage(err)
+				io.LogError(err)
+				return
 			}
 		} else {
 			namemap = make(map[string]string)
 		}
 
-		aligns := readalign(infile)
-		f := openWriteFile(renameOutput)
+		if aligns, err = readalign(infile); err != nil {
+			io.LogError(err)
+			return
+		}
+		if f, err = openWriteFile(renameOutput); err != nil {
+			io.LogError(err)
+			return
+		}
+		defer closeWriteFile(f, renameOutput)
+
 		for al := range aligns.Achan {
 			if !setregex {
 				al.Rename(namemap)
 			} else {
 				if err = al.RenameRegexp(renameRegexp, renameReplace, namemap); err != nil {
-					io.ExitWithMessage(err)
+					io.LogError(err)
+					return
 				}
 			}
 			writeAlign(al, f)
 		}
-		f.Close()
 
 		if setregex {
 			writeNameMap(namemap, renameMap)
 		}
+
+		if aligns.Err != nil {
+			err = aligns.Err
+			io.LogError(err)
+		}
+		return
 	},
 }
 

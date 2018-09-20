@@ -34,21 +34,43 @@ Possible to add pseudo counts (before normalization) with --pseudo-count (-c)
 
 Possible to log2 transform the (normalized) value with --log (-l). Not taken into account with logo normalization
 `,
-	Run: func(cmd *cobra.Command, args []string) {
-		aligns := readalign(infile)
+	RunE: func(cmd *cobra.Command, args []string) (err error) {
+		var aligns align.AlignChannel
+		var pssm map[rune][]float64
+		var pssmstring string
+
+		if aligns, err = readalign(infile); err != nil {
+			io.LogError(err)
+			return
+		}
+
 		switch pssmnorm {
 		case align.PSSM_NORM_UNIF, align.PSSM_NORM_NONE, align.PSSM_NORM_FREQ, align.PSSM_NORM_DATA, align.PSSM_NORM_LOGO:
 			for al := range aligns.Achan {
-				if pssm, err := al.Pssm(pssmlog, pssmpseudocount, pssmnorm); err != nil {
-					io.ExitWithMessage(err)
+				if pssm, err = al.Pssm(pssmlog, pssmpseudocount, pssmnorm); err != nil {
+					io.LogError(err)
+					return
 				} else {
-					fmt.Fprintf(os.Stdout, printPSSM(al, pssm))
+					if pssmstring, err = printPSSM(al, pssm); err != nil {
+						io.LogError(err)
+						return
+					}
+					fmt.Fprintf(os.Stdout, pssmstring)
 				}
 			}
 
 		default:
-			io.ExitWithMessage(errors.New(fmt.Sprintf("Normlization does not exist: %d", pssmnorm)))
+			err = errors.New(fmt.Sprintf("Normlization does not exist: %d", pssmnorm))
+			io.LogError(err)
+			return
 		}
+
+		if aligns.Err != nil {
+			err = aligns.Err
+			io.LogError(err)
+		}
+
+		return
 	},
 }
 
@@ -59,13 +81,14 @@ func init() {
 	pssmCmd.PersistentFlags().IntVarP(&pssmnorm, "normalization", "n", 0, "Counts normalization")
 }
 
-func printPSSM(a align.Alignment, pssm map[rune][]float64) string {
+func printPSSM(a align.Alignment, pssm map[rune][]float64) (pssmstring string, err error) {
 	var buffer bytes.Buffer
 	size := -1
 	for _, c := range a.AlphabetCharacters() {
 		v, ok := pssm[c]
 		if !ok {
-			io.ExitWithMessage(errors.New(fmt.Sprintf("Alphabet character %c is not in the pssm", c)))
+			err = errors.New(fmt.Sprintf("Alphabet character %c is not in the pssm", c))
+			return
 		}
 		buffer.WriteString(fmt.Sprintf("\t%c", c))
 
@@ -73,7 +96,8 @@ func printPSSM(a align.Alignment, pssm map[rune][]float64) string {
 			size = len(v)
 		} else {
 			if len(v) != size {
-				io.ExitWithMessage(errors.New(fmt.Sprintf("Pssm has different sequence lengths for different characters")))
+				err = errors.New(fmt.Sprintf("Pssm has different sequence lengths for different characters"))
+				return
 			}
 		}
 	}
@@ -88,5 +112,6 @@ func printPSSM(a align.Alignment, pssm map[rune][]float64) string {
 		}
 		buffer.WriteString("\n")
 	}
-	return buffer.String()
+	pssmstring = buffer.String()
+	return
 }

@@ -1,10 +1,11 @@
 package cmd
 
 import (
-	"github.com/spf13/cobra"
+	"os"
 
 	"github.com/fredericlemoine/goalign/align"
 	"github.com/fredericlemoine/goalign/io"
+	"github.com/spf13/cobra"
 )
 
 var concatout string
@@ -28,60 +29,68 @@ It is possible to give only otherfiles, without -i, by giving -i none
 or goalign concat -i none -p align*.phy
 
 `,
-	Run: func(cmd *cobra.Command, args []string) {
+	RunE: func(cmd *cobra.Command, args []string) (err error) {
+
+		var aligns align.AlignChannel
+		var alchan align.AlignChannel
 		var align align.Alignment = nil
-		var err error
+		var f *os.File
+
 		if infile != "none" {
-			aligns := readalign(infile)
+			if aligns, err = readalign(infile); err != nil {
+				io.LogError(err)
+				return
+			}
 			for al := range aligns.Achan {
 				if align == nil {
 					align = al
 				} else {
-					err = align.Concat(al)
-					if err != nil {
-						io.ExitWithMessage(err)
+					if err = align.Concat(al); err != nil {
+						io.LogError(err)
+						return
 					}
 				}
 			}
 			if aligns.Err != nil {
-				io.ExitWithMessage(aligns.Err)
+				err = aligns.Err
+				io.LogError(err)
+				return
 			}
 		}
 		for _, otherfile := range args {
-			alchan := readalign(otherfile)
+			if alchan, err = readalign(otherfile); err != nil {
+				io.LogError(err)
+				return
+			}
 			for al := range alchan.Achan {
 				if align == nil {
 					align = al
 				} else {
-					err = align.Concat(al)
-					if err != nil {
-						io.ExitWithMessage(err)
+					if err = align.Concat(al); err != nil {
+						io.LogError(err)
+						return
 					}
 				}
 			}
 			if alchan.Err != nil {
-				io.ExitWithMessage(alchan.Err)
+				err = alchan.Err
+				io.LogError(err)
+				return
 			}
 		}
 
-		f := openWriteFile(concatout)
+		if f, err = openWriteFile(concatout); err != nil {
+			io.LogError(err)
+			return
+		}
 		writeAlign(align, f)
-		f.Close()
+		closeWriteFile(f, concatout)
+
+		return
 	},
 }
 
 func init() {
 	RootCmd.AddCommand(concatCmd)
 	concatCmd.PersistentFlags().StringVarP(&concatout, "output", "o", "stdout", "Alignment output file")
-
-	// Here you will define your flags and configuration settings.
-
-	// Cobra supports Persistent Flags which will work for this command
-	// and all subcommands, e.g.:
-	// concatCmd.PersistentFlags().String("foo", "", "A help for foo")
-
-	// Cobra supports local flags which will only run when this command
-	// is called directly, e.g.:
-	// concatCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
-
 }

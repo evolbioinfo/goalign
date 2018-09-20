@@ -41,41 +41,54 @@ goalign build distboot -m k2p -i align.fa -o mats.txt
 	//Weights follow a Dirichlet distribution D(n;1,...,1)
 	//`,
 
-	Run: func(cmd *cobra.Command, args []string) {
-		var err error
+	RunE: func(cmd *cobra.Command, args []string) (err error) {
 		var model distance.DistModel
+		var aligns align.AlignChannel
+		var f *os.File
 
-		aligns := readalign(infile)
-		f := openWriteFile(distbootOutput)
+		if aligns, err = readalign(infile); err != nil {
+			io.LogError(err)
+			return
+		}
+		if f, err = openWriteFile(distbootOutput); err != nil {
+			io.LogError(err)
+			return
+		}
+		defer closeWriteFile(f, distbootOutput)
+
 		align, _ := <-aligns.Achan
 		if aligns.Err != nil {
-			io.ExitWithMessage(aligns.Err)
+			err = aligns.Err
+			io.LogError(err)
+			return
 		}
 
-		model, err = distance.Model(distbootmodel, distboolRemoveGaps)
-		if err != nil {
-			io.ExitWithMessage(err)
+		if model, err = distance.Model(distbootmodel, distboolRemoveGaps); err != nil {
+			io.LogError(err)
+			return
 		}
+
 		for i := 0; i < distbootnb; i++ {
 			var weights []float64 = nil
 			var distMatrix [][]float64
 			if distbootcontinuous {
 				weights = distance.BuildWeightsDirichlet(align)
-				distMatrix, err = distance.DistMatrix(align, weights, model, rootcpus)
-				if err != nil {
-					io.ExitWithMessage(err)
+				if distMatrix, err = distance.DistMatrix(align, weights, model, rootcpus); err != nil {
+					io.LogError(err)
+					return
 				}
 				writeDistBootMatrix(distMatrix, align, f)
 			} else {
 				boot := align.BuildBootstrap()
-				distMatrix, err = distance.DistMatrix(boot, nil, model, rootcpus)
-				if err != nil {
-					io.ExitWithMessage(err)
+				if distMatrix, err = distance.DistMatrix(boot, nil, model, rootcpus); err != nil {
+					io.LogError(err)
+					return
 				}
 				writeDistBootMatrix(distMatrix, align, f)
 			}
 		}
-		f.Close()
+
+		return
 	},
 }
 

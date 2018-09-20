@@ -2,7 +2,9 @@ package cmd
 
 import (
 	"fmt"
+	"os"
 
+	"github.com/fredericlemoine/goalign/align"
 	"github.com/fredericlemoine/goalign/io"
 	"github.com/spf13/cobra"
 )
@@ -20,11 +22,21 @@ var samplesitesCmd = &cobra.Command{
 It take a random start position, and extract the alignment starting at that position
 and with a given length.
 `,
-	Run: func(cmd *cobra.Command, args []string) {
-		aligns := readalign(infile)
+	RunE: func(cmd *cobra.Command, args []string) (err error) {
+		var aligns align.AlignChannel
+		var f *os.File
+		var subalign align.Alignment
+
+		if aligns, err = readalign(infile); err != nil {
+			io.LogError(err)
+			return
+		}
+
 		al, _ := <-aligns.Achan
 		if aligns.Err != nil {
-			io.ExitWithMessage(aligns.Err)
+			err = aligns.Err
+			io.LogError(err)
+			return
 		}
 
 		var name string = siteout
@@ -36,14 +48,19 @@ and with a given length.
 			if sitenb > 1 {
 				name = fmt.Sprintf("%s_%d.%s", siteout, i, extension)
 			}
-			out := openWriteFile(name)
-			subalign, err := al.RandSubAlign(sitelength)
-			if err != nil {
-				io.ExitWithMessage(err)
+			if f, err = openWriteFile(name); err != nil {
+				io.LogError(err)
+				return
 			}
-			writeAlign(subalign, out)
-			out.Close()
+			defer closeWriteFile(f, name)
+
+			if subalign, err = al.RandSubAlign(sitelength); err != nil {
+				io.LogError(err)
+				return
+			}
+			writeAlign(subalign, f)
 		}
+		return
 	},
 }
 

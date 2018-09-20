@@ -2,7 +2,10 @@ package cmd
 
 import (
 	"fmt"
+	"os"
 
+	"github.com/fredericlemoine/goalign/align"
+	"github.com/fredericlemoine/goalign/io"
 	"github.com/spf13/cobra"
 )
 
@@ -33,20 +36,34 @@ If align contains 3 alignments, this will generate 3 files:
 * seq_000002.fa
 * seq_000003.fa
 `,
-	Run: func(cmd *cobra.Command, args []string) {
-		aligns := readalign(infile)
+	RunE: func(cmd *cobra.Command, args []string) (err error) {
+		var aligns align.AlignChannel
+		var f *os.File
+
+		if aligns, err = readalign(infile); err != nil {
+			io.LogError(err)
+			return
+		}
+
 		i := 1
 		filename := unalignOutput
 		for al := range aligns.Achan {
 			if filename != "stdout" && filename != "-" {
 				filename = fmt.Sprintf("%s_%.6d.fa", unalignOutput, i)
 			}
-			f := openWriteFile(filename)
-			writeUnAlignFasta(al, f)
-			if filename != "stdout" && filename != "-" {
-				f.Close()
+			if f, err = openWriteFile(filename); err != nil {
+				io.LogError(err)
+				return
 			}
+			writeUnAlignFasta(al, f)
+			closeWriteFile(f, filename)
 		}
+
+		if aligns.Err != nil {
+			err = aligns.Err
+			io.LogError(err)
+		}
+		return
 	},
 }
 
