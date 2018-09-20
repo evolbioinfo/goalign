@@ -21,7 +21,8 @@ goalign stats nseq -i align.phylip -p
 goalign stats nseq -i align.fasta
 `,
 	Run: func(cmd *cobra.Command, args []string) {
-		for al := range rootaligns.Achan {
+		aligns := readalign(infile)
+		for al := range aligns.Achan {
 			fmt.Println(al.NbSequences())
 		}
 	},

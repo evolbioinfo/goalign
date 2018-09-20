@@ -24,8 +24,9 @@ goalign shuffle seqs -i align.fasta
 
 `,
 	Run: func(cmd *cobra.Command, args []string) {
+		aligns := readalign(infile)
 		f := openWriteFile(shuffleOutput)
-		for al := range rootaligns.Achan {
+		for al := range aligns.Achan {
 			al.ShuffleSequences()
 			writeAlign(al, f)
 		}

@@ -5,9 +5,7 @@ package cmd
 import (
 	"fmt"
 	"github.com/spf13/cobra"
-	"math/rand"
 	"os"
-	"time"
 
 	"github.com/fredericlemoine/goalign/distance"
 	"github.com/fredericlemoine/goalign/io"
@@ -23,11 +21,10 @@ Weights follow a Dirichlet distribution D(n;1,...,1)
 
 `,
 	Run: func(cmd *cobra.Command, args []string) {
-		rand.Seed(weightbootSeed)
-
-		al, _ := <-rootaligns
-		if rootaligns.Err != nil {
-			io.ExitWithMessage(rootaligns.Err)
+		aligns := readalign(infile)
+		al, _ := <-aligns
+		if aligns.Err != nil {
+			io.ExitWithMessage(aligns.Err)
 		}
 
 		mintnt := 1.0
@@ -74,7 +71,6 @@ Weights follow a Dirichlet distribution D(n;1,...,1)
 
 func init() {
 	buildCmd.AddCommand(tntweightbootCmd)
-	tntweightbootCmd.PersistentFlags().Int64VarP(&weightbootSeed, "seed", "s", time.Now().UTC().UnixNano(), "Initial Random Seed")
 	tntweightbootCmd.PersistentFlags().StringVarP(&weightbootOutput, "output-prefix", "o", "stdout", "Prefix of Tnt input data file")
 	tntweightbootCmd.PersistentFlags().IntVarP(&weightbootnb, "nboot", "n", 1, "Number of bootstrap replicates to build")
 }

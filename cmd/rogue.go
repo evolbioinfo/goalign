@@ -41,9 +41,10 @@ S3 12345678    S3 1634527 <= This one: 2 nucleotides are shuffled
 S4 12345678    S4 1234567
 `,
 	Run: func(cmd *cobra.Command, args []string) {
+		aligns := readalign(infile)
 		f := openWriteFile(shuffleOutput)
 		nameFile := openWriteFile(rogueNameFile)
-		for al := range rootaligns.Achan {
+		for al := range aligns.Achan {
 			names, _ := al.SimulateRogue(rogueNb, rogueLength)
 			writeAlign(al, f)
 			for _, n := range names {

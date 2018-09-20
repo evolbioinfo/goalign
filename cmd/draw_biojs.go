@@ -20,8 +20,9 @@ See http://msa.biojs.net/ for more informations
 	Run: func(cmd *cobra.Command, args []string) {
 		var l draw.AlignLayout
 
+		aligns := readalign(infile)
 		nalign := 0
-		for al := range rootaligns.Achan {
+		for al := range aligns.Achan {
 			fname := drawOutput
 			// Add an index to file output name
 			// if there are several alignments to draw

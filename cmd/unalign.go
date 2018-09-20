@@ -34,9 +34,10 @@ If align contains 3 alignments, this will generate 3 files:
 * seq_000003.fa
 `,
 	Run: func(cmd *cobra.Command, args []string) {
+		aligns := readalign(infile)
 		i := 1
 		filename := unalignOutput
-		for al := range rootaligns.Achan {
+		for al := range aligns.Achan {
 			if filename != "stdout" && filename != "-" {
 				filename = fmt.Sprintf("%s_%.6d.fa", unalignOutput, i)
 			}

@@ -30,12 +30,14 @@ Id -a is given, then names are generated with the pattern "S000<i>".
 `,
 	Run: func(cmd *cobra.Command, args []string) {
 		var err error
+
+		aligns := readalign(infile)
 		namemap := make(map[string]string)
 		curid := 1
 		f := openWriteFile(trimAlignOut)
-		for al := range rootaligns.Achan {
-			if rootaligns.Err != nil {
-				io.ExitWithMessage(rootaligns.Err)
+		for al := range aligns.Achan {
+			if aligns.Err != nil {
+				io.ExitWithMessage(aligns.Err)
 			}
 
 			if trimAuto {

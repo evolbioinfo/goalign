@@ -20,8 +20,9 @@ goalign reformat nexus -i align.fasta
 
 `,
 	Run: func(cmd *cobra.Command, args []string) {
+		aligns := readalign(infile)
 		f := openWriteFile(reformatOutput)
-		for al := range rootaligns.Achan {
+		for al := range aligns.Achan {
 			if reformatCleanNames {
 				al.CleanNames()
 			}

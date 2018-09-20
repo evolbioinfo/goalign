@@ -7,14 +7,12 @@ import (
 	"log"
 	"math"
 	"os"
-	"time"
 
 	"github.com/fredericlemoine/goalign/align"
 	"github.com/fredericlemoine/goalign/distance"
 	"github.com/fredericlemoine/goalign/io"
 )
 
-var computedistSeed int64
 var computedistOutput string
 var computedistModel string
 var computedistRemoveGaps bool
@@ -65,7 +63,9 @@ if -a is given: display only the average distance
 		if err != nil {
 			io.ExitWithMessage(err)
 		}
-		for align := range rootaligns.Achan {
+
+		aligns := readalign(infile)
+		for align := range aligns.Achan {
 			var distMatrix [][]float64
 			distMatrix, err = distance.DistMatrix(align, nil, model, rootcpus)
 			if err != nil {
@@ -83,7 +83,6 @@ if -a is given: display only the average distance
 
 func init() {
 	computeCmd.AddCommand(computedistCmd)
-	computedistCmd.PersistentFlags().Int64VarP(&computedistSeed, "seed", "s", time.Now().UTC().UnixNano(), "Initial Random Seed")
 	computedistCmd.PersistentFlags().StringVarP(&computedistOutput, "output", "o", "stdout", "Distance matrix output file")
 	computedistCmd.PersistentFlags().StringVarP(&computedistModel, "model", "m", "k2p", "Model for distance computation")
 	computedistCmd.PersistentFlags().BoolVarP(&computedistRemoveGaps, "rm-gaps", "r", false, "Do not take into account positions containing >=1 gaps")

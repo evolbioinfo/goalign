@@ -30,8 +30,9 @@ goalign dedup -i ali.phy will produce:
 3 GGGGGG
 `,
 	Run: func(cmd *cobra.Command, args []string) {
+		aligns := readalign(infile)
 		f := openWriteFile(dedupOutput)
-		for al := range rootaligns.Achan {
+		for al := range aligns.Achan {
 			if out, err := al.Deduplicate(); err != nil {
 				if err != nil {
 					io.ExitWithMessage(err)

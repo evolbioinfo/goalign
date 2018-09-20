@@ -7,7 +7,6 @@ import (
 	"errors"
 	"fmt"
 	"github.com/spf13/cobra"
-	"math/rand"
 	"os"
 	"sync"
 	"time"
@@ -17,7 +16,6 @@ import (
 	"github.com/fredericlemoine/goalign/io/phylip"
 )
 
-var bootstrapSeed int64
 var bootstrapNb int
 var bootstrapoutprefix string
 var bootstrapOrder bool
@@ -55,19 +53,19 @@ goalign build seqboot -i align.phylip -p -n 500 -o boot --tar-gz
 goalign build seqboot -i align.phylip -p -n 500 -o boot_ 
 `,
 	Run: func(cmd *cobra.Command, args []string) {
+		aligns := readalign(infile)
 		if bootstrapoutprefix == "none" {
 			io.ExitWithMessage(errors.New("Output bootstrap file prefix is mandatory"))
 		}
 
-		rand.Seed(bootstrapSeed)
 		var err error
 		var f *os.File
 		var tw *tar.Writer
 		var gw *gzip.Writer
 
-		align, _ := <-rootaligns.Achan
-		if rootaligns.Err != nil {
-			io.ExitWithMessage(rootaligns.Err)
+		align, _ := <-aligns.Achan
+		if aligns.Err != nil {
+			io.ExitWithMessage(aligns.Err)
 		}
 
 		bootidx := make(chan int, 100)
@@ -215,7 +213,6 @@ func min_int(a, b int) int {
 func init() {
 	buildCmd.AddCommand(seqbootCmd)
 
-	seqbootCmd.PersistentFlags().Int64VarP(&bootstrapSeed, "seed", "s", time.Now().UTC().UnixNano(), "Initial Random Seed")
 	seqbootCmd.PersistentFlags().BoolVarP(&bootstrapOrder, "shuf-order", "S", false, "Also shuffle order of sequences in bootstrap files")
 	seqbootCmd.PersistentFlags().BoolVar(&bootstraptar, "tar", false, "Will create a single tar file with all bootstrap alignments (one thread for tar, but not a bottleneck)")
 	seqbootCmd.PersistentFlags().BoolVar(&bootstrapgz, "gz", false, "Will gzip output file(s). Maybe slow if combined with --tar (only one thread working for tar/gz)")

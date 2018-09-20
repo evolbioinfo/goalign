@@ -6,9 +6,11 @@ import (
 	"errors"
 	"fmt"
 	goio "io"
+	"math/rand"
 	"os"
 	"runtime"
 	"strings"
+	"time"
 
 	"github.com/fredericlemoine/goalign/align"
 	"github.com/fredericlemoine/goalign/io"
@@ -24,7 +26,6 @@ import (
 
 var cfgFile string
 var infile string
-var rootaligns align.AlignChannel
 var rootphylip bool
 var rootnexus bool
 var rootclustal bool
@@ -32,6 +33,7 @@ var rootcpus int
 var rootinputstrict bool = false
 var rootoutputstrict bool = false
 var rootAutoDetectInputFormat bool
+var seed int64 = -1
 
 var helptemplate string = `{{with or .Long .Short }}{{. | trim}}
 
@@ -69,12 +71,10 @@ Please note that in --auto-detect mode, phylip format is considered as not stric
 `,
 	PersistentPreRun: func(cmd *cobra.Command, args []string) {
 		runtime.GOMAXPROCS(rootcpus)
-		rootaligns = readalign(infile)
-	},
-	PersistentPostRun: func(cmd *cobra.Command, args []string) {
-		if rootaligns.Err != nil {
-			io.ExitWithMessage(rootaligns.Err)
+		if seed == -1 {
+			seed = time.Now().UTC().UnixNano()
 		}
+		rand.Seed(seed)
 	},
 }
 
@@ -154,8 +154,9 @@ func init() {
 	RootCmd.PersistentFlags().BoolVarP(&rootphylip, "phylip", "p", false, "Alignment is in phylip? default fasta")
 	RootCmd.PersistentFlags().BoolVarP(&rootnexus, "nexus", "x", false, "Alignment is in nexus? default fasta")
 	RootCmd.PersistentFlags().BoolVarP(&rootclustal, "clustal", "u", false, "Alignment is in clustal? default fasta")
-
 	RootCmd.PersistentFlags().IntVarP(&rootcpus, "threads", "t", 1, "Number of threads")
+
+	RootCmd.PersistentFlags().Int64Var(&seed, "seed", -1, "Random Seed: -1 = nano seconds since 1970/01/01 00:00:00")
 	RootCmd.PersistentFlags().BoolVar(&rootinputstrict, "input-strict", false, "Strict phylip input format (only used with -p)")
 	RootCmd.PersistentFlags().BoolVar(&rootoutputstrict, "output-strict", false, "Strict phylip output format (only used with -p)")
 

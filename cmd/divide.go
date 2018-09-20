@@ -29,8 +29,9 @@ gotree divide -i align.ph -p -o out
 
 `,
 	Run: func(cmd *cobra.Command, args []string) {
+		aligns := readalign(infile)
 		i := 0
-		for al := range rootaligns.Achan {
+		for al := range aligns.Achan {
 			if divideoutputFasta {
 				f := openWriteFile(fmt.Sprintf("%s_%03d.fa", divideOutput, i))
 				writeAlignFasta(al, f)

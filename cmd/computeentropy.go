@@ -42,7 +42,8 @@ and it will not be taken into account in the average.
 		} else {
 			fmt.Println("Alignment\tSite\tEntropy")
 		}
-		for align := range rootaligns.Achan {
+		aligns := readalign(infile)
+		for align := range aligns.Achan {
 			avg := 0.0
 			total := 0
 			for i := 0; i < align.Length(); i++ {

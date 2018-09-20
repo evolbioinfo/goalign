@@ -22,10 +22,10 @@ goalign stats taxa -i align.phylip -p
 goalign stats taxa -i align.fasta
 `,
 	Run: func(cmd *cobra.Command, args []string) {
-		// TODO: Work your own magic here
-		al, _ := <-rootaligns.Achan
-		if rootaligns.Err != nil {
-			io.ExitWithMessage(rootaligns.Err)
+		aligns := readalign(infile)
+		al, _ := <-aligns.Achan
+		if aligns.Err != nil {
+			io.ExitWithMessage(aligns.Err)
 		}
 
 		i := 0

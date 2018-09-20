@@ -66,7 +66,8 @@ given in the comand line.
 			}
 		}
 
-		for al := range rootaligns.Achan {
+		aligns := readalign(infile)
+		for al := range aligns.Achan {
 			var filtered align.Alignment = nil
 			al.Iterate(func(name string, sequence string) {
 				if filtered == nil {

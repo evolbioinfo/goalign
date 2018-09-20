@@ -4,18 +4,15 @@ import (
 	"bufio"
 	"compress/gzip"
 	"errors"
-	"math/rand"
 	"os"
 	"strconv"
 	"strings"
-	"time"
 
 	"github.com/fredericlemoine/goalign/io"
 	"github.com/spf13/cobra"
 )
 
 var rarefyNb int
-var rarefySeed int64
 var rarefyOutput string
 var rarefyCounts string
 var rarefyReplicates int
@@ -43,10 +40,10 @@ is considered as 0). Sum of counts of all sequences must be > n.
 Output: An alignment (phylip or fasta).
 `,
 	Run: func(cmd *cobra.Command, args []string) {
-		rand.Seed(rarefySeed)
+		aligns := readalign(infile)
 		counts := parseCountFile(rarefyCounts)
 		f := openWriteFile(rarefyOutput)
-		for al := range rootaligns.Achan {
+		for al := range aligns.Achan {
 			if rarefyReplicates > 1 {
 				rootphylip = true
 			}
@@ -65,7 +62,6 @@ Output: An alignment (phylip or fasta).
 func init() {
 	sampleCmd.AddCommand(rarefyCmd)
 	rarefyCmd.PersistentFlags().IntVarP(&rarefyNb, "nb-seq", "n", 1, "Number of sequences to sample from the repeated dataset (from counts)")
-	rarefyCmd.PersistentFlags().Int64VarP(&rarefySeed, "seed", "s", time.Now().UTC().UnixNano(), "Initial Random Seed")
 	rarefyCmd.PersistentFlags().StringVarP(&rarefyOutput, "output", "o", "stdout", "Rarefied alignment output file")
 	rarefyCmd.PersistentFlags().StringVarP(&rarefyCounts, "counts", "c", "stdin", "Count file (tab separated), one line per sequence: seqname\\tcount")
 	rarefyCmd.PersistentFlags().IntVarP(&rarefyReplicates, "replicates", "r", 1, "Number of replicates to generate")

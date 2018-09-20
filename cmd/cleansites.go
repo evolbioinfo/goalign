@@ -25,9 +25,10 @@ Examples:
 If cutoff is <0 or >1, it will be considered as 0, which means that every site with at least 1 gap
 will be removed.`,
 	Run: func(cmd *cobra.Command, args []string) {
+		aligns := readalign(infile)
 		f := openWriteFile(cleanOutput)
 		i := 0
-		for al := range rootaligns.Achan {
+		for al := range aligns.Achan {
 			beforelength := al.Length()
 			al.RemoveGapSites(cleanCutoff)
 			afterlength := al.Length()

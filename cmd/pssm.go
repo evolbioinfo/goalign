@@ -35,9 +35,10 @@ Possible to add pseudo counts (before normalization) with --pseudo-count (-c)
 Possible to log2 transform the (normalized) value with --log (-l). Not taken into account with logo normalization
 `,
 	Run: func(cmd *cobra.Command, args []string) {
+		aligns := readalign(infile)
 		switch pssmnorm {
 		case align.PSSM_NORM_UNIF, align.PSSM_NORM_NONE, align.PSSM_NORM_FREQ, align.PSSM_NORM_DATA, align.PSSM_NORM_LOGO:
-			for al := range rootaligns.Achan {
+			for al := range aligns.Achan {
 				if pssm, err := al.Pssm(pssmlog, pssmpseudocount, pssmnorm); err != nil {
 					io.ExitWithMessage(err)
 				} else {

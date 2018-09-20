@@ -2,14 +2,11 @@ package cmd
 
 import (
 	"fmt"
-	"math/rand"
-	"time"
 
 	"github.com/fredericlemoine/goalign/io"
 	"github.com/spf13/cobra"
 )
 
-var siteseed int64
 var siteout string
 var sitelength int
 var sitenb int
@@ -24,11 +21,10 @@ It take a random start position, and extract the alignment starting at that posi
 and with a given length.
 `,
 	Run: func(cmd *cobra.Command, args []string) {
-		rand.Seed(siteseed)
-
-		al, _ := <-rootaligns.Achan
-		if rootaligns.Err != nil {
-			io.ExitWithMessage(rootaligns.Err)
+		aligns := readalign(infile)
+		al, _ := <-aligns.Achan
+		if aligns.Err != nil {
+			io.ExitWithMessage(aligns.Err)
 		}
 
 		var name string = siteout
@@ -53,7 +49,6 @@ and with a given length.
 
 func init() {
 	sampleCmd.AddCommand(samplesitesCmd)
-	samplesitesCmd.PersistentFlags().Int64VarP(&siteseed, "seed", "s", time.Now().UTC().UnixNano(), "Initial Random Seed")
 	samplesitesCmd.PersistentFlags().StringVarP(&siteout, "output", "o", "stdout", "Alignment output file")
 	samplesitesCmd.PersistentFlags().IntVarP(&sitelength, "length", "l", 10, "Length of the random sub alignment")
 	samplesitesCmd.PersistentFlags().IntVarP(&sitenb, "nsamples", "n", 1, "Number of samples to generate")

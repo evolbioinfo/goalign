@@ -71,8 +71,9 @@ If several alignments are present in the input file and the output is a file
 		extension := filepath.Ext(subseqout)
 		name := subseqout[0 : len(subseqout)-len(extension)]
 
+		aligns := readalign(infile)
 		out := openWriteFile(subseqout)
-		for al := range rootaligns.Achan {
+		for al := range aligns.Achan {
 			start := subseqstart
 			if filenum > 0 && subseqout != "stdout" && subseqout != "-" {
 				fileid = fmt.Sprintf("_al%d", filenum)

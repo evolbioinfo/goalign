@@ -26,7 +26,8 @@ If the input alignment contains several alignments, will process all of them
 
 `,
 	Run: func(cmd *cobra.Command, args []string) {
-		for al := range rootaligns.Achan {
+		aligns := readalign(infile)
+		for al := range aligns.Achan {
 			fmt.Fprintf(os.Stdout, "length\t%d\n", al.Length())
 			fmt.Fprintf(os.Stdout, "nseqs\t%d\n", al.NbSequences())
 			fmt.Fprintf(os.Stdout, "avgalleles\t%.4f\n", al.AvgAllelesPerSite())
@@ -36,8 +37,8 @@ If the input alignment contains several alignments, will process all of them
 	},
 }
 
-func printCharStats(rootalign align.Alignment) {
-	charmap := rootalign.CharStats()
+func printCharStats(align align.Alignment) {
+	charmap := align.CharStats()
 	keys := make([]string, 0, len(charmap))
 	var total int64 = 0
 	for k, v := range charmap {
@@ -53,8 +54,8 @@ func printCharStats(rootalign align.Alignment) {
 	}
 }
 
-func printSiteCharStats(rootalign align.Alignment) {
-	charmap := rootalign.CharStats()
+func printSiteCharStats(align align.Alignment) {
+	charmap := align.CharStats()
 	keys := make([]string, 0, len(charmap))
 	for k, _ := range charmap {
 		keys = append(keys, string(k))
@@ -65,8 +66,8 @@ func printSiteCharStats(rootalign align.Alignment) {
 		fmt.Fprintf(os.Stdout, "\t%s", v)
 	}
 	fmt.Fprintf(os.Stdout, "\n")
-	for site := 0; site < rootalign.Length(); site++ {
-		sitemap, err := rootalign.CharStatsSite(site)
+	for site := 0; site < align.Length(); site++ {
+		sitemap, err := align.CharStatsSite(site)
 		if err != nil {
 			io.ExitWithMessage(err)
 		}
@@ -81,8 +82,8 @@ func printSiteCharStats(rootalign align.Alignment) {
 
 // Prints the Character with the most frequency
 // for each site of the alignment
-func printMaxCharStats(rootalign align.Alignment) {
-	maxchars, occur := rootalign.MaxCharStats()
+func printMaxCharStats(align align.Alignment) {
+	maxchars, occur := align.MaxCharStats()
 
 	fmt.Fprintf(os.Stdout, "site\tchar\tnb\n")
 	for i, c := range maxchars {

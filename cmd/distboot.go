@@ -3,16 +3,13 @@ package cmd
 import (
 	"fmt"
 	"github.com/spf13/cobra"
-	"math/rand"
 	"os"
-	"time"
 
 	"github.com/fredericlemoine/goalign/align"
 	"github.com/fredericlemoine/goalign/distance"
 	"github.com/fredericlemoine/goalign/io"
 )
 
-var distbootSeed int64
 var distbootOutput string
 var distbootnb int
 var distbootmodel string
@@ -48,11 +45,11 @@ goalign build distboot -m k2p -i align.fa -o mats.txt
 		var err error
 		var model distance.DistModel
 
-		rand.Seed(distbootSeed)
+		aligns := readalign(infile)
 		f := openWriteFile(distbootOutput)
-		align, _ := <-rootaligns.Achan
-		if rootaligns.Err != nil {
-			io.ExitWithMessage(rootaligns.Err)
+		align, _ := <-aligns.Achan
+		if aligns.Err != nil {
+			io.ExitWithMessage(aligns.Err)
 		}
 
 		model, err = distance.Model(distbootmodel, distboolRemoveGaps)
@@ -84,7 +81,6 @@ goalign build distboot -m k2p -i align.fa -o mats.txt
 
 func init() {
 	buildCmd.AddCommand(distbootCmd)
-	distbootCmd.PersistentFlags().Int64VarP(&distbootSeed, "seed", "s", time.Now().UTC().UnixNano(), "Initial Random Seed")
 	distbootCmd.PersistentFlags().StringVarP(&distbootOutput, "output", "o", "stdout", "Distance matrices output file")
 	distbootCmd.PersistentFlags().StringVarP(&distbootmodel, "model", "m", "k2p", "Model for distance computation")
 	distbootCmd.PersistentFlags().IntVarP(&distbootnb, "nboot", "n", 1, "Number of bootstrap replicates to build")

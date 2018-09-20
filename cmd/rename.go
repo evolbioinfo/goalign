@@ -50,8 +50,9 @@ If a name that does not exist appears in the map file, it will not do anything.
 			namemap = make(map[string]string)
 		}
 
+		aligns := readalign(infile)
 		f := openWriteFile(renameOutput)
-		for al := range rootaligns.Achan {
+		for al := range aligns.Achan {
 			if !setregex {
 				al.Rename(namemap)
 			} else {

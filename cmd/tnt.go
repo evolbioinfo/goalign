@@ -22,10 +22,11 @@ goalign reformat tnt -i align.phylip -p
 goalign reformat tnt -i align.fasta
 `,
 	Run: func(cmd *cobra.Command, args []string) {
+		aligns := readalign(infile)
 		f := openWriteFile(reformatOutput)
-		al, _ := <-rootaligns.Achan
-		if rootaligns.Err != nil {
-			io.ExitWithMessage(rootaligns.Err)
+		al, _ := <-aligns.Achan
+		if aligns.Err != nil {
+			io.ExitWithMessage(aligns.Err)
 		}
 		if reformatCleanNames {
 			al.CleanNames()

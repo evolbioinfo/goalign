@@ -21,8 +21,9 @@ goalign stats nalign -i align.ph -p
 
 `,
 	Run: func(cmd *cobra.Command, args []string) {
+		aligns := readalign(infile)
 		naligns := 0
-		for _ = range rootaligns.Achan {
+		for _ = range aligns.Achan {
 			naligns++
 		}
 		fmt.Println(naligns)

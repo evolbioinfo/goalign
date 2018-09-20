@@ -49,10 +49,6 @@ Examples (Largely inspired from kubectl command):
   goalign completion zsh > "${fpath[1]}/_goalign"
 
 `,
-	PersistentPreRun: func(cmd *cobra.Command, args []string) {
-	},
-	PersistentPostRun: func(cmd *cobra.Command, args []string) {
-	},
 	Run: func(cmd *cobra.Command, args []string) {
 		shell := args[0]
 		if shell == "bash" {

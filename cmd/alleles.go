@@ -12,7 +12,8 @@ var allelesCmd = &cobra.Command{
 	Short: "Prints the average number of alleles per sites of the alignment",
 	Long:  `Prints the average number of alleles per sites of the alignment.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		for al := range rootaligns.Achan {
+		aligns := readalign(infile)
+		for al := range aligns.Achan {
 			fmt.Println(al.AvgAllelesPerSite())
 		}
 	},

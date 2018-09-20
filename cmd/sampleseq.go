@@ -3,11 +3,8 @@ package cmd
 import (
 	"github.com/fredericlemoine/goalign/io"
 	"github.com/spf13/cobra"
-	"math/rand"
-	"time"
 )
 
-var sampleseqSeed int64
 var sampleseqOutput string
 var sampleseqNb int
 
@@ -25,9 +22,9 @@ As output, writes an alignment containing a sample of the sequences
 
 `,
 	Run: func(cmd *cobra.Command, args []string) {
-		rand.Seed(sampleseqSeed)
+		aligns := readalign(infile)
 		f := openWriteFile(sampleseqOutput)
-		for al := range rootaligns.Achan {
+		for al := range aligns.Achan {
 			if sample, err := al.Sample(sampleseqNb); err != nil {
 				io.ExitWithMessage(err)
 			} else {
@@ -41,6 +38,5 @@ As output, writes an alignment containing a sample of the sequences
 func init() {
 	sampleCmd.AddCommand(sampleseqCmd)
 	sampleseqCmd.PersistentFlags().IntVarP(&sampleseqNb, "nb-seq", "n", 1, "Number of sequences to sample from the alignment")
-	sampleseqCmd.PersistentFlags().Int64VarP(&sampleseqSeed, "seed", "s", time.Now().UTC().UnixNano(), "Initial Random Seed")
 	sampleseqCmd.PersistentFlags().StringVarP(&sampleseqOutput, "output", "o", "stdout", "Sampled alignment output file")
 }

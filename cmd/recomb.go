@@ -35,8 +35,9 @@ goalign shuffle recomb -i align.phylip -p -n 1 -l 0.5
 goalign shuffle recomb -i align.fasta -r 0.5 -n 1 -l 0.5
 `,
 	Run: func(cmd *cobra.Command, args []string) {
+		aligns := readalign(infile)
 		f := openWriteFile(shuffleOutput)
-		for al := range rootaligns.Achan {
+		for al := range aligns.Achan {
 			al.Recombine(recombNb, recombProp)
 			writeAlign(al, f)
 		}

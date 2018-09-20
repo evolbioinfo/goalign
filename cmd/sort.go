@@ -13,8 +13,9 @@ var sortCmd = &cobra.Command{
 	Long: `sorts input algignment by sequence name.
 `,
 	Run: func(cmd *cobra.Command, args []string) {
+		aligns := readalign(infile)
 		f := openWriteFile(sortOutput)
-		for al := range rootaligns.Achan {
+		for al := range aligns.Achan {
 			al.Sort()
 			writeAlign(al, f)
 		}

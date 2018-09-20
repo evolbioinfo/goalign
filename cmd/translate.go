@@ -23,8 +23,9 @@ It only translates using the standard genetic code so far.
 
 `,
 	Run: func(cmd *cobra.Command, args []string) {
+		aligns := readalign(infile)
 		f := openWriteFile(translateOutput)
-		for al := range rootaligns.Achan {
+		for al := range aligns.Achan {
 			transAl, err := al.Translate(translatePhase)
 			if err != nil {
 				io.ExitWithMessage(err)

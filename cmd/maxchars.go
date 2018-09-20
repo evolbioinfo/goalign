@@ -23,9 +23,10 @@ goalign stats maxchar -i align.phylip -p
 goalign stats maxchar -i align.fasta
 `,
 	Run: func(cmd *cobra.Command, args []string) {
-		al, _ := <-rootaligns.Achan
-		if rootaligns.Err != nil {
-			io.ExitWithMessage(rootaligns.Err)
+		aligns := readalign(infile)
+		al, _ := <-aligns.Achan
+		if aligns.Err != nil {
+			io.ExitWithMessage(aligns.Err)
 		}
 		printMaxCharStats(al)
 	},

@@ -5,13 +5,10 @@ package cmd
 import (
 	"fmt"
 	"github.com/spf13/cobra"
-	"math/rand"
-	"time"
 
 	"github.com/fredericlemoine/goalign/distance"
 )
 
-var weightbootSeed int64
 var weightbootOutput string
 var weightbootnb int
 
@@ -27,11 +24,10 @@ Weights follow a Dirichlet distribtion D(n;1,...,1)
 
 `,
 	Run: func(cmd *cobra.Command, args []string) {
-		rand.Seed(weightbootSeed)
-
-		al, _ := <-rootaligns
-		if rootaligns.Err != nil {
-			io.ExitWithMessage(rootaligns.Err)
+		aligns := readalign(infile)
+		al, _ := <-aligns
+		if aligns.Err != nil {
+			io.ExitWithMessage(aligns.Err)
 		}
 
 		f := openWriteFile(weightbootOutput)
@@ -52,7 +48,6 @@ Weights follow a Dirichlet distribtion D(n;1,...,1)
 
 func init() {
 	buildCmd.AddCommand(weightbootCmd)
-	weightbootCmd.PersistentFlags().Int64VarP(&weightbootSeed, "seed", "s", time.Now().UTC().UnixNano(), "Initial Random Seed")
 	weightbootCmd.PersistentFlags().StringVarP(&weightbootOutput, "output", "o", "stdout", "Weight vectors output file")
 	weightbootCmd.PersistentFlags().IntVarP(&weightbootnb, "nboot", "n", 1, "Number of bootstrap replicates to build")
 }

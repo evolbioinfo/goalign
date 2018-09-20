@@ -1,8 +1,6 @@
 package cmd
 
 import (
-	"math/rand"
-
 	"github.com/spf13/cobra"
 )
 
@@ -16,9 +14,9 @@ var gapsCmd = &cobra.Command{
       if rate > 1  : then rate = 1
 `,
 	Run: func(cmd *cobra.Command, args []string) {
-		rand.Seed(mutateSeed)
+		aligns := readalign(infile)
 		f := openWriteFile(mutateOutput)
-		for al := range rootaligns.Achan {
+		for al := range aligns.Achan {
 			al.Mutate(mutateRate)
 			writeAlign(al, f)
 		}

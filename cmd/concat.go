@@ -28,14 +28,12 @@ It is possible to give only otherfiles, without -i, by giving -i none
 or goalign concat -i none -p align*.phy
 
 `,
-	PersistentPreRun: func(cmd *cobra.Command, args []string) {
-	},
 	Run: func(cmd *cobra.Command, args []string) {
 		var align align.Alignment = nil
 		var err error
 		if infile != "none" {
-			rootaligns = readalign(infile)
-			for al := range rootaligns.Achan {
+			aligns := readalign(infile)
+			for al := range aligns.Achan {
 				if align == nil {
 					align = al
 				} else {
@@ -45,8 +43,8 @@ or goalign concat -i none -p align*.phy
 					}
 				}
 			}
-			if rootaligns.Err != nil {
-				io.ExitWithMessage(rootaligns.Err)
+			if aligns.Err != nil {
+				io.ExitWithMessage(aligns.Err)
 			}
 		}
 		for _, otherfile := range args {
@@ -62,7 +60,7 @@ or goalign concat -i none -p align*.phy
 				}
 			}
 			if alchan.Err != nil {
-				io.ExitWithMessage(rootaligns.Err)
+				io.ExitWithMessage(alchan.Err)
 			}
 		}
 

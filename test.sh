@@ -23,7 +23,7 @@ AGGTATCTTCCTGTGTTACC
 CATAGCCCCTGATGCCCTGACCCGTGTCGCGGCAACGTCTACATTTCACGATAAATACTCCGCTGCTAGTCGGCTCTAGA
 TGCTTTTCTTCCAGATCTGG
 EOF
-goalign random -s 10 -n 5 | goalign addid -n prefix_ | goalign addid -n _suffix -r > result
+goalign random --seed 10 -n 5 | goalign addid -n prefix_ | goalign addid -n _suffix -r > result
 diff result expected
 rm -f expected result mapfile
 
@@ -56,7 +56,7 @@ cat > expectedlog <<EOF
 [Warning] in cmd/clean.go (line 56), message: Alignment (0) length after cleaning=39
 [Warning] in cmd/clean.go (line 57), message: Alignment (0) number of gaps=61
 EOF
-goalign random -s 10 | goalign mutate gaps -n 1 -r 0.1 -s 10 |  goalign clean sites > result 2>log
+goalign random --seed 10 | goalign mutate gaps -n 1 -r 0.1 --seed 10 |  goalign clean sites > result 2>log
 diff result expected
 rm -f expected result mapfile log expectedlog
 
@@ -83,7 +83,7 @@ cat > expectedlog <<EOF
 [Warning] in cmd/cleanseqs.go (line 37), message: Alignment (0) #seqs after cleaning=5
 [Warning] in cmd/cleanseqs.go (line 38), message: Alignment (0) removed sequences=5
 EOF
-goalign random -s 10 | goalign mutate gaps -n 0.5 -r 0.7 -s 10 |  goalign clean seqs > result 2>log
+goalign random --seed 10 | goalign mutate gaps -n 0.5 -r 0.7 --seed 10 |  goalign clean seqs > result 2>log
 diff result expected
 rm -f expected result mapfile log expectedlog
 
@@ -110,7 +110,7 @@ GGTTGAAGGACTCTAGAGCT
 >Seq0009
 GTAAAGGGTATGGCCATGTG
 EOF
-goalign random -s 10 -l 20 > result
+goalign random --seed 10 -l 20 > result
 diff result expected
 rm -f expected result mapfile
 
@@ -127,7 +127,7 @@ GGCCA
 >Seq0004
 GAATC
 EOF
-goalign random -n 5 -l 5 -s 10 -p | goalign reformat fasta -p > result
+goalign random -n 5 -l 5 --seed 10 -p | goalign reformat fasta -p > result
 diff result expected
 rm -f expected result mapfile
 
@@ -144,7 +144,7 @@ GGCCA
 >Seq0004
 GAATC
 EOF
-goalign random -n 5 -l 5 -s 10 -p --input-strict | goalign reformat fasta -p > result
+goalign random -n 5 -l 5 --seed 10 -p --input-strict | goalign reformat fasta -p > result
 diff result expected
 rm -f expected result mapfile
 
@@ -215,7 +215,7 @@ Seq0002  CCGTA
 Seq0003  GGCCA
 Seq0004  GAATC
 EOF
-goalign random -n 5 -l 5 -s 10 | goalign reformat phylip > result
+goalign random -n 5 -l 5 --seed 10 | goalign reformat phylip > result
 diff result expected
 rm -f expected result mapfile
 
@@ -296,7 +296,7 @@ Seq0002   CCGTA
 Seq0003   GGCCA
 Seq0004   GAATC
 EOF
-goalign random -n 5 -l 5 -s 10 | goalign reformat phylip --output-strict > result
+goalign random -n 5 -l 5 --seed 10 | goalign reformat phylip --output-strict > result
 diff result expected
 rm -f expected result mapfile
 
@@ -315,7 +315,7 @@ Seq0004 GAATC
 ;
 end;
 EOF
-goalign random -n 5 -l 5 -s 10 | goalign reformat nexus > result
+goalign random -n 5 -l 5 --seed 10 | goalign reformat nexus > result
 diff result expected
 rm -f expected result mapfile
 
@@ -464,7 +464,7 @@ Seq0003 GGCCA
 Seq0004 GAATC
 ;
 EOF
-goalign random -n 5 -l 5 -s 10 | goalign reformat tnt > result
+goalign random -n 5 -l 5 --seed 10 | goalign reformat tnt > result
 diff result expected
 rm -f expected result mapfile
 
@@ -483,7 +483,7 @@ Seq0003 GGCCA
 Seq0004 GAATC
 ;
 EOF
-goalign random -n 5 -l 5 -s 10 | goalign reformat tnt --auto-detect > result
+goalign random -n 5 -l 5 --seed 10 | goalign reformat tnt --auto-detect > result
 diff result expected
 rm -f expected result mapfile
 
@@ -502,7 +502,7 @@ Seq0004 GAATC
 ;
 end;
 EOF
-goalign random -n 5 -l 5 -s 10 -x | goalign reformat nexus --auto-detect > result
+goalign random -n 5 -l 5 --seed 10 -x | goalign reformat nexus --auto-detect > result
 diff result expected
 rm -f expected result mapfile
 
@@ -515,7 +515,7 @@ Seq0002   CCGTA
 Seq0003   GGCCA
 Seq0004   GAATC
 EOF
-goalign random -n 5 -l 5 -s 10 | goalign reformat phylip --output-strict | goalign reformat phylip --output-strict --auto-detect > result
+goalign random -n 5 -l 5 --seed 10 | goalign reformat phylip --output-strict | goalign reformat phylip --output-strict --auto-detect > result
 diff result expected
 rm -f expected result mapfile
 
@@ -528,7 +528,7 @@ Seq0002  CCGTA
 Seq0003  GGCCA
 Seq0004  GAATC
 EOF
-goalign random -n 5 -l 5 -s 10 -p | goalign reformat phylip --auto-detect > result
+goalign random -n 5 -l 5 --seed 10 -p | goalign reformat phylip --auto-detect > result
 diff result expected
 rm -f expected result mapfile
 
@@ -545,7 +545,7 @@ GGCCA
 >Seq0004
 GAATC
 EOF
-goalign random -n 5 -l 5 -s 10 | goalign reformat fasta --auto-detect > result
+goalign random -n 5 -l 5 --seed 10 | goalign reformat fasta --auto-detect > result
 diff result expected
 rm -f expected result mapfile
 
@@ -766,7 +766,7 @@ TTTAAACACTTTTAAACACT
 >Seq0009
 TTTACATCGATTTACATCGA
 EOF
-goalign random -l 10 -s 10 | goalign concat  <(goalign random -l 10 -s 10 | goalign shuffle seqs) > result
+goalign random -l 10 --seed 10 | goalign concat  <(goalign random -l 10 --seed 10 | goalign shuffle seqs) > result
 diff result expected
 rm -f expected result
 
@@ -793,7 +793,7 @@ TTTAAACACTTTTAAACACT
 >Seq0009
 TTTACATCGATTTACATCGA
 EOF
-goalign random -l 10 -s 10 | goalign concat  <(goalign random -l 10 -s 10 | goalign shuffle seqs) > result
+goalign random -l 10 --seed 10 | goalign concat  <(goalign random -l 10 --seed 10 | goalign shuffle seqs) > result
 diff result expected
 rm -f expected result
 
@@ -999,7 +999,7 @@ EOF
 rm -f input
 for i in {1..10}
 do
-    goalign random -n 1 -l 10 -s 10 -p >> input
+    goalign random -n 1 -l 10 --seed 10 -p >> input
 done
 goalign divide -i input -p -o divprefix -f
 cat divprefix_* > result
@@ -1030,7 +1030,7 @@ GGTTGAAGGACT-TAGAGC-
 >Seq0009
 GTAAAGGGTATGGCCATGTG
 EOF
-goalign random -s 10 -l 20 | goalign mutate gaps -s 10 > result
+goalign random --seed 10 -l 20 | goalign mutate gaps --seed 10 > result
 diff result expected
 rm -f expected result
 
@@ -1058,7 +1058,7 @@ GGTTAAAGGACTCTATAGCT
 >Seq0009
 GAAAAGGGTATGGCCATGTG
 EOF
-goalign random -s 10 -l 20 | goalign mutate snvs -s 10 > result
+goalign random --seed 10 -l 20 | goalign mutate snvs --seed 10 > result
 diff result expected
 rm -f expected result
 
@@ -1083,7 +1083,7 @@ GAGAGGACTAGTTCATACTT
 >New0004
 TTTAAACACTTTTACATCGA
 EOF
-goalign random -s 10 -l 20 -n 5 | goalign rename -m mapfile > result
+goalign random --seed 10 -l 20 -n 5 | goalign rename -m mapfile > result
 diff result expected
 rm -f expected result mapfile
 
@@ -1107,7 +1107,7 @@ GAGAGGACTAGTTCATACTT
 >New0004
 TTTAAACACTTTTACATCGA
 EOF
-goalign random -s 10 -l 20 -n 5 | goalign rename --regexp 'Seq(\d+)' --replace 'New$1' -m mapfile2 > result
+goalign random --seed 10 -l 20 -n 5 | goalign rename --regexp 'Seq(\d+)' --replace 'New$1' -m mapfile2 > result
 diff result expected
 diff <(sort mapfile) <(sort mapfile2)
 rm -f expected result mapfile mapfile2
@@ -1121,7 +1121,7 @@ GAATCTGAAG
 >Seq0008
 TTTAAACACT
 EOF
-goalign random -l 10 -s 10 | goalign sample seqs -n 3 -s 10 > result
+goalign random -l 10 --seed 10 | goalign sample seqs -n 3 --seed 10 > result
 diff result expected
 rm -f expected result
 
@@ -1150,7 +1150,7 @@ TAAAC
 >Seq0009
 TACAT
 EOF
-goalign random -l 10 -s 10 | goalign sample sites -l 5 -s 10 > result
+goalign random -l 10 --seed 10 | goalign sample sites -l 5 --seed 10 > result
 diff result expected
 rm -f expected result
 
@@ -1179,7 +1179,7 @@ TTTAAACACT
 >Seq0009
 TTTACATCGA
 EOF
-goalign random -l 10 -s 10 | goalign shuffle recomb -l 0.5 -n 0.25 -s 11 > result
+goalign random -l 10 --seed 10 | goalign shuffle recomb -l 0.5 -n 0.25 --seed 11 > result
 diff result expected
 rm -f expected result
 
@@ -1206,7 +1206,7 @@ TTTAAACACT
 >Seq0009
 TTTACATCGA
 EOF
-goalign random -l 10 -s 10 | goalign shuffle recomb -l 0.5 -n 0.25 -s 11 > result
+goalign random -l 10 --seed 10 | goalign shuffle recomb -l 0.5 -n 0.25 --seed 11 > result
 diff result expected
 rm -f expected result
 
@@ -1243,7 +1243,7 @@ Seq0008
 Seq0007
 EOF
 
-goalign random -l 50 -s 10 | goalign shuffle sites -r 0.5 -s 10 --rogue 0.5 --rogue-file rogues.txt > result
+goalign random -l 50 --seed 10 | goalign shuffle sites -r 0.5 --seed 10 --rogue 0.5 --rogue-file rogues.txt > result
 diff result expected
 diff rogueexpected rogues.txt
 rm -f expected result rogueexpected rogues.txt
@@ -1280,8 +1280,8 @@ Seq0004
 Seq0006
 EOF
 
-goalign random -l 50 -s 10 | goalign shuffle sites -r 0.5 -s 10 --rogue 0.5 --rogue-file rogues.txt --stable-rogues  > result
-goalign random -l 30 -s 11 | goalign shuffle sites -r 0.5 -s 10 --rogue 0.5 --rogue-file rogues2.txt --stable-rogues  > /dev/null
+goalign random -l 50 --seed 10 | goalign shuffle sites -r 0.5 --seed 10 --rogue 0.5 --rogue-file rogues.txt --stable-rogues  > result
+goalign random -l 30 --seed 11 | goalign shuffle sites -r 0.5 --seed 10 --rogue 0.5 --rogue-file rogues2.txt --stable-rogues  > /dev/null
 diff result expected
 diff rogueexpected rogues.txt
 # Should be the same list of rogues, even if random gen seed is
@@ -1301,7 +1301,7 @@ C	18	0.180000
 G	17	0.170000
 T	34	0.340000
 EOF
-goalign random -l 10 -s 10 | goalign stats > result
+goalign random -l 10 --seed 10 | goalign stats > result
 diff result expected
 rm -f expected result
 
@@ -1317,7 +1317,7 @@ CCATACTCGT
 >Seq0003
 GCTGTGGAGC
 EOF
-goalign random -n 4 -s 10 -l 10000 | goalign subseq -l 10 -s 5 > result
+goalign random -n 4 --seed 10 -l 10000 | goalign subseq -l 10 -s 5 > result
 diff result expected
 rm -f expected result
 
@@ -1414,7 +1414,7 @@ CCGTAGGCCA
 >Seq3999
 CGGGGCCGAC
 EOF
-goalign random -n 4000 -s 10 -l 10 | goalign subset Seq0001 Seq3999 > result
+goalign random -n 4000 --seed 10 -l 10 | goalign subset Seq0001 Seq3999 > result
 diff result expected
 rm -f expected result
 
@@ -1436,7 +1436,7 @@ Seq0003	S04
 Seq0000	S01
 Seq0001	S02
 EOF
-goalign random -s 10 -n 4 -l 5 | goalign trim name -n 3 -m mapfile > result
+goalign random --seed 10 -n 4 -l 5 | goalign trim name -n 3 -m mapfile > result
 diff result expected
 diff <(sort mapfile) <(sort expectedmap)
 rm -f expected result expectedmap mapfile
@@ -1459,7 +1459,7 @@ Seq0003	S4
 Seq0000	S1
 Seq0001	S2
 EOF
-goalign random -s 10 -n 4 -l 5 | goalign trim name -a -m mapfile > result
+goalign random --seed 10 -n 4 -l 5 | goalign trim name -a -m mapfile > result
 diff result expected
 diff <(sort mapfile) <(sort expectedmap)
 rm -f expected result expectedmap mapfile
@@ -1526,7 +1526,7 @@ TGAAG
 >Seq0003
 ACACT
 EOF
-goalign random -s 10 -n 4 -l 10 | goalign trim seq -n 5 -s > result
+goalign random --seed 10 -n 4 -l 10 | goalign trim seq -n 5 -s > result
 diff result expected
 rm -f expected result 
 
@@ -1564,7 +1564,7 @@ TGAGCTCTCT
 ACCTACGGCTCTAGACAGCTGAAGTCCGGTTCCGAGCACTGTACGGAAACTTGAAAAGGCTCGACGGAGGCTTGTTCCGC
 AGAGTGGGACTATAACATAC
 EOF
-goalign random -s 10 -p | goalign mutate gaps -s 10 -p | goalign unalign -p > result
+goalign random --seed 10 -p | goalign mutate gaps --seed 10 -p | goalign unalign -p > result
 diff result expected
 rm -f expected result 
 
@@ -1668,7 +1668,7 @@ ATCGAACACT
 >Seq0004
 TTAAGTTTTC
 EOF
-goalign random -s 10 -l 10 -n 5 | goalign shuffle seqs | goalign sort > result
+goalign random --seed 10 -l 10 -n 5 | goalign shuffle seqs | goalign sort > result
 diff expected result
 rm -f expected result
 
