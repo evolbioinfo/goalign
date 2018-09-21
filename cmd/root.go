@@ -12,6 +12,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/fredericlemoine/cobrashell"
 	"github.com/fredericlemoine/goalign/align"
 	"github.com/fredericlemoine/goalign/io/clustal"
 	"github.com/fredericlemoine/goalign/io/fasta"
@@ -74,6 +75,15 @@ Please note that in --auto-detect mode, phylip format is considered as not stric
 			seed = time.Now().UTC().UnixNano()
 		}
 		rand.Seed(seed)
+	},
+	Run: func(cmd *cobra.Command, args []string) {
+		s := cobrashell.New()
+		// display welcome info.
+		s.Println(fmt.Sprintf("Welcome to Goalign Console %s", version.Version))
+		s.Println("type \"help\" to get a list of available commands")
+		cobrashell.AddCommands(s, cmd.Root(), nil, cmd.Root().Commands()...)
+		// We open a gotree console to interactively execute commands
+		s.Run()
 	},
 }
 
