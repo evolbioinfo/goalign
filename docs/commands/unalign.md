@@ -42,9 +42,9 @@ Global Flags:
 * Generating random alignment, adding 50% gaps in 50% of the sequences, and unaligning it:
 ```
 # Gapped alignment
-goalign random -s 10 -p | goalign mutate gaps -s 10 -p
+goalign random --seed 10 -p | goalign mutate gaps --seed 10 -p -n 0.5 -r 0.5
 # Gapped alignment => unaligned
-goalign random -s 10 -p | goalign mutate gaps -s 10 -p | goalign unalign -p
+goalign random --seed 10 -p | goalign mutate gaps --seed 10 -p -n 0.5 -r 0.5 | goalign unalign -p
 ```
 Should output:
 ```

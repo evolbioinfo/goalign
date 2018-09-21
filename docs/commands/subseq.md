@@ -68,7 +68,7 @@ Flags:
   -l, --length int      Length of the sub alignment (default 10)
   -o, --output string   Alignment output file (default "stdout")
   -s, --start int       Start position
-  --step int            Step: If > 0, then will generate several alignments, 
+      --step int        Step: If > 0, then will generate several alignments, 
                         for each window of length l, with starts: 
                         [start,start+step, ..., end-l]*
 
@@ -83,7 +83,7 @@ Global Flags:
 
 * Generating a random alignment and taking a sub-alignment of length 10 from position 5:
 ```
-goalign random -n 4 -s 10 -l 100 | goalign subseq -l 10 -s 5
+goalign random -n 4 --seed 10 -l 100 | goalign subseq -l 10 -s 5
 ```
 
 It should give the following alignment:

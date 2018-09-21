@@ -45,7 +45,7 @@ If `--clean-names` option is given, special characters in sequence names (that m
 
 * Generating a random fasta alignment with 5 sequences and 5 nucleotides and reformating it in phylip:
 ```
-goalign random -n 5 -l 5 -s 10 | goalign reformat phylip
+goalign random -n 5 -l 5 --seed 10 | goalign reformat phylip
 ```
 
 Should give the following alignment:
@@ -59,7 +59,7 @@ Seq0004  GAATC
 ```
 * Generating a random fasta alignment with 5 sequences and 5 nucleotides and reformating it in nexus:
 ```
-goalign random -n 5 -l 5 -s 10 | goalign reformat nexus
+goalign random -n 5 -l 5 --seed 10 | goalign reformat nexus
 ```
 
 Should give the following alignment:

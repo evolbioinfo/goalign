@@ -41,7 +41,7 @@ Global Flags:
 
 * Generating a gapped alignment, and removing positions having at least one gap:
 ```
-goalign random -s 10 | goalign mutate gaps -n 1 -r 0.1 -s 10 |  goalign clean sites
+goalign random --seed 10 | goalign mutate gaps -n 1 -r 0.1 --seed 10 |  goalign clean sites
 ```
 
 Should give on stdout:
@@ -78,7 +78,7 @@ And on stderr:
 
 * Generating a gapped alignment, and removing sequences having at least one gap:
 ```
-goalign random -s 10 | goalign mutate gaps -n 0.5 -r 0.7 -s 10 |  goalign clean seqs
+goalign random --seed 10 | goalign mutate gaps -n 0.5 -r 0.7 --seed 10 |  goalign clean seqs
 ```
 
 Should give on stdout:

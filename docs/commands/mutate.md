@@ -21,7 +21,7 @@ Flags:
   -h, --help            help for mutate
   -o, --output string   Mutated alignment output file (default "stdout")
   -r, --rate float      Mutation rate per nucleotide/amino acid (default 0.1)
-  -s, --seed int        Initial Random Seed (default 1497950022161439493)
+      --seed int        Random Seed: -1 = nano seconds since 1970/01/01 00:00:00 (default -1)
 
 Global Flags:
   -i, --align string   Alignment input file (default "stdin")
@@ -43,7 +43,7 @@ Global Flags:
   -o, --output string   Mutated alignment output file (default "stdout")
   -p, --phylip          Alignment is in phylip? False=Fasta
   -r, --rate float      Mutation rate per nucleotide/amino acid (default 0.1)
-  -s, --seed int        Initial Random Seed (default: number of nanoseconds elapsed since January 1, 1970 UTC)
+  -   --seed int        Random Seed: -1 = nano seconds since 1970/01/01 00:00:00 (default -1)
   --input-strict        Strict phylip input format (only used with -p)
   --output-strict       Strict phylip output format  (only used with -p)
 ```
@@ -58,7 +58,7 @@ Global Flags:
   -o, --output string   Mutated alignment output file (default "stdout")
   -p, --phylip          Alignment is in phylip? False=Fasta
   -r, --rate float      Mutation rate per nucleotide/amino acid (default 0.1)
-  -s, --seed int        Initial Random Seed (default: number of nanoseconds elapsed since January 1, 1970 UTC)
+      --seed int        Random Seed: -1 = nano seconds since 1970/01/01 00:00:00 (default -1)
   --input-strict        Strict phylip input format (only used with -p)
   --output-strict       Strict phylip output format  (only used with -p)
 ```
@@ -66,7 +66,7 @@ Global Flags:
 #### Examples
 * Generating a random (uniform) alignment and adding 20% gaps to 50% of the sequences:
 ```
-goalign random -l 20 -s10| goalign mutate gaps -n 0.5 -r 0.2 -s10
+goalign random -l 20 --seed 10| goalign mutate gaps -n 0.5 -r 0.2 --seed 10
 ```
 
 Should give:
@@ -95,7 +95,7 @@ GTAAAGGGTATGGCCATGTG
 
 * Generating a random (uniform) alignment and adding 10% substitutions :
 ```
-goalign random -l 20 -s10| goalign mutate snvs -r 0.1 -s 10
+goalign random -l 20 --seed 10| goalign mutate snvs -r 0.1 --seed 10
 ```
 
 Should give:

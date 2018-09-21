@@ -46,7 +46,7 @@ Global Flags:
 
 * Generating a random alignment and displaying it in html
 ```
-goalign random -l 10 -s 10 | goalign draw biojs -o al.html
+goalign random -l 10 --seed 10 | goalign draw biojs -o al.html
 ```
 Should give the following alignment:
 ![HTML Display](draw.png)

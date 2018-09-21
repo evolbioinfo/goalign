@@ -48,7 +48,7 @@ Available Commands:
 Flags:
   -h, --help            help for shuffle
   -o, --output string   Shuffled alignment output file (default "stdout")
-  -s, --seed int        Initial Random Seed (default 1495022409892045891)
+      --seed int        Random Seed: -1 = nano seconds since 1970/01/01 00:00:00 (default -1)
 
 Global Flags:
   -i, --align string   Alignment input file (default "stdin")
@@ -70,7 +70,7 @@ Global Flags:
   -i, --align string    Alignment input file (default "stdin")
   -o, --output string   Shuffled alignment output file (default "stdout")
   -p, --phylip          Alignment is in phylip? False=Fasta
-  -s, --seed int        Initial Random Seed (default 1495021613485404707)
+      --seed int        Random Seed: -1 = nano seconds since 1970/01/01 00:00:00 (default -1)
   --input-strict        Strict phylip input format (only used with -p)
   --output-strict       Strict phylip output format  (only used with -p)
 
@@ -90,7 +90,7 @@ Global Flags:
   -i, --align string    Alignment input file (default "stdin")
   -o, --output string   Shuffled alignment output file (default "stdout")
   -p, --phylip          Alignment is in phylip? False=Fasta
-  -s, --seed int        Initial Random Seed (default 1495022447513391592)
+      --seed int        Random Seed: -1 = nano seconds since 1970/01/01 00:00:00 (default -1)
   --input-strict        Strict phylip input format (only used with -p)
   --output-strict       Strict phylip output format  (only used with -p)
 
@@ -105,7 +105,7 @@ Global Flags:
   -i, --align string    Alignment input file (default "stdin")
   -o, --output string   Shuffled alignment output file (default "stdout")
   -p, --phylip          Alignment is in phylip? False=Fasta
-  -s, --seed int        Initial Random Seed (default 1495022604538616837)
+      --seed int        Random Seed: -1 = nano seconds since 1970/01/01 00:00:00 (default -1)
   --input-strict        Strict phylip input format (only used with -p)
   --output-strict       Strict phylip output format  (only used with -p)
 
@@ -125,7 +125,7 @@ Global Flags:
   -i, --align string    Alignment input file (default "stdin")
   -o, --output string   Shuffled alignment output file (default "stdout")
   -p, --phylip          Alignment is in phylip? False=Fasta
-  -s, --seed int        Initial Random Seed (default 1495022638306057739)
+      --seed int        Random Seed: -1 = nano seconds since 1970/01/01 00:00:00 (default -1)
   --input-strict        Strict phylip input format (only used with -p)
   --output-strict       Strict phylip output format  (only used with -p)
 
@@ -143,10 +143,10 @@ Global Flags:
   -i, --align string    Alignment input file (default "stdin")
   -o, --output string   Shuffled alignment output file (default "stdout")
   -p, --phylip          Alignment is in phylip? False=Fasta
-  -s, --seed int        Initial Random Seed (default 1495022654265868607)
+      --seed int        Random Seed: -1 = nano seconds since 1970/01/01 00:00:00 (default -1)
   -t, --threads int     Number of threads (default 1)
-  --input-strict       Strict phylip input format (only used with -p)
-  --output-strict      Strict phylip output format  (only used with -p)
+      --input-strict    Strict phylip input format (only used with -p)
+      --output-strict   Strict phylip output format  (only used with -p)
 ```
 
 #### Examples
@@ -164,7 +164,7 @@ GGGGGGGGGG
 TTTTTTTTTT
 EOF
 # Recombining alignment
-goalign shuffle recomb -i align.fa -l 0.5 -n 0.25 -s 11
+goalign shuffle recomb -i align.fa -l 0.5 -n 0.25 --seed 11
 ```
 
 Should give:

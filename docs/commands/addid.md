@@ -31,7 +31,7 @@ Global Flags:
 * Generate a random alignment with 5 sequences, adding "prefix_" as prefix and "_suffix" as suffix to each sequence name.
 
 ```
-goalign random -s 10 -n 5 | goalign addid -n prefix_ | goalign addid -n _suffix -r
+goalign random --seed 10 -n 5 | goalign addid -n prefix_ | goalign addid -n _suffix -r
 ```
 
 Should give

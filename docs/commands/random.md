@@ -15,7 +15,7 @@ Flags:
   -l, --length int         Length of sequences to generate (default 100)
   -n, --nb-seqs int        Number of sequences to generate (default 10)
   -o, --out-align string   Random alignment output file (default "stdout")
-  -s, --seed int           Initial Random Seed (default 1495468802031837781)
+      --seed int           Random Seed: -1 = nano seconds since 1970/01/01 00:00:00 (default -1)
 
 Global Flags:
   -i, --align string   Alignment input file (default "stdin")
@@ -28,7 +28,7 @@ Global Flags:
 
 * Generating a random alignment with 100 sequences and 1000 nucleotides:
 ```
-goalign random -n 100 -l 1000 -s 10 | goalign stats
+goalign random -n 100 -l 1000 --seed 10 | goalign stats
 ```
 
 Should give the following statistics:

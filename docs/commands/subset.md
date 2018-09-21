@@ -23,23 +23,23 @@ Usage:
   goalign subset [flags]
   
 Flags:
-	-f, --name-file string   File containing names of sequences to keep (default "stdin")
-	-o, --output string      Alignment output file (default "stdout")
-	-e, --regexp             If sequence names are given as regexp patterns
-	-r, --revert             If true, will remove given sequences instead of keeping only them
+    -f, --name-file string   File containing names of sequences to keep (default "stdin")
+    -o, --output string      Alignment output file (default "stdout")
+    -e, --regexp             If sequence names are given as regexp patterns
+    -r, --revert             If true, will remove given sequences instead of keeping only them
 		  
 Global Flags:
-	-i, --align string   Alignment input file (default "stdin")
-	-p, --phylip         Alignment is in phylip? False=Fasta
-    --input-strict       Strict phylip input format (only used with -p)
-    --output-strict      Strict phylip output format  (only used with -p)
+    -i, --align string   Alignment input file (default "stdin")
+    -p, --phylip         Alignment is in phylip? False=Fasta
+        --input-strict   Strict phylip input format (only used with -p)
+        --output-strict  Strict phylip output format  (only used with -p)
 ```
 
 #### Examples
 
 * Generating a random alignment and taking a subset of the sequences:
 ```
-goalign random -n 40 -s 10 -l 10 | goalign subset Seq0001 Seq0002
+goalign random -n 40 --seed 10 -l 10 | goalign subset Seq0001 Seq0002
 ```
 
 It should give the following alignment:
@@ -54,7 +54,7 @@ GAATCTGAAG
 ```
 echo "Seq0001" > seqs
 echo "Seq0002" >> seqs
-goalign random -n 40 -s 10 -l 10 | goalign subset -f seqs
+goalign random -n 40 --seed 10 -l 10 | goalign subset -f seqs
 ```
 
 It should give the following alignment:
@@ -68,5 +68,5 @@ GAATCTGAAG
 
 * Generating a random alignment and keeping only sequences 0001 to 0009
 ```
-goalign random -n 4000 -s 10 -l 10 | goalign subset -e "Seq000[1-9]"
+goalign random -n 4000 --seed 10 -l 10 | goalign subset -e "Seq000[1-9]"
 ```

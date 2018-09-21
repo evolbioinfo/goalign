@@ -45,7 +45,7 @@ Flags:
   -n, --nboot int       Number of bootstrap replicates to build (default 1)
   -o, --output string   Distance matrices output file (default "stdout")
   -r, --rm-gaps         Do not take into account positions containing >=1 gaps
-  -s, --seed int        Initial Random Seed (default: number of nanoseconds elapsed since January 1, 1970 UTC)
+      --seed int        Random Seed: -1 = nano seconds since 1970/01/01 00:00:00 (default -1)
 
 Global Flags:
   -i, --align string   Alignment input file (default "stdin")
@@ -64,7 +64,7 @@ Flags:
       --gz                  Will gzip output file(s). Maybe slow if combined with --tar (only one thread working for tar/gz)
   -n, --nboot int           Number of bootstrap replicates to build (default 1)
   -o, --out-prefix string   Prefix of output bootstrap files (default "none")
-  -s, --seed int            Initial Random Seed (default; number of nanoseconds elapsed since January 1, 1970 UTC)
+      --seed int            Random Seed: -1 = nano seconds since 1970/01/01 00:00:00 (default -1)
   -S, --shuf-order          Also shuffle order of sequences in bootstrap files
       --tar                 Will create a single tar file with all bootstrap alignments (one thread for tar, but not a bottleneck)
 
@@ -81,7 +81,7 @@ Global Flags:
 * Generate a random tree with 100 leaves ([Gotree](https://github.com/fredericlemoine/gotree)), then simulate an alignment with 500 sites ([seq-gen](https://github.com/rambaut/Seq-Gen)), compute 100 bootstrap distance matrices with Goalign (f81 model and 10 threads), infer trees for all bootstrap distance matrices and for simulated alignment ([FastME](http://www.atgc-montpellier.fr/fastme/)), and compute bootstrap supports ([Gotree](https://github.com/fredericlemoine/gotree)):
 
 ```
-gotree generate yuletree -l 100 -s 1 -o true_tree.nw
+gotree generate yuletree -l 100 --seed 1 -o true_tree.nw
 seq-gen -op -mGTR -l500 -z 2 -n 1 true_tree.nw > alignment.phy
 goalign build distboot -i alignment.phy -m f81 -n 100 -o dist_boot.txt -p -t 10
 fastme -i dist_boot.txt -D 100 -o boot_trees.nw
@@ -96,7 +96,7 @@ Should give the following tree with branches having > 70% support highlighted.
 * Generate a random tree with 100 leaves ([Gotree](https://github.com/fredericlemoine/gotree)), then simulate an alignment with 500 sites ([seq-gen](https://github.com/rambaut/Seq-Gen)), compute 100 bootstrap alignments Goalign (f81 model and 10 threads), infer trees for all bootstrap alignments and for the simulated alignment ([FastTree](http://www.microbesonline.org/fasttree/)), and compute bootstrap supports ([Gotree](https://github.com/fredericlemoine/gotree)):
 
 ```
-gotree generate yuletree -l 100 -s 1 -o true_tree.nw
+gotree generate yuletree -l 100 --seed 1 -o true_tree.nw
 seq-gen -op -mGTR -l500 -z 2 -n 1 true_tree.nw > alignment.phy
 goalign build seqboot -i alignment.phy -p -n 100 -o seq_boot -S
 cat seq_boot*.ph | FastTree -nt -n 100 -gtr > boot_trees.nw

@@ -25,7 +25,7 @@ Global Flags:
 
 * Sorting a random alignment
 ```
-goalign random -s 10 -l 10 -n 5 | goalign shuffle seqs | goalign sort
+goalign random --seed 10 -l 10 -n 5 | goalign shuffle seqs | goalign sort
 ```
 
 It should give the following alignment:

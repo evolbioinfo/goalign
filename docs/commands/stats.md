@@ -44,7 +44,7 @@ Global Flags:
 #### Examples
 * Generating a random (uniform) alignment and printing stats:
 ```
-goalign random -l 20 -s10| goalign stats
+goalign random -l 20 --seed 10| goalign stats
 ```
 
 Should give:

@@ -41,8 +41,8 @@ Global Flags:
   -i, --align string       Alignment input file (default "stdin")
   -o, --out-align string   Renamed alignment output file (default "stdout")
   -p, --phylip             Alignment is in phylip? False=Fasta
-  --input-strict           Strict phylip input format (only used with -p)
-  --output-strict          Strict phylip output format  (only used with -p)
+      --input-strict       Strict phylip input format (only used with -p)
+      --output-strict      Strict phylip output format  (only used with -p)
 
 ```
 
@@ -60,14 +60,14 @@ Global Flags:
   -i, --align string       Alignment input file (default "stdin")
   -o, --out-align string   Renamed alignment output file (default "stdout")
   -p, --phylip             Alignment is in phylip? False=Fasta
-  --input-strict           Strict phylip input format (only used with -p)
-  --output-strict          Strict phylip output format  (only used with -p)
+      --input-strict       Strict phylip input format (only used with -p)
+      --output-strict      Strict phylip output format  (only used with -p)
 ```
 
 #### Examples
 * Generating a random alignment and trimming sequence names :
 ```
-goalign random -s 10 -n 4 -l 5 | goalign trim name -n 3 -m mapfile.txt
+goalign random --seed 10 -n 4 -l 5 | goalign trim name -n 3 -m mapfile.txt
 ```
 
 Should output:
@@ -91,8 +91,8 @@ Seq0003	S04
 
 * Generating a random alignment and trimming 5 nt from the left:
 ```
-goalign random -s 10 -n 4 -l 10 
-goalign random -s 10 -n 4 -l 10 | goalign trim seq -n 5 -s 
+goalign random --seed 10 -n 4 -l 10 
+goalign random --seed 10 -n 4 -l 10 | goalign trim seq -n 5 -s 
 ```
 
 Should output:

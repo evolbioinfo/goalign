@@ -49,7 +49,7 @@ Global Flags:
 * Generating a random alignment and renaming sequences:
 ```
 echo -e "Seq0000\tNewSeq" > map
-goalign random -n 3 -s 10 -l 10 | goalign rename -m map
+goalign random -n 3 --seed 10 -l 10 | goalign rename -m map
 ```
 
 It should give the following alignment:
@@ -64,7 +64,7 @@ GAATCTGAAG
 
 * Generating a random alignment and renaming sequences with a regex:
 ```
-goalign random -n 3 -s 10 -l 10 | goalign rename --regexp 'Seq' --replace 'NewSeq' -m map.txt
+goalign random -n 3 --seed 10 -l 10 | goalign rename --regexp 'Seq' --replace 'NewSeq' -m map.txt
 ```
 
 It should give the following alignment:

@@ -18,13 +18,13 @@ Usage:
   
   Available Commands:
     seqs        Samples a subset of sequences from the input alignment
-	sites       Take a random subalignment
+    sites       Take a random subalignment
 	  
   Global Flags:
-	  -i, --align string   Alignment input file (default "stdin")
-	  -p, --phylip         Alignment is in phylip? False=Fasta
-      --input-strict       Strict phylip input format (only used with -p)
-      --output-strict      Strict phylip output format  (only used with -p)
+    -i, --align string   Alignment input file (default "stdin")
+    -p, --phylip         Alignment is in phylip? False=Fasta
+        --input-strict   Strict phylip input format (only used with -p)
+        --output-strict  Strict phylip output format  (only used with -p)
 ```
 * seqs command
 ```
@@ -33,14 +33,14 @@ Usage:
   
   Flags:
     -n, --nb-seq int      Number of sequences to sample from the alignment (default 1)
-	-o, --output string   Sampled alignment output file (default "stdout")
-	-s, --seed int        Initial Random Seed (default 1496330366914852296)
+    -o, --output string   Sampled alignment output file (default "stdout")
+        --seed int        Random Seed: -1 = nano seconds since 1970/01/01 00:00:00 (default -1)
 		
   Global Flags:
-	-i, --align string   Alignment input file (default "stdin")
+    -i, --align string   Alignment input file (default "stdin")
     -p, --phylip         Alignment is in phylip? False=Fasta
-    --input-strict       Strict phylip input format (only used with -p)
-    --output-strict      Strict phylip output format  (only used with -p)
+        --input-strict   Strict phylip input format (only used with -p)
+        --output-strict  Strict phylip output format  (only used with -p)
 
 ```
 
@@ -51,15 +51,15 @@ Usage:
   
   Flags:
     -l, --length int      Length of the random sub alignment (default 10)
-	-n, --nsamples int    Number of samples to generate (default 1)
-	-o, --output string   Alignment output file (default "stdout")
-	-s, --seed int        Initial Random Seed (default 1496330424289100016)
+    -n, --nsamples int    Number of samples to generate (default 1)
+    -o, --output string   Alignment output file (default "stdout")
+        --seed int        Random Seed: -1 = nano seconds since 1970/01/01 00:00:00 (default -1)
 		  
   Global Flags:
     -i, --align string   Alignment input file (default "stdin")
-	-p, --phylip         Alignment is in phylip? False=Fasta
-    --input-strict       Strict phylip input format (only used with -p)
-    --output-strict      Strict phylip output format  (only used with -p)
+    -p, --phylip         Alignment is in phylip? False=Fasta
+        --input-strict   Strict phylip input format (only used with -p)
+        --output-strict  Strict phylip output format  (only used with -p)
 ```
 
 * rarefy command
@@ -71,7 +71,7 @@ Flags:
   -c, --counts string   Count file (tab separated), one line per sequence: seqname\tcount (default "stdin")
   -n, --nb-seq int      Number of sequences to sample from the repeated dataset (from counts) (default 1)
   -o, --output string   Rarefied alignment output file (default "stdout")
-  -s, --seed int        Initial Random Seed (default 1499337865919564301)
+      --seed int        Random Seed: -1 = nano seconds since 1970/01/01 00:00:00 (default -1)
 
 Global Flags:
   -i, --align string    Alignment input file (default "stdin")
@@ -84,7 +84,7 @@ Global Flags:
 
 * Generating a random alignment and taking a subset of the sequences
 ```
-goalign random -l 10 -s 10 | goalign sample seqs -n 3 -s 10
+goalign random -l 10 --seed 10 | goalign sample seqs -n 3 --seed 10
 ```
 Should give the following alignment:
 ```
@@ -98,7 +98,7 @@ TTTAAACACT
 
 * Generating a random alignment and taking a subsequence from it
 ```
-goalign random -l 10 -s 10 | goalign sample sites -l 5 -s 10
+goalign random -l 10 --seed 10 | goalign sample sites -l 5 --seed 10
 ```
 Should give the following alignment:
 ```

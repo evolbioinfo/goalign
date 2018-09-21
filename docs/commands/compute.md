@@ -77,7 +77,7 @@ Global Flags:
 
 * Generating a random tree with 5 tips ([Gotree](https://github.com/fredericlemoine/gotree)), simulating an alignment from this tree ([seq-gen](https://github.com/rambaut/Seq-Gen), and computing a distance matrix (model f81) from this alignment:
 ```
-gotree generate yuletree -l 5 -s 1 -o true_tree.nw
+gotree generate yuletree -l 5 --seed 1 -o true_tree.nw
 seq-gen -op -mGTR -l500 -z 2 -n 1 true_tree.nw > alignment.phy
 goalign compute distance -i alignment.phy -m f81 -o dist.txt -p -t 10
 ```
@@ -95,7 +95,7 @@ Tip1    0.235379041630  0.142776083476  0.086842665158  0.111961817720  0.000000
 
 * Generating a random tree with 100 tips ([Gotree](https://github.com/fredericlemoine/gotree)), simulating an alignment from this tree ([seq-gen](https://github.com/rambaut/Seq-Gen), and computing entropy of each site of this alignment:
 ```
-gotree generate yuletree -l 200 -s 1 -o true_tree.nw
+gotree generate yuletree -l 200 --seed 1 -o true_tree.nw
 seq-gen -op -mGTR -l10 -z 2 -n 1 true_tree.nw > alignment.phy
 goalign compute entropy  -i alignment.phy -p 
 ```
@@ -117,7 +117,7 @@ Alignment  Site  Entropy
 
 * Generating a random tree with 100 tips ([Gotree](https://github.com/fredericlemoine/gotree)), simulating an alignment from this tree ([seq-gen](https://github.com/rambaut/Seq-Gen)), and computing a logo from this alignment:
 ```
-gotree generate yuletree -l 200 -s 1 -o true_tree.nw
+gotree generate yuletree -l 200 --seed 1 -o true_tree.nw
 seq-gen -op -mGTR -l10 -z 2 -n 1 true_tree.nw > alignment.phy
 goalign compute pssm -n 4 -i alignment.phy -p -c 0.0001
 ```
