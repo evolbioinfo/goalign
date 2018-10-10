@@ -1141,8 +1141,8 @@ func (a *align) CodonAlign(ntseqs SeqBag) (rtAl *align, err error) {
 				buffer.WriteString(string(ntseq[ntseqindex : ntseqindex+3]))
 				ntseqindex += 3
 			}
-			rtAl.AddSequence(name, buffer.String(), comment)
 		}
+		rtAl.AddSequence(name, buffer.String(), comment)
 	})
 	return
 }
