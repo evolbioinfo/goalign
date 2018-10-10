@@ -14,6 +14,7 @@ type SeqBag interface {
 	AddSequence(name string, sequence string, comment string) error
 	AddSequenceChar(name string, sequence []rune, comment string) error
 	Alphabet() int
+	AlphabetStr() string
 	AlphabetCharacters() []rune
 	AutoAlphabet() // detects and sets alphabet automatically for all the sequences
 	GetSequence(name string) (string, bool)
@@ -73,6 +74,17 @@ func (sb *seqbag) AddSequenceChar(name string, sequence []rune, comment string) 
 
 func (sb *seqbag) Alphabet() int {
 	return sb.alphabet
+}
+
+func (sb *seqbag) AlphabetStr() string {
+	switch sb.Alphabet() {
+	case NUCLEOTIDS:
+		return "nucleotide"
+	case AMINOACIDS:
+		return "protein"
+	default:
+		return "unknown"
+	}
 }
 
 func (sb *seqbag) AlphabetCharacters() (alphabet []rune) {

@@ -1135,12 +1135,16 @@ func (a *align) CodonAlign(ntseqs SeqBag) (rtAl *align, err error) {
 				buffer.WriteString("---")
 			} else {
 				if ntseqindex+3 > len(ntseq) {
-					err = fmt.Errorf("Nucleotidic sequence length does not match amino acid sequence")
+					err = fmt.Errorf("Nucleotidic sequence %s is shorter than its aa counterpart", name)
 					return // return from this iteration of iterator
 				}
 				buffer.WriteString(string(ntseq[ntseqindex : ntseqindex+3]))
 				ntseqindex += 3
 			}
+		}
+		if ntseqindex < len(ntseq) {
+			err = fmt.Errorf("Nucleotidic sequence %s is longer than its aa counterpart", name)
+			return
 		}
 		rtAl.AddSequence(name, buffer.String(), comment)
 	})

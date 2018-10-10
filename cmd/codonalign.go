@@ -23,7 +23,13 @@ var codonAlignCmd = &cobra.Command{
 
 If the input alignment is not amino acid, then returns an error.
 If the given fasta file is not nucleotides then returns an error.
- 
+
+Warning: It does not check that the amino acid sequence is a good 
+translation of the nucleotide sequence, but just add gaps to the
+nucleotide sequence where needed. 
+
+Once gaps are added, if the nucleotide alignment length does not match 
+the protein alignment length * 3, returns an error.
 `,
 	RunE: func(cmd *cobra.Command, args []string) (err error) {
 		var aligns align.AlignChannel

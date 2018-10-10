@@ -1300,6 +1300,7 @@ A	31	0.310000
 C	18	0.180000
 G	17	0.170000
 T	34	0.340000
+alphabet	nucleotide
 EOF
 goalign random -l 10 --seed 10 | goalign stats > result
 diff result expected
@@ -1814,4 +1815,35 @@ diff boot0.fa expected.1
 diff boot1.fa expected.2
 if [[ $(ls boot*.fa | wc -l) -ne 2 ]]; then echo "Wrong number of bootstrap alignments"; exit 1; fi
 rm -f boot0.fa boot1.fa boot.tar.gz  expected.2 expected.1 orig.fa
+
+echo "->goalign codonalign"
+cat > input.aa <<EOF
+>Seq0000
+D*-AVGQNLK
+>Seq0001
+IE-FKF-LLM
+>Seq0002
+ERTSSYFLNT
+EOF
+
+cat > input.nt <<EOF
+>Seq0000
+GATTAAGCCGTAGGCCAGAATCTGAAG
+>Seq0001
+ATCGAATTTAAGTTTCTTCTAATG
+>Seq0002
+GAGAGGACTAGTTCATACTTTTTAAACACT
+EOF
+
+cat > expected <<EOF
+>Seq0000
+GATTAA---GCCGTAGGCCAGAATCTGAAG
+>Seq0001
+ATCGAA---TTTAAGTTT---CTTCTAATG
+>Seq0002
+GAGAGGACTAGTTCATACTTTTTAAACACT
+EOF
+
+goalign codonalign -i input.aa -f input.nt -o result
+diff expected result
 
