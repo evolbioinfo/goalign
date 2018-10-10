@@ -10,6 +10,7 @@ type Sequence interface {
 	SequenceChar() []rune
 	Name() string
 	Comment() string
+	Length() int
 }
 
 type seq struct {
@@ -39,6 +40,10 @@ func (s *seq) Name() string {
 
 func (s *seq) Comment() string {
 	return s.comment
+}
+
+func (s *seq) Length() int {
+	return len(s.sequence)
 }
 
 func RandomSequence(alphabet, length int) ([]rune, error) {

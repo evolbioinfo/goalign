@@ -12,8 +12,9 @@ import (
 
 // Parser represents a parser.
 type Parser struct {
-	s   *Scanner
-	buf struct {
+	s            *Scanner
+	ignorelength bool
+	buf          struct {
 		tok Token  // last read token
 		lit string // last read literal
 		n   int    // buffer size (max=1)
@@ -22,7 +23,15 @@ type Parser struct {
 
 // NewParser returns a new instance of Parser.
 func NewParser(r io.Reader) *Parser {
-	return &Parser{s: NewScanner(r)}
+	return &Parser{s: NewScanner(r), ignorelength: false}
+}
+
+// If true: then the parser won't complain if sequences
+// do not have the same length (unaligned fasta file)
+// Will break all functions that are specific to
+// aligned sequences: to be used with caution
+func (p *Parser) SetIgnoreLength(ignore bool) {
+	p.ignorelength = ignore
 }
 
 // scan returns the next token from the underlying scanner.
@@ -55,54 +64,58 @@ func (p *Parser) scanIgnoreEndOfLine() (tok Token, lit string) {
 }
 
 // Parse parses a FASTA alignment
-func (p *Parser) Parse() (align.Alignment, error) {
+func (p *Parser) Parse() (al align.Alignment, err error) {
+	al = align.NewAlign(align.UNKNOWN)
+	err = p.parseGeneric(al)
+	return
+}
+
+// ParseUnalign parses an unaligned FASTA file
+func (p *Parser) ParseUnalign() (sb align.SeqBag, err error) {
+	sb = align.NewSeqBag(align.UNKNOWN)
+	err = p.parseGeneric(sb)
+	return
+}
+
+func (p *Parser) parseGeneric(sb align.SeqBag) (err error) {
 	// The first token should be a ">"
 	tok, lit := p.scanIgnoreEndOfLine()
 	if tok != STARTIDENT {
-		return nil, errors.New("Fasta file should start with a > ")
+		err = errors.New("Fasta file should start with a > ")
+		return
 	}
 	p.unscan()
-	var al align.Alignment = nil
 	var curseq bytes.Buffer
 	curname := ""
 	firstSpaces := regexp.MustCompile("^( +)")
 	for tok != EOF {
 		tok, lit = p.scanIgnoreEndOfLine()
-
 		switch tok {
 		case STARTIDENT:
 			tok, lit = p.scan()
 			if tok != IDENTIFIER {
-				return nil, errors.New("> should be followed by a sequence identifier")
+				err = errors.New("> should be followed by a sequence identifier")
+				return
 			}
 			if curseq.Len() > 0 {
-				s := curseq.String()
-				if al == nil {
-					al = align.NewAlign(align.DetectAlphabet(s))
-				}
-				err := al.AddSequence(curname, curseq.String(), "")
-				if err != nil {
-					return nil, err
+				if err = sb.AddSequence(curname, curseq.String(), ""); err != nil {
+					return
 				}
 				curseq.Reset()
 			} else if curname != "" {
-				return nil, errors.New("A Fasta entry has a name but no sequence (" + curname + ")")
+				err = errors.New("A Fasta entry has a name but no sequence (" + curname + ")")
+				return
 			}
 			curname = firstSpaces.ReplaceAllString(lit, "")
 		case IDENTIFIER:
 			curseq.WriteString(strings.Replace(lit, " ", "", -1))
 		case EOF:
 			if curseq.Len() > 0 {
-				s := curseq.String()
-				if al == nil {
-					al = align.NewAlign(align.DetectAlphabet(s))
-				}
-				err := al.AddSequence(curname, s, "")
-				if err != nil {
-					return nil, err
+				if err = sb.AddSequence(curname, curseq.String(), ""); err != nil {
+					return
 				}
 			}
 		}
 	}
-	return al, nil
+	return
 }

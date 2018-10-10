@@ -16,22 +16,11 @@ import (
 )
 
 type Alignment interface {
-	AddSequence(name string, sequence string, comment string) error
-	AddSequenceChar(name string, sequence []rune, comment string) error
-	GetSequence(name string) (string, bool)
-	GetSequenceById(ith int) (string, bool)
-	GetSequenceChar(name string) ([]rune, bool)
-	GetSequenceCharById(ith int) ([]rune, bool)
-	GetSequenceNameById(ith int) (string, bool)
-	SetSequenceChar(ithAlign, ithSite int, char rune) error
-	Iterate(it func(name string, sequence string))
-	IterateChar(it func(name string, sequence []rune))
-	IterateAll(it func(name string, sequence []rune, comment string))
-	NbSequences() int
-	NbVariableSites() int
-	Length() int
-	Mutate(rate float64) // Adds uniform substitutions in the alignment (~sequencing errors)
-	ShuffleSequences()
+	SeqBag
+	NbVariableSites() int // Nb of variable sites
+	Length() int          // Length of the alignment
+	Mutate(rate float64)  // Adds uniform substitutions in the alignment (~sequencing errors)
+	ShuffleSequences()    // Shuffle sequence order
 	ShuffleSites(rate float64, roguerate float64, randroguefirst bool) []string
 	SimulateRogue(prop float64, proplen float64) ([]string, []string)
 	Sort()                         // Sorts the alignment by sequence name
@@ -49,6 +38,7 @@ type Alignment interface {
 	RenameRegexp(regex, replace string, namemap map[string]string) error
 	Pssm(log bool, pseudocount float64, normalization int) (pssm map[rune][]float64, err error) // Normalization: PSSM_NORM_NONE, PSSM_NORM_UNIF, PSSM_NORM_DATA
 	Translate(phase int) (transAl *align, err error)                                            // Translates nt sequence if possible
+	CodonAlign(ntseqs SeqBag) (codonAl *align, err error)
 	TrimNames(namemap map[string]string, size int) error
 	TrimNamesAuto(namemap map[string]string, curid *int) error
 	CleanNames() // Removes spaces and tabs at beginning and end of sequence names and replace all newick special characters \s\t()[];,.: by "-"
@@ -58,8 +48,6 @@ type Alignment interface {
 	CharStats() map[rune]int64
 	CharStatsSite(site int) (map[rune]int, error)
 	MaxCharStats() ([]rune, []int)
-	Alphabet() int
-	AlphabetCharacters() []rune
 	SiteConservation(position int) (int, error)    // If the site is conserved:
 	SubAlign(start, length int) (Alignment, error) // Extract a subalignment from this alignment
 	RandSubAlign(length int) (Alignment, error)    // Extract a random subalignment with given length from this alignment
@@ -68,10 +56,8 @@ type Alignment interface {
 }
 
 type align struct {
-	length   int             // Length of alignment
-	seqmap   map[string]*seq // Map of sequences
-	seqs     []*seq          // Set of sequences (to preserve order)
-	alphabet int             // AMINOACIDS , NUCLEOTIDS or UNKOWN
+	seqbag
+	length int // Length of alignment
 }
 
 type AlignChannel struct {
@@ -87,10 +73,11 @@ func NewAlign(alphabet int) *align {
 		io.ExitWithMessage(errors.New("Unexpected sequence alphabet type"))
 	}
 	return &align{
+		seqbag{
+			make(map[string]*seq),
+			make([]*seq, 0, 100),
+			alphabet},
 		-1,
-		make(map[string]*seq),
-		make([]*seq, 0, 100),
-		alphabet,
 	}
 }
 
@@ -102,24 +89,6 @@ func AlphabetFromString(alphabet string) int {
 		return AMINOACIDS
 	default:
 		return UNKNOWN
-	}
-}
-
-func (a *align) Iterate(it func(name string, sequence string)) {
-	for _, seq := range a.seqs {
-		it(seq.name, string(seq.sequence))
-	}
-}
-
-func (a *align) IterateChar(it func(name string, sequence []rune)) {
-	for _, seq := range a.seqs {
-		it(seq.name, seq.sequence)
-	}
-}
-
-func (a *align) IterateAll(it func(name string, sequence []rune, comment string)) {
-	for _, seq := range a.seqs {
-		it(seq.name, seq.sequence, seq.comment)
 	}
 }
 
@@ -150,81 +119,6 @@ func (a *align) AddSequenceChar(name string, sequence []rune, comment string) er
 	a.seqmap[tmpname] = seq
 	a.seqs = append(a.seqs, seq)
 	return nil
-}
-
-/* It appends the given sequence to the sequence having given name */
-func (a *align) appendToSequence(name string, sequence []rune) error {
-	seq, ok := a.seqmap[name]
-	if !ok {
-		return errors.New(fmt.Sprintf("Sequence with name %s does not exist in alignment", name))
-	}
-	seq.sequence = append(seq.sequence, sequence...)
-	return nil
-}
-
-// If sequence exists in alignment, return true,sequence
-// Otherwise, return false,nil
-func (a *align) GetSequence(name string) (string, bool) {
-	seq, ok := a.seqmap[name]
-	if ok {
-		return seq.Sequence(), ok
-	}
-	return "", ok
-}
-
-// If sequence exists in alignment, return sequence,true
-// Otherwise, return "",false
-func (a *align) GetSequenceById(ith int) (string, bool) {
-	if ith >= 0 && ith < a.NbSequences() {
-		return a.seqs[ith].Sequence(), true
-	}
-	return "", false
-}
-
-// If ith >=0 && i < nbSequences() return sequence,true
-// Otherwise, return nil, false
-func (a *align) GetSequenceCharById(ith int) ([]rune, bool) {
-	if ith >= 0 && ith < a.NbSequences() {
-		return a.seqs[ith].SequenceChar(), true
-	}
-	return nil, false
-}
-
-// If sequence exists in alignment, return sequence, true
-// Otherwise, return nil,false
-func (a *align) GetSequenceChar(name string) ([]rune, bool) {
-	seq, ok := a.seqmap[name]
-	if ok {
-		return seq.SequenceChar(), ok
-	}
-	return nil, false
-}
-
-// If ith >=0 && i < nbSequences() return name,true
-// Otherwise, return "", false
-func (a *align) GetSequenceNameById(ith int) (string, bool) {
-	if ith >= 0 && ith < a.NbSequences() {
-		return a.seqs[ith].Name(), true
-	}
-	return "", false
-}
-
-func (a *align) SetSequenceChar(ithAlign, ithSite int, char rune) error {
-	if ithAlign < 0 || ithAlign > a.NbSequences() {
-		return errors.New("Sequence index is outside alignment")
-	}
-	if ithSite < 0 || ithSite > a.Length() {
-		return errors.New("Site index is outside alignment")
-	}
-
-	a.seqs[ithAlign].sequence[ithSite] = char
-	return nil
-}
-
-// If sequence exists in alignment, return true,sequence
-// Otherwise, return false,nil
-func (a *align) NbSequences() int {
-	return len(a.seqs)
 }
 
 func (a *align) Length() int {
@@ -815,37 +709,6 @@ func (a *align) BuildBootstrap() Alignment {
 	return boot
 }
 
-func DetectAlphabet(seq string) int {
-	isaa := true
-	isnt := true
-
-	for _, nt := range strings.ToUpper(seq) {
-		couldbent := false
-		couldbeaa := false
-		switch nt {
-		case 'A', 'C', 'B', 'R', 'G', '?', GAP, POINT, OTHER, 'D', 'K', 'S', 'H', 'M', 'N', 'V', 'X', 'T', 'W', 'Y':
-			couldbent = true
-			couldbeaa = true
-		case 'U', 'O':
-			couldbent = true
-		case 'Q', 'E', 'I', 'L', 'F', 'P', 'Z':
-			couldbeaa = true
-		}
-		isaa = isaa && couldbeaa
-		isnt = isnt && couldbent
-
-		if !(isaa || isnt) {
-			return UNKNOWN
-		}
-	}
-
-	if isnt {
-		return NUCLEOTIDS
-	} else {
-		return AMINOACIDS
-	}
-}
-
 // Returns the distribution of all characters
 func (a *align) CharStats() map[rune]int64 {
 	outmap := make(map[rune]int64)
@@ -896,10 +759,6 @@ func (a *align) MaxCharStats() (out []rune, occur []int) {
 	}
 
 	return out, occur
-}
-
-func (a *align) Alphabet() int {
-	return a.alphabet
 }
 
 func RandomAlignment(alphabet, length, nbseq int) (Alignment, error) {
@@ -1103,14 +962,6 @@ func (a *align) Pssm(log bool, pseudocount float64, normalization int) (pssm map
 	return
 }
 
-func (a *align) AlphabetCharacters() (alphabet []rune) {
-	if a.Alphabet() == AMINOACIDS {
-		return stdaminoacid
-	} else {
-		return stdnucleotides
-	}
-}
-
 // Extract a subalignment from this alignment
 func (a *align) SubAlign(start, length int) (Alignment, error) {
 	if start < 0 || start > a.Length() {
@@ -1232,7 +1083,7 @@ It only translates using the standard code so far
 */
 func (a *align) Translate(phase int) (transAl *align, err error) {
 	if a.Alphabet() != NUCLEOTIDS {
-		return nil, errors.New("Wring alphabet, cannot translate to AA")
+		return nil, errors.New("Wrong alphabet, cannot translate to AA")
 	}
 	if a.Length() < 3+phase {
 		return nil, errors.New("Cannot translate an alignment with length < 3+phase")
@@ -1255,6 +1106,45 @@ func (a *align) Translate(phase int) (transAl *align, err error) {
 		}
 	})
 	return transAl, err
+}
+
+func (a *align) CodonAlign(ntseqs SeqBag) (rtAl *align, err error) {
+	var buffer bytes.Buffer
+
+	if a.Alphabet() != AMINOACIDS {
+		return nil, errors.New("Wrong alphabet, cannot reverse translate nucleotides")
+	}
+
+	if ntseqs.Alphabet() != NUCLEOTIDS {
+		return nil, errors.New("Wrong nucleotidic alignment alphabet, cannot reverse translate")
+	}
+
+	rtAl = NewAlign(ntseqs.Alphabet())
+	// outputting aligned codons
+	a.IterateAll(func(name string, sequence []rune, comment string) {
+		buffer.Reset()
+		ntseq, ok := ntseqs.GetSequenceChar(name)
+		if !ok {
+			err = fmt.Errorf("Sequence %s is not present in the nucleotidic sequence, cannot reverse translate", name)
+			return // return from this iteration of iterator
+		}
+
+		ntseqindex := 0
+		for i := 0; i < len(sequence); i++ {
+			if sequence[i] == '-' {
+				buffer.WriteString("---")
+			} else {
+				if ntseqindex+3 > len(ntseq) {
+					err = fmt.Errorf("Nucleotidic sequence length does not match amino acid sequence")
+					return // return from this iteration of iterator
+				}
+				buffer.WriteString(string(ntseq[ntseqindex : ntseqindex+3]))
+				ntseqindex += 3
+			}
+			rtAl.AddSequence(name, buffer.String(), comment)
+		}
+	})
+	return
 }
 
 // Compute conservation status of a given site of the alignment
