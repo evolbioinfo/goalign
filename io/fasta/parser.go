@@ -117,5 +117,6 @@ func (p *Parser) parseGeneric(sb align.SeqBag) (err error) {
 			}
 		}
 	}
+	sb.AutoAlphabet()
 	return
 }
