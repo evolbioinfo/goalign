@@ -7,7 +7,6 @@ import (
 	"log"
 	"math"
 	"math/rand"
-	"regexp"
 	"sort"
 	"strings"
 	"unicode"
@@ -17,42 +16,33 @@ import (
 
 type Alignment interface {
 	SeqBag
-	NbVariableSites() int // Nb of variable sites
-	Length() int          // Length of the alignment
-	Mutate(rate float64)  // Adds uniform substitutions in the alignment (~sequencing errors)
-	ShuffleSequences()    // Shuffle sequence order
-	ShuffleSites(rate float64, roguerate float64, randroguefirst bool) []string
-	SimulateRogue(prop float64, proplen float64) ([]string, []string)
-	Sort()                         // Sorts the alignment by sequence name
-	RemoveGapSites(cutoff float64) // Removes sites having >= cutoff gaps
-	RemoveGapSeqs(cutoff float64)  // Removes sequences having >= cutoff gaps
-	Sample(nb int) (Alignment, error)
-	Rarefy(nb int, counts map[string]int) (Alignment, error) // Take a new rarefied sample taking into accounts weights
-	BuildBootstrap() Alignment
-	Entropy(site int, removegaps bool) (float64, error) // Entropy of the given site
-	Swap(rate float64)
-	Concat(Alignment) error // concatenates the given alignment with this alignment
-	Recombine(rate float64, lenprop float64)
 	AddGaps(rate, lenprop float64)
-	Rename(namemap map[string]string)
-	RenameRegexp(regex, replace string, namemap map[string]string) error
-	Pssm(log bool, pseudocount float64, normalization int) (pssm map[rune][]float64, err error) // Normalization: PSSM_NORM_NONE, PSSM_NORM_UNIF, PSSM_NORM_DATA
-	Translate(phase int) (transAl *align, err error)                                            // Translates nt sequence if possible
-	CodonAlign(ntseqs SeqBag) (codonAl *align, err error)
-	TrimNames(namemap map[string]string, size int) error
-	TrimNamesAuto(namemap map[string]string, curid *int) error
-	CleanNames() // Removes spaces and tabs at beginning and end of sequence names and replace all newick special characters \s\t()[];,.: by "-"
-	TrimSequences(trimsize int, fromStart bool) error
-	AppendSeqIdentifier(identifier string, right bool)
 	AvgAllelesPerSite() float64
-	CharStats() map[rune]int64
+	BuildBootstrap() Alignment
 	CharStatsSite(site int) (map[rune]int, error)
-	MaxCharStats() ([]rune, []int)
-	SiteConservation(position int) (int, error)    // If the site is conserved:
-	SubAlign(start, length int) (Alignment, error) // Extract a subalignment from this alignment
-	RandSubAlign(length int) (Alignment, error)    // Extract a random subalignment with given length from this alignment
 	Clone() (Alignment, error)
+	CodonAlign(ntseqs SeqBag) (codonAl *align, err error)
+	Concat(Alignment) error // concatenates the given alignment with this alignment
 	Deduplicate() (Alignment, error)
+	Entropy(site int, removegaps bool) (float64, error) // Entropy of the given site
+	Length() int                                        // Length of the alignment
+	MaxCharStats() ([]rune, []int)
+	Mutate(rate float64)                                                                        // Adds uniform substitutions in the alignment (~sequencing errors)
+	NbVariableSites() int                                                                       // Nb of variable sites
+	Pssm(log bool, pseudocount float64, normalization int) (pssm map[rune][]float64, err error) // Normalization: PSSM_NORM_NONE, PSSM_NORM_UNIF, PSSM_NORM_DATA
+	Rarefy(nb int, counts map[string]int) (Alignment, error)                                    // Take a new rarefied sample taking into accounts weights
+	RandSubAlign(length int) (Alignment, error)                                                 // Extract a random subalignment with given length from this alignment
+	Recombine(rate float64, lenprop float64)
+	RemoveGapSeqs(cutoff float64)     // Removes sequences having >= cutoff gaps
+	RemoveGapSites(cutoff float64)    // Removes sites having >= cutoff gaps
+	Sample(nb int) (Alignment, error) // generate a sub sample of the sequences
+	ShuffleSites(rate float64, roguerate float64, randroguefirst bool) []string
+	SimulateRogue(prop float64, proplen float64) ([]string, []string) // add "rogue" sequences
+	SiteConservation(position int) (int, error)                       // If the site is conserved:
+	SubAlign(start, length int) (Alignment, error)                    // Extract a subalignment from this alignment
+	Swap(rate float64)
+	Translate(phase int) (transAl *align, err error) // Translates nt sequence if possible
+	TrimSequences(trimsize int, fromStart bool) error
 }
 
 type align struct {
@@ -125,20 +115,6 @@ func (a *align) Length() int {
 	return a.length
 }
 
-// Just shuffle the order of the sequences in the alignment
-// Does not change biological information
-func (a *align) ShuffleSequences() {
-	var temp *seq
-	var n int = a.NbSequences()
-	for n > 1 {
-		r := rand.Intn(n)
-		n--
-		temp = a.seqs[n]
-		a.seqs[n] = a.seqs[r]
-		a.seqs[r] = temp
-	}
-}
-
 // Shuffles vertically rate sites of the alignment
 // randomly
 // rate must be >=0 and <=1
@@ -202,23 +178,6 @@ func (a *align) ShuffleSites(rate float64, roguerate float64, randroguefirst boo
 	return rogues
 }
 
-// Sorts the alignment by sequence name
-func (a *align) Sort() {
-	names := make([]string, len(a.seqs))
-
-	// Get sequence names
-	for i, seq := range a.seqs {
-		names[i] = seq.Name()
-	}
-
-	// Sort names
-	sort.Strings(names)
-	for i, n := range names {
-		s, _ := a.seqmap[n]
-		a.seqs[i] = s
-	}
-}
-
 // Removes positions constituted of [cutoff*100%,100%] Gaps
 // Exception fo a cutoff of 0: does not remove positions with 0% gaps
 // Cutoff must be between 0 and 1, otherwise set to 0.
@@ -280,35 +239,6 @@ func (a *align) RemoveGapSeqs(cutoff float64) {
 	for i := (len(toremove) - 1); i >= 0; i-- {
 		a.seqs = append(a.seqs[:toremove[i]], a.seqs[toremove[i]+1:]...)
 	}
-}
-
-// This function renames sequences of the alignment based on the map in argument
-// If a name in the map does not exist in the alignment, does nothing
-// If a sequence in the alignment does not have a name in the map: does nothing
-func (a *align) Rename(namemap map[string]string) {
-	for seq := 0; seq < a.NbSequences(); seq++ {
-		newname, ok := namemap[a.seqs[seq].name]
-		if ok {
-			a.seqs[seq].name = newname
-		}
-		// else {
-		// 	io.PrintMessage("Sequence " + a.seqs[seq].name + " not present in the map file")
-		// }
-	}
-}
-
-// This function renames sequences of the alignment based on the given regex and replace strings
-func (a *align) RenameRegexp(regex, replace string, namemap map[string]string) error {
-	r, err := regexp.Compile(regex)
-	if err != nil {
-		return err
-	}
-	for seq := 0; seq < a.NbSequences(); seq++ {
-		newname := r.ReplaceAllString(a.seqs[seq].name, replace)
-		namemap[a.seqs[seq].name] = newname
-		a.seqs[seq].name = newname
-	}
-	return nil
 }
 
 // Swaps a rate of the sequences together
@@ -479,72 +409,6 @@ func (a *align) SimulateRogue(prop float64, proplen float64) ([]string, []string
 	return seqlist, intactlist
 }
 
-func (a *align) TrimNames(namemap map[string]string, size int) error {
-	shortmap := make(map[string]bool)
-	if math.Pow10(size-2) < float64(a.NbSequences()) {
-		return errors.New("New name size (" + fmt.Sprintf("%d", size-2) + ") does not allow to identify that amount of sequences (" + fmt.Sprintf("%d", a.NbSequences()) + ")")
-	}
-	// If previous short names, we take them into account for uniqueness
-	for _, v := range namemap {
-		shortmap[v] = true
-	}
-	for _, seq := range a.seqs {
-		newname, ok := namemap[seq.Name()]
-		if !ok {
-			newname = seq.Name()
-			newname = strings.Replace(newname, ":", "", -1)
-			newname = strings.Replace(newname, "_", "", -1)
-			if len(newname) >= size-2 {
-				newname = newname[0 : size-2]
-			} else {
-				for m := 0; m < (size - 2 - len(newname)); m++ {
-					newname = newname + "x"
-				}
-			}
-			id := 1
-			_, ok2 := shortmap[fmt.Sprintf("%s%02d", newname, id)]
-			for ok2 {
-				id++
-				if id > 99 {
-					return errors.New("More than 100 identical short names (" + newname + "), cannot shorten the names")
-				}
-				_, ok2 = shortmap[fmt.Sprintf("%s%02d", newname, id)]
-			}
-			newname = fmt.Sprintf("%s%02d", newname, id)
-			shortmap[newname] = true
-			namemap[seq.Name()] = newname
-		}
-		delete(a.seqmap, seq.name)
-		seq.name = newname
-		a.seqmap[seq.name] = seq
-	}
-
-	return nil
-}
-
-// namemap : map that is updated during the process
-// curid : pointer to the current identifier to use for next seq names
-// it is incremented in the function.
-func (a *align) TrimNamesAuto(namemap map[string]string, curid *int) (err error) {
-	length := int(math.Ceil(math.Log10(float64(a.NbSequences() + 1))))
-	for _, seq := range a.seqs {
-		newname, ok := namemap[seq.Name()]
-		if !ok {
-			newname = fmt.Sprintf(fmt.Sprintf("S%%0%dd", (length)), *curid)
-			namemap[seq.Name()] = newname
-			(*curid)++
-			// In case of several alignments to rename,
-			// The number of necessary digits may be updated
-			newlength := int(math.Ceil(math.Log10(float64(*curid + 1))))
-			if newlength > length {
-				length = newlength
-			}
-		}
-		seq.name = newname
-	}
-	return
-}
-
 // Trims alignment sequences.
 // If fromStart, then trims from the start, else trims from the end
 // If trimsize >= sequence or trimsize < 0 lengths, then throw an error
@@ -564,33 +428,6 @@ func (a *align) TrimSequences(trimsize int, fromStart bool) error {
 	}
 	a.length = a.length - trimsize
 	return nil
-}
-
-// Append a string to all sequence names of the alignment
-// If right is true, then append it to the right of each names,
-// otherwise, appends it to the left
-func (a *align) AppendSeqIdentifier(identifier string, right bool) {
-	if len(identifier) != 0 {
-		for _, seq := range a.seqs {
-			if right {
-				seq.name = seq.name + identifier
-			} else {
-				seq.name = identifier + seq.name
-			}
-		}
-	}
-}
-
-// Removes spaces and tabs at beginning and end of sequence names
-// and replaces newick special characters \s\t()[];,.: by "-"
-func (a *align) CleanNames() {
-	firstlast := regexp.MustCompile("(^[\\s\\t]+|[\\s\\t]+$)")
-	inside := regexp.MustCompile("[\\s\\t,\\[\\]\\(\\),;\\.:]+")
-
-	for _, seq := range a.seqs {
-		seq.name = firstlast.ReplaceAllString(seq.name, "")
-		seq.name = inside.ReplaceAllString(seq.name, "-")
-	}
 }
 
 // Samples randomly a subset of the sequences
@@ -707,19 +544,6 @@ func (a *align) BuildBootstrap() Alignment {
 		boot.AddSequenceChar(seq.name, bytes.Runes(buf.Bytes()), seq.Comment())
 	}
 	return boot
-}
-
-// Returns the distribution of all characters
-func (a *align) CharStats() map[rune]int64 {
-	outmap := make(map[rune]int64)
-
-	for _, seq := range a.seqs {
-		for _, r := range seq.sequence {
-			outmap[unicode.ToUpper(r)]++
-		}
-	}
-
-	return outmap
 }
 
 // Returns the distribution of characters at a given site

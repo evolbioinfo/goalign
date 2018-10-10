@@ -635,3 +635,72 @@ func TestDedup(t *testing.T) {
 		t.Error("There should be 2 sequences in the de-deduplicated alignment")
 	}
 }
+
+func TestCodonAlign(t *testing.T) {
+	a := NewAlign(UNKNOWN)
+	a.AddSequence("Seq0000", "D*-AVGQNLK", "")
+	a.AddSequence("Seq0001", "IE-FKF-LLM", "")
+	a.AddSequence("Seq0002", "ERTSSYFLNT", "")
+	a.AutoAlphabet()
+
+	n := NewSeqBag(UNKNOWN)
+	n.AddSequence("Seq0000", "GATTAAGCCGTAGGCCAGAATCTGAAG", "")
+	n.AddSequence("Seq0001", "ATCGAATTTAAGTTTCTTCTAATG", "")
+	n.AddSequence("Seq0002", "GAGAGGACTAGTTCATACTTTTTAAACACT", "")
+	n.AutoAlphabet()
+
+	exp := NewSeqBag(UNKNOWN)
+	exp.AddSequence("Seq0000", "GATTAA---GCCGTAGGCCAGAATCTGAAG", "")
+	exp.AddSequence("Seq0001", "ATCGAA---TTTAAGTTT---CTTCTAATG", "")
+	exp.AddSequence("Seq0002", "GAGAGGACTAGTTCATACTTTTTAAACACT", "")
+	exp.AutoAlphabet()
+
+	res, err := a.CodonAlign(n)
+	if err != nil {
+		t.Error(err)
+	}
+
+	if res.Alphabet() != NUCLEOTIDS {
+		t.Error(fmt.Errorf("Alphabet of result codon align must be nucleotides"))
+	}
+	if a.Alphabet() != AMINOACIDS {
+		t.Error(fmt.Errorf("Alphabet of aa alignment must be aminoacids"))
+	}
+	if n.Alphabet() != NUCLEOTIDS {
+		t.Error(fmt.Errorf("Alphabet of nt seqs to align must be nucleotides"))
+	}
+	if !exp.Identical(res) {
+		t.Error(fmt.Errorf("Expected alignment is different from codon aligned alignemnts"))
+	}
+}
+
+func TestIdenticalAligns(t *testing.T) {
+	var err error
+	var a, a2, a3 Alignment
+
+	if a, err = RandomAlignment(AMINOACIDS, 1001, 145); err != nil {
+		t.Error(err)
+	}
+
+	if a2, err = a.Clone(); err != nil {
+		t.Error(err)
+	}
+
+	if a3, err = a.Clone(); err != nil {
+		t.Error(err)
+	}
+
+	a3.ShuffleSequences()
+
+	if !a.Identical(a) {
+		t.Error(fmt.Errorf("Same alignment object must be Identical"))
+	}
+
+	if !a.Identical(a2) {
+		t.Error(fmt.Errorf("Cloned alignment must be Identical"))
+	}
+
+	if !a.Identical(a3) {
+		t.Error(fmt.Errorf("Shuffled alignment must be Identical"))
+	}
+}

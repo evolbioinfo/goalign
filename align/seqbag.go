@@ -4,6 +4,10 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"math"
+	"math/rand"
+	"regexp"
+	"sort"
 	"strings"
 	"unicode"
 
@@ -13,20 +17,30 @@ import (
 type SeqBag interface {
 	AddSequence(name string, sequence string, comment string) error
 	AddSequenceChar(name string, sequence []rune, comment string) error
+	AppendSeqIdentifier(identifier string, right bool)
 	Alphabet() int
 	AlphabetStr() string
 	AlphabetCharacters() []rune
 	AutoAlphabet() // detects and sets alphabet automatically for all the sequences
-	GetSequence(name string) (string, bool)
+	CharStats() map[rune]int64
+	CleanNames()                            // Clean sequence names (newick special char)
+	GetSequence(name string) (string, bool) // Get a sequence by names
 	GetSequenceById(ith int) (string, bool)
 	GetSequenceChar(name string) ([]rune, bool)
 	GetSequenceCharById(ith int) ([]rune, bool)
 	GetSequenceNameById(ith int) (string, bool)
 	SetSequenceChar(ithAlign, ithSite int, char rune) error
+	Identical(SeqBag) bool
 	Iterate(it func(name string, sequence string))
 	IterateChar(it func(name string, sequence []rune))
 	IterateAll(it func(name string, sequence []rune, comment string))
 	NbSequences() int
+	Rename(namemap map[string]string)
+	RenameRegexp(regex, replace string, namemap map[string]string) error
+	ShuffleSequences() // Shuffle sequence order
+	TrimNames(namemap map[string]string, size int) error
+	TrimNamesAuto(namemap map[string]string, curid *int) error
+	Sort() // Sorts the sequences by name
 }
 
 type seqbag struct {
@@ -72,6 +86,21 @@ func (sb *seqbag) AddSequenceChar(name string, sequence []rune, comment string) 
 	return nil
 }
 
+// Append a string to all sequence names of the alignment
+// If right is true, then append it to the right of each names,
+// otherwise, appends it to the left
+func (sb *seqbag) AppendSeqIdentifier(identifier string, right bool) {
+	if len(identifier) != 0 {
+		for _, seq := range sb.seqs {
+			if right {
+				seq.name = seq.name + identifier
+			} else {
+				seq.name = identifier + seq.name
+			}
+		}
+	}
+}
+
 func (sb *seqbag) Alphabet() int {
 	return sb.alphabet
 }
@@ -92,6 +121,18 @@ func (sb *seqbag) AlphabetCharacters() (alphabet []rune) {
 		return stdaminoacid
 	} else {
 		return stdnucleotides
+	}
+}
+
+// Removes spaces and tabs at beginning and end of sequence names
+// and replaces newick special characters \s\t()[];,.: by "-"
+func (sb *seqbag) CleanNames() {
+	firstlast := regexp.MustCompile("(^[\\s\\t]+|[\\s\\t]+$)")
+	inside := regexp.MustCompile("[\\s\\t,\\[\\]\\(\\),;\\.:]+")
+
+	for _, seq := range sb.seqs {
+		seq.name = firstlast.ReplaceAllString(seq.name, "")
+		seq.name = inside.ReplaceAllString(seq.name, "-")
 	}
 }
 
@@ -160,6 +201,31 @@ func (sb *seqbag) SetSequenceChar(ithAlign, ithSite int, char rune) error {
 	return nil
 }
 
+// Returns true if:
+//
+// - sb and comp have the same number of sequences &&
+// - each sequence in sb have a sequence in comp with the same name
+//   and the same sequence
+//
+// Identical seqbags may have sequences in different order
+func (sb *seqbag) Identical(comp SeqBag) bool {
+	if sb.NbSequences() != comp.NbSequences() {
+		return false
+	}
+
+	for _, seq := range sb.seqs {
+		seq2, ok := comp.GetSequence(seq.name)
+		if !ok {
+			return false
+		}
+		if string(seq.sequence) != seq2 {
+			return false
+		}
+	}
+
+	return true
+}
+
 func (sb *seqbag) Iterate(it func(name string, sequence string)) {
 	for _, seq := range sb.seqs {
 		it(seq.name, string(seq.sequence))
@@ -220,6 +286,19 @@ func (sb *seqbag) AutoAlphabet() {
 	}
 }
 
+// Returns the distribution of all characters
+func (sb *seqbag) CharStats() map[rune]int64 {
+	outmap := make(map[rune]int64)
+
+	for _, seq := range sb.seqs {
+		for _, r := range seq.sequence {
+			outmap[unicode.ToUpper(r)]++
+		}
+	}
+
+	return outmap
+}
+
 func DetectAlphabet(seq string) int {
 	isaa := true
 	isnt := true
@@ -249,4 +328,135 @@ func DetectAlphabet(seq string) int {
 	} else {
 		return AMINOACIDS
 	}
+}
+
+// This function renames sequences of the alignment based on the map in argument
+// If a name in the map does not exist in the alignment, does nothing
+// If a sequence in the alignment does not have a name in the map: does nothing
+func (sb *seqbag) Rename(namemap map[string]string) {
+	for seq := 0; seq < sb.NbSequences(); seq++ {
+		newname, ok := namemap[sb.seqs[seq].name]
+		if ok {
+			sb.seqs[seq].name = newname
+		}
+		// else {
+		// 	io.PrintMessage("Sequence " + a.seqs[seq].name + " not present in the map file")
+		// }
+	}
+}
+
+// Shuffle the order of the sequences in the alignment
+// Does not change biological information
+func (sb *seqbag) ShuffleSequences() {
+	var temp *seq
+	var n int = sb.NbSequences()
+	for n > 1 {
+		r := rand.Intn(n)
+		n--
+		temp = sb.seqs[n]
+		sb.seqs[n] = sb.seqs[r]
+		sb.seqs[r] = temp
+	}
+}
+
+// This function renames sequences of the alignment based on the given regex and replace strings
+func (sb *seqbag) RenameRegexp(regex, replace string, namemap map[string]string) error {
+	r, err := regexp.Compile(regex)
+	if err != nil {
+		return err
+	}
+	for seq := 0; seq < sb.NbSequences(); seq++ {
+		newname := r.ReplaceAllString(sb.seqs[seq].name, replace)
+		namemap[sb.seqs[seq].name] = newname
+		sb.seqs[seq].name = newname
+	}
+	return nil
+}
+
+// Sorts sequences by name
+func (sb *seqbag) Sort() {
+	names := make([]string, len(sb.seqs))
+
+	// Get sequence names
+	for i, seq := range sb.seqs {
+		names[i] = seq.Name()
+	}
+
+	// Sort names
+	sort.Strings(names)
+	for i, n := range names {
+		s, _ := sb.seqmap[n]
+		sb.seqs[i] = s
+	}
+}
+
+// Shorten sequence names to the given size. If duplicates are generated
+// then add an identifier.
+//
+// The map in argument is updated with new oldname=>newname key values
+func (sb *seqbag) TrimNames(namemap map[string]string, size int) error {
+	shortmap := make(map[string]bool)
+	if math.Pow10(size-2) < float64(sb.NbSequences()) {
+		return fmt.Errorf("New name size (%d) does not allow to identify that amount of sequences (%d)",
+			size-2, sb.NbSequences())
+	}
+	// If previous short names, we take them into account for uniqueness
+	for _, v := range namemap {
+		shortmap[v] = true
+	}
+	for _, seq := range sb.seqs {
+		newname, ok := namemap[seq.Name()]
+		if !ok {
+			newname = seq.Name()
+			newname = strings.Replace(newname, ":", "", -1)
+			newname = strings.Replace(newname, "_", "", -1)
+			if len(newname) >= size-2 {
+				newname = newname[0 : size-2]
+			} else {
+				for m := 0; m < (size - 2 - len(newname)); m++ {
+					newname = newname + "x"
+				}
+			}
+			id := 1
+			_, ok2 := shortmap[fmt.Sprintf("%s%02d", newname, id)]
+			for ok2 {
+				id++
+				if id > 99 {
+					return errors.New("More than 100 identical short names (" + newname + "), cannot shorten the names")
+				}
+				_, ok2 = shortmap[fmt.Sprintf("%s%02d", newname, id)]
+			}
+			newname = fmt.Sprintf("%s%02d", newname, id)
+			shortmap[newname] = true
+			namemap[seq.Name()] = newname
+		}
+		delete(sb.seqmap, seq.name)
+		seq.name = newname
+		sb.seqmap[seq.name] = seq
+	}
+
+	return nil
+}
+
+// namemap : map that is updated during the process
+// curid : pointer to the current identifier to use for next seq names
+// it is incremented in the function.
+func (sb *seqbag) TrimNamesAuto(namemap map[string]string, curid *int) (err error) {
+	length := int(math.Ceil(math.Log10(float64(sb.NbSequences() + 1))))
+	for _, seq := range sb.seqs {
+		newname, ok := namemap[seq.Name()]
+		if !ok {
+			newname = fmt.Sprintf(fmt.Sprintf("S%%0%dd", (length)), *curid)
+			namemap[seq.Name()] = newname
+			(*curid)++
+			// In case of several alignments to rename,
+			// The number of necessary digits may be updated
+			newlength := int(math.Ceil(math.Log10(float64(*curid + 1))))
+			if newlength > length {
+				length = newlength
+			}
+		}
+		seq.name = newname
+	}
+	return
 }

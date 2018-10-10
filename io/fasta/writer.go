@@ -16,9 +16,9 @@ func min_int(a int, b int) int {
 	return b
 }
 
-func WriteAlignment(al align.Alignment) string {
+func WriteAlignment(sb align.SeqBag) string {
 	var buf bytes.Buffer
-	al.IterateChar(func(name string, seq []rune) {
+	sb.IterateChar(func(name string, seq []rune) {
 		buf.WriteString(">")
 		buf.WriteString(name)
 		buf.WriteString("\n")
@@ -33,13 +33,12 @@ func WriteAlignment(al align.Alignment) string {
 	return buf.String()
 }
 
-/* This function writes the input alignment as standard fasta sequences
-It removes "-" characters.
-*/
-func WriteSequences(al align.Alignment) string {
+// Write input alignment as standard fasta sequences
+// It removes "-" characters.
+func WriteSequences(sb align.SeqBag) string {
 	var buf bytes.Buffer
 
-	al.IterateChar(func(name string, seq []rune) {
+	sb.IterateChar(func(name string, seq []rune) {
 		buf.WriteString(">")
 		buf.WriteString(name)
 		buf.WriteString("\n")

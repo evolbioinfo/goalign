@@ -1846,4 +1846,63 @@ EOF
 
 goalign codonalign -i input.aa -f input.nt -o result
 diff expected result
+rm -f expected result input.aa input.nt
 
+echo "->goalign identical"
+cat > input1 <<EOF
+>Seq0000
+GATTAA---GCCGTAGGCCAGAATCTGAAG
+>Seq0001
+ATCGAA---TTTAAGTTT---CTTCTAATG
+>Seq0002
+GAGAGGACTAGTTCATACTTTTTAAACACT
+EOF
+
+cat > input2 <<EOF
+>Seq0001
+ATCGAA---TTTAAGTTT---CTTCTAATG
+>Seq0000
+GATTAA---GCCGTAGGCCAGAATCTGAAG
+>Seq0002
+GAGAGGACTAGTTCATACTTTTTAAACACT
+EOF
+
+cat > input3 <<EOF
+>Seq0001
+GATTAA---GCCGTAGGCCAGAATCTGAAG
+>Seq0000
+ATCGAA---TTTAAGTTT---CTTCTAATG
+>Seq0002
+GAGAGGACTAGTTCATACTTTTTAAACACT
+EOF
+
+cat > input4 <<EOF
+>Seq0000
+GATTAA---GCCGTAGGCCAGAATCTGAAG
+>Seq0001
+ATCGAA---TTTAAGTTT---CTTCTAATG
+>Seq0002
+GAGAGGACTAGTTCATACTTTTTAAACACT
+>Seq0003
+ACGACGACACGACGACGACGAGCAGCAGCA
+EOF
+
+
+cat > expected1 <<EOF
+true
+EOF
+
+cat > expected2 <<EOF
+false
+EOF
+
+goalign identical -i input1 -c input2 > result
+diff expected1 result
+
+goalign identical -i input1 -c input3 > result
+diff expected2 result
+
+goalign identical -i input1 -c input4 > result
+diff expected2 result
+
+rm -f input1 input2 input3 input4 expected1 expected2 results
