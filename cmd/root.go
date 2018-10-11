@@ -34,6 +34,7 @@ var rootinputstrict bool = false
 var rootoutputstrict bool = false
 var rootAutoDetectInputFormat bool
 var seed int64 = -1
+var unaligned bool
 
 var helptemplate string = `{{with or .Long .Short }}{{. | trim}}
 
@@ -226,10 +227,6 @@ func writeAlignClustal(al align.Alignment, f *os.File) {
 	f.WriteString(clustal.WriteAlignment(al))
 }
 
-func writeUnAlignFasta(al align.Alignment, f *os.File) {
-	f.WriteString(fasta.WriteSequences(al))
-}
-
 func writeAlignPaml(al align.Alignment, f *os.File) {
 	f.WriteString(paml.WriteAlignment(al))
 }
@@ -304,7 +301,7 @@ func readMapFile(file string, revert bool) (map[string]string, error) {
 }
 
 func closeWriteFile(f goio.Closer, filename string) {
-	if filename != "-" && filename != "stdout" {
+	if filename != "-" && filename != "stdout" && filename != "none" {
 		f.Close()
 	}
 }

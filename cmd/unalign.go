@@ -55,7 +55,7 @@ If align contains 3 alignments, this will generate 3 files:
 				io.LogError(err)
 				return
 			}
-			writeUnAlignFasta(al, f)
+			writeSequences(al.Unalign(), f)
 			closeWriteFile(f, filename)
 		}
 

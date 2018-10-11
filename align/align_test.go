@@ -674,6 +674,27 @@ func TestCodonAlign(t *testing.T) {
 	}
 }
 
+func TestUnalign(t *testing.T) {
+
+	in := NewAlign(UNKNOWN)
+	in.AddSequence("Seq0000", "GATTAA---GCCGTAGGCCAGAATCTGAAG", "")
+	in.AddSequence("Seq0001", "ATCGAA---TTTAAGTTT---CTTCTAATG", "")
+	in.AddSequence("Seq0002", "GAGAGGACTAGTTCATACTTTTTAAACACT", "")
+	in.AutoAlphabet()
+
+	exp := NewSeqBag(UNKNOWN)
+	exp.AddSequence("Seq0000", "GATTAAGCCGTAGGCCAGAATCTGAAG", "")
+	exp.AddSequence("Seq0001", "ATCGAATTTAAGTTTCTTCTAATG", "")
+	exp.AddSequence("Seq0002", "GAGAGGACTAGTTCATACTTTTTAAACACT", "")
+	exp.AutoAlphabet()
+
+	res := in.Unalign()
+
+	if !exp.Identical(res) {
+		t.Error(fmt.Errorf("Expected sequences are different from unaligned alignemnt"))
+	}
+}
+
 func TestIdenticalAligns(t *testing.T) {
 	var err error
 	var a, a2, a3 Alignment

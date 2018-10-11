@@ -10,7 +10,6 @@ import (
 
 var translatePhase int
 var translateOutput string
-var unaligned bool
 
 // translateCmd represents the addid command
 var translateCmd = &cobra.Command{

@@ -40,6 +40,7 @@ type Alignment interface {
 	SiteConservation(position int) (int, error)                       // If the site is conserved:
 	SubAlign(start, length int) (Alignment, error)                    // Extract a subalignment from this alignment
 	Swap(rate float64)
+	Unalign() SeqBag
 	TrimSequences(trimsize int, fromStart bool) error
 }
 
@@ -1010,5 +1011,14 @@ func (a *align) SiteConservation(position int) (conservation int, err error) {
 		}
 	}
 
+	return
+}
+
+func (a *align) Unalign() (sb SeqBag) {
+	sb = NewSeqBag(a.Alphabet())
+
+	for _, seq := range a.seqs {
+		sb.AddSequence(seq.name, strings.Replace(string(seq.sequence), "-", "", -1), seq.comment)
+	}
 	return
 }
