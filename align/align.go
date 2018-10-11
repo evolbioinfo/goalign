@@ -932,6 +932,17 @@ func (a *align) Translate(phase int) (transAl *align, err error) {
 	return transAl, err
 }
 
+// Aligns given nt sequences (ntseqs) using a corresponding aa alignment (a).
+//
+// If a is not amino acid, then returns an error.
+// If ntseqs is not nucleotides then returns an error.
+//
+// Warning: It does not check that the amino acid sequence is a good
+// translation of the nucleotide sequence, but just adds gaps to the
+// nucleotide sequence where needed.
+//
+// Once gaps are added, if the nucleotide alignment length does not match
+// the protein alignment length * 3, returns an error.
 func (a *align) CodonAlign(ntseqs SeqBag) (rtAl *align, err error) {
 	var buffer bytes.Buffer
 
