@@ -206,6 +206,10 @@ func writeAlign(al align.Alignment, f *os.File) {
 	}
 }
 
+func writeSequences(seqs align.SeqBag, f *os.File) {
+	f.WriteString(fasta.WriteAlignment(seqs))
+}
+
 func writeAlignFasta(al align.Alignment, f *os.File) {
 	f.WriteString(fasta.WriteAlignment(al))
 }

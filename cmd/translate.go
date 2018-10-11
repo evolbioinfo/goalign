@@ -10,6 +10,7 @@ import (
 
 var translatePhase int
 var translateOutput string
+var unaligned bool
 
 // translateCmd represents the addid command
 var translateCmd = &cobra.Command{
@@ -26,31 +27,48 @@ It only translates using the standard genetic code so far.
 
 `,
 	RunE: func(cmd *cobra.Command, args []string) (err error) {
-		var aligns align.AlignChannel
 		var f *os.File
 
-		if aligns, err = readalign(infile); err != nil {
-			io.LogError(err)
-			return
-		}
 		if f, err = openWriteFile(translateOutput); err != nil {
 			io.LogError(err)
 			return
 		}
 		defer closeWriteFile(f, translateOutput)
 
-		for al := range aligns.Achan {
-			if err = al.Translate(translatePhase); err != nil {
+		if unaligned {
+			var seqs align.SeqBag
+
+			if seqs, err = readsequences(infile); err != nil {
 				io.LogError(err)
 				return
 			}
-			writeAlign(al, f)
+			if err = seqs.Translate(translatePhase); err != nil {
+				io.LogError(err)
+				return
+			}
+			writeSequences(seqs, f)
+		} else {
+			var aligns align.AlignChannel
+			var al align.Alignment
+
+			if aligns, err = readalign(infile); err != nil {
+				io.LogError(err)
+				return
+			}
+			for al = range aligns.Achan {
+				if err = al.Translate(translatePhase); err != nil {
+					io.LogError(err)
+					return
+				}
+				writeAlign(al, f)
+			}
+
+			if aligns.Err != nil {
+				err = aligns.Err
+				io.LogError(err)
+			}
 		}
 
-		if aligns.Err != nil {
-			err = aligns.Err
-			io.LogError(err)
-		}
 		return
 	},
 }
@@ -59,4 +77,6 @@ func init() {
 	RootCmd.AddCommand(translateCmd)
 	translateCmd.PersistentFlags().StringVarP(&translateOutput, "output", "o", "stdout", "Output translated alignment file")
 	translateCmd.PersistentFlags().IntVar(&translatePhase, "phase", 0, "Number of characters to drop from the start of the alignment")
+	translateCmd.PersistentFlags().BoolVar(&unaligned, "unaligned", false, "Considers sequences as unaligned and format fasta (phylip, nexus,... options are ignored)")
+
 }
