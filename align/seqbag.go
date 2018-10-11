@@ -478,6 +478,10 @@ func (sb *seqbag) Translate(phase int) (err error) {
 //
 // It does not modify the input object
 func (sb *seqbag) Phase() (phased SeqBag, positions []int, err error) {
+	if sb.Alphabet() != NUCLEOTIDS {
+		err = fmt.Errorf("Wrong alphabet for phase : %s", sb.AlphabetStr())
+		return
+	}
 	positions = make([]int, 0, sb.NbSequences())
 	phased = NewSeqBag(sb.Alphabet())
 	for _, seq := range sb.seqs {

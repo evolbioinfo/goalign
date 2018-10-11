@@ -21,6 +21,8 @@ var phaseCmd = &cobra.Command{
 if --unaligned is set, format options are ingored (phylip, nexus, etc.), and
 only Fasta is accepted.
 
+If input sequences are not nucleotidic, then returns an error.
+
 Output file is an unaligned set of sequences in fasta.
 
 `,
