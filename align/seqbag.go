@@ -38,6 +38,7 @@ type SeqBag interface {
 	IterateChar(it func(name string, sequence []rune))
 	IterateAll(it func(name string, sequence []rune, comment string))
 	NbSequences() int
+	Phase() (seqs SeqBag, positions []int, err error)
 	Rename(namemap map[string]string)
 	RenameRegexp(regex, replace string, namemap map[string]string) error
 	ShuffleSequences()               // Shuffle sequence order
@@ -453,7 +454,6 @@ func (sb *seqbag) Translate(phase int) (err error) {
 			err = fmt.Errorf("Cannot translate a sequence with length < 3+phase (%s)", seq.name)
 			return
 		}
-
 		for i := phase; i < len(seq.sequence)-2; i += 3 {
 			codon := strings.Replace(strings.ToUpper(string(seq.sequence[i:i+3])), "U", "T", -1)
 			aa, found := standardcode[codon]
@@ -468,6 +468,27 @@ func (sb *seqbag) Translate(phase int) (err error) {
 		}
 	}
 
+	return
+}
+
+// Searches for the ATG giving the longest ORF in the forward strand
+// and trims sequences to that position
+//
+// It returns the phased SeqBag and the positions of the ATGs found
+//
+// It does not modify the input object
+func (sb *seqbag) Phase() (phased SeqBag, positions []int, err error) {
+	positions = make([]int, 0, sb.NbSequences())
+	phased = NewSeqBag(sb.Alphabet())
+	for _, seq := range sb.seqs {
+		pos := seq.BestATG()
+		if pos == -1 {
+			err = fmt.Errorf("No ORF is found on the sequence %s", seq.name)
+			return
+		}
+		positions = append(positions, pos)
+		phased.AddSequence(seq.name, string(seq.sequence[pos:]), seq.comment)
+	}
 	return
 }
 

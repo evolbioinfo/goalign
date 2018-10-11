@@ -3,6 +3,8 @@ package align
 import (
 	"errors"
 	"math/rand"
+	"regexp"
+	"strings"
 )
 
 type Sequence interface {
@@ -11,6 +13,7 @@ type Sequence interface {
 	Name() string
 	Comment() string
 	Length() int
+	BestATG() int // Detects the position of ATG giving the longest ORF in forward strand only
 }
 
 type seq struct {
@@ -44,6 +47,31 @@ func (s *seq) Comment() string {
 
 func (s *seq) Length() int {
 	return len(s.sequence)
+}
+
+// Detects the position of ATG giving the longest ORF
+// Search is done in the forward strand only
+//
+// returns -1 is no ATG...STOP has been found
+func (s *seq) BestATG() int {
+	beststart := -1
+	bestend := -1
+	re, _ := regexp.CompilePOSIX("(ATG)(.{3})*(TAA|TGA|TAG)")
+	re.Longest()
+	idx := re.FindAllStringIndex(
+		strings.Replace(
+			strings.ToUpper(string(s.sequence)),
+			"U", "T", -1),
+		-1)
+	if idx != nil {
+		for _, pos := range idx {
+			if pos[1]-pos[0] > bestend-beststart {
+				bestend = pos[1]
+				beststart = pos[0]
+			}
+		}
+	}
+	return beststart
 }
 
 func RandomSequence(alphabet, length int) ([]rune, error) {
