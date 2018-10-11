@@ -26,6 +26,7 @@ type SeqBag interface {
 	CharStats() map[rune]int64
 	CleanNames()                            // Clean sequence names (newick special char)
 	Clear()                                 // Removes all sequences
+	Deduplicate() error                     // Remove duplicate sequences
 	GetSequence(name string) (string, bool) // Get a sequence by names
 	GetSequenceById(ith int) (string, bool)
 	GetSequenceChar(name string) ([]rune, bool)
@@ -143,6 +144,29 @@ func (sb *seqbag) CleanNames() {
 func (sb *seqbag) Clear() {
 	sb.seqmap = make(map[string]*seq)
 	sb.seqs = make([]*seq, 0, 100)
+}
+
+// This function removes sequences that are duplicates of other
+// It keeps one copy of each sequence, with the name of the first
+// found.
+//
+// It modifies input alignment.
+func (sb *seqbag) Deduplicate() (err error) {
+	oldseqs := sb.seqs
+	sb.Clear()
+
+	seqs := make(map[string]bool)
+	for _, seq := range oldseqs {
+		s := string(seq.sequence)
+		_, ok := seqs[s]
+		if !ok {
+			if err = sb.AddSequence(seq.name, s, seq.comment); err != nil {
+				return
+			}
+			seqs[s] = true
+		}
+	}
+	return
 }
 
 // If sequence exists in alignment, return true,sequence

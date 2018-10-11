@@ -35,7 +35,6 @@ goalign dedup -i ali.phy will produce:
 	RunE: func(cmd *cobra.Command, args []string) (err error) {
 		var aligns align.AlignChannel
 		var f *os.File
-		var dedup align.Alignment
 
 		if aligns, err = readalign(infile); err != nil {
 			io.LogError(err)
@@ -48,11 +47,11 @@ goalign dedup -i ali.phy will produce:
 		defer closeWriteFile(f, dedupOutput)
 
 		for al := range aligns.Achan {
-			if dedup, err = al.Deduplicate(); err != nil {
+			if err = al.Deduplicate(); err != nil {
 				io.LogError(err)
 				return
 			} else {
-				writeAlign(dedup, f)
+				writeAlign(al, f)
 			}
 		}
 

@@ -22,8 +22,7 @@ type Alignment interface {
 	CharStatsSite(site int) (map[rune]int, error)
 	Clone() (Alignment, error)
 	CodonAlign(ntseqs SeqBag) (codonAl *align, err error)
-	Concat(Alignment) error // concatenates the given alignment with this alignment
-	Deduplicate() (Alignment, error)
+	Concat(Alignment) error                             // concatenates the given alignment with this alignment
 	Entropy(site int, removegaps bool) (float64, error) // Entropy of the given site
 	Length() int                                        // Length of the alignment
 	MaxCharStats() ([]rune, []int)
@@ -1011,27 +1010,5 @@ func (a *align) SiteConservation(position int) (conservation int, err error) {
 		}
 	}
 
-	return
-}
-
-// This function removes sequences that are duplicates of other
-// It keeps one copy of each sequence, with the name of the first
-// found.
-//
-// It does not modifies input alignment but
-// It returns a new alignement without duplicates
-func (a *align) Deduplicate() (out Alignment, err error) {
-	seqs := make(map[string]bool)
-	out = NewAlign(a.Alphabet())
-	for _, seq := range a.seqs {
-		s := string(seq.sequence)
-		_, ok := seqs[s]
-		if !ok {
-			if err = out.AddSequence(seq.name, s, seq.comment); err != nil {
-				return
-			}
-			seqs[s] = true
-		}
-	}
 	return
 }
