@@ -28,7 +28,6 @@ It only translates using the standard genetic code so far.
 	RunE: func(cmd *cobra.Command, args []string) (err error) {
 		var aligns align.AlignChannel
 		var f *os.File
-		var transAl align.Alignment
 
 		if aligns, err = readalign(infile); err != nil {
 			io.LogError(err)
@@ -41,15 +40,11 @@ It only translates using the standard genetic code so far.
 		defer closeWriteFile(f, translateOutput)
 
 		for al := range aligns.Achan {
-			if transAl, err = al.Clone(); err != nil {
+			if err = al.Translate(translatePhase); err != nil {
 				io.LogError(err)
 				return
 			}
-			if err = transAl.Translate(translatePhase); err != nil {
-				io.LogError(err)
-				return
-			}
-			writeAlign(transAl, f)
+			writeAlign(al, f)
 		}
 
 		if aligns.Err != nil {
