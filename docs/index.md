@@ -69,7 +69,7 @@ Command                                                     | Subcommand |      
 [divide](commands/divide.md) ([api](api/divide.md))         |            | Divide an input alignment in several output files
 [draw](commands/draw.md) ([api](api/draw.md))               |            | Draws an input alignment
 --                                                          | biojs      | Displays an input alignment in an html file using biojs
-[identical](commands/identical.md) ([api](api/identical.md))|            | Tells wether two alignments are identical
+[identical](commands/identical.md) ([api](api/identical.md))|            | Tells whether two alignments are identical
 [mutate](commands/mutate.md) ([api](api/mutate.md))         |            | Adds substitutions (~sequencing errors), or gaps, uniformly in an input alignment
 --                                                          | gaps       | Adds gaps uniformly in an input alignment
 --                                                          | snvs       | Adds substitutions uniformly in an input alignment

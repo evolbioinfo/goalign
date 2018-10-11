@@ -4,7 +4,7 @@
 
 ### identical
 
-Telling wether two alignments are identical
+Telling whether two alignments are identical
 
 ```go
 package main

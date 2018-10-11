@@ -12,8 +12,8 @@ var compalign string
 
 var identicalCmd = &cobra.Command{
 	Use:   "identical",
-	Short: "Assess wether the two alignments are identical",
-	Long: `Assess wether the two alignments are identical.
+	Short: "Assess whether the two alignments are identical",
+	Long: `Assess whether the two alignments are identical.
 
 `,
 	RunE: func(cmd *cobra.Command, args []string) (err error) {

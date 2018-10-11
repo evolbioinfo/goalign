@@ -3,7 +3,7 @@
 ## Commands
 
 ### identical
-Tells wether two alignments are identical.
+Tells whether two alignments are identical.
 
 Alignments are considered identical if:
 
