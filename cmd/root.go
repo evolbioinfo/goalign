@@ -87,6 +87,24 @@ Please note that in --auto-detect mode, phylip format is considered as not stric
 	},
 }
 
+// Read sequences (possibly not aligned) from a fasta file
+func readsequences(file string) (sequences align.SeqBag, err error) {
+	var fi goio.Closer
+	var r *bufio.Reader
+
+	if fi, r, err = utils.GetReader(file); err != nil {
+		return
+	}
+	defer fi.Close()
+
+	if sequences, err = fasta.NewParser(r).ParseUnalign(); err != nil {
+		return
+	}
+
+	return
+}
+
+// Read aligned sequences from an input file
 func readalign(file string) (alchan align.AlignChannel, err error) {
 	var fi goio.Closer
 	var r *bufio.Reader

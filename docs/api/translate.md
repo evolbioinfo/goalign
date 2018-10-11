@@ -25,7 +25,6 @@ func main() {
 	var r *bufio.Reader
 	var err error
 	var al align.Alignment
-	var translated align.Alignment
 
 	/* Get reader (plain text or gzip) */
 	fi, r, err = utils.GetReader("align.fa")
@@ -41,10 +40,10 @@ func main() {
 	fi.Close()
 
 	/* Translate */
-	if translated, err = al.Translate(1); err != nil {
+	if err = al.Translate(1); err != nil {
 		panic(err)
 	} else {
-		fmt.Println(fasta.WriteAlignment(translated))
+		fmt.Println(fasta.WriteAlignment(al))
 	}
 }
 ```

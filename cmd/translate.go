@@ -41,7 +41,11 @@ It only translates using the standard genetic code so far.
 		defer closeWriteFile(f, translateOutput)
 
 		for al := range aligns.Achan {
-			if transAl, err = al.Translate(translatePhase); err != nil {
+			if transAl, err = al.Clone(); err != nil {
+				io.LogError(err)
+				return
+			}
+			if err = transAl.Translate(translatePhase); err != nil {
 				io.LogError(err)
 				return
 			}

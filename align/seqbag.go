@@ -1,6 +1,7 @@
 package align
 
 import (
+	"bytes"
 	"errors"
 	"fmt"
 	"log"
@@ -24,6 +25,7 @@ type SeqBag interface {
 	AutoAlphabet() // detects and sets alphabet automatically for all the sequences
 	CharStats() map[rune]int64
 	CleanNames()                            // Clean sequence names (newick special char)
+	Clear()                                 // Removes all sequences
 	GetSequence(name string) (string, bool) // Get a sequence by names
 	GetSequenceById(ith int) (string, bool)
 	GetSequenceChar(name string) ([]rune, bool)
@@ -37,7 +39,8 @@ type SeqBag interface {
 	NbSequences() int
 	Rename(namemap map[string]string)
 	RenameRegexp(regex, replace string, namemap map[string]string) error
-	ShuffleSequences() // Shuffle sequence order
+	ShuffleSequences()               // Shuffle sequence order
+	Translate(phase int) (err error) // Translates nt sequence in aa
 	TrimNames(namemap map[string]string, size int) error
 	TrimNamesAuto(namemap map[string]string, curid *int) error
 	Sort() // Sorts the sequences by name
@@ -134,6 +137,12 @@ func (sb *seqbag) CleanNames() {
 		seq.name = firstlast.ReplaceAllString(seq.name, "")
 		seq.name = inside.ReplaceAllString(seq.name, "-")
 	}
+}
+
+// Removes all the sequences from the seqbag
+func (sb *seqbag) Clear() {
+	sb.seqmap = make(map[string]*seq)
+	sb.seqs = make([]*seq, 0, 100)
 }
 
 // If sequence exists in alignment, return true,sequence
@@ -388,6 +397,54 @@ func (sb *seqbag) Sort() {
 		s, _ := sb.seqmap[n]
 		sb.seqs[i] = s
 	}
+}
+
+/*
+Translates the given sequences in aa, in the given phase (0,1,2). All sequences
+are consifered being in the same phase.
+
+- if the phase is 1 or 2 : it will remove the first or the 2 first characters
+- if the alphabet is not NUCLEOTIDES: returns an error
+
+The seqbag is cleared and old sequences are replaced with aminoacid sequences
+
+It only translates using the standard code so far.
+*/
+func (sb *seqbag) Translate(phase int) (err error) {
+	var oldseqs []*seq
+	var buffer bytes.Buffer
+
+	if sb.Alphabet() != NUCLEOTIDS {
+		err = errors.New("Wrong alphabet, cannot translate to AA")
+		return
+	}
+
+	oldseqs = sb.seqs
+	sb.Clear()
+
+	for _, seq := range oldseqs {
+		buffer.Reset()
+
+		if len(seq.sequence) < 3+phase {
+			err = fmt.Errorf("Cannot translate a sequence with length < 3+phase (%s)", seq.name)
+			return
+		}
+
+		for i := phase; i < len(seq.sequence)-2; i += 3 {
+			codon := strings.Replace(strings.ToUpper(string(seq.sequence[i:i+3])), "U", "T", -1)
+			aa, found := standardcode[codon]
+			if !found {
+				aa = 'X'
+			}
+			buffer.WriteRune(aa)
+		}
+		if err2 := sb.AddSequence(seq.name, buffer.String(), seq.comment); err != nil {
+			err = err2
+			return
+		}
+	}
+
+	return
 }
 
 // Shorten sequence names to the given size. If duplicates are generated

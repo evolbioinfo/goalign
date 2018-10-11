@@ -41,7 +41,6 @@ type Alignment interface {
 	SiteConservation(position int) (int, error)                       // If the site is conserved:
 	SubAlign(start, length int) (Alignment, error)                    // Extract a subalignment from this alignment
 	Swap(rate float64)
-	Translate(phase int) (transAl *align, err error) // Translates nt sequence if possible
 	TrimSequences(trimsize int, fromStart bool) error
 }
 
@@ -894,42 +893,6 @@ func (a *align) NbVariableSites() int {
 		}
 	}
 	return nbinfo
-}
-
-/*
-Translates the given alignment in aa, in the given phase (0,1,2)
-
-- if the phase is 1 or 2 : it will remove the first or the 2 firsts characters
-- if the alphabet is not NUCLEOTIDES: returns an error
-
-It only translates using the standard code so far
-
-*/
-func (a *align) Translate(phase int) (transAl *align, err error) {
-	if a.Alphabet() != NUCLEOTIDS {
-		return nil, errors.New("Wrong alphabet, cannot translate to AA")
-	}
-	if a.Length() < 3+phase {
-		return nil, errors.New("Cannot translate an alignment with length < 3+phase")
-	}
-
-	transAl = NewAlign(a.Alphabet())
-
-	a.IterateAll(func(name string, sequence []rune, comment string) {
-		var buffer bytes.Buffer
-		for i := phase; i < len(sequence)-2; i += 3 {
-			codon := strings.Replace(strings.ToUpper(string(sequence[i:i+3])), "U", "T", -1)
-			aa, found := standardcode[codon]
-			if !found {
-				aa = 'X'
-			}
-			buffer.WriteRune(aa)
-		}
-		if err2 := transAl.AddSequence(name, buffer.String(), comment); err != nil {
-			err = err2
-		}
-	})
-	return transAl, err
 }
 
 // Aligns given nt sequences (ntseqs) using a corresponding aa alignment (a).
