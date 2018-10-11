@@ -10,9 +10,11 @@ Without any subcommand, it prints the following information:
 3. Average number of alleles per site;
 4. Number of variables sites (does ot take into account gaps or special characters);
 5. Character frequencies.
+6. Aphabet
 
 Different sub-commands:
 * `goalign stats alleles`: Prints the average number of alleles per site of the alignment;
+* `goalign stats alphabet`: Prints the alphabet of the alignemnts (aminoacids, nucleotides, unknown);
 * `goalign stats char`: Prints the character frequencies;
 * `goalign stats length`: Prints alignment length;
 * `goalign stats maxchar`: Prints max occurence char for each alignment site
@@ -29,6 +31,7 @@ goalign stats [command]
   
 Available Commands:
 	alleles
+	alphabet
 	char
 	length
 	nalign
@@ -57,4 +60,5 @@ A 54 0.270000
 C 34 0.170000
 G 49 0.245000
 T 63 0.315000
+alphabet	nucleotides
 ```

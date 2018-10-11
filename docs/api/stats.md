@@ -48,5 +48,7 @@ func main() {
 	for nt, nb := range al.CharStats() {
 		fmt.Printf("%c = %d\n", nt, nb)
 	}
+	/* Print alphabet */
+	fmt.Printf("ALphabet=%s\n", al.AlphabetStr())
 }
 ```
