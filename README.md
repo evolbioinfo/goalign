@@ -121,6 +121,7 @@ You may go to the [doc](docs/index.md) for a more detailed documentation of the 
 * clean:       Removes gap sites/sequences
   * sites : Removes sites with gaps
   * seqs : Removes sequences with gaps
+* codonalign: Aligns a given nt fasta file using a corresponding aa alignment (by codons)
 * compute:     Different computations (distances, etc.)
   * distances: compute evolutionary distances for nucleotide alignment
   * entropy: compute entropy of alignment sites
@@ -130,6 +131,7 @@ You may go to the [doc](docs/index.md) for a more detailed documentation of the 
 * divide:      Divide an input alignment in several output files (one per alignment)
 * draw:   Draw alignments
   * biojs:     Display an input alignment in an html file using [BioJS](http://msa.biojs.net/)
+* identical: Tells wether two alignments are identical
 * mutate: Adds substitutions (~sequencing errors), or gaps, uniformly in an input alignment
   * gaps: Adds gaps uniformly in an input alignment
   * snvs: Adds substitutions uniformly in an input alignment
@@ -154,6 +156,7 @@ You may go to the [doc](docs/index.md) for a more detailed documentation of the 
   * swap:  Swap portions of some sequences (cut/paste)
 * stats:       Prints different characteristics of the alignment
   * alleles
+  * alphabet
   * char
   * length
   * nalign

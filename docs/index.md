@@ -58,6 +58,7 @@ Command                                                     | Subcommand |      
 [clean](commands/clean.md) ([api](api/clean.md))            |            | Removes gap sites/sequences
 --                                                          | sites      | Removes sequences with gaps
 --                                                          | seqs       | Removes sites with gaps
+[codonalign](commands/codonalign.md) ([api](api/codonalign.md))|         | Different computations (distances, entropy, etc.)
 [compute](commands/compute.md) ([api](api/compute.md))      |            | Different computations (distances, entropy, etc.)
 --                                                          | distance   | Computes distance matrix from inpu alignment
 --                                                          | entropy    | Computes entropy of sites of a given alignment
@@ -68,6 +69,7 @@ Command                                                     | Subcommand |      
 [divide](commands/divide.md) ([api](api/divide.md))         |            | Divide an input alignment in several output files
 [draw](commands/draw.md) ([api](api/draw.md))               |            | Draws an input alignment
 --                                                          | biojs      | Displays an input alignment in an html file using biojs
+[identical](commands/identical.md) ([api](api/identical.md))|            | Tells wether two alignments are identical
 [mutate](commands/mutate.md) ([api](api/mutate.md))         |            | Adds substitutions (~sequencing errors), or gaps, uniformly in an input alignment
 --                                                          | gaps       | Adds gaps uniformly in an input alignment
 --                                                          | snvs       | Adds substitutions uniformly in an input alignment
@@ -93,6 +95,7 @@ Command                                                     | Subcommand |      
 [sort](commands/sort.md) ([api](api/sort.md))               |            | Sorts the alignment by sequence name
 [stats](commands/stats.md) ([api](api/stats.md))            |            | Prints different characteristics of the alignment
 --                                                          | alleles    | Prints the average number of alleles per sites of the alignment
+--                                                          | alphabet   | Prints  the alphabet detected for the alignment
 --                                                          | char       | Prints frequence of different characters (aa/nt) of the alignment
 --                                                          | length     | Prints the length of sequences in the alignment
 --                                                          | maxchar    | Prints max occurence char for each alignment site
