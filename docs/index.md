@@ -73,6 +73,7 @@ Command                                                     | Subcommand |      
 [mutate](commands/mutate.md) ([api](api/mutate.md))         |            | Adds substitutions (~sequencing errors), or gaps, uniformly in an input alignment
 --                                                          | gaps       | Adds gaps uniformly in an input alignment
 --                                                          | snvs       | Adds substitutions uniformly in an input alignment
+[phase](commands/phase.md) ([api](api/phase.md))            |            | Find best ATGs and set them as new start positions
 [random](commands/random.md) ([api](api/random.md))         |            | Generate random sequences
 [reformat](commands/reformat.md) ([api](api/reformat.md))   |            | Reformats input alignment into phylip of fasta format
 --                                                          | clustal    | Reformats an input alignment into Clustal

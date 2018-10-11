@@ -15,10 +15,10 @@ var phaseLogOutput string
 // translateCmd represents the addid command
 var phaseCmd = &cobra.Command{
 	Use:   "phase",
-	Short: "Find best ATG and set it as new start position",
-	Long: `Find best ATG and set it as new start position.
+	Short: "Find best ATGs and set them as new start positions",
+	Long: `Find best ATGs and set them as new start positions.
 
-if --unaligned is set, format options are ingored (phylip, nexus, etc.), and
+if --unaligned is set, format options are ignored (phylip, nexus, etc.), and
 only Fasta is accepted.
 
 If input sequences are not nucleotidic, then returns an error.
@@ -79,7 +79,7 @@ Output file is an unaligned set of sequences in fasta.
 
 func init() {
 	RootCmd.AddCommand(phaseCmd)
-	phaseCmd.PersistentFlags().StringVarP(&phaseOutput, "output", "o", "stdout", "Output translated alignment file")
+	phaseCmd.PersistentFlags().StringVarP(&phaseOutput, "output", "o", "stdout", "Output ATG \"phased\" FASTA file")
 	phaseCmd.PersistentFlags().StringVarP(&phaseLogOutput, "log", "l", "none", "Output log: positions of the considered ATG for each sequence")
 	phaseCmd.PersistentFlags().BoolVar(&unaligned, "unaligned", false, "Considers sequences as unaligned and only format fasta is accepted (phylip, nexus,... options are ignored)")
 }

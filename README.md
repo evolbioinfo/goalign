@@ -135,6 +135,7 @@ You may go to the [doc](docs/index.md) for a more detailed documentation of the 
 * mutate: Adds substitutions (~sequencing errors), or gaps, uniformly in an input alignment
   * gaps: Adds gaps uniformly in an input alignment
   * snvs: Adds substitutions uniformly in an input alignment
+* phase: Try to find ATG in each sequence and remove nucleotides before
 * random:      Generate random sequences
 * reformat:    Reformats input alignment into several formats
   * fasta
@@ -164,6 +165,7 @@ You may go to the [doc](docs/index.md) for a more detailed documentation of the 
   * taxa
 * subseq:      Extract a subsequence from the alignment
 * subset:      Take a subset of sequences from the input alignment
+* translate:   Translate input sequences/alignment
 * trim:        This command trims names of sequences or sequences themselves
   * name
   * seq
