@@ -23,7 +23,7 @@ func main() {
 	var fi io.Closer
 	var r *bufio.Reader
 	var err error
-	var al, dedup align.Alignment
+	var al align.Alignment
 
 	/* Get reader (plain text or gzip) */
 	fi, r, err = utils.GetReader("align.fa")
@@ -39,10 +39,10 @@ func main() {
 	fi.Close()
 
 	/* Deduplicate */
-	if dedup, err = al.Deduplicate(); err != nil {
+	if err = al.Deduplicate(); err != nil {
 		panic(err)
 	} else {
-		fmt.Println(fasta.WriteAlignment(dedup))
+		fmt.Println(fasta.WriteAlignment(al))
 	}
 }
 ```
