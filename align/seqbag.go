@@ -499,21 +499,46 @@ func (sb *seqbag) Translate(phase int) (err error) {
 //
 // It does not modify the input object
 func (sb *seqbag) Phase() (phased SeqBag, positions []int, err error) {
+	var beststart, bestend int
+	var start, end int
+	var bestseq Sequence
+	var longestORF *seq
+	var aligner PairwiseAligner
+
 	if sb.Alphabet() != NUCLEOTIDS {
 		err = fmt.Errorf("Wrong alphabet for phase : %s", sb.AlphabetStr())
 		return
 	}
 	positions = make([]int, 0, sb.NbSequences())
 	phased = NewSeqBag(sb.Alphabet())
+	// Search for the longest orf in all sequences
 	for _, seq := range sb.seqs {
-		pos := seq.BestATG()
-		if pos == -1 {
+		start, end = seq.LongestORF()
+		if end-start > bestend-beststart {
+			beststart, bestend = start, end
+			bestseq = seq
+		}
+		if start == -1 {
 			err = fmt.Errorf("No ORF is found on the sequence %s", seq.name)
 			return
 		}
-		positions = append(positions, pos)
-		phased.AddSequence(seq.name, string(seq.sequence[pos:]), seq.comment)
 	}
+	longestORF = NewSequence("longestorf_sw", bestseq.SequenceChar()[beststart:bestend+1], "")
+
+	// Now we align all sequences against this longest orf with Smith/Waterman
+	for _, seq := range sb.seqs {
+		aligner = NewSwAligner(longestORF, seq)
+		aligner.Alignment()
+		orfstart, seqstart := aligner.AlignStarts()
+
+		if orfstart != 0 {
+			log.Print(fmt.Sprintf("The longest ORF does not match in sequence %s", seq.name))
+		} else {
+			positions = append(positions, seqstart)
+			phased.AddSequence(seq.name, string(seq.sequence[seqstart:]), seq.comment)
+		}
+	}
+
 	return
 }
 

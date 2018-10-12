@@ -14,7 +14,7 @@ type Sequence interface {
 	Name() string
 	Comment() string
 	Length() int
-	BestATG() int // Detects the position of ATG giving the longest ORF in forward strand only
+	LongestORF() (start, end int) // Detects the longest ORF in forward strand only
 }
 
 type seq struct {
@@ -58,9 +58,9 @@ func (s *seq) Length() int {
 // Search is done in the forward strand only
 //
 // returns -1 is no ATG...STOP has been found
-func (s *seq) BestATG() int {
-	beststart := -1
-	bestend := -1
+func (s *seq) LongestORF() (start, end int) {
+	start = -1
+	end = -1
 	re, _ := regexp.CompilePOSIX("(ATG)(.{3})*(TAA|TGA|TAG)")
 	re.Longest()
 	idx := re.FindAllStringIndex(
@@ -70,13 +70,13 @@ func (s *seq) BestATG() int {
 		-1)
 	if idx != nil {
 		for _, pos := range idx {
-			if pos[1]-pos[0] > bestend-beststart {
-				bestend = pos[1]
-				beststart = pos[0]
+			if pos[1]-pos[0] > end-start {
+				end = pos[1]
+				start = pos[0]
 			}
 		}
 	}
-	return beststart
+	return start, end
 }
 
 func RandomSequence(alphabet, length int) ([]rune, error) {

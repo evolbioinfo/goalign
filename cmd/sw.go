@@ -10,6 +10,7 @@ import (
 )
 
 var swOutput string
+var swLog string
 var gapopening float64
 var gapelongation float64
 var match float64
@@ -30,13 +31,21 @@ Output: Aligned file (format depending on format options)
 		var seq1 align.Sequence
 		var seq2 align.Sequence
 		var ok bool
-		var f *os.File
+		var f, log *os.File
 
 		if f, err = openWriteFile(swOutput); err != nil {
 			io.LogError(err)
 			return
 		}
-		defer closeWriteFile(f, reformatOutput)
+		defer closeWriteFile(f, swOutput)
+
+		if swLog != "none" {
+			if log, err = openWriteFile(swLog); err != nil {
+				io.LogError(err)
+				return
+			}
+			defer closeWriteFile(log, swLog)
+		}
 
 		if seqs, err = readsequences(infile); err != nil {
 			io.LogError(err)
@@ -64,9 +73,17 @@ Output: Aligned file (format depending on format options)
 		aligner.SetGapElongScore(gapelongation)
 		aligner.SetMismatchScore(mismatch)
 		aligner.SetMatchScore(match)
-
 		al := aligner.Alignment()
 		writeAlign(al, f)
+
+		if log != nil {
+			start1, start2 := aligner.AlignStarts()
+			end1, end2 := aligner.AlignEnds()
+			fmt.Fprintf(log, "Query Start,End: %d,%d\n", start1, end1)
+			fmt.Fprintf(log, "Subject Start,End: %d,%d\n", start2, end2)
+			fmt.Fprintf(log, "Align length: %d\n", al.Length())
+		}
+
 		return
 	},
 }
@@ -74,6 +91,7 @@ Output: Aligned file (format depending on format options)
 func init() {
 	RootCmd.AddCommand(swCmd)
 	swCmd.PersistentFlags().StringVarP(&swOutput, "output", "o", "stdout", "Alignment output file")
+	swCmd.PersistentFlags().StringVarP(&swLog, "log", "l", "none", "Alignment log file")
 	swCmd.PersistentFlags().Float64Var(&gapopening, "gap-open", -1.0, "Score for opening a gap")
 	swCmd.PersistentFlags().Float64Var(&gapelongation, "gap-elong", -0.5, "Score for elonging a gap")
 	swCmd.PersistentFlags().Float64Var(&match, "match", 1.0, "Score for a match")

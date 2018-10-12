@@ -1,11 +1,11 @@
 package align
 
 type PairwiseAligner interface {
-	AlignEnds()
-	AlignStarts()
-	SetGapStartScore(gap float64)
+	AlignEnds() (int, int)
+	AlignStarts() (int, int)
+	SetGapOpenScore(gap float64)
 	SetGapElongScore(gap float64)
-	SetMismatchScpre(mismatch float64)
+	SetMismatchScore(mismatch float64)
 	SetMatchScore(mismatch float64)
 	Alignment() Alignment
 }
@@ -154,7 +154,7 @@ func (a *swaligner) AlignEnds() (int, int) {
 
 // Indices of alignment end
 func (a *swaligner) AlignStarts() (int, int) {
-	return a.start2, a.start2
+	return a.start1, a.start2
 }
 
 func (a *swaligner) backTrack() {
@@ -170,21 +170,25 @@ func (a *swaligner) backTrack() {
 	seq1 = make([]rune, 0, 20)
 	seq2 = make([]rune, 0, 20)
 
+	seq1 = append(seq1, a.seq1.CharAt(i))
+	seq2 = append(seq2, a.seq2.CharAt(j))
+
 	for a.matrix[i][j] != 0.0 {
 		switch a.trace[i][j] {
 		case ALIGN_UP:
+			j--
 			seq1 = append(seq1, '-')
 			seq2 = append(seq2, a.seq2.CharAt(j))
-			j--
+
 		case ALIGN_DIAG:
+			i--
+			j--
 			seq1 = append(seq1, a.seq1.CharAt(i))
 			seq2 = append(seq2, a.seq2.CharAt(j))
-			i--
-			j--
 		case ALIGN_LEFT:
+			i--
 			seq1 = append(seq1, a.seq1.CharAt(i))
 			seq2 = append(seq2, '-')
-			i--
 		}
 	}
 
