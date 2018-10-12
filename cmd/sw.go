@@ -1,0 +1,81 @@
+package cmd
+
+import (
+	"fmt"
+	"os"
+
+	"github.com/fredericlemoine/goalign/align"
+	"github.com/fredericlemoine/goalign/io"
+	"github.com/spf13/cobra"
+)
+
+var swOutput string
+var gapopening float64
+var gapelongation float64
+var match float64
+var mismatch float64
+
+// translateCmd represents the addid command
+var swCmd = &cobra.Command{
+	Use:   "sw",
+	Short: "Aligns 2 sequences using Smith&Waterman algorithm",
+	Long: `Aligns 2 sequences using Smith&Waterman algorithm.
+
+Input : Fasta file
+Output: Aligned file (format depending on format options)
+
+`,
+	RunE: func(cmd *cobra.Command, args []string) (err error) {
+		var seqs align.SeqBag
+		var seq1 align.Sequence
+		var seq2 align.Sequence
+		var ok bool
+		var f *os.File
+
+		if f, err = openWriteFile(swOutput); err != nil {
+			io.LogError(err)
+			return
+		}
+		defer closeWriteFile(f, reformatOutput)
+
+		if seqs, err = readsequences(infile); err != nil {
+			io.LogError(err)
+			return
+		}
+
+		if seqs.NbSequences() != 2 {
+			err = fmt.Errorf("Fasta file must contain 2 sequences to align")
+			io.LogError(err)
+			return
+		}
+
+		if seq1, ok = seqs.Sequence(0); !ok {
+			io.LogError(fmt.Errorf("Sequence 0 is not present in the seqbag"))
+			return
+		}
+
+		if seq2, ok = seqs.Sequence(1); !ok {
+			io.LogError(fmt.Errorf("Sequence 1 is not present in the seqbag"))
+			return
+		}
+
+		aligner := align.NewSwAligner(seq1, seq2)
+		aligner.SetGapOpenScore(gapopening)
+		aligner.SetGapElongScore(gapelongation)
+		aligner.SetMismatchScore(mismatch)
+		aligner.SetMatchScore(match)
+
+		al := aligner.Alignment()
+		writeAlign(al, f)
+		return
+	},
+}
+
+func init() {
+	RootCmd.AddCommand(swCmd)
+	swCmd.PersistentFlags().StringVarP(&swOutput, "output", "o", "stdout", "Alignment output file")
+	swCmd.PersistentFlags().Float64Var(&gapopening, "gap-open", -1.0, "Score for opening a gap")
+	swCmd.PersistentFlags().Float64Var(&gapelongation, "gap-elong", -0.5, "Score for elonging a gap")
+	swCmd.PersistentFlags().Float64Var(&match, "match", 1.0, "Score for a match")
+	swCmd.PersistentFlags().Float64Var(&mismatch, "mismatch", -1.0, "Score for a mismatch")
+}

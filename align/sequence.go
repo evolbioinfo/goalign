@@ -10,6 +10,7 @@ import (
 type Sequence interface {
 	Sequence() string
 	SequenceChar() []rune
+	CharAt(int) rune
 	Name() string
 	Comment() string
 	Length() int
@@ -35,6 +36,10 @@ func (s *seq) Sequence() string {
 }
 func (s *seq) SequenceChar() []rune {
 	return s.sequence
+}
+
+func (s *seq) CharAt(i int) rune {
+	return s.sequence[i]
 }
 
 func (s *seq) Name() string {
@@ -87,4 +92,11 @@ func RandomSequence(alphabet, length int) ([]rune, error) {
 		}
 	}
 	return seq, nil
+}
+
+// Reverses a sequence
+func Reverse(seq []rune) {
+	for i, j := 0, len(seq)-1; i < j; i, j = i+1, j-1 {
+		seq[i], seq[j] = seq[j], seq[i]
+	}
 }

@@ -33,6 +33,8 @@ type SeqBag interface {
 	GetSequenceCharById(ith int) ([]rune, bool)
 	GetSequenceNameById(ith int) (string, bool)
 	SetSequenceChar(ithAlign, ithSite int, char rune) error
+	Sequence(ith int) (Sequence, bool)
+	SequenceByName(name string) (Sequence, bool)
 	Identical(SeqBag) bool
 	Iterate(it func(name string, sequence string))
 	IterateChar(it func(name string, sequence []rune))
@@ -206,6 +208,25 @@ func (sb *seqbag) GetSequenceChar(name string) ([]rune, bool) {
 		return seq.SequenceChar(), ok
 	}
 	return nil, false
+}
+
+// If sequence exists in alignment, return sequence,true
+// Otherwise, return "",false
+func (sb *seqbag) Sequence(ith int) (Sequence, bool) {
+	if ith >= 0 && ith < sb.NbSequences() {
+		return sb.seqs[ith], true
+	}
+	return nil, false
+}
+
+// If sequence exists in alignment, return sequence,true
+// Otherwise, return "",false
+func (sb *seqbag) SequenceByName(name string) (Sequence, bool) {
+	seq, ok := sb.seqmap[name]
+	if ok {
+		return seq, ok
+	}
+	return nil, ok
 }
 
 // If ith >=0 && i < nbSequences() return name,true
