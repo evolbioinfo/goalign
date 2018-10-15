@@ -41,6 +41,7 @@ type SeqBag interface {
 	IterateAll(it func(name string, sequence []rune, comment string))
 	NbSequences() int
 	Phase(orf Sequence) (seqs SeqBag, positions []int, err error)
+	LongestORF() (orf Sequence, err error)
 	Rename(namemap map[string]string)
 	RenameRegexp(regex, replace string, namemap map[string]string) error
 	ShuffleSequences()               // Shuffle sequence order
@@ -48,6 +49,7 @@ type SeqBag interface {
 	TrimNames(namemap map[string]string, size int) error
 	TrimNamesAuto(namemap map[string]string, curid *int) error
 	Sort() // Sorts the sequences by name
+	Unalign() SeqBag
 }
 
 type seqbag struct {
@@ -492,15 +494,35 @@ func (sb *seqbag) Translate(phase int) (err error) {
 	return
 }
 
+func (sb *seqbag) LongestORF() (orf Sequence, err error) {
+	var beststart, bestend int
+	var start, end int
+	var bestseq Sequence
+
+	// Search for the longest orf in all sequences
+	for _, seq := range sb.seqs {
+		start, end = seq.LongestORF()
+		if end-start > bestend-beststart {
+			beststart, bestend = start, end
+			bestseq = seq
+		}
+		if start == -1 {
+			err = fmt.Errorf("No ORF is found on the sequence %s", seq.name)
+			return
+		}
+	}
+	// log.Print("Longest ORF found in sequence ", bestseq.Name())
+	// log.Print(string(bestseq.SequenceChar()[beststart:bestend]))
+	orf = NewSequence("longestorf_sw", bestseq.SequenceChar()[beststart:bestend], "")
+	return
+}
+
 // align all sequences to the given ORF and trims sequences to the start
 // position
 // If orf is nil, searches for the longest ORF in all sequences
 //
 // It does not modify the input object
 func (sb *seqbag) Phase(orf Sequence) (phased SeqBag, positions []int, err error) {
-	var beststart, bestend int
-	var start, end int
-	var bestseq Sequence
 	var aligner PairwiseAligner
 
 	if sb.Alphabet() != NUCLEOTIDS {
@@ -511,21 +533,7 @@ func (sb *seqbag) Phase(orf Sequence) (phased SeqBag, positions []int, err error
 	phased = NewSeqBag(sb.Alphabet())
 
 	if orf == nil {
-		// Search for the longest orf in all sequences
-		for _, seq := range sb.seqs {
-			start, end = seq.LongestORF()
-			if end-start > bestend-beststart {
-				beststart, bestend = start, end
-				bestseq = seq
-			}
-			if start == -1 {
-				err = fmt.Errorf("No ORF is found on the sequence %s", seq.name)
-				return
-			}
-		}
-		log.Print("Longest ORF found in sequence ", bestseq.Name())
-		log.Print(string(bestseq.SequenceChar()[beststart:bestend]))
-		orf = NewSequence("longestorf_sw", bestseq.SequenceChar()[beststart:bestend], "")
+		orf, err = sb.LongestORF()
 	}
 
 	// Now we align all sequences against this longest orf with Modified Smith/Waterman
@@ -620,6 +628,15 @@ func (sb *seqbag) TrimNamesAuto(namemap map[string]string, curid *int) (err erro
 			}
 		}
 		seq.name = newname
+	}
+	return
+}
+
+func (sb *seqbag) Unalign() (unal SeqBag) {
+	unal = NewSeqBag(sb.Alphabet())
+
+	for _, seq := range sb.seqs {
+		unal.AddSequence(seq.name, strings.Replace(string(seq.sequence), "-", "", -1), seq.comment)
 	}
 	return
 }
