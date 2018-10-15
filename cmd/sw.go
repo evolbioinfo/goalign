@@ -68,7 +68,7 @@ Output: Aligned file (format depending on format options)
 			return
 		}
 
-		aligner := align.NewSwAligner(seq1, seq2)
+		aligner := align.NewPwAligner(seq1, seq2, align.ALIGN_ALGO_SW)
 		aligner.SetGapOpenScore(gapopening)
 		aligner.SetGapElongScore(gapelongation)
 		aligner.SetMismatchScore(mismatch)

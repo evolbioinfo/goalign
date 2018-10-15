@@ -15,9 +15,13 @@ const (
 	ALIGN_LEFT
 	ALIGN_DIAG
 	ALIGN_STOP
+
+	ALIGN_ALGO_SW = iota
+	ALIGN_ALGO_ATG
 )
 
-type swaligner struct {
+type pwaligner struct {
+	algo   int
 	matrix [][]float64 /* trace matrix */
 	trace  [][]int
 
@@ -33,8 +37,9 @@ type swaligner struct {
 	mismatch         float64
 }
 
-func NewSwAligner(seq1, seq2 Sequence) *swaligner {
-	return &swaligner{
+func NewPwAligner(seq1, seq2 Sequence, algo int) *pwaligner {
+	return &pwaligner{
+		algo:     algo,
 		matrix:   nil,
 		trace:    nil,
 		maxscore: 0.0,
@@ -53,33 +58,54 @@ func NewSwAligner(seq1, seq2 Sequence) *swaligner {
 	}
 }
 
-func (a *swaligner) initMatrix(l1, l2 int) {
-	var i int
+func (a *pwaligner) initMatrix(l1, l2 int) {
+	var i, j int
 
-	a.matrix = make([][]float64, l1)
-	a.trace = make([][]int, l1)
+	a.matrix = make([][]float64, l1+1)
+	a.trace = make([][]int, l1+1)
 	for i, _ = range a.matrix {
-		a.matrix[i] = make([]float64, l2)
-		a.trace[i] = make([]int, l2)
+
+		a.matrix[i] = make([]float64, l2+1)
+		a.trace[i] = make([]int, l2+1)
+	}
+
+	// Init first row and first column with 0.0
+	// and ALIGN_STOP trace
+	for i = 0; i <= l1; i++ {
+		a.matrix[i][0] = 0.0
+		a.trace[i][0] = ALIGN_STOP
+	}
+	for j = 0; j <= l2; j++ {
+		a.matrix[0][j] = 0.0
+		a.trace[0][j] = ALIGN_STOP
 	}
 }
 
-func (a *swaligner) SetGapOpenScore(gap float64) {
+func (a *pwaligner) SetGapOpenScore(gap float64) {
 	a.gapstart = gap
 }
-func (a *swaligner) SetGapElongScore(gap float64) {
+func (a *pwaligner) SetGapElongScore(gap float64) {
 	a.gapelong = gap
 }
 
-func (a *swaligner) SetMismatchScore(mismatch float64) {
+func (a *pwaligner) SetMismatchScore(mismatch float64) {
 	a.mismatch = mismatch
 }
 
-func (a *swaligner) SetMatchScore(match float64) {
+func (a *pwaligner) SetMatchScore(match float64) {
 	a.match = match
 }
 
-func (a *swaligner) fillMatrix() {
+func (a *pwaligner) fillMatrix() {
+	switch a.algo {
+	case ALIGN_ALGO_ATG:
+		a.fillMatrix_ATG()
+	default:
+		a.fillMatrix_SW()
+	}
+}
+
+func (a *pwaligner) fillMatrix_SW() {
 	var i, j int
 	var c1, c2 rune
 	var maxscore float64
@@ -88,19 +114,21 @@ func (a *swaligner) fillMatrix() {
 
 	a.initMatrix(a.seq1.Length(), a.seq2.Length())
 
-	for i, c1 = range a.seq1.SequenceChar() {
-		for j, c2 = range a.seq2.SequenceChar() {
+	// In ATG algo, we look at sequences in reverse order
+	for i = 1; i <= len(a.seq1.SequenceChar()); i++ {
+		c1 = a.seq1.SequenceChar()[i-1]
+		for j = 1; j <= len(a.seq2.SequenceChar()); j++ {
+			c2 = a.seq2.SequenceChar()[j-1]
+
 			maxscore = 0.0
 			trace = ALIGN_STOP
 
 			// left score
 			leftscore = 0.0
-			if i > 0 {
-				if a.trace[i-1][j] == ALIGN_LEFT {
-					leftscore = a.matrix[i-1][j] + a.gapelong
-				} else {
-					leftscore = a.matrix[i-1][j] + a.gapstart
-				}
+			if a.trace[i-1][j] == ALIGN_LEFT {
+				leftscore = a.matrix[i-1][j] + a.gapelong
+			} else {
+				leftscore = a.matrix[i-1][j] + a.gapstart
 			}
 			if leftscore > maxscore {
 				trace = ALIGN_LEFT
@@ -109,12 +137,10 @@ func (a *swaligner) fillMatrix() {
 
 			// up score
 			upscore = 0.0
-			if j > 0 {
-				if a.trace[i][j] == ALIGN_UP {
-					upscore = a.matrix[i][j-1] + a.gapelong
-				} else {
-					upscore = a.matrix[i][j-1] + a.gapstart
-				}
+			if a.trace[i][j] == ALIGN_UP {
+				upscore = a.matrix[i][j-1] + a.gapelong
+			} else {
+				upscore = a.matrix[i][j-1] + a.gapstart
 			}
 			if upscore > maxscore {
 				trace = ALIGN_UP
@@ -122,14 +148,11 @@ func (a *swaligner) fillMatrix() {
 			}
 
 			// diag score
-			diagscore = 0.0
-			if i > 0 && j > 0 {
-				diagscore = a.matrix[i-1][j-1]
-				if c1 != c2 {
-					diagscore += a.mismatch
-				} else {
-					diagscore += a.match
-				}
+			diagscore = a.matrix[i-1][j-1]
+			if c1 != c2 {
+				diagscore += a.mismatch
+			} else {
+				diagscore += a.match
 			}
 			if diagscore > maxscore {
 				trace = ALIGN_DIAG
@@ -147,53 +170,129 @@ func (a *swaligner) fillMatrix() {
 	}
 }
 
+func (a *pwaligner) fillMatrix_ATG() {
+	var i, j int
+	var revi, revj int
+	var c1, c2 rune
+	var maxscore float64
+	var trace int
+	var leftscore, upscore, diagscore float64
+
+	a.initMatrix(a.seq1.Length(), a.seq2.Length())
+
+	// In ATG algo, we look at sequences in reverse order
+	for revi = len(a.seq1.SequenceChar()); revi > 0; revi-- {
+		c1 = a.seq1.SequenceChar()[revi-1]
+		i = len(a.seq1.SequenceChar()) - revi + 1
+		for revj = len(a.seq2.SequenceChar()); revj > 0; revj-- {
+			c2 = a.seq2.SequenceChar()[revj-1]
+			j = len(a.seq2.SequenceChar()) - revj + 1
+			maxscore = 0.0
+			trace = ALIGN_STOP
+
+			// left score
+			leftscore = 0.0
+			if a.trace[i-1][j] == ALIGN_LEFT {
+				leftscore = a.matrix[i-1][j] + a.gapelong
+			} else {
+				leftscore = a.matrix[i-1][j] + a.gapstart
+			}
+			if leftscore > maxscore {
+				trace = ALIGN_LEFT
+				maxscore = leftscore
+			}
+
+			// up score
+			upscore = 0.0
+			if a.trace[i][j] == ALIGN_UP {
+				upscore = a.matrix[i][j-1] + a.gapelong
+			} else {
+				upscore = a.matrix[i][j-1] + a.gapstart
+			}
+			if upscore > maxscore {
+				trace = ALIGN_UP
+				maxscore = upscore
+			}
+
+			// diag score
+			diagscore = a.matrix[i-1][j-1]
+			if c1 != c2 {
+				diagscore += a.mismatch
+			} else {
+				diagscore += a.match
+			}
+			if diagscore > maxscore {
+				trace = ALIGN_DIAG
+				maxscore = diagscore
+			}
+
+			a.matrix[i][j] = maxscore
+			a.trace[i][j] = trace
+
+			// We update the max score only for the last column of the matrix
+			// i.e. revi=0
+			if maxscore > a.maxscore && revi == 1 {
+				a.maxi = i
+				a.maxj = j
+				a.maxscore = maxscore
+			}
+		}
+	}
+}
+
 // Indices of alignment end
-func (a *swaligner) AlignEnds() (int, int) {
+func (a *pwaligner) AlignEnds() (int, int) {
 	return a.end1, a.end2
 }
 
 // Indices of alignment end
-func (a *swaligner) AlignStarts() (int, int) {
+func (a *pwaligner) AlignStarts() (int, int) {
 	return a.start1, a.start2
 }
 
-func (a *swaligner) backTrack() {
+func (a *pwaligner) backTrack() {
+	switch a.algo {
+	case ALIGN_ALGO_ATG:
+		a.backTrack_ATG()
+	default:
+		a.backTrack_SW()
+	}
+}
+
+func (a *pwaligner) backTrack_SW() {
 	var i, j int
 	var seq1, seq2 []rune
 
-	a.end1 = a.maxi
-	a.end2 = a.maxj
+	a.end1 = a.maxi - 1
+	a.end2 = a.maxj - 1
 
-	i = a.end1
-	j = a.end2
+	i = a.maxi
+	j = a.maxj
 
 	seq1 = make([]rune, 0, 20)
 	seq2 = make([]rune, 0, 20)
 
-	seq1 = append(seq1, a.seq1.CharAt(i))
-	seq2 = append(seq2, a.seq2.CharAt(j))
-
-	for a.matrix[i][j] != 0.0 {
+	for a.trace[i][j] != ALIGN_STOP {
 		switch a.trace[i][j] {
 		case ALIGN_UP:
-			j--
 			seq1 = append(seq1, '-')
-			seq2 = append(seq2, a.seq2.CharAt(j))
+			seq2 = append(seq2, a.seq2.CharAt(j-1))
+			j--
 
 		case ALIGN_DIAG:
+			seq1 = append(seq1, a.seq1.CharAt(i-1))
+			seq2 = append(seq2, a.seq2.CharAt(j-1))
 			i--
 			j--
-			seq1 = append(seq1, a.seq1.CharAt(i))
-			seq2 = append(seq2, a.seq2.CharAt(j))
 		case ALIGN_LEFT:
-			i--
-			seq1 = append(seq1, a.seq1.CharAt(i))
+			seq1 = append(seq1, a.seq1.CharAt(i-1))
 			seq2 = append(seq2, '-')
+			i--
 		}
 	}
 
-	a.start1 = i
-	a.start2 = j
+	a.start1 = i - 1
+	a.start2 = j - 1
 
 	Reverse(seq1)
 	Reverse(seq2)
@@ -202,7 +301,60 @@ func (a *swaligner) backTrack() {
 	a.seq2ali = seq2
 }
 
-func (a *swaligner) Alignment() Alignment {
+// In ATG backtrack we take the maximum found from the ATG of seq1,
+// i.e its start, i.e. the last column of the matrix
+func (a *pwaligner) backTrack_ATG() {
+	var i, j int
+	var revi, revj int
+	var len1, len2 int
+	var seq1, seq2 []rune
+
+	len1 = len(a.seq1.SequenceChar())
+	len2 = len(a.seq2.SequenceChar())
+
+	a.start1 = len1 - a.maxi
+	a.start2 = len2 - a.maxj
+
+	revi = a.maxi
+	revj = a.maxj
+
+	i = len1 - revi
+	j = len2 - revj
+
+	seq1 = make([]rune, 0, 20)
+	seq2 = make([]rune, 0, 20)
+
+	for a.trace[revi][revj] != ALIGN_STOP {
+		switch a.trace[revi][revj] {
+		case ALIGN_UP:
+			seq1 = append(seq1, '-')
+			seq2 = append(seq2, a.seq2.CharAt(j))
+			revj--
+			j++
+
+		case ALIGN_DIAG:
+			seq1 = append(seq1, a.seq1.CharAt(i))
+			seq2 = append(seq2, a.seq2.CharAt(j))
+			revi--
+			revj--
+			i++
+			j++
+		case ALIGN_LEFT:
+			seq1 = append(seq1, a.seq1.CharAt(i))
+			seq2 = append(seq2, '-')
+			revi--
+			i++
+		}
+	}
+
+	a.end1 = i
+	a.end2 = j
+
+	a.seq1ali = seq1
+	a.seq2ali = seq2
+}
+
+func (a *pwaligner) Alignment() Alignment {
 	a.fillMatrix()
 	a.backTrack()
 	align := NewAlign(UNKNOWN)

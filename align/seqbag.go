@@ -525,9 +525,9 @@ func (sb *seqbag) Phase() (phased SeqBag, positions []int, err error) {
 	}
 	longestORF = NewSequence("longestorf_sw", bestseq.SequenceChar()[beststart:bestend+1], "")
 
-	// Now we align all sequences against this longest orf with Smith/Waterman
+	// Now we align all sequences against this longest orf with Modified Smith/Waterman
 	for _, seq := range sb.seqs {
-		aligner = NewSwAligner(longestORF, seq)
+		aligner = NewPwAligner(longestORF, seq, ALIGN_ALGO_ATG)
 		aligner.Alignment()
 		orfstart, seqstart := aligner.AlignStarts()
 
