@@ -738,7 +738,7 @@ func TestPhase(t *testing.T) {
 	exp.AddSequence("Seq0001", "ATGGATGACTTTTTCTGTTGCCCTCCCCCACCGCAACAGTCTTCCTCATCGAGTAGCGAAGAGACTACCACAACGGGTGGCGGAGGGTGGCATCACTATTACATTATCATAGTTGTCGTATAATGA", "")
 	exp.AutoAlphabet()
 
-	if seqs, _, err := in.Phase(); err != nil {
+	if seqs, _, err := in.Phase(nil); err != nil {
 		t.Error(err)
 	} else {
 
