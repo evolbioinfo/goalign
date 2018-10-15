@@ -61,8 +61,8 @@ func (s *seq) Length() int {
 func (s *seq) LongestORF() (start, end int) {
 	start = -1
 	end = -1
-	re, _ := regexp.CompilePOSIX("(ATG)(.{3})*(TAA|TGA|TAG)")
-	re.Longest()
+	re, _ := regexp.Compile("(ATG)(.{3})*?(TAA|TGA|TAG)")
+	//re.Longest()
 	idx := re.FindAllStringIndex(
 		strings.Replace(
 			strings.ToUpper(string(s.sequence)),

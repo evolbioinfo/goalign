@@ -11,8 +11,7 @@ import (
 
 var swOutput string
 var swLog string
-var gapopening float64
-var gapelongation float64
+var gap float64
 var match float64
 var mismatch float64
 
@@ -68,9 +67,8 @@ Output: Aligned file (format depending on format options)
 			return
 		}
 
-		aligner := align.NewPwAligner(seq1, seq2, align.ALIGN_ALGO_SW)
-		aligner.SetGapOpenScore(gapopening)
-		aligner.SetGapElongScore(gapelongation)
+		aligner := align.NewPwAligner(seq1, seq2, align.ALIGN_ALGO_ATG)
+		aligner.SetGapScore(gap)
 		aligner.SetMismatchScore(mismatch)
 		aligner.SetMatchScore(match)
 		al := aligner.Alignment()
@@ -92,8 +90,7 @@ func init() {
 	RootCmd.AddCommand(swCmd)
 	swCmd.PersistentFlags().StringVarP(&swOutput, "output", "o", "stdout", "Alignment output file")
 	swCmd.PersistentFlags().StringVarP(&swLog, "log", "l", "none", "Alignment log file")
-	swCmd.PersistentFlags().Float64Var(&gapopening, "gap-open", -1.0, "Score for opening a gap")
-	swCmd.PersistentFlags().Float64Var(&gapelongation, "gap-elong", -0.5, "Score for elonging a gap")
+	swCmd.PersistentFlags().Float64Var(&gap, "gap", -1.0, "Score for a gap")
 	swCmd.PersistentFlags().Float64Var(&match, "match", 1.0, "Score for a match")
 	swCmd.PersistentFlags().Float64Var(&mismatch, "mismatch", -1.0, "Score for a mismatch")
 }

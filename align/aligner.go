@@ -3,11 +3,11 @@ package align
 type PairwiseAligner interface {
 	AlignEnds() (int, int)
 	AlignStarts() (int, int)
-	SetGapOpenScore(gap float64)
-	SetGapElongScore(gap float64)
+	SetGapScore(gap float64)
 	SetMismatchScore(mismatch float64)
 	SetMatchScore(mismatch float64)
 	Alignment() Alignment
+	AlignmentStr() string
 }
 
 const (
@@ -31,8 +31,8 @@ type pwaligner struct {
 	end1, end2       int
 	seq1, seq2       Sequence
 	seq1ali, seq2ali []rune // aligned sequences
-	gapstart         float64
-	gapelong         float64
+	alistr           []rune // comparison between sequences
+	gap              float64
 	match            float64
 	mismatch         float64
 }
@@ -51,8 +51,7 @@ func NewPwAligner(seq1, seq2 Sequence, algo int) *pwaligner {
 		end2:     0,
 		seq1:     seq1,
 		seq2:     seq2,
-		gapstart: -1.0,
-		gapelong: -0.5,
+		gap:      -1.0,
 		match:    1.0,
 		mismatch: -1.0,
 	}
@@ -81,11 +80,8 @@ func (a *pwaligner) initMatrix(l1, l2 int) {
 	}
 }
 
-func (a *pwaligner) SetGapOpenScore(gap float64) {
-	a.gapstart = gap
-}
-func (a *pwaligner) SetGapElongScore(gap float64) {
-	a.gapelong = gap
+func (a *pwaligner) SetGapScore(gap float64) {
+	a.gap = gap
 }
 
 func (a *pwaligner) SetMismatchScore(mismatch float64) {
@@ -125,11 +121,7 @@ func (a *pwaligner) fillMatrix_SW() {
 
 			// left score
 			leftscore = 0.0
-			if a.trace[i-1][j] == ALIGN_LEFT {
-				leftscore = a.matrix[i-1][j] + a.gapelong
-			} else {
-				leftscore = a.matrix[i-1][j] + a.gapstart
-			}
+			leftscore = a.matrix[i-1][j] + a.gap
 			if leftscore > maxscore {
 				trace = ALIGN_LEFT
 				maxscore = leftscore
@@ -137,11 +129,7 @@ func (a *pwaligner) fillMatrix_SW() {
 
 			// up score
 			upscore = 0.0
-			if a.trace[i][j] == ALIGN_UP {
-				upscore = a.matrix[i][j-1] + a.gapelong
-			} else {
-				upscore = a.matrix[i][j-1] + a.gapstart
-			}
+			upscore = a.matrix[i][j-1] + a.gap
 			if upscore > maxscore {
 				trace = ALIGN_UP
 				maxscore = upscore
@@ -192,11 +180,7 @@ func (a *pwaligner) fillMatrix_ATG() {
 
 			// left score
 			leftscore = 0.0
-			if a.trace[i-1][j] == ALIGN_LEFT {
-				leftscore = a.matrix[i-1][j] + a.gapelong
-			} else {
-				leftscore = a.matrix[i-1][j] + a.gapstart
-			}
+			leftscore = a.matrix[i-1][j] + a.gap
 			if leftscore > maxscore {
 				trace = ALIGN_LEFT
 				maxscore = leftscore
@@ -204,11 +188,7 @@ func (a *pwaligner) fillMatrix_ATG() {
 
 			// up score
 			upscore = 0.0
-			if a.trace[i][j] == ALIGN_UP {
-				upscore = a.matrix[i][j-1] + a.gapelong
-			} else {
-				upscore = a.matrix[i][j-1] + a.gapstart
-			}
+			upscore = a.matrix[i][j-1] + a.gap
 			if upscore > maxscore {
 				trace = ALIGN_UP
 				maxscore = upscore
@@ -307,7 +287,7 @@ func (a *pwaligner) backTrack_ATG() {
 	var i, j int
 	var revi, revj int
 	var len1, len2 int
-	var seq1, seq2 []rune
+	var seq1, alistr, seq2 []rune
 
 	len1 = len(a.seq1.SequenceChar())
 	len2 = len(a.seq2.SequenceChar())
@@ -323,18 +303,25 @@ func (a *pwaligner) backTrack_ATG() {
 
 	seq1 = make([]rune, 0, 20)
 	seq2 = make([]rune, 0, 20)
+	alistr = make([]rune, 0, 20)
 
 	for a.trace[revi][revj] != ALIGN_STOP {
 		switch a.trace[revi][revj] {
 		case ALIGN_UP:
 			seq1 = append(seq1, '-')
 			seq2 = append(seq2, a.seq2.CharAt(j))
+			alistr = append(alistr, ' ')
 			revj--
 			j++
 
 		case ALIGN_DIAG:
 			seq1 = append(seq1, a.seq1.CharAt(i))
 			seq2 = append(seq2, a.seq2.CharAt(j))
+			if a.seq1.CharAt(i) == a.seq2.CharAt(j) {
+				alistr = append(alistr, '|')
+			} else {
+				alistr = append(alistr, ' ')
+			}
 			revi--
 			revj--
 			i++
@@ -342,6 +329,7 @@ func (a *pwaligner) backTrack_ATG() {
 		case ALIGN_LEFT:
 			seq1 = append(seq1, a.seq1.CharAt(i))
 			seq2 = append(seq2, '-')
+			alistr = append(alistr, ' ')
 			revi--
 			i++
 		}
@@ -352,6 +340,18 @@ func (a *pwaligner) backTrack_ATG() {
 
 	a.seq1ali = seq1
 	a.seq2ali = seq2
+	a.alistr = alistr
+}
+
+func (a *pwaligner) AlignmentStr() string {
+	alistr := make([]rune, 0, len(a.seq1ali)+len(a.alistr)+len(a.seq2ali)+3)
+	alistr = append(alistr, a.seq1ali...)
+	alistr = append(alistr, '\n')
+	alistr = append(alistr, a.alistr...)
+	alistr = append(alistr, '\n')
+	alistr = append(alistr, a.seq2ali...)
+	alistr = append(alistr, '\n')
+	return string(alistr)
 }
 
 func (a *pwaligner) Alignment() Alignment {
