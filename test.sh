@@ -1951,6 +1951,15 @@ CGGAGGGTGGCATCACTATTACATTATCATAGTTGTCGTAGTGTAATGATAGC
 ATGGATGACTTTTTCTGTTGCCCTCCCCCACCGCAACAGTCTTCCTCATCGAGTAGCGAAGAGACTACCACAACGGGTGG
 CGGAGGGTGGCATCACTATTACATTATCATAGTTGTCGTATAATGA
 EOF
-goalign phase -i input --unaligned -o result
+
+cat > expected.aa <<EOF
+>allcodons
+MDDFFCCPPPPQQSSSSSSEETTTTGGGGWHHYYIIIVVVV***
+>allcodons2
+MDDFFCCPPPPQQSSSSSSEETTTTGGGGWHHYYIIIVVV**
+EOF
+
+goalign phase -i input --unaligned -o result --aa-output result.aa
 diff expected result
-rm -f input expected result
+diff expected.aa result.aa
+rm -f input expected result expected.aa result.aa
