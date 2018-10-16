@@ -6,6 +6,7 @@ type PairwiseAligner interface {
 	SetGapScore(gap float64)
 	SetMismatchScore(mismatch float64)
 	SetMatchScore(mismatch float64)
+	MaxScore() float64
 	Alignment() Alignment
 	AlignmentStr() string
 }
@@ -90,6 +91,10 @@ func (a *pwaligner) SetMismatchScore(mismatch float64) {
 
 func (a *pwaligner) SetMatchScore(match float64) {
 	a.match = match
+}
+
+func (a *pwaligner) MaxScore() float64 {
+	return a.maxscore
 }
 
 func (a *pwaligner) fillMatrix() {

@@ -940,8 +940,14 @@ func (a *align) CodonAlign(ntseqs SeqBag) (rtAl *align, err error) {
 			}
 		}
 		if ntseqindex < len(ntseq) {
-			err = fmt.Errorf("Nucleotidic sequence %s is longer than its aa counterpart", name)
-			return
+			// At most 2 remaining nucleotides that could not be part of the last codon
+			if len(ntseq)-ntseqindex <= 2 {
+				log.Print(fmt.Sprintf("%s: Dropping %d additional nucleotides", name, len(ntseq)-ntseqindex))
+			} else {
+				// A problem with the sequences
+				err = fmt.Errorf("Nucleotidic sequence %s is longer than its aa counterpart (%d = more than 2 nucleotides remaining)", name, len(ntseq)-ntseqindex)
+				return
+			}
 		}
 		rtAl.AddSequence(name, buffer.String(), comment)
 	})

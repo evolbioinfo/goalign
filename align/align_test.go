@@ -738,11 +738,18 @@ func TestPhase(t *testing.T) {
 	exp.AddSequence("Seq0001", "ATGGATGACTTTTTCTGTTGCCCTCCCCCACCGCAACAGTCTTCCTCATCGAGTAGCGAAGAGACTACCACAACGGGTGGCGGAGGGTGGCATCACTATTACATTATCATAGTTGTCGTATAATGA", "")
 	exp.AutoAlphabet()
 
-	if seqs, _, err := in.Phase(nil); err != nil {
+	expaa := NewSeqBag(UNKNOWN)
+	expaa.AddSequence("Seq0000", "MDDFFCCPPPPQQSSSSSSEETTTTGGGGWHHYYIIIVVVV***", "")
+	expaa.AddSequence("Seq0001", "MDDFFCCPPPPQQSSSSSSEETTTTGGGGWHHYYIIIVVV**", "")
+	expaa.AutoAlphabet()
+
+	if seqs, seqsaa, _, err := in.Phase(nil); err != nil {
 		t.Error(err)
 	} else {
-
 		if !exp.Identical(seqs) {
+			t.Error(fmt.Errorf("Expected sequences are different from phased sequences"))
+		}
+		if !expaa.Identical(seqsaa) {
 			t.Error(fmt.Errorf("Expected sequences are different from phased sequences"))
 		}
 	}

@@ -2,7 +2,6 @@ package cmd
 
 import (
 	"fmt"
-	"log"
 	"os"
 
 	"github.com/fredericlemoine/goalign/align"
@@ -11,6 +10,7 @@ import (
 )
 
 var phaseOutput string
+var phaseAAOutput string
 var phaseLogOutput string
 var orfsequence string
 
@@ -25,13 +25,16 @@ only Fasta is accepted.
 
 If input sequences are not nucleotidic, then returns an error.
 
-Output file is an unaligned set of sequences in fasta.
+Output files:
+
+1) --output : unaligned set of phased sequences in fasta
+2) --aa-output: unaligned set of phased aa sequencs in fasta
 
 `,
 	RunE: func(cmd *cobra.Command, args []string) (err error) {
-		var f, logf *os.File
+		var f, aaf, logf *os.File
 		var pos []int
-		var phased align.SeqBag
+		var phased, aaphased align.SeqBag
 		var inseqs align.SeqBag
 		var reforf align.SeqBag
 		var orf align.Sequence
@@ -42,6 +45,14 @@ Output file is an unaligned set of sequences in fasta.
 			return
 		}
 		defer closeWriteFile(f, phaseOutput)
+
+		if phaseAAOutput != "none" {
+			if aaf, err = openWriteFile(phaseAAOutput); err != nil {
+				io.LogError(err)
+				return
+			}
+			defer closeWriteFile(aaf, phaseAAOutput)
+		}
 
 		if logf, err = openWriteFile(phaseLogOutput); err != nil {
 			io.LogError(err)
@@ -80,7 +91,7 @@ Output file is an unaligned set of sequences in fasta.
 			inseqs = (<-aligns.Achan).Unalign()
 		}
 
-		if phased, pos, err = inseqs.Phase(orf); err != nil {
+		if phased, aaphased, pos, err = inseqs.Phase(orf); err != nil {
 			io.LogError(err)
 			return
 		}
@@ -93,8 +104,9 @@ Output file is an unaligned set of sequences in fasta.
 		}
 
 		writeSequences(phased, f)
-
-		log.SetOutput(os.Stderr)
+		if phaseAAOutput != "none" {
+			writeSequences(aaphased, aaf)
+		}
 
 		return
 	},
@@ -103,6 +115,7 @@ Output file is an unaligned set of sequences in fasta.
 func init() {
 	RootCmd.AddCommand(phaseCmd)
 	phaseCmd.PersistentFlags().StringVarP(&phaseOutput, "output", "o", "stdout", "Output ATG \"phased\" FASTA file")
+	phaseCmd.PersistentFlags().StringVar(&phaseAAOutput, "aa-output", "none", "Output Met \"phased\" aa FASTA file")
 	phaseCmd.PersistentFlags().StringVarP(&phaseLogOutput, "log", "l", "none", "Output log: positions of the considered ATG for each sequence")
 	phaseCmd.PersistentFlags().BoolVar(&unaligned, "unaligned", false, "Considers sequences as unaligned and only format fasta is accepted (phylip, nexus,... options are ignored)")
 	phaseCmd.PersistentFlags().StringVar(&orfsequence, "ref-orf", "none", "Reference ORF to phase against (if none is given, then will try to get the longest orf in the input data)")

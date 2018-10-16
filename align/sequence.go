@@ -1,10 +1,13 @@
 package align
 
 import (
+	"bytes"
 	"errors"
+	"fmt"
 	"math/rand"
 	"regexp"
 	"strings"
+	"unicode"
 )
 
 type Sequence interface {
@@ -14,7 +17,9 @@ type Sequence interface {
 	Name() string
 	Comment() string
 	Length() int
-	LongestORF() (start, end int) // Detects the longest ORF in forward strand only
+	LongestORF() (start, end int)          // Detects the longest ORF in forward strand only
+	Translate(phase int) (Sequence, error) // Translates the sequence using the standard code
+	DetectAlphabet() int                   // Try to detect alphabet (nt or aa)
 }
 
 type seq struct {
@@ -99,4 +104,63 @@ func Reverse(seq []rune) {
 	for i, j := 0, len(seq)-1; i < j; i, j = i+1, j-1 {
 		seq[i], seq[j] = seq[j], seq[i]
 	}
+}
+
+func (s *seq) DetectAlphabet() int {
+	isaa := true
+	isnt := true
+
+	for _, nt := range s.sequence {
+		nt = unicode.ToUpper(nt)
+		couldbent := false
+		couldbeaa := false
+		switch nt {
+		case 'A', 'C', 'B', 'R', 'G', '?', GAP, POINT, OTHER, 'D', 'K', 'S', 'H', 'M', 'N', 'V', 'X', 'T', 'W', 'Y':
+			couldbent = true
+			couldbeaa = true
+		case 'U', 'O':
+			couldbent = true
+		case 'Q', 'E', 'I', 'L', 'F', 'P', 'Z':
+			couldbeaa = true
+		}
+		isaa = isaa && couldbeaa
+		isnt = isnt && couldbent
+	}
+
+	if isnt {
+		return NUCLEOTIDS
+	} else if isaa {
+		return AMINOACIDS
+	} else {
+		return UNKNOWN
+	}
+}
+
+// Translates the given sequence start at nucleotide index "phase"
+//
+// If the sequence is not nucleotidic, then throws an error
+// If sequence length is < 3+phase then thropws an error
+func (s *seq) Translate(phase int) (tr Sequence, err error) {
+	var buffer bytes.Buffer
+
+	if s.DetectAlphabet() != NUCLEOTIDS {
+		err = fmt.Errorf("Cannot translate this sequence, wrong alphabet")
+		return
+	}
+
+	if len(s.sequence) < 3+phase {
+		err = fmt.Errorf("Cannot translate a sequence with length < 3+phase (%s)", s.name)
+		return
+	}
+
+	for i := phase; i < len(s.sequence)-2; i += 3 {
+		codon := strings.Replace(strings.ToUpper(string(s.sequence[i:i+3])), "U", "T", -1)
+		aa, found := standardcode[codon]
+		if !found {
+			aa = 'X'
+		}
+		buffer.WriteRune(aa)
+	}
+	tr = NewSequence(s.name, []rune(buffer.String()), s.comment)
+	return
 }
