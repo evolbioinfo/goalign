@@ -18,11 +18,22 @@ func min_int(a int, b int) int {
 	return b
 }
 
-func WriteAlignment(al align.Alignment, strict bool) string {
+func WriteAlignment(al align.Alignment, strict, oneline, noblock bool) string {
 	var buf bytes.Buffer
 	var header bool = true
+	var line_length = PHYLIP_LINE
+	var block_length = PHYLIP_BLOCK
+
 	cursize := 0
 	buf.WriteString(fmt.Sprintf("   %d   %d\n", al.NbSequences(), al.Length()))
+
+	if oneline {
+		line_length = al.Length()
+	}
+	if noblock {
+		block_length = line_length
+	}
+
 	for cursize < al.Length() {
 		if cursize > 0 {
 			buf.WriteString("\n")
@@ -37,7 +48,7 @@ func WriteAlignment(al align.Alignment, strict bool) string {
 				}
 			}
 
-			for i := cursize; i < cursize+PHYLIP_LINE && i < len(seq); i += PHYLIP_BLOCK {
+			for i := cursize; i < cursize+line_length && i < len(seq); i += block_length {
 				if i > cursize {
 					buf.WriteString(" ")
 				} else if !header {
@@ -47,14 +58,14 @@ func WriteAlignment(al align.Alignment, strict bool) string {
 						buf.WriteString("   ")
 					}
 				}
-				end := min_int(i+PHYLIP_BLOCK, len(seq))
+				end := min_int(i+block_length, len(seq))
 				for j := i; j < end; j++ {
 					buf.WriteRune(seq[j])
 				}
 			}
 			buf.WriteString("\n")
 		})
-		cursize += PHYLIP_LINE
+		cursize += line_length
 		header = false
 	}
 	return buf.String()

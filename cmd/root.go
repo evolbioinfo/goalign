@@ -32,6 +32,8 @@ var rootclustal bool
 var rootcpus int
 var rootinputstrict bool = false
 var rootoutputstrict bool = false
+var rootoutputoneline = false
+var rootoutputnoblock = false
 var rootAutoDetectInputFormat bool
 var seed int64 = -1
 var unaligned bool
@@ -184,6 +186,8 @@ func init() {
 	RootCmd.PersistentFlags().Int64Var(&seed, "seed", -1, "Random Seed: -1 = nano seconds since 1970/01/01 00:00:00")
 	RootCmd.PersistentFlags().BoolVar(&rootinputstrict, "input-strict", false, "Strict phylip input format (only used with -p)")
 	RootCmd.PersistentFlags().BoolVar(&rootoutputstrict, "output-strict", false, "Strict phylip output format (only used with -p)")
+	RootCmd.PersistentFlags().BoolVar(&rootoutputoneline, "one-line", false, "Write Phylip sequences on 1 line (only used with -p)")
+	RootCmd.PersistentFlags().BoolVar(&rootoutputnoblock, "no-block", false, "Write Phylip sequences without space separated blocks (only used with -p)")
 
 	RootCmd.PersistentFlags().BoolVar(&rootAutoDetectInputFormat, "auto-detect", false, "Auto detects input format (overrides -p, -x and -u)")
 
@@ -197,7 +201,7 @@ func initConfig() {
 
 func writeAlign(al align.Alignment, f *os.File) {
 	if rootphylip {
-		f.WriteString(phylip.WriteAlignment(al, rootoutputstrict))
+		f.WriteString(phylip.WriteAlignment(al, rootoutputstrict, rootoutputoneline, rootoutputnoblock))
 	} else if rootnexus {
 		f.WriteString(nexus.WriteAlignment(al))
 	} else if rootclustal {
@@ -205,6 +209,32 @@ func writeAlign(al align.Alignment, f *os.File) {
 	} else {
 		f.WriteString(fasta.WriteAlignment(al))
 	}
+}
+
+func writeAlignString(al align.Alignment) (out string) {
+	if rootphylip {
+		out = phylip.WriteAlignment(al, rootoutputstrict, rootoutputoneline, rootoutputnoblock)
+	} else if rootnexus {
+		out = nexus.WriteAlignment(al)
+	} else if rootclustal {
+		out = clustal.WriteAlignment(al)
+	} else {
+		out = fasta.WriteAlignment(al)
+	}
+	return
+}
+
+func alignExtension() (out string) {
+	if rootphylip {
+		out = ".ph"
+	} else if rootnexus {
+		out = ".nx"
+	} else if rootclustal {
+		out = ".clustal"
+	} else {
+		out = ".fa"
+	}
+	return
 }
 
 func writeSequences(seqs align.SeqBag, f *os.File) {
@@ -216,7 +246,7 @@ func writeAlignFasta(al align.Alignment, f *os.File) {
 }
 
 func writeAlignPhylip(al align.Alignment, f *os.File) {
-	f.WriteString(phylip.WriteAlignment(al, rootoutputstrict))
+	f.WriteString(phylip.WriteAlignment(al, rootoutputstrict, rootoutputoneline, rootoutputnoblock))
 }
 
 func writeAlignNexus(al align.Alignment, f *os.File) {

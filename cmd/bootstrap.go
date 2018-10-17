@@ -13,8 +13,6 @@ import (
 
 	"github.com/fredericlemoine/goalign/align"
 	"github.com/fredericlemoine/goalign/io"
-	"github.com/fredericlemoine/goalign/io/fasta"
-	"github.com/fredericlemoine/goalign/io/phylip"
 )
 
 var bootstrapNb int
@@ -104,11 +102,8 @@ goalign build seqboot -i align.phylip -p -n 500 -o boot_
 					if bootstrapOrder {
 						boot.ShuffleSequences()
 					}
-					if rootphylip {
-						bootstring = phylip.WriteAlignment(boot, false)
-					} else {
-						bootstring = fasta.WriteAlignment(boot)
-					}
+
+					bootstring = writeAlignString(boot)
 
 					// Output
 					if bootstraptar {
@@ -169,12 +164,8 @@ goalign build seqboot -i align.phylip -p -n 500 -o boot_
 func writenewfile(name string, gz bool, bootstring string) (err error) {
 	var f *os.File
 
-	ext := ""
-	if rootphylip {
-		ext = ".ph"
-	} else {
-		ext = ".fa"
-	}
+	ext := alignExtension()
+
 	if gz {
 		if f, err = os.Create(name + ext + ".gz"); err != nil {
 			return
@@ -200,12 +191,7 @@ func writenewfile(name string, gz bool, bootstring string) (err error) {
 func addstringtotargz(tw *tar.Writer, name string, align string) error {
 	// now lets create the header as needed for this file within the tarball
 	alignbytes := []byte(align)
-	ext := ""
-	if rootphylip {
-		ext = ".ph"
-	} else {
-		ext = ".fa"
-	}
+	ext := alignExtension()
 	header := new(tar.Header)
 	header.Name = name + ext
 	header.Size = int64(len(alignbytes))
