@@ -30,6 +30,17 @@ Output files:
 1) --output : unaligned set of phased sequences in fasta
 2) --aa-output: unaligned set of phased aa sequencs in fasta
 
+Phase command will:
+1. Search for the longest ORF in the dataset if no reference orf is given;
+1. Translate the given ORF in aminoacids;
+2. For each sequence of the dataset: translate it in the 3 phases (forward strand only),
+   align it with the translated orf, and take the phase giving the best alignment; If no phase
+   gives a good alignment (>80% orf length, and starting at first position of the ORF), then
+   the sequence is discarded;
+3. For each sequence, take the Start corresponding to the Start of the ORF, and remove
+   nucleotides before;
+4. Return the trimmed nucleotidic sequences (phased), the corresponding amino-acid sequences (phasedaa)
+   and the positions of starts in the nucleotidic sequences.
 `,
 	RunE: func(cmd *cobra.Command, args []string) (err error) {
 		var f, aaf, logf *os.File

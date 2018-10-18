@@ -1,13 +1,16 @@
 package align
 
+import (
+	"fmt"
+)
+
 type PairwiseAligner interface {
 	AlignEnds() (int, int)
 	AlignStarts() (int, int)
 	SetGapScore(gap float64)
-	SetMismatchScore(mismatch float64)
-	SetMatchScore(mismatch float64)
+	SetScore(match, mismatch float64)
 	MaxScore() float64
-	Alignment() Alignment
+	Alignment() (Alignment, error)
 	AlignmentStr() string
 }
 
@@ -20,6 +23,16 @@ const (
 	ALIGN_ALGO_SW = iota
 	ALIGN_ALGO_ATG
 )
+
+// Taken from EMBOSS water
+//
+// This matrix was created by Todd Lowe   12/10/92
+//
+// Uses ambiguous nucleotide codes, probabilities rounded to
+//  nearest integer
+//
+// Lowest score = -4, Highest score = 5
+//
 
 type pwaligner struct {
 	algo   int
@@ -36,25 +49,44 @@ type pwaligner struct {
 	gap              float64
 	match            float64
 	mismatch         float64
+	submatrix        [][]float64  // substitution matrix
+	chartopos        map[rune]int // char to position in subst matrix
+
 }
 
 func NewPwAligner(seq1, seq2 Sequence, algo int) *pwaligner {
+	var mat [][]float64
+	var chartopos map[rune]int
+	a1 := seq1.DetectAlphabet()
+	a2 := seq2.DetectAlphabet()
+
+	if a1 == NUCLEOTIDS && a2 == NUCLEOTIDS {
+		mat = dnafull_subst_matrix
+		chartopos = dna_to_matrix_pos
+	}
+	if a1 == AMINOACIDS && a2 == AMINOACIDS {
+		mat = blosum62_subst_matrix
+		chartopos = prot_to_matrix_pos
+	}
+
 	return &pwaligner{
-		algo:     algo,
-		matrix:   nil,
-		trace:    nil,
-		maxscore: 0.0,
-		maxi:     0,
-		maxj:     0,
-		start1:   0,
-		start2:   0,
-		end1:     0,
-		end2:     0,
-		seq1:     seq1,
-		seq2:     seq2,
-		gap:      -1.0,
-		match:    1.0,
-		mismatch: -1.0,
+		algo:      algo,
+		matrix:    nil,
+		trace:     nil,
+		maxscore:  0.0,
+		maxi:      0,
+		maxj:      0,
+		start1:    0,
+		start2:    0,
+		end1:      0,
+		end2:      0,
+		seq1:      seq1,
+		seq2:      seq2,
+		gap:       -1.0,
+		match:     1.0,
+		mismatch:  -1.0,
+		submatrix: mat,
+		chartopos: chartopos,
 	}
 }
 
@@ -85,33 +117,37 @@ func (a *pwaligner) SetGapScore(gap float64) {
 	a.gap = gap
 }
 
-func (a *pwaligner) SetMismatchScore(mismatch float64) {
-	a.mismatch = mismatch
-}
-
-func (a *pwaligner) SetMatchScore(match float64) {
+// Sets manually match and mismatch scores
+// Substitution matrix is not used any more
+func (a *pwaligner) SetScore(match, mismatch float64) {
 	a.match = match
+	a.mismatch = mismatch
+	a.submatrix = nil
+	a.chartopos = nil
 }
 
 func (a *pwaligner) MaxScore() float64 {
 	return a.maxscore
 }
 
-func (a *pwaligner) fillMatrix() {
+func (a *pwaligner) fillMatrix() (err error) {
 	switch a.algo {
 	case ALIGN_ALGO_ATG:
-		a.fillMatrix_ATG()
+		err = a.fillMatrix_ATG()
 	default:
-		a.fillMatrix_SW()
+		err = a.fillMatrix_SW()
 	}
+	return
 }
 
-func (a *pwaligner) fillMatrix_SW() {
+func (a *pwaligner) fillMatrix_SW() (err error) {
 	var i, j int
 	var c1, c2 rune
 	var maxscore float64
 	var trace int
 	var leftscore, upscore, diagscore float64
+	var pos1, pos2 int
+	var ok1, ok2 bool
 
 	a.initMatrix(a.seq1.Length(), a.seq2.Length())
 
@@ -142,11 +178,22 @@ func (a *pwaligner) fillMatrix_SW() {
 
 			// diag score
 			diagscore = a.matrix[i-1][j-1]
-			if c1 != c2 {
-				diagscore += a.mismatch
+			if a.submatrix != nil {
+				pos1, ok1 = a.chartopos[c1]
+				pos2, ok2 = a.chartopos[c2]
+				if !ok1 || !ok2 {
+					err = fmt.Errorf("Character not part of alphabet : %c/%c", c1, c2)
+					return
+				}
+				diagscore += a.submatrix[pos1][pos2]
 			} else {
-				diagscore += a.match
+				if c1 != c2 {
+					diagscore += a.mismatch
+				} else {
+					diagscore += a.match
+				}
 			}
+
 			if diagscore > maxscore {
 				trace = ALIGN_DIAG
 				maxscore = diagscore
@@ -161,15 +208,18 @@ func (a *pwaligner) fillMatrix_SW() {
 			}
 		}
 	}
+	return
 }
 
-func (a *pwaligner) fillMatrix_ATG() {
+func (a *pwaligner) fillMatrix_ATG() (err error) {
 	var i, j int
 	var revi, revj int
 	var c1, c2 rune
 	var maxscore float64
 	var trace int
 	var leftscore, upscore, diagscore float64
+	var pos1, pos2 int
+	var ok1, ok2 bool
 
 	a.initMatrix(a.seq1.Length(), a.seq2.Length())
 
@@ -201,10 +251,20 @@ func (a *pwaligner) fillMatrix_ATG() {
 
 			// diag score
 			diagscore = a.matrix[i-1][j-1]
-			if c1 != c2 {
-				diagscore += a.mismatch
+			if a.submatrix != nil {
+				pos1, ok1 = a.chartopos[c1]
+				pos2, ok2 = a.chartopos[c2]
+				if !ok1 || !ok2 {
+					err = fmt.Errorf("Character not part of alphabet : %c/%c", c1, c2)
+					return
+				}
+				diagscore += a.submatrix[pos1][pos2]
 			} else {
-				diagscore += a.match
+				if c1 != c2 {
+					diagscore += a.mismatch
+				} else {
+					diagscore += a.match
+				}
 			}
 			if diagscore > maxscore {
 				trace = ALIGN_DIAG
@@ -223,6 +283,7 @@ func (a *pwaligner) fillMatrix_ATG() {
 			}
 		}
 	}
+	return
 }
 
 // Indices of alignment end
@@ -359,12 +420,12 @@ func (a *pwaligner) AlignmentStr() string {
 	return string(alistr)
 }
 
-func (a *pwaligner) Alignment() Alignment {
-	a.fillMatrix()
+func (a *pwaligner) Alignment() (align Alignment, err error) {
+	err = a.fillMatrix()
 	a.backTrack()
-	align := NewAlign(UNKNOWN)
+	align = NewAlign(UNKNOWN)
 	align.AddSequenceChar(a.seq1.Name(), a.seq1ali, "")
 	align.AddSequenceChar(a.seq2.Name(), a.seq2ali, "")
 	align.AutoAlphabet()
-	return align
+	return
 }

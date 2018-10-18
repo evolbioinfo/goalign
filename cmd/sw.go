@@ -27,6 +27,7 @@ Output: Aligned file (format depending on format options)
 `,
 	RunE: func(cmd *cobra.Command, args []string) (err error) {
 		var seqs align.SeqBag
+		var al align.Alignment
 		var seq1 align.Sequence
 		var seq2 align.Sequence
 		var ok bool
@@ -67,11 +68,19 @@ Output: Aligned file (format depending on format options)
 			return
 		}
 
-		aligner := align.NewPwAligner(seq1, seq2, align.ALIGN_ALGO_ATG)
+		aligner := align.NewPwAligner(seq1, seq2, align.ALIGN_ALGO_SW)
 		aligner.SetGapScore(gap)
-		aligner.SetMismatchScore(mismatch)
-		aligner.SetMatchScore(match)
-		al := aligner.Alignment()
+
+		if cmd.Flags().Changed("mismatch") || cmd.Flags().Changed("match") {
+			fmt.Println("Taking match and mismatch")
+			aligner.SetScore(match, mismatch)
+		} else {
+			fmt.Println("taking substitution matrices")
+		}
+		if al, err = aligner.Alignment(); err != nil {
+			io.LogError(err)
+			return
+		}
 		writeAlign(al, f)
 
 		if log != nil {
@@ -91,6 +100,6 @@ func init() {
 	swCmd.PersistentFlags().StringVarP(&swOutput, "output", "o", "stdout", "Alignment output file")
 	swCmd.PersistentFlags().StringVarP(&swLog, "log", "l", "none", "Alignment log file")
 	swCmd.PersistentFlags().Float64Var(&gap, "gap", -1.0, "Score for a gap")
-	swCmd.PersistentFlags().Float64Var(&match, "match", 1.0, "Score for a match")
-	swCmd.PersistentFlags().Float64Var(&mismatch, "mismatch", -1.0, "Score for a mismatch")
+	swCmd.PersistentFlags().Float64Var(&match, "match", 1.0, "Score for a match (if omitted, then take substitution matrix)")
+	swCmd.PersistentFlags().Float64Var(&mismatch, "mismatch", -1.0, "Score for a mismatch (if omitted, then take substitution matrix)")
 }
