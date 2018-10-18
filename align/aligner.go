@@ -7,7 +7,8 @@ import (
 type PairwiseAligner interface {
 	AlignEnds() (int, int)
 	AlignStarts() (int, int)
-	SetGapScore(gap float64)
+	SetGapOpenScore(open float64)
+	SetGapExtendScore(extend float64)
 	SetScore(match, mismatch float64)
 	MaxScore() float64
 	Alignment() (Alignment, error)
@@ -36,8 +37,9 @@ const (
 
 type pwaligner struct {
 	algo   int
-	matrix [][]float64 /* trace matrix */
-	trace  [][]int
+	matrix [][]float64
+	trace  [][]int   // trace matrix
+	maxa   []float64 // keep track of best gap opened
 
 	maxscore         float64 // Maximum score of the matrix
 	maxi, maxj       int     // Indices of the maximum score
@@ -46,7 +48,8 @@ type pwaligner struct {
 	seq1, seq2       Sequence
 	seq1ali, seq2ali []rune // aligned sequences
 	alistr           []rune // comparison between sequences
-	gap              float64
+	gapopen          float64
+	gapextend        float64
 	match            float64
 	mismatch         float64
 	submatrix        [][]float64  // substitution matrix
@@ -73,6 +76,7 @@ func NewPwAligner(seq1, seq2 Sequence, algo int) *pwaligner {
 		algo:      algo,
 		matrix:    nil,
 		trace:     nil,
+		maxa:      nil,
 		maxscore:  0.0,
 		maxi:      0,
 		maxj:      0,
@@ -82,7 +86,8 @@ func NewPwAligner(seq1, seq2 Sequence, algo int) *pwaligner {
 		end2:      0,
 		seq1:      seq1,
 		seq2:      seq2,
-		gap:       -1.0,
+		gapopen:   -10.0,
+		gapextend: -0.5,
 		match:     1.0,
 		mismatch:  -1.0,
 		submatrix: mat,
@@ -93,23 +98,12 @@ func NewPwAligner(seq1, seq2 Sequence, algo int) *pwaligner {
 func (a *pwaligner) initMatrix(l1, l2 int) {
 	var i, j int
 
-	a.matrix = make([][]float64, l1+1)
-	a.trace = make([][]int, l1+1)
+	a.matrix = make([][]float64, l1)
+	a.trace = make([][]int, l1)
+	a.maxa = make([]float64, l2)
 	for i, _ = range a.matrix {
-
-		a.matrix[i] = make([]float64, l2+1)
-		a.trace[i] = make([]int, l2+1)
-	}
-
-	// Init first row and first column with 0.0
-	// and ALIGN_STOP trace
-	for i = 0; i <= l1; i++ {
-		a.matrix[i][0] = 0.0
-		a.trace[i][0] = ALIGN_STOP
-	}
-	for j = 0; j <= l2; j++ {
-		a.matrix[0][j] = 0.0
-		a.trace[0][j] = ALIGN_STOP
+		a.matrix[i] = make([]float64, l2)
+		a.trace[i] = make([]int, l2)
 	}
 }
 
@@ -149,16 +143,80 @@ func (a *pwaligner) fillMatrix_SW() (err error) {
 	var indexseq1, indexseq2 []int // convert characters to subst matrix positions
 	a.initMatrix(a.seq1.Length(), a.seq2.Length())
 
-	if a.submatrix != nil {
-		if indexseq1, err = a.seqToindices(a.seq1); err != nil {
-			return
+	// We convert characters to indices in subst matrices
+	// once for all
+	if indexseq1, err = a.seqToindices(a.seq1); err != nil {
+		return
+	}
+	if indexseq2, err = a.seqToindices(a.seq2); err != nil {
+		return
+	}
+
+	// We initialize first row and first column of the matrix
+	var match, fnew float64
+	// First row
+	for i = 0; i <= l1; i++ {
+		c1 = a.seq1.SequenceChar(i)
+		c2 = a.seq2.SequenceChar(0)
+		match = a.matchScore(c1, c2, indexseq1[i], indexseq2[0])
+		fnew = 0.0
+		if i > 0 {
+			fnew = a.matrix[i-1][0]
+			if a.trace[i-1][0] == ALIGN_LEFT {
+				fnew -= a.gapextend
+			} else {
+				fnew -= a.gapopen
+			}
 		}
-		if indexseq2, err = a.seqToindices(a.seq2); err != nil {
-			return
+		if match > fnew && match > 0 {
+			a.matrix[i][0] = match
+			a.trace[i][0] = ALIGN_DIAG
+		} else if fnew > 0 {
+			a.matrix[i][0] = fnew
+			a.trace[i][0] = ALIGN_LEFT
+		} else {
+			a.matrix[i][0] = 0.0
+			a.trace[i][0] = ALIGN_DIAG // TO REVIEW
 		}
 	}
 
-	// In ATG algo, we look at sequences in reverse order
+	// First column
+	for j = 0; j <= l2; j++ {
+		c1 = a.seq1.SequenceChar(0)
+		c2 = a.seq2.SequenceChar(j)
+		match = a.matchScore(c1, c2, indexseq1[0], indexseq2[j])
+		fnew = 0.0
+		if j > 0 {
+			fnew = a.matrix[0][j-1]
+			if a.trace[0][j-1] == ALIGN_UP {
+				fnew -= a.gapextend
+			} else {
+				fnew -= a.gapopen
+			}
+		}
+		if match > fnew && result > 0 {
+			a.matrix[0][j] = match
+			a.trace[0][j] = ALIGN_DIAG
+		} else if fnew > 0 {
+			a.matrix[0][j] = fnew
+			a.trace[0][j] = ALIGN_UP
+		} else {
+			a.matrix[0][j] = 0.0
+			a.trace[0][j] = ALIGN_DIAG // TO REVIEW
+		}
+
+		if j > 0 {
+			maxa[j] = a.matrix[0][j]
+			if a.trace[0][j-1] == ALIGN_UP {
+				maxa[j] -= gapextend
+			} else {
+				maxa[j] -= gapopen
+			}
+		} else {
+			maxa[j] = a.matrix[0][j] - a.gapopen
+		}
+	}
+
 	for i = 1; i <= len(a.seq1.SequenceChar()); i++ {
 		c1 = a.seq1.SequenceChar()[i-1]
 		for j = 1; j <= len(a.seq2.SequenceChar()); j++ {
@@ -185,15 +243,7 @@ func (a *pwaligner) fillMatrix_SW() (err error) {
 
 			// diag score
 			diagscore = a.matrix[i-1][j-1]
-			if a.submatrix != nil {
-				diagscore += a.submatrix[indexseq1[i-1]][indexseq2[j-1]]
-			} else {
-				if c1 != c2 {
-					diagscore += a.mismatch
-				} else {
-					diagscore += a.match
-				}
-			}
+			diagscore += a.matchScore(c1, c2, indexseq1[i], indexseq2[j])
 
 			if diagscore > maxscore {
 				trace = ALIGN_DIAG
@@ -444,6 +494,19 @@ func (a *pwaligner) seqToindices(s Sequence) (indices []int, err error) {
 		if !ok {
 			err = fmt.Errorf("Character not part of alphabet : %c", s.CharAt(i))
 			return
+		}
+	}
+	return
+}
+
+func (a *pwaligner) matchScore(c1, c2 rune, i1, i2 int) (score float64) {
+	if a.submatrix != nil {
+		score = a.submatrix[i1][i2]
+	} else {
+		if c1 != c2 {
+			score = a.mismatch
+		} else {
+			score = a.match
 		}
 	}
 	return
