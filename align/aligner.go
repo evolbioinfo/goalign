@@ -146,10 +146,17 @@ func (a *pwaligner) fillMatrix_SW() (err error) {
 	var maxscore float64
 	var trace int
 	var leftscore, upscore, diagscore float64
-	var pos1, pos2 int
-	var ok1, ok2 bool
-
+	var indexseq1, indexseq2 []int // convert characters to subst matrix positions
 	a.initMatrix(a.seq1.Length(), a.seq2.Length())
+
+	if a.submatrix != nil {
+		if indexseq1, err = a.seqToindices(a.seq1); err != nil {
+			return
+		}
+		if indexseq2, err = a.seqToindices(a.seq2); err != nil {
+			return
+		}
+	}
 
 	// In ATG algo, we look at sequences in reverse order
 	for i = 1; i <= len(a.seq1.SequenceChar()); i++ {
@@ -179,13 +186,7 @@ func (a *pwaligner) fillMatrix_SW() (err error) {
 			// diag score
 			diagscore = a.matrix[i-1][j-1]
 			if a.submatrix != nil {
-				pos1, ok1 = a.chartopos[c1]
-				pos2, ok2 = a.chartopos[c2]
-				if !ok1 || !ok2 {
-					err = fmt.Errorf("Character not part of alphabet : %c/%c", c1, c2)
-					return
-				}
-				diagscore += a.submatrix[pos1][pos2]
+				diagscore += a.submatrix[indexseq1[i-1]][indexseq2[j-1]]
 			} else {
 				if c1 != c2 {
 					diagscore += a.mismatch
@@ -218,10 +219,17 @@ func (a *pwaligner) fillMatrix_ATG() (err error) {
 	var maxscore float64
 	var trace int
 	var leftscore, upscore, diagscore float64
-	var pos1, pos2 int
-	var ok1, ok2 bool
-
+	var indexseq1, indexseq2 []int // convert characters to subst matrix positions
 	a.initMatrix(a.seq1.Length(), a.seq2.Length())
+
+	if a.submatrix != nil {
+		if indexseq1, err = a.seqToindices(a.seq1); err != nil {
+			return
+		}
+		if indexseq2, err = a.seqToindices(a.seq2); err != nil {
+			return
+		}
+	}
 
 	// In ATG algo, we look at sequences in reverse order
 	for revi = len(a.seq1.SequenceChar()); revi > 0; revi-- {
@@ -252,13 +260,7 @@ func (a *pwaligner) fillMatrix_ATG() (err error) {
 			// diag score
 			diagscore = a.matrix[i-1][j-1]
 			if a.submatrix != nil {
-				pos1, ok1 = a.chartopos[c1]
-				pos2, ok2 = a.chartopos[c2]
-				if !ok1 || !ok2 {
-					err = fmt.Errorf("Character not part of alphabet : %c/%c", c1, c2)
-					return
-				}
-				diagscore += a.submatrix[pos1][pos2]
+				diagscore += a.submatrix[indexseq1[revi-1]][indexseq2[revj-1]]
 			} else {
 				if c1 != c2 {
 					diagscore += a.mismatch
@@ -427,5 +429,22 @@ func (a *pwaligner) Alignment() (align Alignment, err error) {
 	align.AddSequenceChar(a.seq1.Name(), a.seq1ali, "")
 	align.AddSequenceChar(a.seq2.Name(), a.seq2ali, "")
 	align.AutoAlphabet()
+	return
+}
+
+// Converts the aa/nt sequences into chartopos indices
+// of the substitution matrix
+func (a *pwaligner) seqToindices(s Sequence) (indices []int, err error) {
+	var i int
+	var ok bool
+
+	indices = make([]int, s.Length())
+	for i = 1; i < len(s.SequenceChar()); i++ {
+		indices[i], ok = a.chartopos[s.CharAt(i)]
+		if !ok {
+			err = fmt.Errorf("Character not part of alphabet : %c", s.CharAt(i))
+			return
+		}
+	}
 	return
 }

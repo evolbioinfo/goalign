@@ -24,6 +24,11 @@ var swCmd = &cobra.Command{
 Input : Fasta file
 Output: Aligned file (format depending on format options)
 
+If neither --match nor --mismatch are specified, then match and mismatch scores
+are taken from blosum62 or dnafull substitution matrices (taken from EMBOSS WATER)
+depending on the input sequences alphabets.
+
+Only one kind of gap penalty is considered so far (no gap extension).
 `,
 	RunE: func(cmd *cobra.Command, args []string) (err error) {
 		var seqs align.SeqBag
@@ -72,11 +77,9 @@ Output: Aligned file (format depending on format options)
 		aligner.SetGapScore(gap)
 
 		if cmd.Flags().Changed("mismatch") || cmd.Flags().Changed("match") {
-			fmt.Println("Taking match and mismatch")
 			aligner.SetScore(match, mismatch)
-		} else {
-			fmt.Println("taking substitution matrices")
 		}
+
 		if al, err = aligner.Alignment(); err != nil {
 			io.LogError(err)
 			return
