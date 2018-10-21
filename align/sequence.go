@@ -17,7 +17,8 @@ type Sequence interface {
 	Name() string
 	Comment() string
 	Length() int
-	LongestORF() (start, end int)          // Detects the longest ORF in forward strand only
+	LongestORF() (start, end int) // Detects the longest ORF in forward strand only
+	Reverse()
 	Translate(phase int) (Sequence, error) // Translates the sequence using the standard code
 	DetectAlphabet() int                   // Try to detect alphabet (nt or aa)
 }
@@ -104,6 +105,11 @@ func Reverse(seq []rune) {
 	for i, j := 0, len(seq)-1; i < j; i, j = i+1, j-1 {
 		seq[i], seq[j] = seq[j], seq[i]
 	}
+}
+
+// Reverse sequence order
+func (s *seq) Reverse() {
+	Reverse(s.sequence)
 }
 
 func (s *seq) DetectAlphabet() int {

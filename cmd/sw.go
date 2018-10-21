@@ -11,7 +11,7 @@ import (
 
 var swOutput string
 var swLog string
-var gap float64
+var gapopen, gapextend float64
 var match float64
 var mismatch float64
 
@@ -74,7 +74,8 @@ Only one kind of gap penalty is considered so far (no gap extension).
 		}
 
 		aligner := align.NewPwAligner(seq1, seq2, align.ALIGN_ALGO_SW)
-		aligner.SetGapScore(gap)
+		aligner.SetGapOpenScore(gapopen)
+		aligner.SetGapExtendScore(gapextend)
 
 		if cmd.Flags().Changed("mismatch") || cmd.Flags().Changed("match") {
 			aligner.SetScore(match, mismatch)
@@ -102,7 +103,8 @@ func init() {
 	RootCmd.AddCommand(swCmd)
 	swCmd.PersistentFlags().StringVarP(&swOutput, "output", "o", "stdout", "Alignment output file")
 	swCmd.PersistentFlags().StringVarP(&swLog, "log", "l", "none", "Alignment log file")
-	swCmd.PersistentFlags().Float64Var(&gap, "gap", -1.0, "Score for a gap")
+	swCmd.PersistentFlags().Float64Var(&gapopen, "gap-open", -10.0, "Score for opening a gap ")
+	swCmd.PersistentFlags().Float64Var(&gapextend, "gap-extend", -0.5, "Score for extending a gap ")
 	swCmd.PersistentFlags().Float64Var(&match, "match", 1.0, "Score for a match (if omitted, then take substitution matrix)")
 	swCmd.PersistentFlags().Float64Var(&mismatch, "mismatch", -1.0, "Score for a mismatch (if omitted, then take substitution matrix)")
 }

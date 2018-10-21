@@ -570,9 +570,8 @@ func (sb *seqbag) Phase(orf Sequence) (phased SeqBag, phasedaa SeqBag, positions
 				return
 			}
 			aligner = NewPwAligner(orfaa, seqaa, ALIGN_ALGO_ATG)
-			aligner.SetGapScore(-5.0)
-			//aligner.SetMatchScore(2.0)
-			//aligner.SetMismatchScore(-4.0)
+			aligner.SetGapOpenScore(-10.0)
+			aligner.SetGapExtendScore(-.5)
 
 			if _, err = aligner.Alignment(); err != nil {
 				return
