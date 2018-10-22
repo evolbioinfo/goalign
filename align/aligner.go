@@ -278,6 +278,18 @@ func (a *pwaligner) fillMatrix_SW() (err error) {
 		}
 	}
 
+	// for i, v := range a.matrix {
+	// 	for j, v2 := range v {
+	// 		fmt.Printf("\t%.2f", v2)
+	// 		if a.matrix[i][j] == ALIGN_UP {
+	// 			fmt.Printf("^")
+	// 		} else if a.matrix[i][j] == ALIGN_LEFT {
+	// 			fmt.Printf("<")
+	// 		}
+	// 	}
+	// 	fmt.Println()
+	// }
+
 	return
 }
 
@@ -363,9 +375,6 @@ func (a *pwaligner) backTrack_SW() {
 			}
 			i--
 			j--
-			if i > 0 && j > 0 && a.matrix[i][j] <= .0 {
-				break
-			}
 		case ALIGN_LEFT:
 			ngaps = 0
 			for {
@@ -381,6 +390,9 @@ func (a *pwaligner) backTrack_SW() {
 				alistr = append(alistr, ' ')
 				j--
 			}
+		}
+		if i > 0 && j > 0 && a.matrix[i][j] <= .0 {
+			break
 		}
 	}
 
