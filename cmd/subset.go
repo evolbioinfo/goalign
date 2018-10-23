@@ -44,6 +44,7 @@ given in the comand line.
 	RunE: func(cmd *cobra.Command, args []string) (err error) {
 		var subset map[string]int
 		var aligns align.AlignChannel
+		var seqs align.SeqBag
 		var f *os.File
 		var r *regexp.Regexp
 
@@ -78,15 +79,15 @@ given in the comand line.
 			}
 		}
 
-		if aligns, err = readalign(infile); err != nil {
-			io.LogError(err)
-			return
-		}
-		for al := range aligns.Achan {
-			var filtered align.Alignment = nil
-			al.Iterate(func(name string, sequence string) {
+		if unaligned {
+			if seqs, err = readsequences(infile); err != nil {
+				io.LogError(err)
+				return
+			}
+			var filtered align.SeqBag = nil
+			seqs.Iterate(func(name string, sequence string) {
 				if filtered == nil {
-					filtered = align.NewAlign(align.DetectAlphabet(sequence))
+					filtered = align.NewSeqBag(seqs.Alphabet())
 				}
 				ok := matchSeqName(name, subset, regexps, regexmatch)
 				if !revert && ok {
@@ -95,12 +96,32 @@ given in the comand line.
 					filtered.AddSequence(name, sequence, "")
 				}
 			})
-			writeAlign(filtered, f)
+			writeSequences(filtered, f)
+		} else {
+			if aligns, err = readalign(infile); err != nil {
+				io.LogError(err)
+				return
+			}
+			for al := range aligns.Achan {
+				var filtered align.Alignment = nil
+				al.Iterate(func(name string, sequence string) {
+					if filtered == nil {
+						filtered = align.NewAlign(align.DetectAlphabet(sequence))
+					}
+					ok := matchSeqName(name, subset, regexps, regexmatch)
+					if !revert && ok {
+						filtered.AddSequence(name, sequence, "")
+					} else if revert && !ok {
+						filtered.AddSequence(name, sequence, "")
+					}
+				})
+				writeAlign(filtered, f)
 
-		}
-		if aligns.Err != nil {
-			err = aligns.Err
-			io.LogError(err)
+			}
+			if aligns.Err != nil {
+				err = aligns.Err
+				io.LogError(err)
+			}
 		}
 		return
 	},
@@ -164,4 +185,5 @@ func init() {
 	subsetCmd.PersistentFlags().StringVarP(&nameout, "output", "o", "stdout", "Alignment output file")
 	subsetCmd.PersistentFlags().BoolVarP(&regexmatch, "regexp", "e", false, "If sequence names are given as regexp patterns")
 	subsetCmd.PersistentFlags().BoolVarP(&revert, "revert", "r", false, "If true, will remove given sequences instead of keeping only them")
+	subsetCmd.PersistentFlags().BoolVar(&unaligned, "unaligned", false, "Considers input sequences as unaligned and fasta format (phylip, nexus,... options are ignored)")
 }
