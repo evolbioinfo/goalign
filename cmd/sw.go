@@ -28,7 +28,11 @@ If neither --match nor --mismatch are specified, then match and mismatch scores
 are taken from blosum62 or dnafull substitution matrices (taken from EMBOSS WATER)
 depending on the input sequences alphabets.
 
-Only one kind of gap penalty is considered so far (no gap extension).
+Score for opening a gap is specified by --gap-open option and score for extending a gap is
+specified by --gap-extend option (they should be negative).
+
+Input file must be a fasta file containing 2 sequences. Output format may be specified
+by formatting options (-p, -x, etc.)
 `,
 	RunE: func(cmd *cobra.Command, args []string) (err error) {
 		var seqs align.SeqBag
