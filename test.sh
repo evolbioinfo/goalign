@@ -1764,6 +1764,22 @@ goalign translate -i input --phase 0 --unaligned -o result
 diff expected result
 rm -f input expected result
 
+echo "->goalign translate 3 phases"
+cat > input <<EOF
+>test1 
+CATGAGTCTCTCTGATAAGGACAAGGCTGCTGTGAAAGCCCTATGG 
+EOF
+cat > expected <<EOF
+>test1 _0
+HESL**GQGCCESPM
+>test1 _1
+MSLSDKDKAAVKALW
+>test1 _2
+*VSLIRTRLL*KPY
+EOF
+goalign translate -i input --phase -1 -o result
+diff expected result
+rm -f input expected result
 
 echo "->goalign dedup"
 cat > input <<EOF
