@@ -16,9 +16,9 @@ var addIdRight bool
 var addidCmd = &cobra.Command{
 	Use:   "addid",
 	Short: "Adds a string to each sequence identifier of the input alignment",
-	Long: `Adds a string to each sequence identifier of the input alignment.
+	Long: `This command adds an indentifier (string) to all sequences of an input alignment. 
 
-The string may be added to the left or to the right of each sequence identifier.
+The string may be added to the left or to the right of each sequence name.
 `,
 	RunE: func(cmd *cobra.Command, args []string) (err error) {
 		var aligns align.AlignChannel
