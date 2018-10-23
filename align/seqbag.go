@@ -465,6 +465,7 @@ func (sb *seqbag) Translate(phase int) (err error) {
 	var buffer bytes.Buffer
 	var firststart, laststart int
 	var name string
+	var suffix bool
 
 	if sb.Alphabet() != NUCLEOTIDS {
 		err = errors.New("Wrong alphabet, cannot translate to AA")
@@ -476,9 +477,11 @@ func (sb *seqbag) Translate(phase int) (err error) {
 
 	firststart = phase
 	laststart = phase
+	suffix = false
 	if phase == -1 {
 		firststart = 0
 		laststart = 2
+		suffix = true
 	}
 
 	for _, seq := range oldseqs {
@@ -486,7 +489,7 @@ func (sb *seqbag) Translate(phase int) (err error) {
 		// We may translate in several phases (if phase==-1)
 		for phase = firststart; phase <= laststart; phase++ {
 			buffer.Reset()
-			if phase == -1 {
+			if suffix {
 				name = fmt.Sprintf("%s_%d", seq.name, phase)
 			}
 			if len(seq.sequence) < 3+phase {
