@@ -41,7 +41,9 @@ Almost all commands can have the following arguments:
     * sequence names are maximum 10 character long. goalign removes spaces in sequence names;
 	* sequence starts at position 11 (just after sequence name).
 * `--output-strict`: if `-p` is also given, then output alignments are written in strict phylip format, i.e:
-    * sequence names are maximum 10 character long, otherwise they are truncated.
+    * sequence names are maximum 10 character long, otherwise they are truncated;
+* `--no-block`: if `-p`is also given, then output alignments are written in phylip, without 10 character block separation.
+* `--one-line`: if `-p`is also given, then output alignments are written inphylip, on one single line.
 * `--auto-detect` (overrides `-p`, `-u` and `-x`): It will test input formats in the following order:
     1. Fasta
     2. Nexus
