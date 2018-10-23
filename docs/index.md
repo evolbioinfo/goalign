@@ -60,7 +60,7 @@ Command                                                     | Subcommand |      
 [clean](commands/clean.md) ([api](api/clean.md))            |            | Removes gap sites/sequences
 --                                                          | sites      | Removes sequences with gaps
 --                                                          | seqs       | Removes sites with gaps
-[codonalign](commands/codonalign.md) ([api](api/codonalign.md))|         | Different computations (distances, entropy, etc.)
+[codonalign](commands/codonalign.md) ([api](api/codonalign.md))|         | Adds gaps in nt sequences, according to its corresponding protein alignment
 [compute](commands/compute.md) ([api](api/compute.md))      |            | Different computations (distances, entropy, etc.)
 --                                                          | distance   | Computes distance matrix from inpu alignment
 --                                                          | entropy    | Computes entropy of sites of a given alignment

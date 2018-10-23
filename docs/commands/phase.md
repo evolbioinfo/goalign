@@ -18,7 +18,7 @@ This command "phases" sequences on the ATG giving the longest ORF on the forward
 
 
 if --unaligned is set, format options are ignored (phylip, nexus, etc.), and
-only Fasta is accepted.
+only Fasta is accepted. Otherwise, alignment is first "unaligned".
 
 If input sequences are not nucleotidic, then returns an error.
 
