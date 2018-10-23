@@ -7,7 +7,7 @@ import (
 	"testing"
 )
 
-func TestRandomAlignment(t *testing.T) {
+func TestRanTranslatedomAlignment(t *testing.T) {
 	length := 3000
 	nbseqs := 500
 	a, err := RandomAlignment(AMINOACIDS, length, nbseqs)
@@ -751,6 +751,49 @@ func TestPhase(t *testing.T) {
 		}
 		if !expaa.Identical(seqsaa) {
 			t.Error(fmt.Errorf("Expected sequences are different from phased sequences"))
+		}
+	}
+}
+
+func TestTranslate(t *testing.T) {
+
+	in := NewSeqBag(UNKNOWN)
+	in.AddSequence("Seq0000", "ATGGATGACTTTTTCTGTTGCCCTCCCCCACCGCAACAGTCTTCCTCATCGAGTAGCGAAGAGACTACCACAACGGGTGGCGGAGGGTGGCATCACTATTACATTATCATAGTTGTCGTAGTGTAATGATAGC", "")
+	in.AddSequence("Seq0001", "ATGGATGACTTTTTCTGTTGCCCTCCCCCACCGCAACAGTCTTCCTCATCGAGTAGCGAAGAGACTACCACAACGGGTGGCGGAGGGTGGCATCACTATTACATTATCATAGTTGTCGTATAATGA", "")
+	in.AutoAlphabet()
+
+	in2, err2 := in.CloneSeqBag()
+	if err2 != nil {
+		t.Error(err2)
+	}
+
+	expaa := NewSeqBag(UNKNOWN)
+	expaa.AddSequence("Seq0000", "MDDFFCCPPPPQQSSSSSSEETTTTGGGGWHHYYIIIVVVV***", "")
+	expaa.AddSequence("Seq0001", "MDDFFCCPPPPQQSSSSSSEETTTTGGGGWHHYYIIIVVV**", "")
+	expaa.AutoAlphabet()
+
+	exp3phases := NewSeqBag(UNKNOWN)
+	exp3phases.AddSequence("Seq0000_0", "MDDFFCCPPPPQQSSSSSSEETTTTGGGGWHHYYIIIVVVV***", "")
+	exp3phases.AddSequence("Seq0000_1", "WMTFSVALPHRNSLPHRVAKRLPQRVAEGGITITLS*LS*CNDS", "")
+	exp3phases.AddSequence("Seq0000_2", "G*LFLLPSPTATVFLIE*RRDYHNGWRRVASLLHYHSCRSVMI", "")
+	exp3phases.AddSequence("Seq0001_0", "MDDFFCCPPPPQQSSSSSSEETTTTGGGGWHHYYIIIVVV**", "")
+	exp3phases.AddSequence("Seq0001_1", "WMTFSVALPHRNSLPHRVAKRLPQRVAEGGITITLS*LSYN", "")
+	exp3phases.AddSequence("Seq0001_2", "G*LFLLPSPTATVFLIE*RRDYHNGWRRVASLLHYHSCRIM", "")
+	exp3phases.AutoAlphabet()
+
+	if err := in.Translate(0); err != nil {
+		t.Error(err)
+	} else {
+		if !expaa.Identical(in) {
+			t.Error(fmt.Errorf("Expected sequences are different from phased sequences"))
+		}
+	}
+
+	if err := in2.Translate(-1); err != nil {
+		t.Error(err)
+	} else {
+		if !exp3phases.Identical(in2) {
+			t.Error(fmt.Errorf("Expected sequences are different from 3 phase translated sequences"))
 		}
 	}
 }

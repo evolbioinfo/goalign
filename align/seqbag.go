@@ -26,6 +26,7 @@ type SeqBag interface {
 	CharStats() map[rune]int64
 	CleanNames()                            // Clean sequence names (newick special char)
 	Clear()                                 // Removes all sequences
+	CloneSeqBag() (seqs SeqBag, err error)  // Clones the seqqbag
 	Deduplicate() error                     // Remove duplicate sequences
 	GetSequence(name string) (string, bool) // Get a sequence by names
 	GetSequenceById(ith int) (string, bool)
@@ -149,6 +150,20 @@ func (sb *seqbag) CleanNames() {
 func (sb *seqbag) Clear() {
 	sb.seqmap = make(map[string]*seq)
 	sb.seqs = make([]*seq, 0, 100)
+}
+
+func (sb *seqbag) CloneSeqBag() (SeqBag, error) {
+	c := NewSeqBag(sb.Alphabet())
+	var err error
+	sb.IterateAll(func(name string, sequence []rune, comment string) {
+		newseq := make([]rune, 0, len(sequence))
+		newseq = append(newseq, sequence...)
+		err = c.AddSequenceChar(name, newseq, comment)
+		if err != nil {
+			return
+		}
+	})
+	return c, err
 }
 
 // This function removes sequences that are duplicates of other

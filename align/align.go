@@ -596,9 +596,8 @@ func RandomAlignment(alphabet, length, nbseq int) (Alignment, error) {
 	return al, nil
 }
 
-func (a *align) Clone() (Alignment, error) {
-	c := NewAlign(a.Alphabet())
-	var err error
+func (a *align) Clone() (c Alignment, err error) {
+	c = NewAlign(a.Alphabet())
 	a.IterateAll(func(name string, sequence []rune, comment string) {
 		newseq := make([]rune, 0, len(sequence))
 		newseq = append(newseq, sequence...)
@@ -607,7 +606,7 @@ func (a *align) Clone() (Alignment, error) {
 			return
 		}
 	})
-	return c, err
+	return
 }
 
 func (a *align) AvgAllelesPerSite() float64 {
