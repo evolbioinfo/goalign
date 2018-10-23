@@ -22,6 +22,11 @@ If the input alignment is not nucleotides, then returns an error.
 It is possible to drop a given number of characters from the start 
 of the alignment, by specifying the '--phase' option.
 
+If given phase is -1, then it will translate in the 3 phases, 
+from positions 0, 1 and 2. Sequence names will be added the suffix
+_<phase>. At the end, 3x times more sequences will be present in the
+file.
+
 It only translates using the standard genetic code so far.
 
 `,
