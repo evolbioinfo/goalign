@@ -452,6 +452,8 @@ Translates the given sequences in aa, in the given phase (0,1,2). All sequences
 are consifered being in the same phase.
 
 - if the phase is 1 or 2 : it will remove the first or the 2 first characters
+- if the phase is -1: it will translate in the 3 phases, and append the suffix _<phase> to all
+sequence names. At the end 3x more sequences in the seqbag.
 - if the alphabet is not NUCLEOTIDES: returns an error
 
 The seqbag is cleared and old sequences are replaced with aminoacid sequences
@@ -461,6 +463,8 @@ It only translates using the standard code so far.
 func (sb *seqbag) Translate(phase int) (err error) {
 	var oldseqs []*seq
 	var buffer bytes.Buffer
+	var firststart, laststart int
+	var name string
 
 	if sb.Alphabet() != NUCLEOTIDS {
 		err = errors.New("Wrong alphabet, cannot translate to AA")
@@ -470,24 +474,37 @@ func (sb *seqbag) Translate(phase int) (err error) {
 	oldseqs = sb.seqs
 	sb.Clear()
 
+	firststart = phase
+	laststart = phase
+	if phase == -1 {
+		firststart = 0
+		laststart = 2
+	}
+
 	for _, seq := range oldseqs {
 		buffer.Reset()
-
-		if len(seq.sequence) < 3+phase {
-			err = fmt.Errorf("Cannot translate a sequence with length < 3+phase (%s)", seq.name)
-			return
-		}
-		for i := phase; i < len(seq.sequence)-2; i += 3 {
-			codon := strings.Replace(strings.ToUpper(string(seq.sequence[i:i+3])), "U", "T", -1)
-			aa, found := standardcode[codon]
-			if !found {
-				aa = 'X'
+		name = seq.name
+		// We may translate in several phases (if phase==-1)
+		for phase = firststart; phase <= laststart; phase++ {
+			if phase == -1 {
+				name = fmt.Sprintf("%s_%d", seq.name, phase)
 			}
-			buffer.WriteRune(aa)
-		}
-		if err2 := sb.AddSequence(seq.name, buffer.String(), seq.comment); err != nil {
-			err = err2
-			return
+			if len(seq.sequence) < 3+phase {
+				err = fmt.Errorf("Cannot translate a sequence with length < 3+phase (%s)", seq.name)
+				return
+			}
+			for i := phase; i < len(seq.sequence)-2; i += 3 {
+				codon := strings.Replace(strings.ToUpper(string(seq.sequence[i:i+3])), "U", "T", -1)
+				aa, found := standardcode[codon]
+				if !found {
+					aa = 'X'
+				}
+				buffer.WriteRune(aa)
+			}
+			if err2 := sb.AddSequence(name, buffer.String(), seq.comment); err != nil {
+				err = err2
+				return
+			}
 		}
 	}
 
@@ -552,9 +569,14 @@ func (sb *seqbag) Phase(orf Sequence) (phased SeqBag, phasedaa SeqBag, positions
 		orf, err = sb.LongestORF()
 	}
 
-	// We translate the longest ORF in AA
-	if orfaa, err = orf.Translate(0); err != nil {
-		return
+	// We translate the longest ORF in AA if it is nucleotides
+	if orf.DetectAlphabet() == NUCLEOTIDS {
+		if orfaa, err = orf.Translate(0); err != nil {
+			return
+		}
+		log.Printf(">longestORF_detected\n%s\n", orfaa.Sequence())
+	} else {
+		orfaa = orf
 	}
 
 	// Now we align all sequences against this longest orf aa sequence with Modified Smith/Waterman
