@@ -5,7 +5,7 @@
 ### subset
 Take a subset of sequences from the input alignment
 
-It takes an alignment and a set of sequence names, and prints the alignments corresponding to sequence names. 
+It takes an alignment and a set of sequence names, and prints the alignments corresponding to sequence names
 
 There are two ways of specifying sequence names:
 1) Via `-f` option; file should be formated with one sequence name per line and or coma separated. If the file contains names that do not exist in the alignment, they won't be taken into account.
@@ -17,22 +17,31 @@ If several names are given, it is considered a "OR", then to get all sequences w
 
 Finally, one can revert the matching with `-r` option. In that case, given sequences are removed instead.
 
+subset may take unaligned sequences as input, in that case, --unaligned must be specified, and only fasta input format is accepted.
+
 #### Usage
 ```
 Usage:
   goalign subset [flags]
   
 Flags:
-    -f, --name-file string   File containing names of sequences to keep (default "stdin")
-    -o, --output string      Alignment output file (default "stdout")
-    -e, --regexp             If sequence names are given as regexp patterns
-    -r, --revert             If true, will remove given sequences instead of keeping only them
-		  
+  -h, --help               help for subset
+  -f, --name-file string   File containing names of sequences to keep (default "stdin")
+  -o, --output string      Alignment output file (default "stdout")
+  -e, --regexp             If sequence names are given as regexp patterns
+  -r, --revert             If true, will remove given sequences instead of keeping only them
+      --unaligned          Considers input sequences as unaligned and fasta format (phylip, nexus,... options are ignored)
+
 Global Flags:
-    -i, --align string   Alignment input file (default "stdin")
-    -p, --phylip         Alignment is in phylip? False=Fasta
-        --input-strict   Strict phylip input format (only used with -p)
-        --output-strict  Strict phylip output format  (only used with -p)
+  -i, --align string    Alignment input file (default "stdin")
+      --auto-detect     Auto detects input format (overrides -p, -x and -u)
+  -u, --clustal         Alignment is in clustal? default fasta
+      --input-strict    Strict phylip input format (only used with -p)
+  -x, --nexus           Alignment is in nexus? default fasta
+      --no-block        Write Phylip sequences without space separated blocks (only used with -p)
+      --one-line        Write Phylip sequences on 1 line (only used with -p)
+      --output-strict   Strict phylip output format (only used with -p)
+  -p, --phylip          Alignment is in phylip? default fasta
 ```
 
 #### Examples
