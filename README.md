@@ -131,10 +131,11 @@ You may go to the [doc](docs/index.md) for a more detailed documentation of the 
 * divide:      Divide an input alignment in several output files (one per alignment)
 * draw:   Draw alignments
   * biojs:     Display an input alignment in an html file using [BioJS](http://msa.biojs.net/)
-* identical: Tells whether two alignments are identical
-* mutate: Adds substitutions (~sequencing errors), or gaps, uniformly in an input alignment
-  * gaps: Adds gaps uniformly in an input alignment
-  * snvs: Adds substitutions uniformly in an input alignment
+* identical: Tell whether two alignments are identical
+* mutate: Add substitutions (~sequencing errors), or gaps, uniformly in an input alignment
+  * gaps: Add gaps uniformly in an input alignment
+  * snvs: Add substitutions uniformly in an input alignment
+* orf:   Find the longest orf in all given sequences in forward strand
 * phase: Try to find ATG in each sequence and remove nucleotides before
 * random:      Generate random sequences
 * reformat:    Reformats input alignment into several formats
@@ -165,6 +166,7 @@ You may go to the [doc](docs/index.md) for a more detailed documentation of the 
   * taxa
 * subseq:      Extract a subsequence from the alignment
 * subset:      Take a subset of sequences from the input alignment
+* sw:          Aligns 2 sequences using Smith & Waterman algorithm
 * translate:   Translate input sequences/alignment
 * trim:        This command trims names of sequences or sequences themselves
   * name

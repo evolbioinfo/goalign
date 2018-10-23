@@ -12,9 +12,8 @@ import (
 
 // Parser represents a parser.
 type Parser struct {
-	s            *Scanner
-	ignorelength bool
-	buf          struct {
+	s   *Scanner
+	buf struct {
 		tok Token  // last read token
 		lit string // last read literal
 		n   int    // buffer size (max=1)
@@ -23,15 +22,7 @@ type Parser struct {
 
 // NewParser returns a new instance of Parser.
 func NewParser(r io.Reader) *Parser {
-	return &Parser{s: NewScanner(r), ignorelength: false}
-}
-
-// If true: then the parser won't complain if sequences
-// do not have the same length (unaligned fasta file)
-// Will break all functions that are specific to
-// aligned sequences: to be used with caution
-func (p *Parser) SetIgnoreLength(ignore bool) {
-	p.ignorelength = ignore
+	return &Parser{s: NewScanner(r)}
 }
 
 // scan returns the next token from the underlying scanner.

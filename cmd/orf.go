@@ -18,6 +18,8 @@ var orfCmd = &cobra.Command{
 
 If input sequences are not nucleotidic, then returns an error.
 If input sequences are aligned (contain '-'), then they are unaligned first.
+
+Output is in fasta format.
 `,
 	RunE: func(cmd *cobra.Command, args []string) (err error) {
 		var f *os.File

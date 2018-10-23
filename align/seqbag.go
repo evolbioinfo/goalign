@@ -533,22 +533,27 @@ func (sb *seqbag) LongestORF() (orf Sequence, err error) {
 	var beststart, bestend int
 	var start, end int
 	var bestseq Sequence
+	var found bool
 
+	found = false
 	// Search for the longest orf in all sequences
 	for _, seq := range sb.seqs {
 		start, end = seq.LongestORF()
-		if end-start > bestend-beststart {
+		if start != -1 && end-start > bestend-beststart {
 			beststart, bestend = start, end
 			bestseq = seq
-		}
-		if start == -1 {
-			err = fmt.Errorf("No ORF is found on the sequence %s", seq.name)
-			return
+			found = true
 		}
 	}
+
+	if !found {
+		err = fmt.Errorf("No ORF has been found on any sequence")
+		return
+	}
+
 	// log.Print("Longest ORF found in sequence ", bestseq.Name())
 	// log.Print(string(bestseq.SequenceChar()[beststart:bestend]))
-	orf = NewSequence("longestorf_sw", bestseq.SequenceChar()[beststart:bestend], "")
+	orf = NewSequence("longestorf", bestseq.SequenceChar()[beststart:bestend], "")
 	return
 }
 
@@ -584,7 +589,9 @@ func (sb *seqbag) Phase(orf Sequence) (phased SeqBag, phasedaa SeqBag, positions
 	phasedaa = NewSeqBag(AMINOACIDS)
 
 	if orf == nil {
-		orf, err = sb.LongestORF()
+		if orf, err = sb.LongestORF(); err != nil {
+			return
+		}
 	}
 
 	// We translate the longest ORF in AA if it is nucleotides
@@ -592,7 +599,6 @@ func (sb *seqbag) Phase(orf Sequence) (phased SeqBag, phasedaa SeqBag, positions
 		if orfaa, err = orf.Translate(0); err != nil {
 			return
 		}
-		log.Printf(">longestORF_detected\n%s\n", orfaa.Sequence())
 	} else {
 		orfaa = orf
 	}
