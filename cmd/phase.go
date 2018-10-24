@@ -72,22 +72,6 @@ Phase command will:
 		}
 		defer closeWriteFile(logf, phaseLogOutput)
 
-		if orfsequence != "none" {
-			if reforf, err = readsequences(orfsequence); err != nil {
-				io.LogError(err)
-				return
-			}
-			if reforf.NbSequences() != 1 {
-				err = fmt.Errorf("Reference ORF file should contain only one sequence")
-				io.LogError(err)
-				return
-			}
-			if orf, ok = reforf.Sequence(0); !ok {
-				io.LogError(fmt.Errorf("Sequence 0 is not present in the orf file"))
-				return
-			}
-		}
-
 		if unaligned {
 			if inseqs, err = readsequences(infile); err != nil {
 				io.LogError(err)
@@ -103,12 +87,35 @@ Phase command will:
 			inseqs = (<-aligns.Achan).Unalign()
 		}
 
+		if orfsequence != "none" {
+			if reforf, err = readsequences(orfsequence); err != nil {
+				io.LogError(err)
+				return
+			}
+			if reforf.NbSequences() != 1 {
+				err = fmt.Errorf("Reference ORF file should contain only one sequence")
+				io.LogError(err)
+				return
+			}
+			if orf, ok = reforf.Sequence(0); !ok {
+				io.LogError(fmt.Errorf("Sequence 0 is not present in the orf file"))
+				return
+			}
+		} else {
+			// We detect the orf
+			if orf, err = inseqs.LongestORF(); err != nil {
+				io.LogError(err)
+				return
+			}
+		}
+
 		if phased, aaphased, pos, removed, err = inseqs.Phase(orf); err != nil {
 			io.LogError(err)
 			return
 		}
 
 		if phaseLogOutput != "none" {
+			fmt.Fprintf(logf, "Detected/Given ORF: %s\n", orf.Sequence())
 			for i, v := range pos {
 				n, _ := phased.GetSequenceNameById(i)
 				fmt.Fprintf(logf, "%s\t%d\n", n, v)
