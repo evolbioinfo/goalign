@@ -743,7 +743,7 @@ func TestPhase(t *testing.T) {
 	expaa.AddSequence("Seq0001", "MDDFFCCPPPPQQSSSSSSEETTTTGGGGWHHYYIIIVVV**", "")
 	expaa.AutoAlphabet()
 
-	if seqs, seqsaa, _, err := in.Phase(nil); err != nil {
+	if seqs, seqsaa, _, _, err := in.Phase(nil); err != nil {
 		t.Error(err)
 	} else {
 		if !exp.Identical(seqs) {
