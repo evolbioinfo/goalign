@@ -10,7 +10,11 @@ type PairwiseAligner interface {
 	SetGapOpenScore(open float64)
 	SetGapExtendScore(extend float64)
 	SetScore(match, mismatch float64)
-	MaxScore() float64
+	MaxScore() float64 // Maximum score of the alignment
+	NbMatches() int    // Number of matches
+	NbMisMatches() int // Number of mismatches
+	NbGaps() int       // Nuber of gaps
+	Length() int       // Length of the alignment
 	Alignment() (Alignment, error)
 	AlignmentStr() string
 }
@@ -32,6 +36,10 @@ type pwaligner struct {
 	maxa   []float64   // keep track of best gap opened
 
 	maxscore         float64 // Maximum score of the matrix
+	nbmatches        int     // number of matches
+	nbmismatches     int     // number of mismatches
+	nbgaps           int     // number of gaps
+	length           int     // alignment length
 	maxi, maxj       int     // Indices of the maximum score
 	start1, start2   int
 	end1, end2       int
@@ -117,6 +125,22 @@ func (a *pwaligner) SetScore(match, mismatch float64) {
 
 func (a *pwaligner) MaxScore() float64 {
 	return a.maxscore
+}
+
+func (a *pwaligner) NbMatches() int {
+	return a.nbmatches
+}
+
+func (a *pwaligner) NbMisMatches() int {
+	return a.nbmismatches
+}
+
+func (a *pwaligner) NbGaps() int {
+	return a.nbgaps
+}
+
+func (a *pwaligner) Length() int {
+	return a.length
 }
 
 func (a *pwaligner) fillMatrix() (err error) {
@@ -363,14 +387,19 @@ func (a *pwaligner) backTrack_SW() {
 				seq1 = append(seq1, a.seq1.CharAt(i))
 				seq2 = append(seq2, '-')
 				alistr = append(alistr, ' ')
+				a.length++
+				a.nbgaps++
 				i--
 			}
 		case ALIGN_DIAG:
 			seq1 = append(seq1, a.seq1.CharAt(i))
 			seq2 = append(seq2, a.seq2.CharAt(j))
+			a.length++
 			if a.seq2.CharAt(j) == a.seq1.CharAt(i) {
+				a.nbmatches++
 				alistr = append(alistr, '|')
 			} else {
+				a.nbmismatches++
 				alistr = append(alistr, '.')
 			}
 			i--
@@ -388,6 +417,8 @@ func (a *pwaligner) backTrack_SW() {
 				seq1 = append(seq1, '-')
 				seq2 = append(seq2, a.seq2.CharAt(j))
 				alistr = append(alistr, ' ')
+				a.length++
+				a.nbgaps++
 				j--
 			}
 		}

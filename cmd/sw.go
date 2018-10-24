@@ -96,7 +96,12 @@ by formatting options (-p, -x, etc.)
 			end1, end2 := aligner.AlignEnds()
 			fmt.Fprintf(log, "Query Start,End: %d,%d\n", start1, end1)
 			fmt.Fprintf(log, "Subject Start,End: %d,%d\n", start2, end2)
+			fmt.Fprintf(log, "Align length: %d\n", aligner.Length())
 			fmt.Fprintf(log, "Align length: %d\n", al.Length())
+			fmt.Fprintf(log, "Align Score: %.2f\n", aligner.MaxScore())
+			fmt.Fprintf(log, "Align Matches: %d\n", aligner.NbMatches())
+			fmt.Fprintf(log, "Align Mismatches: %d\n", aligner.NbMisMatches())
+			fmt.Fprintf(log, "Align Gaps: %d\n", aligner.NbGaps())
 		}
 
 		return
