@@ -50,6 +50,7 @@ Phase command will:
 		var reforf align.SeqBag
 		var orf align.Sequence
 		var ok bool
+		var removed []string
 
 		if f, err = openWriteFile(phaseOutput); err != nil {
 			io.LogError(err)
@@ -102,7 +103,7 @@ Phase command will:
 			inseqs = (<-aligns.Achan).Unalign()
 		}
 
-		if phased, aaphased, pos, err = inseqs.Phase(orf); err != nil {
+		if phased, aaphased, pos, removed, err = inseqs.Phase(orf); err != nil {
 			io.LogError(err)
 			return
 		}
@@ -112,6 +113,10 @@ Phase command will:
 				n, _ := phased.GetSequenceNameById(i)
 				fmt.Fprintf(logf, "%s\t%d\n", n, v)
 			}
+			for _, v := range removed {
+				fmt.Fprintf(logf, "Removed: %s\n", v)
+			}
+
 		}
 
 		writeSequences(phased, f)

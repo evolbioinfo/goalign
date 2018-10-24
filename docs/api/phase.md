@@ -24,6 +24,7 @@ func main() {
 	var r *bufio.Reader
 	var err error
 	var seqs, phased, aaphased align.SeqBag
+	var removed []string
 
 	/* Get reader (plain text or gzip) */
 	fi, r, err = utils.GetReader("align.fa")
@@ -38,7 +39,7 @@ func main() {
 	}
 	fi.Close()
 
-	if phased, aaphased, _, err = seqs.Phase(nil); err != nil {
+	if phased, aaphased, _, removed, err = seqs.Phase(nil); err != nil {
 		panic(err)
 	}
 
@@ -47,5 +48,10 @@ func main() {
 
 	/* Printing aa unaligned phased sequences */
 	fmt.Println(fasta.WriteAlignment(aaphased))
+
+	/* Printing removed sequences */
+	for _, s := range removed {
+		fmt.Println(s)
+	}
 }
 ```

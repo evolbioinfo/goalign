@@ -42,7 +42,7 @@ type SeqBag interface {
 	IterateAll(it func(name string, sequence []rune, comment string))
 	LongestORF() (orf Sequence, err error)
 	NbSequences() int
-	Phase(orf Sequence) (seqs SeqBag, aaseqs SeqBag, positions []int, err error)
+	Phase(orf Sequence) (seqs SeqBag, aaseqs SeqBag, positions []int, removed []string, err error)
 	Rename(namemap map[string]string)
 	RenameRegexp(regex, replace string, namemap map[string]string) error
 	ShuffleSequences()               // Shuffle sequence order
@@ -571,14 +571,15 @@ func (sb *seqbag) LongestORF() (orf Sequence, err error) {
 // 3. For each sequence, take the Start corresponding to the Start of the ORF, and remove
 //    nucleotides before;
 // 4. Return the trimmed nucleotidic sequences (phased), the corresponding amino-acid sequences (phasedaa)
-//    and the positions of starts in the nucleotidic sequences.
+//    the positions of starts in the nucleotidic sequences, and the removed sequence names.
 //
 // It does not modify the input object
-func (sb *seqbag) Phase(orf Sequence) (phased SeqBag, phasedaa SeqBag, positions []int, err error) {
+func (sb *seqbag) Phase(orf Sequence) (phased SeqBag, phasedaa SeqBag, positions []int, removed []string, err error) {
 	var aligner PairwiseAligner
 	var orfaa, seqaa, bestseq Sequence
 	var phase, beststart, beststartaa int
 	var bestscore float64
+	var bestratematches float64
 
 	if sb.Alphabet() != NUCLEOTIDS {
 		err = fmt.Errorf("Wrong alphabet for phase : %s", sb.AlphabetStr())
@@ -587,6 +588,7 @@ func (sb *seqbag) Phase(orf Sequence) (phased SeqBag, phasedaa SeqBag, positions
 	positions = make([]int, 0, sb.NbSequences())
 	phased = NewSeqBag(sb.Alphabet())
 	phasedaa = NewSeqBag(AMINOACIDS)
+	removed = make([]string, 0)
 
 	if orf == nil {
 		if orf, err = sb.LongestORF(); err != nil {
@@ -609,6 +611,7 @@ func (sb *seqbag) Phase(orf Sequence) (phased SeqBag, phasedaa SeqBag, positions
 		beststart = 0
 		beststartaa = 0
 		bestseq = nil
+		bestratematches = .0
 		// We translate the sequence in the 3 phases to search for the best
 		// alignment
 		for phase = 0; phase < 3; phase++ {
@@ -622,27 +625,28 @@ func (sb *seqbag) Phase(orf Sequence) (phased SeqBag, phasedaa SeqBag, positions
 			if _, err = aligner.Alignment(); err != nil {
 				return
 			}
-			orfstart, seqstart := aligner.AlignStarts()
-			_, seqend := aligner.AlignEnds()
+			_, seqstart := aligner.AlignStarts()
 
-			if orfstart == 0 && float64(seqend-seqstart)/float64(orfaa.Length()) >= 0.8 {
-				if aligner.MaxScore() > bestscore {
-					bestscore = aligner.MaxScore()
-					// Alignment start in nucleotidic sequence
-					beststart = phase + (seqstart * 3)
-					// Alignment start in proteic sequence
-					beststartaa = seqstart
-					bestseq = seqaa
-				}
+			if aligner.MaxScore() > bestscore {
+				bestscore = aligner.MaxScore()
+				// Alignment start in nucleotidic sequence
+				beststart = phase + (seqstart * 3)
+				// Alignment start in proteic sequence
+				beststartaa = seqstart
+				bestseq = seqaa
+				bestratematches = float64(aligner.NbMatches()) / float64(aligner.Length())
 			}
 		}
 
-		if bestscore > 0.0 {
+		// We set a threshold at 50% of matches over the alignment length...
+		// may be given as parameter...
+		if bestratematches > 0.5 {
 			positions = append(positions, beststart)
 			phased.AddSequence(seq.name, string(seq.sequence[beststart:]), seq.comment)
 			phasedaa.AddSequence(seq.name, string(bestseq.SequenceChar()[beststartaa:]), seq.comment)
 		} else {
-			log.Print(seq.name, "\n", "Cannot find a good ORF alignment for sequence", "\n")
+			removed = append(removed, seq.name)
+			//log.Print(seq.name, "\n", "Cannot find a good ORF alignment for sequence", "\n")
 		}
 	}
 
