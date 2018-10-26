@@ -115,7 +115,7 @@ Phase command will:
 		}
 
 		if phaseLogOutput != "none" {
-			fmt.Fprintf(logf, "Detected/Given ORF: %s\n", orf.Sequence())
+			fmt.Fprintf(logf, "Detected/Given ORF in %s: %s\n", orf.Name(), orf.Sequence())
 			for i, v := range pos {
 				n, _ := phased.GetSequenceNameById(i)
 				fmt.Fprintf(logf, "%s\t%d\n", n, v)

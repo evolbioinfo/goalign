@@ -534,6 +534,7 @@ func (sb *seqbag) LongestORF() (orf Sequence, err error) {
 	var start, end int
 	var bestseq Sequence
 	var found bool
+	var name string
 
 	found = false
 	// Search for the longest orf in all sequences
@@ -542,6 +543,7 @@ func (sb *seqbag) LongestORF() (orf Sequence, err error) {
 		if start != -1 && end-start > bestend-beststart {
 			beststart, bestend = start, end
 			bestseq = seq
+			name = seq.name
 			found = true
 		}
 	}
@@ -553,7 +555,7 @@ func (sb *seqbag) LongestORF() (orf Sequence, err error) {
 
 	// log.Print("Longest ORF found in sequence ", bestseq.Name())
 	// log.Print(string(bestseq.SequenceChar()[beststart:bestend]))
-	orf = NewSequence("longestorf", bestseq.SequenceChar()[beststart:bestend], "")
+	orf = NewSequence(name, bestseq.SequenceChar()[beststart:bestend], "")
 	return
 }
 
