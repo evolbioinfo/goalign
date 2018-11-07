@@ -21,27 +21,40 @@ var addidCmd = &cobra.Command{
 The string may be added to the left or to the right of each sequence name.
 `,
 	RunE: func(cmd *cobra.Command, args []string) (err error) {
-		var aligns align.AlignChannel
 		var f *os.File
 
-		if aligns, err = readalign(infile); err != nil {
-			io.LogError(err)
-			return
-		}
 		if f, err = openWriteFile(addIdOutput); err != nil {
 			io.LogError(err)
 			return
 		}
 		defer closeWriteFile(f, addIdOutput)
 
-		for al := range aligns.Achan {
-			al.AppendSeqIdentifier(addIdName, addIdRight)
-			writeAlign(al, f)
-		}
+		if unaligned {
+			var seqs align.SeqBag
 
-		if aligns.Err != nil {
-			err = aligns.Err
-			io.LogError(err)
+			if seqs, err = readsequences(infile); err != nil {
+				io.LogError(err)
+				return
+			}
+			seqs.AppendSeqIdentifier(addIdName, addIdRight)
+			writeSequences(seqs, f)
+		} else {
+
+			var aligns align.AlignChannel
+
+			if aligns, err = readalign(infile); err != nil {
+				io.LogError(err)
+				return
+			}
+			for al := range aligns.Achan {
+				al.AppendSeqIdentifier(addIdName, addIdRight)
+				writeAlign(al, f)
+			}
+
+			if aligns.Err != nil {
+				err = aligns.Err
+				io.LogError(err)
+			}
 		}
 		return
 	},
@@ -52,4 +65,5 @@ func init() {
 	addidCmd.PersistentFlags().StringVarP(&addIdOutput, "out-align", "o", "stdout", "Renamed alignment output file")
 	addidCmd.PersistentFlags().StringVarP(&addIdName, "name", "n", "none", "String to add to sequence names")
 	addidCmd.PersistentFlags().BoolVarP(&addIdRight, "right", "r", false, "Adds the String on the right of sequence names (otherwise, adds to left)")
+	addidCmd.PersistentFlags().BoolVar(&unaligned, "unaligned", false, "Considers sequences as unaligned and format fasta (phylip, nexus,... options are ignored)")
 }
