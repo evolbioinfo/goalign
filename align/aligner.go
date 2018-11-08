@@ -62,13 +62,13 @@ func NewPwAligner(seq1, seq2 Sequence, algo int) *pwaligner {
 	a1 := seq1.DetectAlphabet()
 	a2 := seq2.DetectAlphabet()
 
-	if a1 == NUCLEOTIDS && a2 == NUCLEOTIDS {
+	if (a1 == NUCLEOTIDS && (a2 == NUCLEOTIDS || a2 == BOTH)) || (a1 == BOTH && a2 == BOTH) {
 		mat = dnafull_subst_matrix
 		chartopos = dna_to_matrix_pos
-	}
-	if a1 == AMINOACIDS && a2 == AMINOACIDS {
+	} else if a1 == AMINOACIDS && (a2 == AMINOACIDS || a2 == BOTH) {
 		mat = blosum62_subst_matrix
 		chartopos = prot_to_matrix_pos
+
 	}
 
 	return &pwaligner{
@@ -333,8 +333,8 @@ func (a *pwaligner) backTrack() {
 		// We want to backtrack from the atg of the first sequence
 		// i.e. the max value of the last row
 		// We set the max of last row
-		a.maxi = .0
-		a.maxj = .0
+		a.maxi = 0
+		a.maxj = 0
 		a.maxscore = .0
 		for j := 0; j < a.seq2.Length(); j++ {
 			if a.matrix[a.seq1.Length()-1][j] > a.maxscore {
@@ -450,7 +450,10 @@ func (a *pwaligner) AlignmentStr() string {
 }
 
 func (a *pwaligner) Alignment() (align Alignment, err error) {
-	err = a.fillMatrix()
+
+	if err = a.fillMatrix(); err != nil {
+		return
+	}
 	a.backTrack()
 	align = NewAlign(UNKNOWN)
 	align.AddSequenceChar(a.seq1.Name(), a.seq1ali, "")

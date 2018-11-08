@@ -3,7 +3,8 @@ package align
 const (
 	AMINOACIDS = 0 // Amino acid sequence alphabet
 	NUCLEOTIDS = 1 // Nucleotid sequence alphabet
-	UNKNOWN    = 2 // Unkown alphabet
+	BOTH       = 2 // Could be both
+	UNKNOWN    = 3 // Unkown alphabet
 
 	GAP   = '-'
 	POINT = '.'

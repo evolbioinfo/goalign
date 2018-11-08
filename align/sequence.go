@@ -133,7 +133,9 @@ func (s *seq) DetectAlphabet() int {
 		isnt = isnt && couldbent
 	}
 
-	if isnt {
+	if isnt && isaa {
+		return BOTH
+	} else if isnt {
 		return NUCLEOTIDS
 	} else if isaa {
 		return AMINOACIDS
