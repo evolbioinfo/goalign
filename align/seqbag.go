@@ -556,6 +556,7 @@ func (sb *seqbag) LongestORF(reverse bool) (orf Sequence, err error) {
 		if reverse {
 			rev := seq.Clone()
 			rev.Reverse()
+			rev.Complement()
 			start, end = rev.LongestORF()
 			if start != -1 && end-start > bestend-beststart {
 				beststart, bestend = start, end
