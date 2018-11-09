@@ -747,7 +747,7 @@ func TestPhase(t *testing.T) {
 		t.Error(err)
 	} else {
 		if !exp.Identical(seqs) {
-			t.Error(fmt.Errorf("Expected sequences are different from phased sequences"))
+			t.Error(fmt.Errorf("Expected sequences are different from phased sequences \n%s \n%s", exp.String(), seqs.String()))
 		}
 		if !expaa.Identical(seqsaa) {
 			t.Error(fmt.Errorf("Expected sequences are different from phased sequences"))

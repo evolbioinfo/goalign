@@ -46,6 +46,7 @@ type SeqBag interface {
 	Rename(namemap map[string]string)
 	RenameRegexp(regex, replace string, namemap map[string]string) error
 	ShuffleSequences()               // Shuffle sequence order
+	String() string                  // Raw string representation (just write all sequences)
 	Translate(phase int) (err error) // Translates nt sequence in aa
 	TrimNames(namemap map[string]string, size int) error
 	TrimNamesAuto(namemap map[string]string, curid *int) error
@@ -395,7 +396,9 @@ func DetectAlphabet(seq string) int {
 		}
 	}
 
-	if isnt {
+	if isnt || isaa {
+		return BOTH
+	} else if isnt {
 		return NUCLEOTIDS
 	} else {
 		return AMINOACIDS
@@ -582,6 +585,7 @@ func (sb *seqbag) Phase(orf Sequence) (phased SeqBag, phasedaa SeqBag, positions
 	var phase, beststart, beststartaa int
 	var bestscore float64
 	var bestratematches float64
+	var alphabet int
 
 	if sb.Alphabet() != NUCLEOTIDS {
 		err = fmt.Errorf("Wrong alphabet for phase : %s", sb.AlphabetStr())
@@ -599,14 +603,14 @@ func (sb *seqbag) Phase(orf Sequence) (phased SeqBag, phasedaa SeqBag, positions
 	}
 
 	// We translate the longest ORF in AA if it is nucleotides
-	if orf.DetectAlphabet() == NUCLEOTIDS {
+	alphabet = orf.DetectAlphabet()
+	if alphabet == NUCLEOTIDS || alphabet == BOTH {
 		if orfaa, err = orf.Translate(0); err != nil {
 			return
 		}
 	} else {
 		orfaa = orf
 	}
-
 	// Now we align all sequences against this longest orf aa sequence with Modified Smith/Waterman
 	for _, seq := range sb.seqs {
 		bestscore = 0.0
@@ -614,6 +618,7 @@ func (sb *seqbag) Phase(orf Sequence) (phased SeqBag, phasedaa SeqBag, positions
 		beststartaa = 0
 		bestseq = nil
 		bestratematches = .0
+		fmt.Println(seq.Name())
 		// We translate the sequence in the 3 phases to search for the best
 		// alignment
 		for phase = 0; phase < 3; phase++ {
@@ -733,4 +738,13 @@ func (sb *seqbag) Unalign() (unal SeqBag) {
 		unal.AddSequence(seq.name, strings.Replace(string(seq.sequence), "-", "", -1), seq.comment)
 	}
 	return
+}
+
+func (sb *seqbag) String() string {
+	var buffer bytes.Buffer
+	for _, seq := range sb.seqs {
+		buffer.WriteString(string(seq.sequence))
+		buffer.WriteRune('\n')
+	}
+	return buffer.String()
 }

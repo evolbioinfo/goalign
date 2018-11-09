@@ -151,7 +151,7 @@ func (s *seq) DetectAlphabet() int {
 func (s *seq) Translate(phase int) (tr Sequence, err error) {
 	var buffer bytes.Buffer
 
-	if s.DetectAlphabet() != NUCLEOTIDS {
+	if s.DetectAlphabet() != NUCLEOTIDS && s.DetectAlphabet() != BOTH {
 		err = fmt.Errorf("Cannot translate this sequence, wrong alphabet")
 		return
 	}

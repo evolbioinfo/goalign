@@ -62,13 +62,12 @@ func NewPwAligner(seq1, seq2 Sequence, algo int) *pwaligner {
 	a1 := seq1.DetectAlphabet()
 	a2 := seq2.DetectAlphabet()
 
-	if (a1 == NUCLEOTIDS && (a2 == NUCLEOTIDS || a2 == BOTH)) || (a1 == BOTH && a2 == BOTH) {
+	if (a1 == NUCLEOTIDS || a1 == BOTH) && (a2 == NUCLEOTIDS || a2 == BOTH) {
 		mat = dnafull_subst_matrix
 		chartopos = dna_to_matrix_pos
-	} else if a1 == AMINOACIDS && (a2 == AMINOACIDS || a2 == BOTH) {
+	} else if (a1 == AMINOACIDS || a1 == BOTH) && (a2 == AMINOACIDS || a2 == BOTH) {
 		mat = blosum62_subst_matrix
 		chartopos = prot_to_matrix_pos
-
 	}
 
 	return &pwaligner{

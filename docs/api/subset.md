@@ -49,7 +49,7 @@ func main() {
 	/* Iterate over alignment sequences */
 	al.Iterate(func(name string, sequence string) {
 		if filtered == nil {
-			filtered = align.NewAlign(align.DetectAlphabet(sequence))
+			filtered = align.NewAlign(al.Alphabet())
 		}
 		/* Adding only the desired one to the filtered alignment */
 		if _, ok := subset[name]; ok {

@@ -106,7 +106,7 @@ given in the comand line.
 				var filtered align.Alignment = nil
 				al.Iterate(func(name string, sequence string) {
 					if filtered == nil {
-						filtered = align.NewAlign(align.DetectAlphabet(sequence))
+						filtered = align.NewAlign(al.Alphabet())
 					}
 					ok := matchSeqName(name, subset, regexps, regexmatch)
 					if !revert && ok {
@@ -116,7 +116,6 @@ given in the comand line.
 					}
 				})
 				writeAlign(filtered, f)
-
 			}
 			if aligns.Err != nil {
 				err = aligns.Err

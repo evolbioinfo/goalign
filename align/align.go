@@ -57,6 +57,8 @@ func NewAlign(alphabet int) *align {
 	switch alphabet {
 	case AMINOACIDS, NUCLEOTIDS, UNKNOWN:
 		// OK
+	case BOTH:
+		alphabet = NUCLEOTIDS
 	default:
 		io.ExitWithMessage(errors.New("Unexpected sequence alphabet type"))
 	}
