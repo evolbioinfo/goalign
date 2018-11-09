@@ -9,6 +9,7 @@ import (
 )
 
 var orfOutput string
+var orfreverse bool
 
 // translateCmd represents the addid command
 var orfCmd = &cobra.Command{
@@ -40,7 +41,7 @@ Output is in fasta format.
 
 		inseqs = inseqs.Unalign()
 
-		if orf, err = inseqs.LongestORF(); err != nil {
+		if orf, err = inseqs.LongestORF(orfreverse); err != nil {
 			io.LogError(err)
 			return
 		}
@@ -56,4 +57,5 @@ Output is in fasta format.
 func init() {
 	RootCmd.AddCommand(orfCmd)
 	orfCmd.PersistentFlags().StringVarP(&orfOutput, "output", "o", "stdout", "ORF Output Fasta File")
+	orfCmd.PersistentFlags().BoolVar(&orfreverse, "reverse", false, "Search for the longest ORF ALSO in the reverse strand")
 }

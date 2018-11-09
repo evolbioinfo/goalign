@@ -15,12 +15,15 @@ type Sequence interface {
 	SequenceChar() []rune
 	CharAt(int) rune
 	Name() string
+	SetName(name string)
 	Comment() string
 	Length() int
 	LongestORF() (start, end int) // Detects the longest ORF in forward strand only
 	Reverse()
+	Complement() error                     // Returns an error if not nucleotide sequence
 	Translate(phase int) (Sequence, error) // Translates the sequence using the standard code
 	DetectAlphabet() int                   // Try to detect alphabet (nt or aa)
+	Clone() Sequence
 }
 
 type seq struct {
@@ -50,6 +53,10 @@ func (s *seq) CharAt(i int) rune {
 
 func (s *seq) Name() string {
 	return s.name
+}
+
+func (s *seq) SetName(name string) {
+	s.name = name
 }
 
 func (s *seq) Comment() string {
@@ -112,6 +119,29 @@ func (s *seq) Reverse() {
 	Reverse(s.sequence)
 }
 
+// Complement sequence
+func Complement(seq []rune) (err error) {
+
+	for i, n := range seq {
+		c, ok := complement_nuc_mapping[n]
+		if !ok {
+			err = fmt.Errorf("Character %c can not be complemented", n)
+			return
+		}
+		seq[i] = c
+	}
+	return
+}
+
+// Complement sequence
+func (s *seq) Complement() error {
+	a := s.DetectAlphabet()
+	if a != NUCLEOTIDS && a != BOTH {
+		return fmt.Errorf("Wrong alphabet for Complementing sequence")
+	}
+	return Complement(s.sequence)
+}
+
 func (s *seq) DetectAlphabet() int {
 	isaa := true
 	isnt := true
@@ -171,4 +201,10 @@ func (s *seq) Translate(phase int) (tr Sequence, err error) {
 	}
 	tr = NewSequence(s.name, []rune(buffer.String()), s.comment)
 	return
+}
+
+func (s *seq) Clone() Sequence {
+	seq2 := make([]rune, len(s.sequence))
+	copy(seq2, s.sequence)
+	return NewSequence(s.name, seq2, s.comment)
 }

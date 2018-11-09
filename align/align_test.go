@@ -743,7 +743,7 @@ func TestPhase(t *testing.T) {
 	expaa.AddSequence("Seq0001", "MDDFFCCPPPPQQSSSSSSEETTTTGGGGWHHYYIIIVVV**", "")
 	expaa.AutoAlphabet()
 
-	if seqs, seqsaa, _, _, err := in.Phase(nil); err != nil {
+	if seqs, seqsaa, _, _, err := in.Phase(nil, -1.0, 0.5, true, false, 1); err != nil {
 		t.Error(err)
 	} else {
 		if !exp.Identical(seqs) {
@@ -751,6 +751,64 @@ func TestPhase(t *testing.T) {
 		}
 		if !expaa.Identical(seqsaa) {
 			t.Error(fmt.Errorf("Expected sequences are different from phased sequences"))
+		}
+	}
+}
+
+func TestPhaseReverse(t *testing.T) {
+
+	in := NewSeqBag(UNKNOWN)
+	in.AddSequence("Seq0000", "GCTATCATTACACTACGACAACTATGATAATGTAATAGTGATGCCACCCTCCGCCACCCGTTGTGGTAGTCTCTTCGCTACTCGATGAGGAAGACTGTTGCGGTGGGGGAGGGCAACAGAAAAAGTCATCCATGTTATTCTTTTTCCTTCTCCGTCGGCGACGCAGTAGGAGAAGCAATAACGCTGCGGCAGC", "")
+	in.AddSequence("Seq0001", "GCTGCAGCGTTATTGCTTCTCCTACTGCGTCGCCGACGGAGAAGGAAAAAGAATAACATGGATGACTTTTTCTGTTGCCCTCCCCCACCGCAACAGTCTTCCTCATCGAGTAGCGAAGAGACTACCACAACGGGTGGCGGAGGGTGGCATCACTATTACATTATCATAGTTGTCGTATAATGA", "")
+	in.AutoAlphabet()
+
+	exp := NewSeqBag(UNKNOWN)
+	exp.AddSequence("Seq0000", "ATGGATGACTTTTTCTGTTGCCCTCCCCCACCGCAACAGTCTTCCTCATCGAGTAGCGAAGAGACTACCACAACGGGTGGCGGAGGGTGGCATCACTATTACATTATCATAGTTGTCGTAGTGTAATGATAGC", "")
+	exp.AddSequence("Seq0001", "ATGGATGACTTTTTCTGTTGCCCTCCCCCACCGCAACAGTCTTCCTCATCGAGTAGCGAAGAGACTACCACAACGGGTGGCGGAGGGTGGCATCACTATTACATTATCATAGTTGTCGTATAATGA", "")
+	exp.AutoAlphabet()
+
+	expaa := NewSeqBag(UNKNOWN)
+	expaa.AddSequence("Seq0000", "MDDFFCCPPPPQQSSSSSSEETTTTGGGGWHHYYIIIVVVV***", "")
+	expaa.AddSequence("Seq0001", "MDDFFCCPPPPQQSSSSSSEETTTTGGGGWHHYYIIIVVV**", "")
+	expaa.AutoAlphabet()
+
+	if seqs, seqsaa, _, _, err := in.Phase(nil, -1.0, 0.5, true, false, 1); err != nil {
+		t.Error(err)
+	} else {
+		if !exp.Identical(seqs) {
+			t.Error(fmt.Errorf("Expected sequences are different from phased sequences (with reverse) \n%s \n%s", exp.String(), seqs.String()))
+		}
+		if !expaa.Identical(seqsaa) {
+			t.Error(fmt.Errorf("Expected sequences are different from phased sequences (with reverse)"))
+		}
+	}
+}
+
+func TestPhaseReverseCutEnds(t *testing.T) {
+
+	in := NewSeqBag(UNKNOWN)
+	in.AddSequence("Seq0000", "GCTATCATTACACTACGACAACTATGATAATGTAATAGTGATGCCACCCTCCGCCACCCGTTGTGGTAGTCTCTTCGCTACTCGATGAGGAAGACTGTTGCGGTGGGGGAGGGCAACAGAAAAAGTCATCCATGTTATTCTTTTTCCTTCTCCGTCGGCGACGCAGTAGGAGAAGCAATAACGCTGCGGCAGC", "")
+	in.AddSequence("Seq0001", "GCTGCAGCGTTATTGCTTCTCCTACTGCGTCGCCGACGGAGAAGGAAAAAGAATAACATGGATGACTTTTTCTGTTGCCCTCCCCCACCGCAACAGTCTTCCTCATCGAGTAGCGAAGAGACTACCACAACGGGTGGCGGAGGGTGGCATCACTATTACATTATCATAGTTGTCGTATAATGA", "")
+	in.AutoAlphabet()
+
+	exp := NewSeqBag(UNKNOWN)
+	exp.AddSequence("Seq0000", "ATGGATGACTTTTTCTGTTGCCCTCCCCCACCGCAACAGTCTTCCTCATCGAGTAGCGAAGAGACTACCACAACGGGTGGCGGAGGGTGGCATCACTATTACATTATCATAGTTGTCGTAGTG", "")
+	exp.AddSequence("Seq0001", "ATGGATGACTTTTTCTGTTGCCCTCCCCCACCGCAACAGTCTTCCTCATCGAGTAGCGAAGAGACTACCACAACGGGTGGCGGAGGGTGGCATCACTATTACATTATCATAGTTGTCGTATAA", "")
+	exp.AutoAlphabet()
+
+	expaa := NewSeqBag(UNKNOWN)
+	expaa.AddSequence("Seq0000", "MDDFFCCPPPPQQSSSSSSEETTTTGGGGWHHYYIIIVVVV", "")
+	expaa.AddSequence("Seq0001", "MDDFFCCPPPPQQSSSSSSEETTTTGGGGWHHYYIIIVVV*", "")
+	expaa.AutoAlphabet()
+
+	if seqs, seqsaa, _, _, err := in.Phase(nil, -1.0, 0.5, true, true, 1); err != nil {
+		t.Error(err)
+	} else {
+		if !exp.Identical(seqs) {
+			t.Error(fmt.Errorf("Expected sequences are different from phased sequences (with reverse) \n%s \n%s", exp.String(), seqs.String()))
+		}
+		if !expaa.Identical(seqsaa) {
+			t.Error(fmt.Errorf("Expected sequences are different from phased sequences (with reverse)"))
 		}
 	}
 }

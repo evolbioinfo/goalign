@@ -13,6 +13,10 @@ var phaseOutput string
 var phaseAAOutput string
 var phaseLogOutput string
 var orfsequence string
+var lencutoff float64
+var matchcutoff float64
+var phasereverse bool
+var phasecutend bool
 
 // translateCmd represents the addid command
 var phaseCmd = &cobra.Command{
@@ -103,13 +107,14 @@ Phase command will:
 			}
 		} else {
 			// We detect the orf
-			if orf, err = inseqs.LongestORF(); err != nil {
+			if orf, err = inseqs.LongestORF(phasereverse); err != nil {
 				io.LogError(err)
 				return
 			}
+			orf.SetName(orf.Name() + "_LongestORF")
 		}
 
-		if phased, aaphased, pos, removed, err = inseqs.Phase(orf); err != nil {
+		if phased, aaphased, pos, removed, err = inseqs.Phase(orf, lencutoff, matchcutoff, phasereverse, phasecutend, rootcpus); err != nil {
 			io.LogError(err)
 			return
 		}
@@ -140,6 +145,10 @@ func init() {
 	phaseCmd.PersistentFlags().StringVarP(&phaseOutput, "output", "o", "stdout", "Output ATG \"phased\" FASTA file")
 	phaseCmd.PersistentFlags().StringVar(&phaseAAOutput, "aa-output", "none", "Output Met \"phased\" aa FASTA file")
 	phaseCmd.PersistentFlags().StringVarP(&phaseLogOutput, "log", "l", "none", "Output log: positions of the considered ATG for each sequence")
+	phaseCmd.PersistentFlags().Float64Var(&lencutoff, "len-cutoff", -1.0, "Length cutoff, over orf length, to consider sequence hits (-1==No cutoff)")
+	phaseCmd.PersistentFlags().Float64Var(&matchcutoff, "match-cutoff", .5, "Nb Matches cutoff, over alignment length, to consider sequence hits (-1==No cutoff)")
 	phaseCmd.PersistentFlags().BoolVar(&unaligned, "unaligned", false, "Considers sequences as unaligned and only format fasta is accepted (phylip, nexus,... options are ignored)")
+	phaseCmd.PersistentFlags().BoolVar(&phasereverse, "reverse", false, "Search ALSO in the reverse strand (in addition to the forward strand)")
+	phaseCmd.PersistentFlags().BoolVar(&phasecutend, "cut-end", false, "Iftrue, then also remove the end of sequences that do not align with orf")
 	phaseCmd.PersistentFlags().StringVar(&orfsequence, "ref-orf", "none", "Reference ORF to phase against (if none is given, then will try to get the longest orf in the input data)")
 }
