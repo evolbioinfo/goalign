@@ -41,9 +41,10 @@ type SeqBag interface {
 	Iterate(it func(name string, sequence string))
 	IterateChar(it func(name string, sequence []rune))
 	IterateAll(it func(name string, sequence []rune, comment string))
+	Sequences() []Sequence
 	LongestORF(reverse bool) (orf Sequence, err error)
 	NbSequences() int
-	Phase(orf Sequence, lencutoff, matchcutoff float64, reverse bool, cutend bool, cpus int) (seqs SeqBag, aaseqs SeqBag, positions []int, removed []string, err error)
+	Phase(orfs SeqBag, lencutoff, matchcutoff float64, reverse bool, cutend bool, cpus int) (seqs SeqBag, aaseqs SeqBag, positions []int, removed []string, err error)
 	PhaseNt(orf Sequence, lencutoff, matchcutoff float64, reverse bool, cutend bool, cpus int) (seqs SeqBag, positions []int, removed []string, err error)
 	Rename(namemap map[string]string)
 	RenameRegexp(regex, replace string, namemap map[string]string) error
@@ -317,6 +318,14 @@ func (sb *seqbag) IterateAll(it func(name string, sequence []rune, comment strin
 	for _, seq := range sb.seqs {
 		it(seq.name, seq.sequence, seq.comment)
 	}
+}
+
+func (sb *seqbag) Sequences() (seqs []Sequence) {
+	seqs = make([]Sequence, len(sb.seqs))
+	for i, s := range sb.seqs {
+		seqs[i] = s
+	}
+	return seqs
 }
 
 /* It appends the given sequence to the sequence having given name */
@@ -597,10 +606,11 @@ func (sb *seqbag) LongestORF(reverse bool) (orf Sequence, err error) {
 // If cutend is true, then also remove the end of sequences that do not align with orf
 //
 // It does not modify the input object
-func (sb *seqbag) Phase(orf Sequence, lencutoff, matchcutoff float64, reverse, cutend bool, cpus int) (phased SeqBag, phasedaa SeqBag, positions []int, removed []string, err error) {
-	var orfaa Sequence
+func (sb *seqbag) Phase(orfs SeqBag, lencutoff, matchcutoff float64, reverse, cutend bool, cpus int) (phased SeqBag, phasedaa SeqBag, positions []int, removed []string, err error) {
+	var orf Sequence
 	var alphabet int
 	var lock, lock2 sync.Mutex
+	var orfsaa SeqBag
 
 	// Channels for concurrency
 	seqchan := make(chan *seq)
@@ -614,20 +624,24 @@ func (sb *seqbag) Phase(orf Sequence, lencutoff, matchcutoff float64, reverse, c
 	phasedaa = NewSeqBag(AMINOACIDS)
 	removed = make([]string, 0)
 
-	if orf == nil {
+	if orfs == nil {
 		if orf, err = sb.LongestORF(reverse); err != nil {
 			return
 		}
+		orfs = NewSeqBag(UNKNOWN)
+		orfs.AddSequenceChar(orf.Name(), orf.SequenceChar(), orf.Comment())
+		orfs.AutoAlphabet()
 	}
 
 	// We translate the longest ORF in AA if it is nucleotides
-	alphabet = orf.DetectAlphabet()
-	if alphabet == NUCLEOTIDS || alphabet == BOTH {
-		if orfaa, err = orf.Translate(0); err != nil {
+	alphabet = orfs.Alphabet()
+	if orfsaa, err = orfs.CloneSeqBag(); err != nil {
+		return
+	}
+	if alphabet == NUCLEOTIDS {
+		if err = orfsaa.Translate(0); err != nil {
 			return
 		}
-	} else {
-		orfaa = orf
 	}
 
 	// Now we align all sequences against this longest orf aa sequence with Modified Smith/Waterman
@@ -678,42 +692,46 @@ func (sb *seqbag) Phase(orf Sequence, lencutoff, matchcutoff float64, reverse, c
 					revcomp.Reverse()
 					revcomp.Complement()
 				}
-				for phase = 0; phase < phases; phase++ {
-					if phase < 3 {
-						tmpseq = seq
-					} else {
-						tmpseq = revcomp
-					}
-					if seqaa, err = tmpseq.Translate(phase % 3); err != nil {
-						wg.Done()
-						return
-					}
-					aligner = NewPwAligner(orfaa, seqaa, ALIGN_ALGO_ATG)
-					aligner.SetGapOpenScore(-10.0)
-					aligner.SetGapExtendScore(-.5)
+				// We search for the best score among all references
+				// and all phases
+				for _, orfaa := range orfsaa.Sequences() {
+					for phase = 0; phase < phases; phase++ {
+						if phase < 3 {
+							tmpseq = seq
+						} else {
+							tmpseq = revcomp
+						}
+						if seqaa, err = tmpseq.Translate(phase % 3); err != nil {
+							wg.Done()
+							return
+						}
+						aligner = NewPwAligner(orfaa, seqaa, ALIGN_ALGO_ATG)
+						aligner.SetGapOpenScore(-10.0)
+						aligner.SetGapExtendScore(-.5)
 
-					if _, err = aligner.Alignment(); err != nil {
-						wg.Done()
-						return
-					}
-					_, seqstart := aligner.AlignStarts()
-					_, seqend := aligner.AlignEnds()
+						if _, err = aligner.Alignment(); err != nil {
+							wg.Done()
+							return
+						}
+						_, seqstart := aligner.AlignStarts()
+						_, seqend := aligner.AlignEnds()
 
-					if aligner.MaxScore() > bestscore {
-						bestscore = aligner.MaxScore()
-						// Alignment start in nucleotidic sequence
-						beststart = (phase % 3) + (seqstart * 3)
-						// Alignment start in proteic sequence
-						beststartaa = seqstart
-						bestseqaa = seqaa
-						bestseq = tmpseq
-						bestratematches = float64(aligner.NbMatches()) / float64(aligner.Length())
-						bestlen = float64(aligner.Length()) / float64(orfaa.Length())
-						bestend = bestseq.Length()
-						bestendaa = bestseqaa.Length()
-						if cutend {
-							bestend = (phase % 3) + ((seqend + 1) * 3)
-							bestendaa = seqend + 1
+						if aligner.MaxScore() > bestscore {
+							bestscore = aligner.MaxScore()
+							// Alignment start in nucleotidic sequence
+							beststart = (phase % 3) + (seqstart * 3)
+							// Alignment start in proteic sequence
+							beststartaa = seqstart
+							bestseqaa = seqaa
+							bestseq = tmpseq
+							bestratematches = float64(aligner.NbMatches()) / float64(aligner.Length())
+							bestlen = float64(aligner.Length()) / float64(orfaa.Length())
+							bestend = bestseq.Length()
+							bestendaa = bestseqaa.Length()
+							if cutend {
+								bestend = (phase % 3) + ((seqend + 1) * 3)
+								bestendaa = seqend + 1
+							}
 						}
 					}
 				}
@@ -960,7 +978,9 @@ func (sb *seqbag) Unalign() (unal SeqBag) {
 
 func (sb *seqbag) String() string {
 	var buffer bytes.Buffer
+	buffer.WriteString("\n")
 	for _, seq := range sb.seqs {
+		buffer.WriteString(seq.name + ":")
 		buffer.WriteString(string(seq.sequence))
 		buffer.WriteRune('\n')
 	}

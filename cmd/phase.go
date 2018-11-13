@@ -53,7 +53,6 @@ Phase command will:
 		var inseqs align.SeqBag
 		var reforf align.SeqBag
 		var orf align.Sequence
-		var ok bool
 		var removed []string
 
 		if f, err = openWriteFile(phaseOutput); err != nil {
@@ -96,13 +95,9 @@ Phase command will:
 				io.LogError(err)
 				return
 			}
-			if reforf.NbSequences() != 1 {
-				err = fmt.Errorf("Reference ORF file should contain only one sequence")
+			if reforf.NbSequences() < 1 {
+				err = fmt.Errorf("Reference ORF file should contain at least one sequence")
 				io.LogError(err)
-				return
-			}
-			if orf, ok = reforf.Sequence(0); !ok {
-				io.LogError(fmt.Errorf("Sequence 0 is not present in the orf file"))
 				return
 			}
 		} else {
@@ -112,15 +107,18 @@ Phase command will:
 				return
 			}
 			orf.SetName(orf.Name() + "_LongestORF")
+			reforf = align.NewSeqBag(align.UNKNOWN)
+			reforf.AddSequenceChar(orf.Name(), orf.SequenceChar(), orf.Comment())
+			reforf.AutoAlphabet()
 		}
 
-		if phased, aaphased, pos, removed, err = inseqs.Phase(orf, lencutoff, matchcutoff, phasereverse, phasecutend, rootcpus); err != nil {
+		if phased, aaphased, pos, removed, err = inseqs.Phase(reforf, lencutoff, matchcutoff, phasereverse, phasecutend, rootcpus); err != nil {
 			io.LogError(err)
 			return
 		}
 
 		if phaseLogOutput != "none" {
-			fmt.Fprintf(logf, "Detected/Given ORF in %s: %s\n", orf.Name(), orf.Sequence())
+			fmt.Fprintf(logf, "Detected/Given ORF: %s\n", reforf.String())
 			for i, v := range pos {
 				n, _ := phased.GetSequenceNameById(i)
 				fmt.Fprintf(logf, "%s\t%d\n", n, v)
