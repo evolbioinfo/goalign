@@ -46,7 +46,14 @@ func (layout *bioJSLayout) DrawAlign(a align.Alignment) error {
     var seqs =  msa.io.fasta.parse(fastaseq);
     var m = msa({
          el: align,
-         seqs: seqs
+         seqs: seqs,
+         vis: {
+           conserv: true,
+           overviewbox: false
+         },
+         // smaller menu for JSBin
+         menu: "small",
+         bootstrapMenu: true
     });
     m.g.zoomer.set("alignmentHeight", 500); // modifies the default height
     m.render();
