@@ -2,6 +2,7 @@ package draw
 
 import (
 	"bufio"
+	"fmt"
 
 	"github.com/fredericlemoine/goalign/align"
 	"github.com/fredericlemoine/goalign/io/fasta"
@@ -56,6 +57,9 @@ func (layout *bioJSLayout) DrawAlign(a align.Alignment) error {
          bootstrapMenu: true
     });
     m.g.zoomer.set("alignmentHeight", 500); // modifies the default height
+    m.g.zoomer.set("labelNameLength", `)
+	layout.writer.WriteString(fmt.Sprintf("%d);", a.MaxNameLength()*10))
+	layout.writer.WriteString(`
     m.render();
    </script>
 </body>

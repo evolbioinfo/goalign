@@ -43,6 +43,7 @@ type SeqBag interface {
 	IterateAll(it func(name string, sequence []rune, comment string))
 	Sequences() []Sequence
 	LongestORF(reverse bool) (orf Sequence, err error)
+	MaxNameLength() int // maximum sequence name length
 	NbSequences() int
 	Phase(orfs SeqBag, lencutoff, matchcutoff float64, reverse bool, cutend bool, cpus int) (seqs SeqBag, aaseqs SeqBag, positions []int, removed []string, err error)
 	PhaseNt(orf Sequence, lencutoff, matchcutoff float64, reverse bool, cutend bool, cpus int) (seqs SeqBag, positions []int, removed []string, err error)
@@ -584,6 +585,16 @@ func (sb *seqbag) LongestORF(reverse bool) (orf Sequence, err error) {
 	// log.Print("Longest ORF found in sequence ", bestseq.Name())
 	// log.Print(string(bestseq.SequenceChar()[beststart:bestend]))
 	orf = NewSequence(name, bestseq.SequenceChar()[beststart:bestend], "")
+	return
+}
+
+func (sb *seqbag) MaxNameLength() (max int) {
+	max = 0
+	for _, s := range sb.seqs {
+		if len(s.Name()) > max {
+			max = len(s.Name())
+		}
+	}
 	return
 }
 
