@@ -408,7 +408,7 @@ func DetectAlphabet(seq string) int {
 		}
 	}
 
-	if isnt || isaa {
+	if isnt && isaa {
 		return BOTH
 	} else if isnt {
 		return NUCLEOTIDS
