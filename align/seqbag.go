@@ -143,7 +143,7 @@ func (sb *seqbag) AlphabetCharacters() (alphabet []rune) {
 // and replaces newick special characters \s\t()[];,.: by "-"
 func (sb *seqbag) CleanNames() {
 	firstlast := regexp.MustCompile("(^[\\s\\t]+|[\\s\\t]+$)")
-	inside := regexp.MustCompile("[\\s\\t,\\[\\]\\(\\),;\\.:]+")
+	inside := regexp.MustCompile("[\\|\\s\\t,\\[\\]\\(\\),;\\.:]+")
 
 	for _, seq := range sb.seqs {
 		seq.name = firstlast.ReplaceAllString(seq.name, "")
