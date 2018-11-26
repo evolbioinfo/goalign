@@ -25,6 +25,7 @@ type Alignment interface {
 	Concat(Alignment) error                             // concatenates the given alignment with this alignment
 	Entropy(site int, removegaps bool) (float64, error) // Entropy of the given site
 	Length() int                                        // Length of the alignment
+	Mask(start, length int) error                       // Masks given positions
 	MaxCharStats() ([]rune, []int)
 	Mutate(rate float64)                                                                        // Adds uniform substitutions in the alignment (~sequencing errors)
 	NbVariableSites() int                                                                       // Nb of variable sites
@@ -560,6 +561,33 @@ func (a *align) CharStatsSite(site int) (outmap map[rune]int, err error) {
 		}
 	}
 	return outmap, err
+}
+
+func (a *align) Mask(start, length int) (err error) {
+	if start < 0 {
+		err = errors.New("Mask: Start position cannot be < 0")
+		return
+	}
+	if start > a.Length() {
+		err = errors.New("Mask: Start position cannot be > align length")
+		return
+	}
+
+	rep := '.'
+	if a.Alphabet() == AMINOACIDS {
+		rep = ALL_AMINO
+	} else if a.Alphabet() == NUCLEOTIDS {
+		rep = ALL_NUCLE
+	} else {
+		err = errors.New("Mask: Cannot mask alignment, wrong alphabet")
+	}
+
+	for _, seq := range a.seqs {
+		for i := start; i < (start+length) && i < a.Length(); i++ {
+			seq.sequence[i] = rep
+		}
+	}
+	return
 }
 
 // Returns the Character with the most occurences

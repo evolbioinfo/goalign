@@ -10,6 +10,9 @@ const (
 	POINT = '.'
 	OTHER = '*'
 
+	ALL_AMINO = 'X'
+	ALL_NUCLE = 'N'
+
 	PSSM_NORM_NONE = 0 // No normalization
 	PSSM_NORM_FREQ = 1 // Normalization by freq in the site
 	PSSM_NORM_DATA = 2 // Normalization by aa/nt frequency in data
