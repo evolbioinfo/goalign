@@ -9,7 +9,6 @@ import (
 	"strings"
 
 	"github.com/fredericlemoine/goalign/align"
-	alignio "github.com/fredericlemoine/goalign/io"
 )
 
 // Parser represents a parser.
@@ -165,7 +164,7 @@ func (p *Parser) Parse() (align.Alignment, error) {
 		tok, lit = p.scan()
 		p.unscan()
 	} else if int(lenseq) != seqs[0].Len() {
-		alignio.ExitWithMessage(errors.New("Bad Phylip Format : Should have a blank line here"))
+		return nil, errors.New("Bad Phylip Format : Should have a blank line here")
 	}
 	//  else if tok != EOF {
 	// 	alignio.ExitWithMessage(errors.New("Bad Phylip Format : Should not have a character here, all sequences have been red"))
@@ -201,23 +200,22 @@ func (p *Parser) Parse() (align.Alignment, error) {
 			tok, lit = p.scan()
 			p.unscan()
 		} else if int(lenseq) != seqs[0].Len() {
-			alignio.ExitWithMessage(errors.New("Bad Phylip Format : Should have a blank line here"))
+			return nil, errors.New("Bad Phylip Format : Should have a blank line here")
 		}
 		b++
 	}
 	tok, lit = p.scanWithEOL()
 	p.unscan()
 
+	al = align.NewAlign(align.UNKNOWN)
 	for i, name := range names {
 		seq := seqs[i].String()
 		if int(lenseq) != len(seq) {
-			alignio.ExitWithMessage(errors.New("Bad Phylip format : Length of sequences does not correspond to header"))
-		}
-		if al == nil {
-			al = align.NewAlign(align.DetectAlphabet(seq))
+			return nil, errors.New("Bad Phylip format : Length of sequences does not correspond to header")
 		}
 		al.AddSequence(name, seq, "")
 	}
+	al.AutoAlphabet()
 	return al, nil
 }
 
