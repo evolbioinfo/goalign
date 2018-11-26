@@ -106,6 +106,7 @@ var dna_to_matrix_pos = map[rune]int{
 	'D': 13,
 	'N': 14,
 	'U': 15,
+	'X': 14,
 }
 
 // Taken from EMBOSS Water
