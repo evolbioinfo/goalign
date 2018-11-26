@@ -132,6 +132,7 @@ You may go to the [doc](docs/index.md) for a more detailed documentation of the 
 * draw:   Draw alignments
   * biojs:     Display an input alignment in an html file using [BioJS](http://msa.biojs.net/)
 * identical: Tell whether two alignments are identical
+* mask: Replace positions by N (of nucleotides) or X (if amino-acids)
 * mutate: Add substitutions (~sequencing errors), or gaps, uniformly in an input alignment
   * gaps: Add gaps uniformly in an input alignment
   * snvs: Add substitutions uniformly in an input alignment
