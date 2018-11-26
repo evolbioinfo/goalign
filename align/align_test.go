@@ -855,3 +855,47 @@ func TestTranslate(t *testing.T) {
 		}
 	}
 }
+
+func TestMaskNt(t *testing.T) {
+	in := NewAlign(UNKNOWN)
+	in.AddSequence("Seq0000", "GATTAATTTGCCGTAGGCCA", "")
+	in.AddSequence("Seq0001", "GAATCTGAAGATCGAACACT", "")
+	in.AddSequence("Seq0002", "TTAAGTTTTCACTTCTAATG", "")
+	in.AutoAlphabet()
+
+	exp := NewSeqBag(UNKNOWN)
+	exp.AddSequence("Seq0000", "GATTAATTNNCCGTAGGCCA", "")
+	exp.AddSequence("Seq0001", "GAATCTGANNATCGAACACT", "")
+	exp.AddSequence("Seq0002", "TTAAGTTTNNACTTCTAATG", "")
+	exp.AutoAlphabet()
+
+	if err := in.Mask(8, 2); err != nil {
+		t.Error(err)
+	} else {
+		if !exp.Identical(in) {
+			t.Error(fmt.Errorf("Expected sequences are different from masked sequences"))
+		}
+	}
+}
+
+func TestMaskProt(t *testing.T) {
+	in := NewAlign(UNKNOWN)
+	in.AddSequence("Seq0000", "PHGVHCVSSYRFEKCPNFFC", "")
+	in.AddSequence("Seq0001", "EACKWDNTCPMKIETHQHQK", "")
+	in.AddSequence("Seq0002", "GDMMEDSGSIAIDGIGHHKN", "")
+	in.AutoAlphabet()
+
+	exp := NewSeqBag(UNKNOWN)
+	exp.AddSequence("Seq0000", "PHGVHCVSSYRFXXXXXXXX", "")
+	exp.AddSequence("Seq0001", "EACKWDNTCPMKXXXXXXXX", "")
+	exp.AddSequence("Seq0002", "GDMMEDSGSIAIXXXXXXXX", "")
+	exp.AutoAlphabet()
+
+	if err := in.Mask(12, 2000); err != nil {
+		t.Error(err)
+	} else {
+		if !exp.Identical(in) {
+			t.Error(fmt.Errorf("Expected sequences are different from masked sequences"))
+		}
+	}
+}
