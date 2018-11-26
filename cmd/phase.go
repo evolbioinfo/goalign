@@ -69,12 +69,6 @@ Phase command will:
 			defer closeWriteFile(aaf, phaseAAOutput)
 		}
 
-		if logf, err = openWriteFile(phaseLogOutput); err != nil {
-			io.LogError(err)
-			return
-		}
-		defer closeWriteFile(logf, phaseLogOutput)
-
 		if unaligned {
 			if inseqs, err = readsequences(infile); err != nil {
 				io.LogError(err)
@@ -118,6 +112,12 @@ Phase command will:
 		}
 
 		if phaseLogOutput != "none" {
+			if logf, err = openWriteFile(phaseLogOutput); err != nil {
+				io.LogError(err)
+				return
+			}
+			defer closeWriteFile(logf, phaseLogOutput)
+
 			fmt.Fprintf(logf, "Detected/Given ORF: %s\n", reforf.String())
 			for i, v := range pos {
 				n, _ := phased.GetSequenceNameById(i)
