@@ -448,6 +448,14 @@ func (a *pwaligner) AlignmentStr() string {
 	return string(alistr)
 }
 
+func (a *pwaligner) Seq1Ali() []rune {
+	return a.seq1ali
+}
+
+func (a *pwaligner) Seq2Ali() []rune {
+	return a.seq2ali
+}
+
 func (a *pwaligner) Alignment() (align Alignment, err error) {
 
 	if err = a.fillMatrix(); err != nil {
