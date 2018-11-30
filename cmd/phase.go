@@ -3,6 +3,7 @@ package cmd
 import (
 	"fmt"
 	"os"
+	"strings"
 
 	"github.com/fredericlemoine/goalign/align"
 	"github.com/fredericlemoine/goalign/io"
@@ -122,6 +123,7 @@ Phase command will:
 		defer closeWriteFile(logf, phaseLogOutput)
 
 		fmt.Fprintf(logf, "Detected/Given ORF: %s\n", reforf.String())
+		fmt.Fprintf(logf, "SeqName\tStartPosition\tExtractedSequenceLength\tFirstStop\n")
 		phasedseqs := align.NewSeqBag(align.UNKNOWN)
 		phasedseqsaa := align.NewSeqBag(align.UNKNOWN)
 		for p := range phased {
@@ -131,11 +133,11 @@ Phase command will:
 				return
 			}
 			if p.Removed {
-				fmt.Fprintf(logf, "%s\tRemoved\n", p.NtSeq.Name())
+				fmt.Fprintf(logf, "%s\tRemoved\tN/A\n", p.NtSeq.Name())
 			} else {
 				phasedseqs.AddSequence(p.NtSeq.Name(), p.NtSeq.Sequence(), p.NtSeq.Comment())
 				phasedseqsaa.AddSequence(p.AaSeq.Name(), p.AaSeq.Sequence(), p.AaSeq.Comment())
-				fmt.Fprintf(logf, "%s\t%d\n", p.NtSeq.Name(), p.Position)
+				fmt.Fprintf(logf, "%s\t%d\t%d\t%d\n", p.NtSeq.Name(), p.Position, p.AaSeq.Length(), strings.Index(p.AaSeq.Sequence(), "*"))
 			}
 		}
 
