@@ -24,7 +24,7 @@ type Alignment interface {
 	CodonAlign(ntseqs SeqBag) (codonAl *align, err error)
 	Concat(Alignment) error                             // concatenates the given alignment with this alignment
 	Entropy(site int, removegaps bool) (float64, error) // Entropy of the given site
-	Frameshifts() []int                                 // Positions of potential framshifts
+	Frameshifts() []struct{ start, end int }            // Positions of potential framshifts
 	Length() int                                        // Length of the alignment
 	Mask(start, length int) error                       // Masks given positions
 	MaxCharStats() ([]rune, []int)
@@ -699,7 +699,7 @@ func (a *align) Entropy(site int, removegaps bool) (float64, error) {
 // First sequence of the alignment is considered as the reference orf (in phase)
 // It return for each sequence the coordinates of the longest dephased part
 func (a *align) Frameshifts() (fs []struct{ start, end int }) {
-	fs = make(struct{ start, end int }, 0)
+	fs = make([]struct{ start, end int }, 0)
 	ref := a.seqs[0]
 	fs = make([]struct{ start, end int }, a.NbSequences())
 	for s := 1; s < a.NbSequences(); s++ {
@@ -707,9 +707,8 @@ func (a *align) Frameshifts() (fs []struct{ start, end int }) {
 		fs[s].end = 0
 		seq := a.seqs[s]
 		phase := 0 // in frame
-		start := 0 // Start of de phasing
-		end := 0   // end de phasing
-
+		start := 0 // Start of dephasing
+		pos := 0
 		for i := 0; i < a.Length(); i++ {
 			// Insertion in seq
 			if ref.sequence[i] == '-' {
@@ -722,20 +721,19 @@ func (a *align) Frameshifts() (fs []struct{ start, end int }) {
 				if phase < 0 {
 					phase = 2
 				}
+			} else {
+				pos++
 			}
 
 			// If we go back in the good phase (or we are at the end of the sequence:
 			// we add a frameshift if it is longer than the previous one
-			if (phase == 0 || i == a.Length()-1) && i-start > 1 && i-start > fs[s].end-fs[s].start {
+			if (phase == 0 || i == a.Length()-1) && pos-start > 1 && pos-start > fs[s].end-fs[s].start {
 				fs[s].start = start
-				fs[s].end = i
+				fs[s].end = pos
 			}
 
 			if phase == 0 {
-				start = i
-				end = i
-			} else {
-				end = i
+				start = pos
 			}
 		}
 	}

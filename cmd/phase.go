@@ -48,12 +48,10 @@ Phase command will:
 `,
 	RunE: func(cmd *cobra.Command, args []string) (err error) {
 		var f, aaf, logf *os.File
-		var pos []int
-		var phased, aaphased align.SeqBag
+		var phased chan align.PhasedSequence
 		var inseqs align.SeqBag
 		var reforf align.SeqBag
 		var orf align.Sequence
-		var removed []string
 
 		if f, err = openWriteFile(phaseOutput); err != nil {
 			io.LogError(err)
@@ -61,13 +59,11 @@ Phase command will:
 		}
 		defer closeWriteFile(f, phaseOutput)
 
-		if phaseAAOutput != "none" {
-			if aaf, err = openWriteFile(phaseAAOutput); err != nil {
-				io.LogError(err)
-				return
-			}
-			defer closeWriteFile(aaf, phaseAAOutput)
+		if aaf, err = openWriteFile(phaseAAOutput); err != nil {
+			io.LogError(err)
+			return
 		}
+		defer closeWriteFile(aaf, phaseAAOutput)
 
 		if unaligned {
 			if inseqs, err = readsequences(infile); err != nil {
@@ -106,33 +102,46 @@ Phase command will:
 			reforf.AutoAlphabet()
 		}
 
-		if phased, aaphased, pos, removed, err = inseqs.Phase(reforf, lencutoff, matchcutoff, phasereverse, phasecutend, rootcpus); err != nil {
+		phaser := align.NewPhaser()
+		phaser.SetLenCutoff(lencutoff)
+		phaser.SetMatchCutoff(matchcutoff)
+		phaser.SetReverse(phasereverse)
+		phaser.SetCutEnd(phasecutend)
+		phaser.SetCpus(rootcpus)
+		phaser.SetTranslate(true)
+
+		if phased, err = phaser.Phase(reforf, inseqs); err != nil {
 			io.LogError(err)
 			return
 		}
 
-		if phaseLogOutput != "none" {
-			if logf, err = openWriteFile(phaseLogOutput); err != nil {
-				io.LogError(err)
+		if logf, err = openWriteFile(phaseLogOutput); err != nil {
+			io.LogError(err)
+			return
+		}
+		defer closeWriteFile(logf, phaseLogOutput)
+
+		fmt.Fprintf(logf, "Detected/Given ORF: %s\n", reforf.String())
+		phasedseqs := align.NewSeqBag(align.UNKNOWN)
+		phasedseqsaa := align.NewSeqBag(align.UNKNOWN)
+		for p := range phased {
+			if p.Err != nil {
+				err = p.Err
+				io.LogError(p.Err)
 				return
 			}
-			defer closeWriteFile(logf, phaseLogOutput)
+			phasedseqs.AddSequence(p.NtSeq.Name(), p.NtSeq.Sequence(), p.NtSeq.Comment())
+			phasedseqsaa.AddSequence(p.AaSeq.Name(), p.AaSeq.Sequence(), p.AaSeq.Comment())
 
-			fmt.Fprintf(logf, "Detected/Given ORF: %s\n", reforf.String())
-			for i, v := range pos {
-				n, _ := phased.GetSequenceNameById(i)
-				fmt.Fprintf(logf, "%s\t%d\n", n, v)
+			if p.Removed {
+				fmt.Fprintf(logf, "%s\tRemoved\n", p.NtSeq.Name())
+			} else {
+				fmt.Fprintf(logf, "%s\t%d\n", p.NtSeq.Name(), p.Position)
 			}
-			for _, v := range removed {
-				fmt.Fprintf(logf, "Removed: %s\n", v)
-			}
-
 		}
 
-		writeSequences(phased, f)
-		if phaseAAOutput != "none" {
-			writeSequences(aaphased, aaf)
-		}
+		writeSequences(phasedseqs, f)
+		writeSequences(phasedseqsaa, aaf)
 
 		return
 	},

@@ -10,7 +10,6 @@ import (
 	"regexp"
 	"sort"
 	"strings"
-	"sync"
 	"unicode"
 
 	"github.com/fredericlemoine/goalign/io"
@@ -42,11 +41,10 @@ type SeqBag interface {
 	IterateChar(it func(name string, sequence []rune))
 	IterateAll(it func(name string, sequence []rune, comment string))
 	Sequences() []Sequence
+	SequencesChan() chan Sequence
 	LongestORF(reverse bool) (orf Sequence, err error)
 	MaxNameLength() int // maximum sequence name length
 	NbSequences() int
-	Phase(orfs SeqBag, lencutoff, matchcutoff float64, reverse bool, cutend bool, cpus int) (seqs SeqBag, aaseqs SeqBag, positions []int, removed []string, err error)
-	PhaseNt(orf Sequence, lencutoff, matchcutoff float64, reverse bool, cutend bool, cpus int) (seqs SeqBag, positions []int, removed []string, err error)
 	Rename(namemap map[string]string)
 	RenameRegexp(regex, replace string, namemap map[string]string) error
 	ShuffleSequences()               // Shuffle sequence order
@@ -329,6 +327,17 @@ func (sb *seqbag) Sequences() (seqs []Sequence) {
 	return seqs
 }
 
+func (sb *seqbag) SequencesChan() (seqs chan Sequence) {
+	seqs = make(chan Sequence, 50)
+	go func() {
+		for _, s := range sb.seqs {
+			seqs <- s
+		}
+		close(seqs)
+	}()
+	return
+}
+
 /* It appends the given sequence to the sequence having given name */
 func (sb *seqbag) appendToSequence(name string, sequence []rune) error {
 	seq, ok := sb.seqmap[name]
@@ -595,167 +604,6 @@ func (sb *seqbag) MaxNameLength() (max int) {
 			max = len(s.Name())
 		}
 	}
-	return
-}
-
-// align all sequences to the given ORF and trims sequences to the start
-// position
-// If orf is nil, searches for the longest ORF (in 3 or 6 phases depending on reverse arg) in all sequences
-//
-// To do so, Phase() will:
-//
-// 1. Translate the given ORF in aminoacids;
-// 2. For each sequence of the dataset: translate it in the 3 phases (forward) if reverse is false or 6
-//    phases (forward and reverse) if reverse is true, align it with the translated orf, and take the phase
-//    giving the best alignment; If no phase gives a good alignment (>lencutoff * orf length, >matchcutoff
-//    matches over the align length and starting at first position of the ORF), then the sequence is discarded;
-// 3. For each sequence, take the Start corresponding to the Start of the ORF, and remove
-//    nucleotides before;
-// 4. Return the trimmed nucleotidic sequences (phased), the corresponding amino-acid sequences (phasedaa)
-//    the positions of starts in the nucleotidic sequences, and the removed sequence names.
-//
-// If cutend is true, then also remove the end of sequences that do not align with orf
-//
-// It does not modify the input object
-func (sb *seqbag) Phase(orfs SeqBag, lencutoff, matchcutoff float64, reverse, cutend bool, cpus int) (phased SeqBag, phasedaa SeqBag, positions []int, removed []string, err error) {
-
-	return
-}
-
-// align all sequences to the given ORF and trims sequences to the start
-// position, it does not take into account protein information
-//
-// If orf is nil, searches for the longest ORF (in forward only or both strands depending on reverse arg) in all sequences
-//
-// To do so:
-//
-// 1. If alignment is bad (>lencutoff * orf length, >matchcutoff matches over the align length and starting at first position of the ORF), then the sequence is discarded;
-// 3. For each sequence, take the Start corresponding to the Start of the ORF, and remove nucleotides before;
-// 4. Return the trimmed nucleotidic sequences (phased), the positions of starts in the nucleotidic sequences, and the removed sequence names.
-// If cutend is true, then also remove the end of sequences that do not align with orf
-// It does not modify the input object
-func (sb *seqbag) PhaseNt(orf Sequence, lencutoff, matchcutoff float64, reverse, cutend bool, cpus int) (phased SeqBag, positions []int, removed []string, err error) {
-	var alphabet int
-	var lock, lock2 sync.Mutex
-
-	// Channels for concurrency
-	seqchan := make(chan *seq)
-
-	if sb.Alphabet() != NUCLEOTIDS {
-		err = fmt.Errorf("Wrong alphabet for phase : %s", sb.AlphabetStr())
-		return
-	}
-	positions = make([]int, 0, sb.NbSequences())
-	phased = NewSeqBag(sb.Alphabet())
-	removed = make([]string, 0)
-
-	if orf == nil {
-		if orf, err = sb.LongestORF(reverse); err != nil {
-			return
-		}
-	}
-
-	// We translate the longest ORF in AA if it is nucleotides
-	alphabet = orf.DetectAlphabet()
-	if alphabet != NUCLEOTIDS && alphabet != BOTH {
-		err = fmt.Errorf("Wrong orf alphabet")
-		return
-	}
-
-	// Now we align all sequences against this longest orf aa sequence with Modified Smith/Waterman
-	// We use n threads
-	// Fill the sequence channel
-	go func() {
-		for _, seq := range sb.seqs {
-			seqchan <- seq
-		}
-		close(seqchan)
-	}()
-
-	// All threads consuming sequences
-	var wg sync.WaitGroup
-	for cpu := 0; cpu < cpus; cpu++ {
-		wg.Add(1)
-		go func(cpu int) {
-			var bestscore float64
-			var bestratematches, bestlen float64
-			var beststart, bestend int
-			var bestseq Sequence
-			var phase int
-			var phases int // Number of phases 3 or 6
-			var tmpseq, revcomp Sequence
-			var aligner PairwiseAligner
-
-			for seq := range seqchan {
-				bestscore = .0
-				beststart = 0
-				bestend = 0
-				bestseq = nil
-				bestratematches = .0
-				bestlen = .0
-
-				//fmt.Println(seq.Name())
-				// We translate the sequence in the 3 phases to search for the best
-				// alignment
-				phases = 1
-				tmpseq = seq
-				revcomp = seq
-				if reverse {
-					phases = 2
-					revcomp = seq.Clone()
-					revcomp.Reverse()
-					revcomp.Complement()
-				}
-				for phase = 0; phase < phases; phase++ {
-					if phase < 1 {
-						tmpseq = seq
-					} else {
-						tmpseq = revcomp
-					}
-					aligner = NewPwAligner(orf, tmpseq, ALIGN_ALGO_ATG)
-					aligner.SetGapOpenScore(-10.0)
-					aligner.SetGapExtendScore(-.5)
-
-					if _, err = aligner.Alignment(); err != nil {
-						wg.Done()
-						return
-					}
-					_, seqstart := aligner.AlignStarts()
-					_, seqend := aligner.AlignEnds()
-
-					if aligner.MaxScore() > bestscore {
-						bestscore = aligner.MaxScore()
-						// Alignment start in nucleotidic sequence
-						beststart = seqstart
-						bestseq = tmpseq
-						bestratematches = float64(aligner.NbMatches()) / float64(aligner.Length())
-						bestlen = float64(aligner.Length()) / float64(orf.Length())
-						bestend = bestseq.Length()
-						if cutend {
-							bestend = (seqend + 1)
-						}
-					}
-				}
-
-				// We set a threshold at 50% of matches over the alignment length...
-				// may be given as parameter...
-				if (matchcutoff < .0 || bestratematches > matchcutoff) && (lencutoff < .0 || bestlen > lencutoff) {
-					lock.Lock()
-					positions = append(positions, beststart)
-					phased.AddSequence(bestseq.Name(), string(bestseq.SequenceChar()[beststart:bestend]), bestseq.Comment())
-					lock.Unlock()
-				} else {
-					lock2.Lock()
-					removed = append(removed, seq.Name())
-					lock2.Unlock()
-					//log.Print(seq.name, ": Cannot find a good ORF alignment for sequence", bestratematches, matchcutoff, bestlen, lencutoff, "\n")
-				}
-			}
-			wg.Done()
-		}(cpu)
-	}
-	wg.Wait()
-
 	return
 }
 

@@ -264,11 +264,12 @@ func writeAlignPaml(al align.Alignment, f *os.File) {
 func openWriteFile(file string) (f *os.File, err error) {
 	if file == "stdout" || file == "-" {
 		f = os.Stdout
-		return
+	} else if file == "none" {
+		f, err = os.OpenFile(os.DevNull, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0666)
 	} else {
 		f, err = os.Create(file)
-		return
 	}
+	return
 }
 
 // Readln returns a single line (without the ending \n)

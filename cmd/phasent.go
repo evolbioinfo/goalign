@@ -38,20 +38,23 @@ Output files:
  It does not modify the input object
 `,
 	RunE: func(cmd *cobra.Command, args []string) (err error) {
-		var f, logf *os.File
-		var pos []int
-		var phased align.SeqBag
+		var f, aaf, logf *os.File
+		var phased chan align.PhasedSequence
 		var inseqs align.SeqBag
 		var reforf align.SeqBag
 		var orf align.Sequence
-		var ok bool
-		var removed []string
 
 		if f, err = openWriteFile(phaseOutput); err != nil {
 			io.LogError(err)
 			return
 		}
 		defer closeWriteFile(f, phaseOutput)
+
+		if aaf, err = openWriteFile(phaseAAOutput); err != nil {
+			io.LogError(err)
+			return
+		}
+		defer closeWriteFile(aaf, phaseAAOutput)
 
 		if logf, err = openWriteFile(phaseLogOutput); err != nil {
 			io.LogError(err)
@@ -79,13 +82,9 @@ Output files:
 				io.LogError(err)
 				return
 			}
-			if reforf.NbSequences() != 1 {
-				err = fmt.Errorf("Reference ORF file should contain only one sequence")
+			if reforf.NbSequences() < 1 {
+				err = fmt.Errorf("Reference ORF file should contain at least one sequence")
 				io.LogError(err)
-				return
-			}
-			if orf, ok = reforf.Sequence(0); !ok {
-				io.LogError(fmt.Errorf("Sequence 0 is not present in the orf file"))
 				return
 			}
 		} else {
@@ -95,26 +94,45 @@ Output files:
 				return
 			}
 			orf.SetName(orf.Name() + "_LongestORF")
+			reforf = align.NewSeqBag(align.UNKNOWN)
+			reforf.AddSequenceChar(orf.Name(), orf.SequenceChar(), orf.Comment())
+			reforf.AutoAlphabet()
 		}
 
-		if phased, pos, removed, err = inseqs.PhaseNt(orf, lencutoff, matchcutoff, phasereverse, phasecutend, rootcpus); err != nil {
+		phaser := align.NewPhaser()
+		phaser.SetLenCutoff(lencutoff)
+		phaser.SetMatchCutoff(matchcutoff)
+		phaser.SetReverse(phasereverse)
+		phaser.SetCutEnd(phasecutend)
+		phaser.SetCpus(rootcpus)
+		phaser.SetTranslate(false)
+
+		if phased, err = phaser.Phase(reforf, inseqs); err != nil {
 			io.LogError(err)
 			return
 		}
 
-		if phaseLogOutput != "none" {
-			fmt.Fprintf(logf, "Detected/Given ORF in %s: %s\n", orf.Name(), orf.Sequence())
-			for i, v := range pos {
-				n, _ := phased.GetSequenceNameById(i)
-				fmt.Fprintf(logf, "%s\t%d\n", n, v)
-			}
-			for _, v := range removed {
-				fmt.Fprintf(logf, "Removed: %s\n", v)
-			}
+		fmt.Fprintf(logf, "Detected/Given ORF in %s: %s\n", orf.Name(), orf.Sequence())
 
+		phasedseqs := align.NewSeqBag(align.UNKNOWN)
+		phasedseqsaa := align.NewSeqBag(align.UNKNOWN)
+		for p := range phased {
+			if p.Err != nil {
+				err = p.Err
+				io.LogError(p.Err)
+				return
+			}
+			phasedseqs.AddSequence(p.NtSeq.Name(), p.NtSeq.Sequence(), p.NtSeq.Comment())
+
+			if p.Removed {
+				fmt.Fprintf(logf, "%s\tRemoved\n", p.NtSeq.Name())
+			} else {
+				fmt.Fprintf(logf, "%s\t%d\n", p.NtSeq.Name(), p.Position)
+			}
 		}
 
-		writeSequences(phased, f)
+		writeSequences(phasedseqs, f)
+		writeSequences(phasedseqsaa, aaf)
 
 		return
 	},
@@ -123,6 +141,7 @@ Output files:
 func init() {
 	RootCmd.AddCommand(phasentCmd)
 	phasentCmd.PersistentFlags().StringVarP(&phaseOutput, "output", "o", "stdout", "Output ATG \"phased\" FASTA file")
+	phasentCmd.PersistentFlags().StringVar(&phaseAAOutput, "aa-output", "none", "Output translated sequences FASTA file")
 	phasentCmd.PersistentFlags().StringVarP(&phaseLogOutput, "log", "l", "none", "Output log: positions of the considered ATG for each sequence")
 	phasentCmd.PersistentFlags().Float64Var(&lencutoff, "len-cutoff", -1.0, "Length cutoff, over orf length, to consider sequence hits (-1==No cutoff)")
 	phasentCmd.PersistentFlags().Float64Var(&matchcutoff, "match-cutoff", .5, "Nb Matches cutoff, over alignment length, to consider sequence hits (-1==No cutoff)")
