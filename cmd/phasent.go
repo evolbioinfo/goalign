@@ -124,7 +124,7 @@ Output files:
 				return
 			}
 			if p.Removed {
-				fmt.Fprintf(logf, "%s\tRemoved\tN/A\tN/A\n", p.NtSeq.Name())
+				fmt.Fprintf(logf, "%s\tRemoved\tN/A\tN/A\tN/A\n", p.NtSeq.Name())
 			} else {
 				phasedseqs.AddSequence(p.NtSeq.Name(), p.NtSeq.Sequence(), p.NtSeq.Comment())
 				frameshifts := p.Ali.Frameshifts()
