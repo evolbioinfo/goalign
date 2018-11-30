@@ -313,7 +313,7 @@ func (p *phaser) alignAgainstRefsNT(seq Sequence, orfs []Sequence) (ph PhasedSeq
 	// and all phases
 	for _, orf := range orfs {
 		for phase = 0; phase < phases; phase++ {
-			if phase < 2 {
+			if phase < 1 {
 				tmpseq = seq
 			} else {
 				tmpseq = revcomp

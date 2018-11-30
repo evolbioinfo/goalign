@@ -112,7 +112,8 @@ Output files:
 			return
 		}
 
-		fmt.Fprintf(logf, "Detected/Given ORF in %s: %s\n", orf.Name(), orf.Sequence())
+		fmt.Fprintf(logf, "Detected/Given ORF :%s\n", reforf.String())
+		fmt.Fprintf(logf, "SeqName\tStartPosition\tExtractedSequenceLength\tLongestOutFrame\tFirstStopCodon\n")
 
 		phasedseqs := align.NewSeqBag(align.UNKNOWN)
 		phasedseqsaa := align.NewSeqBag(align.UNKNOWN)
@@ -122,12 +123,26 @@ Output files:
 				io.LogError(p.Err)
 				return
 			}
-			phasedseqs.AddSequence(p.NtSeq.Name(), p.NtSeq.Sequence(), p.NtSeq.Comment())
-
 			if p.Removed {
-				fmt.Fprintf(logf, "%s\tRemoved\n", p.NtSeq.Name())
+				fmt.Fprintf(logf, "%s\tRemoved\tN/A\tN/A\n", p.NtSeq.Name())
 			} else {
-				fmt.Fprintf(logf, "%s\t%d\n", p.NtSeq.Name(), p.Position)
+				phasedseqs.AddSequence(p.NtSeq.Name(), p.NtSeq.Sequence(), p.NtSeq.Comment())
+				frameshifts := p.Ali.Frameshifts()
+				fs := ""
+				for i, f := range frameshifts {
+					if i > 0 {
+						fs += fmt.Sprintf("%d-%d=%d", f.Start, f.End, f.End-f.Start)
+					}
+				}
+				stops := p.Ali.Stops()
+				s := ""
+				for i, f := range stops {
+					if i > 0 {
+						s += fmt.Sprintf("%d", f)
+					}
+				}
+
+				fmt.Fprintf(logf, "%s\t%d\t%d\t%s\t%s\n", p.NtSeq.Name(), p.Position, p.NtSeq.Length(), fs, s)
 			}
 		}
 
