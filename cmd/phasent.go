@@ -127,6 +127,7 @@ Output files:
 				fmt.Fprintf(logf, "%s\tRemoved\tN/A\tN/A\tN/A\n", p.NtSeq.Name())
 			} else {
 				phasedseqs.AddSequence(p.NtSeq.Name(), p.NtSeq.Sequence(), p.NtSeq.Comment())
+				phasedseqsaa.AddSequence(p.AaSeq.Name(), p.AaSeq.Sequence(), p.AaSeq.Comment())
 				frameshifts := p.Ali.Frameshifts()
 				fs := ""
 				for i, f := range frameshifts {
