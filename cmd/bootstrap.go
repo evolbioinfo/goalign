@@ -43,8 +43,9 @@ The input may be a Phylip or Fasta file.
 - If the input file is in fasta format (no -p option), then output bootstrap
   files will be in fasta format as well.
 
-- It is possible to give a initial seed (-s). In this case several runs of 
-  the tool will give the exact same results. 
+- It is possible to give a initial seed (--seed). In this case several runs of 
+  the tool will give the exact same results (if run on 1 thread, an thus 
+  computations are done on a single thread in this case).
 
 Example of usage:
 
@@ -92,7 +93,11 @@ goalign build seqboot -i align.phylip -p -n 500 -o boot_
 		}()
 
 		var wg sync.WaitGroup // For waiting end of step computation
-		for i := 0; i < rootcpus; i++ {
+		// Seed is set => 1 thread
+		if cmd.Flags().Changed("seed") {
+			cpus = 1
+		}
+		for i := 0; i < cpus; i++ {
 			wg.Add(1)
 			go func() {
 				var bootstring string
