@@ -533,18 +533,18 @@ func (a *align) BuildBootstrap() Alignment {
 	n := a.Length()
 	boot := NewAlign(a.alphabet)
 	indices := make([]int, n)
-	var buf bytes.Buffer
+	var buf []rune
 
 	for i := 0; i < n; i++ {
 		indices[i] = rand.Intn(n)
 	}
 
 	for _, seq := range a.seqs {
-		buf.Reset()
-		for _, indice := range indices {
-			buf.WriteRune(seq.sequence[indice])
+		buf = make([]rune, n)
+		for i, indice := range indices {
+			buf[i] = seq.sequence[indice]
 		}
-		boot.AddSequenceChar(seq.name, bytes.Runes(buf.Bytes()), seq.Comment())
+		boot.AddSequenceChar(seq.name, buf, seq.Comment())
 	}
 	return boot
 }
