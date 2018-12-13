@@ -114,6 +114,11 @@ func (a *align) AddSequenceChar(name string, sequence []rune, comment string) er
 	return nil
 }
 
+func (a *align) Clear() {
+	a.seqbag.Clear()
+	a.length = -1
+}
+
 func (a *align) Length() int {
 	return a.length
 }
@@ -275,6 +280,18 @@ func (a *align) Swap(rate float64) {
 			pos++
 		}
 	}
+}
+
+// Translates the alignment, and update the length of
+// the alignment
+func (a *align) Translate(phase int) (err error) {
+	err = a.seqbag.Translate(phase)
+	if len(a.seqs) > 0 {
+		a.length = len(a.seqs[0].sequence)
+	} else {
+		a.length = -1
+	}
+	return
 }
 
 // Recombines a rate of the sequences to another sequences
