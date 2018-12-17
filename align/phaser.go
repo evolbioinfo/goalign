@@ -75,6 +75,10 @@ type PhasedSequence struct {
 	Position int
 	// phased nt sequence
 	NtSeq Sequence
+	// phased nt sequence
+	// with first nt corresponding
+	// first position of aa codon
+	CodonSeq Sequence
 	// phased aa sequence
 	AaSeq Sequence
 	// Aligned sequences
@@ -271,6 +275,9 @@ func (p *phaser) alignAgainstRefsAA(seq Sequence, orfsaa []Sequence) (ph PhasedS
 		NtSeq: NewSequence(bestseq.Name(),
 			bestseq.SequenceChar()[beststart:bestend],
 			bestseq.Comment()),
+		CodonSeq: NewSequence(bestseq.Name(),
+			bestseq.SequenceChar()[beststart:bestend],
+			bestseq.Comment()),
 		AaSeq: NewSequence(bestseqaa.Name(),
 			bestseqaa.SequenceChar()[beststartaa:bestendaa],
 			bestseqaa.Comment()),
@@ -319,7 +326,7 @@ func (p *phaser) alignAgainstRefsNT(seq Sequence, orfs []Sequence) (ph PhasedSeq
 				tmpseq = revcomp
 			}
 			aligner = NewPwAligner(orf, tmpseq, ALIGN_ALGO_ATG)
-			aligner.SetGapOpenScore(-10.0)
+			aligner.SetGapOpenScore(-12.0)
 			aligner.SetGapExtendScore(-.5)
 
 			if al, err = aligner.Alignment(); err != nil {
@@ -351,6 +358,7 @@ func (p *phaser) alignAgainstRefsNT(seq Sequence, orfs []Sequence) (ph PhasedSeq
 		}
 	}
 
+	phase = (3 - nbgapstart%3) % 3
 	ph = PhasedSequence{
 		Err:      nil,
 		Removed:  false,
@@ -358,8 +366,11 @@ func (p *phaser) alignAgainstRefsNT(seq Sequence, orfs []Sequence) (ph PhasedSeq
 		NtSeq: NewSequence(bestseq.Name(),
 			bestseq.SequenceChar()[beststart:bestend],
 			bestseq.Comment()),
+		CodonSeq: NewSequence(bestseq.Name(),
+			bestseq.SequenceChar()[beststart+phase:bestend],
+			bestseq.Comment()),
 		AaSeq: NewSequence(bestseq.Name(),
-			bestseq.SequenceChar()[beststart:bestend],
+			bestseq.SequenceChar()[beststart+phase:bestend],
 			bestseq.Comment()),
 		Ali: bestali,
 	}
@@ -370,7 +381,7 @@ func (p *phaser) alignAgainstRefsNT(seq Sequence, orfs []Sequence) (ph PhasedSeq
 	// -NN NNN NNN => phase 2
 	// --N NNN NNN => phase 1
 	// --- NNN NNN => phase 0
-	ph.AaSeq, err = ph.AaSeq.Translate((3 - nbgapstart%3) % 3)
+	ph.AaSeq, err = ph.AaSeq.Translate(phase)
 
 	// We set a threshold for matches over the alignment length...
 	if (p.matchcutoff > .0 && bestratematches <= p.matchcutoff) ||

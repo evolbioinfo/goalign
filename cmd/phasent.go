@@ -9,6 +9,8 @@ import (
 	"github.com/spf13/cobra"
 )
 
+var phaseCodonOutput string
+
 // translateCmd represents the addid command
 var phasentCmd = &cobra.Command{
 	Use:   "phasent",
@@ -38,7 +40,7 @@ Output files:
  It does not modify the input object
 `,
 	RunE: func(cmd *cobra.Command, args []string) (err error) {
-		var f, aaf, logf *os.File
+		var f, aaf, codonf, logf *os.File
 		var phased chan align.PhasedSequence
 		var inseqs align.SeqBag
 		var reforf align.SeqBag
@@ -49,6 +51,12 @@ Output files:
 			return
 		}
 		defer closeWriteFile(f, phaseOutput)
+
+		if codonf, err = openWriteFile(phaseCodonOutput); err != nil {
+			io.LogError(err)
+			return
+		}
+		defer closeWriteFile(aaf, phaseAAOutput)
 
 		if aaf, err = openWriteFile(phaseAAOutput); err != nil {
 			io.LogError(err)
@@ -116,7 +124,9 @@ Output files:
 		fmt.Fprintf(logf, "SeqName\tBestRef\tStartPosition\tExtractedSequenceLength\tLongestOutFrame\tFirstStopCodon\n")
 
 		phasedseqs := align.NewSeqBag(align.UNKNOWN)
+		phasedcodonseqs := align.NewSeqBag(align.UNKNOWN)
 		phasedseqsaa := align.NewSeqBag(align.UNKNOWN)
+
 		for p := range phased {
 			if p.Err != nil {
 				err = p.Err
@@ -128,6 +138,8 @@ Output files:
 			} else {
 				phasedseqs.AddSequence(p.NtSeq.Name(), p.NtSeq.Sequence(), p.NtSeq.Comment())
 				phasedseqsaa.AddSequence(p.AaSeq.Name(), p.AaSeq.Sequence(), p.AaSeq.Comment())
+				phasedcodonseqs.AddSequence(p.CodonSeq.Name(), p.CodonSeq.Sequence(), p.CodonSeq.Comment())
+
 				frameshifts := p.Ali.Frameshifts()
 				fs := ""
 				for i, f := range frameshifts {
@@ -149,6 +161,7 @@ Output files:
 
 		writeSequences(phasedseqs, f)
 		writeSequences(phasedseqsaa, aaf)
+		writeSequences(phasedcodonseqs, codonf)
 
 		return
 	},
@@ -157,6 +170,7 @@ Output files:
 func init() {
 	RootCmd.AddCommand(phasentCmd)
 	phasentCmd.PersistentFlags().StringVarP(&phaseOutput, "output", "o", "stdout", "Output ATG \"phased\" FASTA file")
+	phasentCmd.PersistentFlags().StringVar(&phaseCodonOutput, "nt-output", "none", "Output ATG \"phased\" FASTA file + first nts not in ref phase removed (nt corresponding to aa-output sequence)")
 	phasentCmd.PersistentFlags().StringVar(&phaseAAOutput, "aa-output", "none", "Output translated sequences FASTA file")
 	phasentCmd.PersistentFlags().StringVarP(&phaseLogOutput, "log", "l", "none", "Output log: positions of the considered ATG for each sequence")
 	phasentCmd.PersistentFlags().Float64Var(&lencutoff, "len-cutoff", -1.0, "Length cutoff, over orf length, to consider sequence hits (-1==No cutoff)")
