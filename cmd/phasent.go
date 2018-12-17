@@ -113,7 +113,7 @@ Output files:
 		}
 
 		fmt.Fprintf(logf, "Detected/Given ORF :%s\n", reforf.String())
-		fmt.Fprintf(logf, "SeqName\tStartPosition\tExtractedSequenceLength\tLongestOutFrame\tFirstStopCodon\n")
+		fmt.Fprintf(logf, "SeqName\tBestRef\tStartPosition\tExtractedSequenceLength\tLongestOutFrame\tFirstStopCodon\n")
 
 		phasedseqs := align.NewSeqBag(align.UNKNOWN)
 		phasedseqsaa := align.NewSeqBag(align.UNKNOWN)
@@ -124,7 +124,7 @@ Output files:
 				return
 			}
 			if p.Removed {
-				fmt.Fprintf(logf, "%s\tRemoved\tN/A\tN/A\tN/A\n", p.NtSeq.Name())
+				fmt.Fprintf(logf, "%s\tN/A\tRemoved\tN/A\tN/A\tN/A\n", p.NtSeq.Name())
 			} else {
 				phasedseqs.AddSequence(p.NtSeq.Name(), p.NtSeq.Sequence(), p.NtSeq.Comment())
 				phasedseqsaa.AddSequence(p.AaSeq.Name(), p.AaSeq.Sequence(), p.AaSeq.Comment())
@@ -143,7 +143,7 @@ Output files:
 					}
 				}
 
-				fmt.Fprintf(logf, "%s\t%d\t%d\t%s\t%s\n", p.NtSeq.Name(), p.Position, p.NtSeq.Length(), fs, s)
+				fmt.Fprintf(logf, "%s\t%s\t%d\t%d\t%s\t%s\n", p.NtSeq.Name(), p.Ali.Sequences()[0].Name(), p.Position, p.NtSeq.Length(), fs, s)
 			}
 		}
 
