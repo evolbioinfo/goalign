@@ -290,8 +290,8 @@ func (p *phaser) alignAgainstRefsNT(seq Sequence, orfs []Sequence) (ph PhasedSeq
 	var bestratematches, bestlen float64 = .0, .0
 	var beststart, bestend int = 0, 0
 	var bestseq Sequence = nil
-	var phases int = 1 // Number of phases 1 or 2 (+/+-)
-
+	var phases int = 1     // Number of phases 1 or 2 (+/+-)
+	var nbgapstart int = 0 // Number of gaps at the start of compared seq
 	var phase int
 	var tmpseq, revcomp Sequence
 	var aligner PairwiseAligner
@@ -335,6 +335,12 @@ func (p *phaser) alignAgainstRefsNT(seq Sequence, orfs []Sequence) (ph PhasedSeq
 				beststart = seqstart
 				bestseq = tmpseq
 				bestali = al
+				// Number of gaps at the start of sequence
+				// Allows to translate in the right phase
+				nbgapstart = 0
+				for i := 0; aligner.Seq2Ali()[i] == '-'; i++ {
+					nbgapstart++
+				}
 				bestratematches = float64(aligner.NbMatches()) / float64(aligner.Length())
 				bestlen = float64(aligner.Length()) / float64(orf.Length())
 				bestend = bestseq.Length()
@@ -358,7 +364,13 @@ func (p *phaser) alignAgainstRefsNT(seq Sequence, orfs []Sequence) (ph PhasedSeq
 		Ali: bestali,
 	}
 
-	ph.AaSeq, err = ph.AaSeq.Translate(0)
+	// We translate in the right phase (taking into account initial gaps)
+	// Ex:
+	// NNN NNN NNN => phase 0
+	// -NN NNN NNN => phase 2
+	// --N NNN NNN => phase 1
+	// --- NNN NNN => phase 0
+	ph.AaSeq, err = ph.AaSeq.Translate((3 - nbgapstart%3) % 3)
 
 	// We set a threshold for matches over the alignment length...
 	if (p.matchcutoff > .0 && bestratematches <= p.matchcutoff) ||

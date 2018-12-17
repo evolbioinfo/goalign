@@ -7,6 +7,8 @@ import (
 type PairwiseAligner interface {
 	AlignEnds() (int, int)
 	AlignStarts() (int, int)
+	Seq1Ali() []rune
+	Seq2Ali() []rune
 	SetGapOpenScore(open float64)
 	SetGapExtendScore(extend float64)
 	SetScore(match, mismatch float64)
