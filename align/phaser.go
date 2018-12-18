@@ -127,7 +127,7 @@ func (p *phaser) SetTranslate(translate bool) {
 }
 func (p *phaser) SetAlignScores(match, mismatch float64) {
 	p.matchscore = match
-	p.mismatchscore = match
+	p.mismatchscore = mismatch
 	p.changedscores = true
 }
 
@@ -348,7 +348,6 @@ func (p *phaser) alignAgainstRefsNT(seq Sequence, orfs []Sequence) (ph PhasedSeq
 			if p.changedscores {
 				aligner.SetScore(p.matchscore, p.mismatchscore)
 			}
-
 			if al, err = aligner.Alignment(); err != nil {
 				ph = PhasedSequence{Err: fmt.Errorf("Error while aligning %s with %s : %v", orf.Name(), tmpseq.Name(), err)}
 				return
@@ -386,6 +385,13 @@ func (p *phaser) alignAgainstRefsNT(seq Sequence, orfs []Sequence) (ph PhasedSeq
 		NtSeq: NewSequence(bestseq.Name(),
 			bestseq.SequenceChar()[beststart:bestend],
 			bestseq.Comment()),
+		// For two next sequences we take into account the right phase
+		// (taking into account initial gaps)
+		// Ex:
+		// NNN NNN NNN => phase 0
+		// -NN NNN NNN => phase 2
+		// --N NNN NNN => phase 1
+		// --- NNN NNN => phase 0
 		CodonSeq: NewSequence(bestseq.Name(),
 			bestseq.SequenceChar()[beststart+phase:bestend],
 			bestseq.Comment()),
@@ -395,13 +401,7 @@ func (p *phaser) alignAgainstRefsNT(seq Sequence, orfs []Sequence) (ph PhasedSeq
 		Ali: bestali,
 	}
 
-	// We translate in the right phase (taking into account initial gaps)
-	// Ex:
-	// NNN NNN NNN => phase 0
-	// -NN NNN NNN => phase 2
-	// --N NNN NNN => phase 1
-	// --- NNN NNN => phase 0
-	ph.AaSeq, err = ph.AaSeq.Translate(phase)
+	ph.AaSeq, err = ph.AaSeq.Translate(0)
 
 	// We set a threshold for matches over the alignment length...
 	if (p.matchcutoff > .0 && bestratematches <= p.matchcutoff) ||
