@@ -50,6 +50,7 @@ type Phaser interface {
 	SetCutEnd(cutend bool)
 	SetCpus(cpus int)
 	SetTranslate(translate bool)
+	SetAlignScores(match, mismatch float64)
 }
 
 type phaser struct {
@@ -67,6 +68,11 @@ type phaser struct {
 	// to search for the best phase. If false, just align sequences
 	// as is
 	translate bool
+	//
+	// For Pairwise alignment
+	changedscores bool
+	matchscore    float64
+	mismatchscore float64
 }
 
 type PhasedSequence struct {
@@ -89,12 +95,15 @@ type PhasedSequence struct {
 
 func NewPhaser() Phaser {
 	return &phaser{
-		lencutoff:   .8,
-		matchcutoff: .5,
-		reverse:     false,
-		cutend:      false,
-		cpus:        1,
-		translate:   true,
+		lencutoff:     .8,
+		matchcutoff:   .5,
+		reverse:       false,
+		cutend:        false,
+		cpus:          1,
+		translate:     true,
+		changedscores: false,
+		matchscore:    -1,
+		mismatchscore: -1,
 	}
 }
 
@@ -115,6 +124,11 @@ func (p *phaser) SetCpus(cpus int) {
 }
 func (p *phaser) SetTranslate(translate bool) {
 	p.translate = translate
+}
+func (p *phaser) SetAlignScores(match, mismatch float64) {
+	p.matchscore = match
+	p.mismatchscore = match
+	p.changedscores = true
 }
 
 // orfs: Reference sequences/ORFs to phase sequences with
@@ -239,6 +253,9 @@ func (p *phaser) alignAgainstRefsAA(seq Sequence, orfsaa []Sequence) (ph PhasedS
 			aligner = NewPwAligner(orfaa, seqaa, ALIGN_ALGO_ATG)
 			aligner.SetGapOpenScore(-10.0)
 			aligner.SetGapExtendScore(-.5)
+			if p.changedscores {
+				aligner.SetScore(p.matchscore, p.mismatchscore)
+			}
 
 			if al, err = aligner.Alignment(); err != nil {
 				ph = PhasedSequence{Err: fmt.Errorf("Error while aligning %s with %s : %v", orfaa.Name(), seqaa.Name(), err)}
@@ -328,6 +345,9 @@ func (p *phaser) alignAgainstRefsNT(seq Sequence, orfs []Sequence) (ph PhasedSeq
 			aligner = NewPwAligner(orf, tmpseq, ALIGN_ALGO_ATG)
 			aligner.SetGapOpenScore(-12.0)
 			aligner.SetGapExtendScore(-.5)
+			if p.changedscores {
+				aligner.SetScore(p.matchscore, p.mismatchscore)
+			}
 
 			if al, err = aligner.Alignment(); err != nil {
 				ph = PhasedSequence{Err: fmt.Errorf("Error while aligning %s with %s : %v", orf.Name(), tmpseq.Name(), err)}

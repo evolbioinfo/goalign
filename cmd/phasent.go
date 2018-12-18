@@ -114,6 +114,9 @@ Output files:
 		phaser.SetCutEnd(phasecutend)
 		phaser.SetCpus(rootcpus)
 		phaser.SetTranslate(false)
+		if cmd.Flags().Changed("mismatch") || cmd.Flags().Changed("match") {
+			phaser.SetAlignScores(match, mismatch)
+		}
 
 		if phased, err = phaser.Phase(reforf, inseqs); err != nil {
 			io.LogError(err)
@@ -175,6 +178,8 @@ func init() {
 	phasentCmd.PersistentFlags().StringVarP(&phaseLogOutput, "log", "l", "none", "Output log: positions of the considered ATG for each sequence")
 	phasentCmd.PersistentFlags().Float64Var(&lencutoff, "len-cutoff", -1.0, "Length cutoff, over orf length, to consider sequence hits (-1==No cutoff)")
 	phasentCmd.PersistentFlags().Float64Var(&matchcutoff, "match-cutoff", .5, "Nb Matches cutoff, over alignment length, to consider sequence hits (-1==No cutoff)")
+	phasentCmd.PersistentFlags().Float64Var(&match, "match", 1.0, "Score for a match for pairwise alignment (if omitted, then take substitution matrix)")
+	phasentCmd.PersistentFlags().Float64Var(&mismatch, "mismatch", -1.0, "Score for a mismatch for pairwise alignment (if omitted, then take substitution matrix)")
 	phasentCmd.PersistentFlags().BoolVar(&unaligned, "unaligned", false, "Considers sequences as unaligned and only format fasta is accepted (phylip, nexus,... options are ignored)")
 	phasentCmd.PersistentFlags().BoolVar(&phasereverse, "reverse", false, "Search ALSO in the reverse strand (in addition to the forward strand)")
 	phasentCmd.PersistentFlags().BoolVar(&phasecutend, "cut-end", false, "Iftrue, then also remove the end of sequences that do not align with orf")
