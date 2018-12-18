@@ -52,6 +52,7 @@ given in the comand line.
 		if namefile != "stdin" {
 			if subset, err = parseNameFile(namefile); err != nil {
 				io.LogError(err)
+				return
 			}
 		} else {
 			subset = make(map[string]int)

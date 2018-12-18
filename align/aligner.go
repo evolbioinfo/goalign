@@ -121,7 +121,7 @@ func (a *pwaligner) SetScore(match, mismatch float64) {
 	a.match = match
 	a.mismatch = mismatch
 	a.submatrix = nil
-	a.chartopos = nil
+	//a.chartopos = nil
 }
 
 func (a *pwaligner) MaxScore() float64 {
