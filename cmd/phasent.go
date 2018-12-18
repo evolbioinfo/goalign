@@ -143,14 +143,14 @@ Output files:
 				phasedseqsaa.AddSequence(p.AaSeq.Name(), p.AaSeq.Sequence(), p.AaSeq.Comment())
 				phasedcodonseqs.AddSequence(p.CodonSeq.Name(), p.CodonSeq.Sequence(), p.CodonSeq.Comment())
 
-				frameshifts := p.Ali.Frameshifts()
+				frameshifts := p.Ali.Frameshifts(true)
 				fs := ""
 				for i, f := range frameshifts {
 					if i > 0 {
 						fs += fmt.Sprintf("%d-%d=%d", f.Start, f.End, f.End-f.Start)
 					}
 				}
-				stops := p.Ali.Stops()
+				stops := p.Ali.Stops(true)
 				s := ""
 				for i, f := range stops {
 					if i > 0 {

@@ -24,10 +24,16 @@ type Alignment interface {
 	CodonAlign(ntseqs SeqBag) (codonAl *align, err error)
 	Concat(Alignment) error                             // concatenates the given alignment with this alignment
 	Entropy(site int, removegaps bool) (float64, error) // Entropy of the given site
-	Frameshifts() []struct{ Start, End int }            // Positions of potential framshifts
-	Stops() []int                                       // Positions of potential stop in frame
-	Length() int                                        // Length of the alignment
-	Mask(start, length int) error                       // Masks given positions
+	// Positions of potential frameshifts
+	// if startinggapsasincomplete is true, then considers gaps as the beginning
+	// as incomplete sequence, then take the right phase
+	Frameshifts(startingGapsAsIncomplete bool) []struct{ Start, End int }
+	// Positions of potential stop in frame
+	// if startinggapsasincomplete is true, then considers gaps as the beginning
+	// as incomplete sequence, then take the right phase
+	Stops(startingGapsAsIncomplete bool) []int
+	Length() int                  // Length of the alignment
+	Mask(start, length int) error // Masks given positions
 	MaxCharStats() ([]rune, []int)
 	Mutate(rate float64)                                                                        // Adds uniform substitutions in the alignment (~sequencing errors)
 	NbVariableSites() int                                                                       // Nb of variable sites
@@ -716,7 +722,7 @@ func (a *align) Entropy(site int, removegaps bool) (float64, error) {
 
 // First sequence of the alignment is considered as the reference orf (in phase)
 // It return for each sequence the coordinates of the longest dephased part
-func (a *align) Frameshifts() (fs []struct{ Start, End int }) {
+func (a *align) Frameshifts(startingGapsAsIncomplete bool) (fs []struct{ Start, End int }) {
 	ref := a.seqs[0]
 	fs = make([]struct{ Start, End int }, a.NbSequences())
 	for s := 1; s < a.NbSequences(); s++ {
@@ -726,6 +732,7 @@ func (a *align) Frameshifts() (fs []struct{ Start, End int }) {
 		phase := 0 // in frame
 		start := 0 // Start of dephasing
 		pos := 0
+		started := false
 		for i := 0; i < a.Length(); i++ {
 			// Insertion in seq
 			if ref.sequence[i] == '-' {
@@ -738,7 +745,13 @@ func (a *align) Frameshifts() (fs []struct{ Start, End int }) {
 				if phase < 0 {
 					phase = 2
 				}
+			} else if !started && startingGapsAsIncomplete && phase != 0 {
+				phase--
+				if phase < 0 {
+					phase = 2
+				}
 			} else {
+				started = true
 				pos++
 			}
 
@@ -758,21 +771,44 @@ func (a *align) Frameshifts() (fs []struct{ Start, End int }) {
 }
 
 // Position of the first encountered STOP in frame
-func (a *align) Stops() (stops []int) {
+func (a *align) Stops(startingGapsAsIncomplete bool) (stops []int) {
 	stops = make([]int, a.NbSequences())
 	codon := make([]rune, 3)
+	ref := a.seqs[0]
+	phase := 0
+	started := false
 	for s := 1; s < a.NbSequences(); s++ {
 		seq := a.seqs[s]
 		stops[s] = -1
 		pos := 0      // position on sequence (without -)
 		codonpos := 0 // nb nt in current codon
 		for i := 0; i < a.Length()-2; i++ {
+			if ref.sequence[i] == '-' {
+				phase++
+				phase = (phase % 3)
+			}
 			// Deletion in seq
-			if seq.sequence[i] != '-' {
+			if seq.sequence[i] == '-' {
+				phase--
+				if phase < 0 {
+					phase = 2
+				}
+			} else if !started && startingGapsAsIncomplete && phase != 0 {
+				phase--
+				if phase < 0 {
+					phase = 2
+				}
+			} else {
+				started = true
+			}
+
+			// Deletion in seq
+			if seq.sequence[i] != '-' && (!startingGapsAsIncomplete || started) {
 				codon[codonpos] = seq.sequence[i]
 				codonpos++
 				pos++
 			}
+
 			if codonpos == 3 {
 				codonstr := strings.Replace(strings.ToUpper(string(codon)), "U", "T", -1)
 				aa, found := standardcode[codonstr]
