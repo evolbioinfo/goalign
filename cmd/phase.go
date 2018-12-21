@@ -22,30 +22,36 @@ var phasecutend bool
 // translateCmd represents the addid command
 var phaseCmd = &cobra.Command{
 	Use:   "phase",
-	Short: "Find best ATGs and set them as new start positions",
-	Long: `Find best ATGs and set them as new start positions.
+	Short: "Find best Starts and set them as new start positions",
+	Long: `Find best Starts and set them as new start positions.
+
+This command "phases" input sequences on the basis on either a set of input sequences, or the longest detected orf.
+To do so, it will:
+
+1. Search for the longest ORF in the dataset if no reference orf(s) is(are) given;
+2. Translate the given ORF(s) in aminoacids;
+3. For each sequence of the dataset: translate it in the 3 phases (or 6 if --reverse is given),
+   align it with all the translated orfs, and take the phase and the reference orf giving the best alignment;
+   If no phase gives a good alignment in any reference orf (cutoffs given by --len-cutoff and --match-cutoff),
+   then the sequence flagged as removed;
+4. For each sequence, take the Start corresponding to the Start of the ORF, and remove
+   nucleotides before (and nucleotides after if --cut-end is given);
+5. Return the trimmed nucleotidic sequences (phased), the corresponding amino-acid sequences (phasedaa)
+   and the start position on the original nt sequence;
+6. The log file contains information on:
+    1. Sequence name
+    2. Its best matching reference orf
+    3. Start position on original nt sequence
+    4. Extracted sequence length
+    5. Position of the first stop in phase
+
 
 if --unaligned is set, format options are ignored (phylip, nexus, etc.), and
-only Fasta is accepted.
+only Fasta is accepted. Otherwise, alignment is first "unaligned".
 
 If input sequences are not nucleotidic, then returns an error.
 
-Output files:
-
-1) --output : unaligned set of phased sequences in fasta
-2) --aa-output: unaligned set of phased aa sequencs in fasta
-
-Phase command will:
-1. Search for the longest ORF in the dataset if no reference orf is given;
-1. Translate the given ORF in aminoacids;
-2. For each sequence of the dataset: translate it in the 3 phases (forward strand only),
-   align it with the translated orf, and take the phase giving the best alignment; If no phase
-   gives a good alignment (>80% orf length, and starting at first position of the ORF), then
-   the sequence is discarded;
-3. For each sequence, take the Start corresponding to the Start of the ORF, and remove
-   nucleotides before;
-4. Return the trimmed nucleotidic sequences (phased), the corresponding amino-acid sequences (phasedaa)
-   and the positions of starts in the nucleotidic sequences.
+Output file is an unaligned set of sequences in fasta.
 `,
 	RunE: func(cmd *cobra.Command, args []string) (err error) {
 		var f, aaf, logf *os.File
@@ -153,9 +159,9 @@ Phase command will:
 
 func init() {
 	RootCmd.AddCommand(phaseCmd)
-	phaseCmd.PersistentFlags().StringVarP(&phaseOutput, "output", "o", "stdout", "Output ATG \"phased\" FASTA file")
+	phaseCmd.PersistentFlags().StringVarP(&phaseOutput, "output", "o", "stdout", "Output \"phased\" FASTA file")
 	phaseCmd.PersistentFlags().StringVar(&phaseAAOutput, "aa-output", "none", "Output Met \"phased\" aa FASTA file")
-	phaseCmd.PersistentFlags().StringVarP(&phaseLogOutput, "log", "l", "none", "Output log: positions of the considered ATG for each sequence")
+	phaseCmd.PersistentFlags().StringVarP(&phaseLogOutput, "log", "l", "none", "Output log: positions of the considered Start for each sequence")
 	phaseCmd.PersistentFlags().Float64Var(&lencutoff, "len-cutoff", -1.0, "Length cutoff, over orf length, to consider sequence hits (-1==No cutoff)")
 	phaseCmd.PersistentFlags().Float64Var(&matchcutoff, "match-cutoff", .5, "Nb Matches cutoff, over alignment length, to consider sequence hits (-1==No cutoff)")
 	phaseCmd.PersistentFlags().Float64Var(&match, "match", 1.0, "Score for a match for pairwise alignment (if omitted, then take substitution matrix)")

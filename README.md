@@ -137,7 +137,8 @@ You may go to the [doc](docs/index.md) for a more detailed documentation of the 
   * gaps: Add gaps uniformly in an input alignment
   * snvs: Add substitutions uniformly in an input alignment
 * orf:   Find the longest orf in all given sequences in forward strand
-* phase: Try to find ATG in each sequence and remove nucleotides before
+* phase: Try to find reference orf(s) (aa) in input sequences, and align it on the same phase
+* phasent: Try to find reference sequence (nt) in input sequences, and align it on the same phase
 * random:      Generate random sequences
 * reformat:    Reformats input alignment into several formats
   * fasta

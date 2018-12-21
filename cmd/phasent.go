@@ -14,30 +14,37 @@ var phaseCodonOutput string
 // translateCmd represents the addid command
 var phasentCmd = &cobra.Command{
 	Use:   "phasent",
-	Short: "Find best ATGs and set them as new start positions",
-	Long: `Find best ATGs and set them as new start positions.
+	Short: "Find best Starts and set them as new start positions",
+	Long: `Find best Starts and set them as new start positions.
+
+Unlike goalign phase, it does not take into account translation of input sequences.
+
+This command "phases" input sequences on the basis on either a set of input sequences, or the longest detected orf.
+To do so, it will:
+
+1. Search for the longest ORF in the dataset if no reference orf(s) is(are) given;
+2. For each sequence of the dataset: will take the sequence in forward and revcomp (if --reverse is given),
+   align it with all ref orfs, and take the phase (fwd or revcomp) and the reference orf giving the best alignment;
+   If no phase gives a good alignment in any reference orf (cutoffs given by --len-cutoff and --match-cutoff),
+   then the sequence flagged as removed;
+3. For each sequence, take the Start corresponding to the Start of the ORF, and remove
+   nucleotides before (and nucleotides after if --cut-end is given);
+4. Return the trimmed nucleotidic sequences (phased), the corresponding amino-acid sequences (phasedaa)
+   and the start position on the original nt sequence;
+5. The log file contains information on:
+    1. Sequence name
+    2. Its best matching reference orf
+    3. Start position on original nt sequence
+    4. Extracted sequence length
+    5. Positions of nt not in phase with reference orf
+    6. Position of the first stop in phase
 
 if --unaligned is set, format options are ignored (phylip, nexus, etc.), and
-only Fasta is accepted.
-
-Unlike goalign phase, it does not take into account protein information (3 or 6 phases).
+only Fasta is accepted. Otherwise, alignment is first "unaligned".
 
 If input sequences are not nucleotidic, then returns an error.
 
-Output files:
-
---output : unaligned set of phased sequences in fasta
-
-
- 1. If alignment is bad (>lencutoff * orf length, >matchcutoff matches over the 
-    align length and starting at first position of the ORF), then the sequence 
-    is discarded;
- 3. For each sequence, take the Start corresponding to the Start of the ORF, and
-    remove nucleotides before;
- 4. Return the trimmed nucleotidic sequences (phased), the positions of starts in
-    the nucleotidic sequences, and the removed sequence names.
- If cutend is true, then also remove the end of sequences that do not align with orf
- It does not modify the input object
+Output file is an unaligned set of sequences in fasta.
 `,
 	RunE: func(cmd *cobra.Command, args []string) (err error) {
 		var f, aaf, codonf, logf *os.File

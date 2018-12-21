@@ -77,7 +77,8 @@ Command                                                     | Subcommand |      
 --                                                          | gaps       | Adds gaps uniformly in an input alignment
 --                                                          | snvs       | Adds substitutions uniformly in an input alignment
 [orf](commands/orf.md) ([api](api/orf.md))                  |            | Find the longest orf in all given sequences in forward strand
-[phase](commands/phase.md) ([api](api/phase.md))            |            | Find best ATGs and set them as new start positions
+[phase](commands/phase.md) ([api](api/phase.md))            |            | Find best Starts by aligning to translated ref sequences and set them as new start positions
+[phasent](commands/phasent.md) ([api](api/phase.md))        |            | Find best Starts by aligning to ref sequences and set them as new start positions
 [random](commands/random.md) ([api](api/random.md))         |            | Generate random sequences
 [reformat](commands/reformat.md) ([api](api/reformat.md))   |            | Reformats input alignment into phylip of fasta format
 --                                                          | clustal    | Reformats an input alignment into Clustal

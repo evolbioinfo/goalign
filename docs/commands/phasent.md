@@ -3,13 +3,14 @@
 ## Commands
 
 ### phase
+Although similar to goalign phase, goalign phasent does not take into align translation of input sequences.
+
 This command "phases" input sequences on the basis on either a set of input sequences, or the longest detected orf.
-To do so, phase will:
+To do so, it will:
 
 1. Search for the longest ORF in the dataset if no reference orf(s) is(are) given;
-1. Translate the given ORF(s) in aminoacids;
-2. For each sequence of the dataset: translate it in the 3 phases (or 6 if `--reverse` is given),
-   align it with all the translated orfs, and take the phase and the reference orf giving the best alignment;
+2. For each sequence of the dataset: will take the sequence in forward and revcomp (if `--reverse` is given),
+   align it with all ref orfs, and take the phase (fwd or revcomp) and the reference orf giving the best alignment;
    If no phase gives a good alignment in any reference orf (cutoffs given by `--len-cutoff` and `--match-cutoff`),
    then the sequence flagged as removed;
 3. For each sequence, take the Start corresponding to the Start of the ORF, and remove
@@ -21,10 +22,10 @@ To do so, phase will:
     2. Its best matching reference orf
     3. Start position on original nt sequence
     4. Extracted sequence length
-    5. Position of the first stop in phase
+    5. Positions of nt not in phase with reference orf
+    6. Position of the first stop in phase
 
-
-if --unaligned is set, format options are ignored (phylip, nexus, etc.), and
+if `--unaligned` is set, format options are ignored (phylip, nexus, etc.), and
 only Fasta is accepted. Otherwise, alignment is first "unaligned".
 
 If input sequences are not nucleotidic, then returns an error.
@@ -34,17 +35,18 @@ Output file is an unaligned set of sequences in fasta.
 #### Usage
 ```
 Usage:
-  goalign phase [flags]
+  goalign phasent [flags]
 
 Flags:
-      --aa-output string     Output Met "phased" aa FASTA file (default "none")
+      --aa-output string     Output translated sequences FASTA file (default "none")
       --cut-end              Iftrue, then also remove the end of sequences that do not align with orf
-  -h, --help                 help for phase
+  -h, --help                 help for phasent
       --len-cutoff float     Length cutoff, over orf length, to consider sequence hits (-1==No cutoff) (default -1)
   -l, --log string           Output log: positions of the considered ATG for each sequence (default "none")
       --match float          Score for a match for pairwise alignment (if omitted, then take substitution matrix) (default 1)
       --match-cutoff float   Nb Matches cutoff, over alignment length, to consider sequence hits (-1==No cutoff) (default 0.5)
       --mismatch float       Score for a mismatch for pairwise alignment (if omitted, then take substitution matrix) (default -1)
+      --nt-output string     Output ATG "phased" FASTA file + first nts not in ref phase removed (nt corresponding to aa-output sequence) (default "none")
   -o, --output string        Output ATG "phased" FASTA file (default "stdout")
       --ref-orf string       Reference ORF to phase against (if none is given, then will try to get the longest orf in the input data) (default "none")
       --reverse              Search ALSO in the reverse strand (in addition to the forward strand)
@@ -81,7 +83,7 @@ ACCACAACGGGTGGCGGAGGGTGGCATCACTATTACATTATCATAGTTGTCGTATAATGA
 ```
 
 ```
-goalign phase -i input.fa --unaligned -o stdout --aa-output aa.fa
+goalign phasent -i input.fa --unaligned -o stdout --aa-output aa.fa
 
 ```
 
