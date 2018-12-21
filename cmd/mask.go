@@ -31,9 +31,6 @@ goalign mask -p -i al.phy -s 9 -l 10
 This will replace 10 positions with N|X from the 10th position.
 
 The output format is the same than input format.
-
- Warning: If output is stdout, it works only if input format is Phylip, because 
-it is possible to split alignments afterwards (goalign divide for example).
 `,
 	RunE: func(cmd *cobra.Command, args []string) (err error) {
 		var aligns align.AlignChannel
