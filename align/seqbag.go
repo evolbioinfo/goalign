@@ -47,9 +47,10 @@ type SeqBag interface {
 	NbSequences() int
 	Rename(namemap map[string]string)
 	RenameRegexp(regex, replace string, namemap map[string]string) error
-	ShuffleSequences()               // Shuffle sequence order
-	String() string                  // Raw string representation (just write all sequences)
-	Translate(phase int) (err error) // Translates nt sequence in aa
+	Replace(old, new string, regex bool) error // Replaces old string with new string in sequences of the alignment
+	ShuffleSequences()                         // Shuffle sequence order
+	String() string                            // Raw string representation (just write all sequences)
+	Translate(phase int) (err error)           // Translates nt sequence in aa
 	TrimNames(namemap map[string]string, size int) error
 	TrimNamesAuto(namemap map[string]string, curid *int) error
 	Sort() // Sorts the sequences by name
@@ -465,6 +466,25 @@ func (sb *seqbag) RenameRegexp(regex, replace string, namemap map[string]string)
 		newname := r.ReplaceAllString(sb.seqs[seq].name, replace)
 		namemap[sb.seqs[seq].name] = newname
 		sb.seqs[seq].name = newname
+	}
+	return nil
+}
+
+func (sb *seqbag) Replace(old, new string, regex bool) error {
+	if regex {
+		r, err := regexp.Compile(old)
+		if err != nil {
+			return err
+		}
+		for seq := 0; seq < sb.NbSequences(); seq++ {
+			newseq := r.ReplaceAllString(string(sb.seqs[seq].sequence), new)
+			sb.seqs[seq].sequence = []rune(newseq)
+		}
+	} else {
+		for seq := 0; seq < sb.NbSequences(); seq++ {
+			newseq := strings.Replace(string(sb.seqs[seq].sequence), old, new, -1)
+			sb.seqs[seq].sequence = []rune(newseq)
+		}
 	}
 	return nil
 }

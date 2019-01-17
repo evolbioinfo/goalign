@@ -148,6 +148,7 @@ You may go to the [doc](docs/index.md) for a more detailed documentation of the 
   * phylip
   * tnt
 * rename:      Rename sequences of the input alignment, given a map file
+* replace:     Replace characters in sequences of input alignment using a regex
 * sample: Samples sequences or subalignments
   * seqs: Randomly samples a subset of sequences from the input alignment
   * sites: Extracts a sub-alignment starting a a random position, and with a given length

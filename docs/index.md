@@ -88,6 +88,7 @@ Command                                                     | Subcommand |      
 --                                                          | phylip     | Reformats an input alignment into Phylip
 --                                                          | tnt        | Reformats an input alignment into TNT input file
 [rename](commands/rename.md) ([api](api/rename.md))         |            | Rename sequences of the input alignment, given a map file
+[replace](commands/replace.md) ([api](api/replace.md))      |            | Replace characters in sequences of input alignment
 [sample](commands/sample.md) ([api](api/sample.md))         |            | Samples sequences or sites from an input alignment
 --                                                          | seqs       | Samples a subset of sequences from the input alignment
 --                                                          | sites      | Take a random subalignment

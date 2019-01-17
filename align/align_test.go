@@ -388,6 +388,89 @@ func TestRename(t *testing.T) {
 	})
 }
 
+func TestReplace(t *testing.T) {
+	length := 3000
+	nbseqs := 500
+	a, err := RandomAlignment(NUCLEOTIDS, length, nbseqs)
+
+	if err != nil {
+		t.Error(err)
+	}
+
+	acount := 0
+	a.IterateChar(func(name string, sequence []rune) {
+		for _, c := range sequence {
+			if c == 'A' {
+				acount++
+			}
+		}
+	})
+
+	gapcount := 0
+	a.Replace("A", "-", false)
+	a.IterateChar(func(name string, sequence []rune) {
+		for _, c := range sequence {
+			if c == 'A' {
+				t.Error(fmt.Sprintf("There should not remains A after replace"))
+			}
+			if c == '-' {
+				gapcount++
+			}
+		}
+	})
+	if gapcount != acount {
+		t.Error(fmt.Sprintf("Each A should have been replaced by a -"))
+	}
+}
+
+func TestReplaceRegEx(t *testing.T) {
+	length := 3000
+	nbseqs := 500
+	a, err := RandomAlignment(NUCLEOTIDS, length, nbseqs)
+
+	if err != nil {
+		t.Error(err)
+	}
+
+	regcount := 0
+	a.IterateChar(func(name string, sequence []rune) {
+		prev := '0'
+		for _, c := range sequence {
+			if (c == 'A' && prev == 'A') ||
+				(c == 'C' && prev == 'A') ||
+				(c == 'G' && prev == 'A') ||
+				(c == 'T' && prev == 'A') {
+				regcount += 2
+				prev = '-'
+			} else {
+				prev = c
+			}
+		}
+	})
+
+	gapcount := 0
+	a.Replace("A.", "--", true)
+	a.IterateChar(func(name string, sequence []rune) {
+		prev := '0'
+		for _, c := range sequence {
+			if (c == 'A' && prev == 'A') ||
+				(c == 'C' && prev == 'A') ||
+				(c == 'G' && prev == 'A') ||
+				(c == 'T' && prev == 'A') {
+				t.Error(fmt.Sprintf("There should not remains %c%c after replace", prev, c))
+			}
+			if c == '-' {
+				gapcount++
+			}
+			prev = c
+		}
+	})
+
+	if gapcount != regcount {
+		t.Error(fmt.Sprintf("Each A. should have been replaced by -- (%d != %d)", gapcount, regcount))
+	}
+}
+
 func TestRogue(t *testing.T) {
 	length := 3000
 	nbseqs := 500
