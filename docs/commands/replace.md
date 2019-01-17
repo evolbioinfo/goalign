@@ -4,6 +4,7 @@
 
 ### replace
 This command replaces characters in sequences of an input alignment. The `--regexp (-e)` option considers the string to be replaced as a regular expression.
+The replacement should not change sequence lengths, otherwise it returns an error.
 
 #### Usage
 ```

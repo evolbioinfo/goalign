@@ -18,7 +18,7 @@ var replaceCmd = &cobra.Command{
 	Use:   "replace",
 	Short: "Replace characters in sequences of the input alignment (possible with a regex)",
 	Long: `Replace characters in sequences of the input alignment (possible with a regex).
-
+If the replacement changes sequence length, then returns an error.
 `,
 	RunE: func(cmd *cobra.Command, args []string) (err error) {
 		var aligns align.AlignChannel
@@ -41,7 +41,10 @@ var replaceCmd = &cobra.Command{
 				io.LogError(err)
 				return
 			}
-			seqs.Replace(replaceOld, replaceNew, replaceRegexp)
+			if err = seqs.Replace(replaceOld, replaceNew, replaceRegexp); err != nil {
+				io.LogError(err)
+				return
+			}
 			writeSequences(seqs, f)
 		} else {
 			if aligns, err = readalign(infile); err != nil {
@@ -49,7 +52,10 @@ var replaceCmd = &cobra.Command{
 				return
 			}
 			for al := range aligns.Achan {
-				al.Replace(replaceOld, replaceNew, replaceRegexp)
+				if err = al.Replace(replaceOld, replaceNew, replaceRegexp); err != nil {
+					io.LogError(err)
+					return
+				}
 				writeAlign(al, f)
 			}
 			if aligns.Err != nil {
