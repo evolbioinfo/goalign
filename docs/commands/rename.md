@@ -3,7 +3,7 @@
 ## Commands
 
 ### rename
-This command renames all sequences of the input alignment (fasta or phylip) by 2 ways:
+This command renames all sequences of the input alignment (fasta or phylip) in 3 ways:
 
 * Using a map file. The map file  is tab separated, with the following fields:
 
@@ -21,6 +21,13 @@ This command renames all sequences of the input alignment (fasta or phylip) by 2
    will replace matching strings in sequence names by string given by `-b`, ex: `goalign rename -i align.fasta --regexp 'Seq(\d+)' --replace 'Newname$1' -m map.txt`
   this will replace all matches of 'Seq(\d+)' with 'NewName$1', with `$1` being the matched string inside ().
 
+* With `--clean-names` option:
+   Special characters in sequence names are replaced with '-'.
+   Special characters are: `\s\t[]();.,:|`.
+   And mapping between old and new names is written in 
+   the file potentially given with --map-file
+
+In any case, option `--unalign` option will rename unaligned fasta files while ignoring formatting options (phylip, etc.).
 
 #### Usage
 ```
@@ -28,6 +35,8 @@ Usage:
   goalign rename [flags]
 
 Flags:
+  --clean-names           Replaces special characters (tabs, spaces, newick characters)
+                          with '-' from input sequence names before writing output alignment
   -h, --help              help for rename
   -m, --map-file string   Name Mapping infile (default "none")
   -o, --output string     renamed alignment output file (default "stdout")
@@ -75,4 +84,36 @@ GATTAATTTG
 CCGTAGGCCA
 >NewSeq0002
 GAATCTGAAG
+```
+
+* Cleaning input sequence names
+
+
+```
+input.fa
+> S e q 0 0 00[]();.,
+GATTA
+> Se    q00 0 2  []();.,
+CCGTA
+>  Seq00  03[]();.,
+GGCCA
+>Se  q[]();.,0004
+GAATC
+```
+
+```
+goalign rename --clean-names -i input.fa
+```
+
+
+It should give the following alignment:
+```
+>S-e-q-0-0-00-
+GATTA
+>Se-q00-0-2-
+CCGTA
+>Seq00-03-
+GGCCA
+>Se-q-0004
+GAATC
 ```

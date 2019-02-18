@@ -41,7 +41,7 @@ goalign reformat phylip -i align.fasta
 
 		for al := range aligns.Achan {
 			if reformatCleanNames {
-				al.CleanNames()
+				al.CleanNames(nil)
 			}
 			writeAlignPhylip(al, f)
 		}

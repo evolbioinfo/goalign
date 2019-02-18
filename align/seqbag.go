@@ -24,7 +24,7 @@ type SeqBag interface {
 	AlphabetCharacters() []rune
 	AutoAlphabet() // detects and sets alphabet automatically for all the sequences
 	CharStats() map[rune]int64
-	CleanNames()                            // Clean sequence names (newick special char)
+	CleanNames(namemap map[string]string)   // Clean sequence names (newick special char)
 	Clear()                                 // Removes all sequences
 	CloneSeqBag() (seqs SeqBag, err error)  // Clones the seqqbag
 	Deduplicate() error                     // Remove duplicate sequences
@@ -140,13 +140,17 @@ func (sb *seqbag) AlphabetCharacters() (alphabet []rune) {
 
 // Removes spaces and tabs at beginning and end of sequence names
 // and replaces newick special characters \s\t()[];,.: by "-"
-func (sb *seqbag) CleanNames() {
+func (sb *seqbag) CleanNames(namemap map[string]string) {
 	firstlast := regexp.MustCompile("(^[\\s\\t]+|[\\s\\t]+$)")
 	inside := regexp.MustCompile("[\\|\\s\\t,\\[\\]\\(\\),;\\.:]+")
 
 	for _, seq := range sb.seqs {
+		old := seq.name
 		seq.name = firstlast.ReplaceAllString(seq.name, "")
 		seq.name = inside.ReplaceAllString(seq.name, "-")
+		if namemap != nil {
+			namemap[old] = seq.name
+		}
 	}
 }
 

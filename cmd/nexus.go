@@ -39,7 +39,7 @@ goalign reformat nexus -i align.fasta
 
 		for al := range aligns.Achan {
 			if reformatCleanNames {
-				al.CleanNames()
+				al.CleanNames(nil)
 			}
 			writeAlignNexus(al, f)
 		}

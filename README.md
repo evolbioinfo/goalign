@@ -147,7 +147,7 @@ You may go to the [doc](docs/index.md) for a more detailed documentation of the 
   * clustal
   * phylip
   * tnt
-* rename:      Rename sequences of the input alignment, given a map file
+* rename:      Rename sequences of the input alignment, (using a map file, with a regexp, or just clean names)
 * replace:     Replace characters in sequences of input alignment using a regex
 * sample: Samples sequences or subalignments
   * seqs: Randomly samples a subset of sequences from the input alignment

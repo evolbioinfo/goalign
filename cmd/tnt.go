@@ -45,7 +45,7 @@ goalign reformat tnt -i align.fasta
 		}
 
 		if reformatCleanNames {
-			al.CleanNames()
+			al.CleanNames(nil)
 		}
 		f.WriteString("xread\n\n")
 		f.WriteString("'Tnt input file'\n\n")

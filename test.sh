@@ -120,6 +120,7 @@ goalign random --seed 10 | goalign mutate gaps -n 0.5 -r 0.7 --seed 10 |  goalig
 diff result expected
 rm -f expected result mapfile log expectedlog
 
+
 echo "->goalign random"
 cat > expected <<EOF
 >Seq0000
@@ -1197,6 +1198,72 @@ goalign random --seed 10 -l 20 -n 5 | goalign rename --regexp 'Seq(\d+)' --repla
 diff result expected
 diff <(sort mapfile) <(sort mapfile2)
 rm -f expected result mapfile mapfile2
+
+
+echo "->goalign rename --clean-names"
+cat > input <<EOF
+> S e q 0	0	00[]();.,
+GATTA
+>	 Se    q00 0 2    	 	[]();.,
+CCGTA
+>		Seq00     03[]();.,
+GGCCA
+>Se		q[]();.,0004
+GAATC
+EOF
+cat > expected <<EOF
+>S-e-q-0-0-00-
+GATTA
+>Se-q00-0-2-
+CCGTA
+>Seq00-03-
+GGCCA
+>Se-q-0004
+GAATC
+EOF
+cat > expectedmap <<EOF
+ S e q 0	0	00[]();.,	S-e-q-0-0-00-
+	 Se    q00 0 2    	 	[]();.,	Se-q00-0-2-
+		Seq00     03[]();.,	Seq00-03-
+Se		q[]();.,0004	Se-q-0004
+EOF
+
+goalign rename --clean-names -i input -o result --map-file outmap
+diff result expected
+rm -f input expected result outmap
+
+echo "->goalign rename --clean-names --unaligned"
+cat > input <<EOF
+> S e q 0	0	00[]();.,
+GATTA
+>	 Se    q00 0 2    	 	[]();.,
+CCGT
+>		Seq00     03[]();.,
+GGCCACCCGC
+>Se		q[]();.,0004
+GA
+EOF
+cat > expected <<EOF
+>S-e-q-0-0-00-
+GATTA
+>Se-q00-0-2-
+CCGT
+>Seq00-03-
+GGCCACCCGC
+>Se-q-0004
+GA
+EOF
+cat > expectedmap <<EOF
+ S e q 0	0	00[]();.,	S-e-q-0-0-00-
+	 Se    q00 0 2    	 	[]();.,	Se-q00-0-2-
+		Seq00     03[]();.,	Seq00-03-
+Se		q[]();.,0004	Se-q-0004
+EOF
+
+goalign rename --unaligned --clean-names -i input -o result --map-file outmap
+diff result expected
+rm -f input expected result outmap
+
 
 echo "->goalign sample seqs"
 cat > expected <<EOF

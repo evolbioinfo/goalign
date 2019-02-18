@@ -55,7 +55,7 @@ func TestCleanNames(t *testing.T) {
 	a.AppendSeqIdentifier("\t \t", false)
 	a.AppendSeqIdentifier("\t \t", true)
 
-	a.CleanNames()
+	a.CleanNames(nil)
 	i := 0
 	a.IterateChar(func(name string, sequence []rune) {
 		expected, found := a2.GetSequenceNameById(i)

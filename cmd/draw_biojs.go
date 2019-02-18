@@ -43,7 +43,7 @@ See http://msa.biojs.net/ for more informations
 				io.LogError(err)
 				return
 			}
-			al.CleanNames()
+			al.CleanNames(nil)
 			w := bufio.NewWriter(f)
 			l = draw.NewBioJSLayout(w)
 			l.DrawAlign(al)

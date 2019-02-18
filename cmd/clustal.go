@@ -42,7 +42,7 @@ goalign reformat clustal -i align.fasta
 			return
 		}
 		if reformatCleanNames {
-			a.CleanNames()
+			a.CleanNames(nil)
 		}
 		writeAlignClustal(a, f)
 
