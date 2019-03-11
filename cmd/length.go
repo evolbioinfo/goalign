@@ -61,6 +61,6 @@ goalign stats length -i align.fasta
 }
 
 func init() {
-	statsCmd.PersistentFlags().BoolVar(&unaligned, "unaligned", false, "Considers sequences as unaligned and format fasta (phylip, nexus,... options are ignored)")
+	lengthCmd.PersistentFlags().BoolVar(&unaligned, "unaligned", false, "Considers sequences as unaligned and format fasta (phylip, nexus,... options are ignored)")
 	statsCmd.AddCommand(lengthCmd)
 }
