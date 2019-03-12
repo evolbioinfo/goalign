@@ -4,6 +4,7 @@ set -e
 set -u
 set -o pipefail
 
+TESTDATA="tests/data"
 
 echo "->goalign addid"
 cat > expected <<EOF
@@ -24,7 +25,7 @@ CATAGCCCCTGATGCCCTGACCCGTGTCGCGGCAACGTCTACATTTCACGATAAATACTCCGCTGCTAGTCGGCTCTAGA
 TGCTTTTCTTCCAGATCTGG
 EOF
 goalign random --seed 10 -n 5 | goalign addid -n prefix_ | goalign addid -n _suffix -r > result
-diff result expected
+diff -q -b result expected
 rm -f expected result mapfile
 
 
@@ -57,7 +58,7 @@ AGGTATCTTCCTGTGTTACC
 CA
 EOF
 goalign addid -n prefix_ -i input --unaligned | goalign addid -n _suffix -r --unaligned > result
-diff result expected
+diff -q -b result expected
 rm -f expected result mapfile input
 
 
@@ -90,7 +91,7 @@ cat > expectedlog <<EOF
 [Warning] in cmd/clean.go (line 57), message: Alignment (0) number of gaps=61
 EOF
 goalign random --seed 10 | goalign mutate gaps -n 1 -r 0.1 --seed 10 |  goalign clean sites > result 2>log
-diff result expected
+diff -q -b result expected
 rm -f expected result mapfile log expectedlog
 
 echo "->goalign clean seqs"
@@ -117,7 +118,7 @@ cat > expectedlog <<EOF
 [Warning] in cmd/cleanseqs.go (line 38), message: Alignment (0) removed sequences=5
 EOF
 goalign random --seed 10 | goalign mutate gaps -n 0.5 -r 0.7 --seed 10 |  goalign clean seqs > result 2>log
-diff result expected
+diff -q -b result expected
 rm -f expected result mapfile log expectedlog
 
 
@@ -145,7 +146,7 @@ GGTTGAAGGACTCTAGAGCT
 GTAAAGGGTATGGCCATGTG
 EOF
 goalign random --seed 10 -l 20 > result
-diff result expected
+diff -q -b result expected
 rm -f expected result mapfile
 
 echo "->goalign reformat fasta"
@@ -162,7 +163,7 @@ GGCCA
 GAATC
 EOF
 goalign random -n 5 -l 5 --seed 10 -p | goalign reformat fasta -p > result
-diff result expected
+diff -q -b result expected
 rm -f expected result mapfile
 
 echo "->goalign reformat fasta strict"
@@ -179,7 +180,7 @@ GGCCA
 GAATC
 EOF
 goalign random -n 5 -l 5 --seed 10 -p --input-strict | goalign reformat fasta -p > result
-diff result expected
+diff -q -b result expected
 rm -f expected result mapfile
 
 echo "->goalign reformat fasta names with spaces"
@@ -208,7 +209,7 @@ GGCCA
 GAATC
 EOF
 goalign reformat fasta -i input -o result
-diff result expected
+diff -q -b result expected
 rm -f expected input result
 
 echo "->goalign reformat fasta sequences with spaces"
@@ -237,7 +238,7 @@ GGCCA
 GAATC
 EOF
 goalign reformat fasta -i input -o result
-diff result expected
+diff -q -b result expected
 rm -f expected input result
 
 echo "->goalign reformat phylip"
@@ -256,7 +257,7 @@ Seq0004  GAGTGGAGGC TTTATGGCAC AAGGTATTAG AGACTGAGGG GCACCCCGGC ATGGTAAGCA
    GGAGCCATCG CGAAG
 EOF
 goalign random -n 5 -l 75 --seed 10 | goalign reformat phylip > result
-diff result expected
+diff -q -b result expected
 rm -f expected result mapfile
 
 
@@ -270,7 +271,7 @@ Seq0003  AGCAAGGTTA AATACTCGGC AATGCCCCAT GATCCCCCAA GGACAATAAG AGCGAAGTTA GAACA
 Seq0004  GAGTGGAGGC TTTATGGCAC AAGGTATTAG AGACTGAGGG GCACCCCGGC ATGGTAAGCA GGAGCCATCG CGAAG
 EOF
 goalign random -n 5 -l 75 --seed 10 | goalign reformat phylip --one-line > result
-diff result expected
+diff -q -b result expected
 rm -f expected result mapfile
 
 echo "->goalign reformat phylip --no-block --one-line"
@@ -283,7 +284,7 @@ Seq0003  AGCAAGGTTAAATACTCGGCAATGCCCCATGATCCCCCAAGGACAATAAGAGCGAAGTTAGAACAAATGAA
 Seq0004  GAGTGGAGGCTTTATGGCACAAGGTATTAGAGACTGAGGGGCACCCCGGCATGGTAAGCAGGAGCCATCGCGAAG
 EOF
 goalign random -n 5 -l 75 --seed 10 | goalign reformat phylip --one-line --no-block > result
-diff result expected
+diff -q -b result expected
 rm -f expected result mapfile
 
 echo "->goalign reformat phylip --no-block"
@@ -302,7 +303,7 @@ Seq0004  GAGTGGAGGCTTTATGGCACAAGGTATTAGAGACTGAGGGGCACCCCGGCATGGTAAGCA
    GGAGCCATCGCGAAG
 EOF
 goalign random -n 5 -l 75 --seed 10 | goalign reformat phylip --no-block > result
-diff result expected
+diff -q -b result expected
 rm -f expected result mapfile
 
 
@@ -328,7 +329,7 @@ GGCCA
 GAATC
 EOF
 goalign reformat phylip -i input.fa --clean-names > result
-diff result expected
+diff -q -b result expected
 rm -f expected result mapfile input.fa
 
 
@@ -354,7 +355,7 @@ GGCCA
 GAATC
 EOF
 goalign reformat fasta -i input.fa --clean-names > result
-diff result expected
+diff -q -b result expected
 rm -f expected result mapfile input.fa
 
 echo "->goalign reformat fasta spaces tabs"
@@ -371,7 +372,7 @@ GATTA
 CCGTA
 EOF
 goalign reformat fasta -i input.fa --clean-names > result
-diff result expected
+diff -q -b result expected
 rm -f expected result mapfile input.fa
 
 echo "->goalign reformat phylip strict"
@@ -384,7 +385,7 @@ Seq0003   GGCCA
 Seq0004   GAATC
 EOF
 goalign random -n 5 -l 5 --seed 10 | goalign reformat phylip --output-strict > result
-diff result expected
+diff -q -b result expected
 rm -f expected result mapfile
 
 echo "->goalign reformat nexus"
@@ -403,7 +404,7 @@ Seq0004 GAATC
 end;
 EOF
 goalign random -n 5 -l 5 --seed 10 | goalign reformat nexus > result
-diff result expected
+diff -q -b result expected
 rm -f expected result mapfile
 
 echo "->goalign reformat fasta from clustal"
@@ -473,7 +474,7 @@ AIG-ATQNQYGEFDIDCDNLSYMPTVVFEINGKMYPLTPSAYTSQDQGFCTSGFQSEN------HSQKWILGDVFIREYY
 SVFDRANNLVG----LAKAI----
 EOF
 goalign reformat fasta -i input -u > result
-diff result expected
+diff -q -b result expected
 rm -f expected result input
 
 echo "->goalign reformat fasta from clustal (2)"
@@ -503,7 +504,7 @@ AGVGTVPMTDYGN-DIEYYGQVTIGTPGKK
 -----------------YTGSLHWVPVTVQ
 EOF
 goalign reformat fasta -i input -u | sed 's/ (goalign version.*//g'> result
-diff result expected
+diff -q -b result expected
 rm -f expected result input
 
 
@@ -534,7 +535,7 @@ CLUSTAL W
                           *   :        
 EOF
 goalign reformat clustal -i input | sed 's/ (goalign version.*//g'> result
-diff result expected
+diff -q -b result expected
 rm -f expected result input
 
 echo "->goalign reformat tnt"
@@ -552,7 +553,7 @@ Seq0004 GAATC
 ;
 EOF
 goalign random -n 5 -l 5 --seed 10 | goalign reformat tnt > result
-diff result expected
+diff -q -b result expected
 rm -f expected result mapfile
 
 
@@ -571,7 +572,7 @@ Seq0004 GAATC
 ;
 EOF
 goalign random -n 5 -l 5 --seed 10 | goalign reformat tnt --auto-detect > result
-diff result expected
+diff -q -b result expected
 rm -f expected result mapfile
 
 echo "->goalign reformat auto from nexus"
@@ -590,7 +591,7 @@ Seq0004 GAATC
 end;
 EOF
 goalign random -n 5 -l 5 --seed 10 -x | goalign reformat nexus --auto-detect > result
-diff result expected
+diff -q -b result expected
 rm -f expected result mapfile
 
 echo "->goalign reformat auto from phylip strict"
@@ -603,7 +604,7 @@ Seq0003   GGCCA
 Seq0004   GAATC
 EOF
 goalign random -n 5 -l 5 --seed 10 | goalign reformat phylip --output-strict | goalign reformat phylip --output-strict --auto-detect > result
-diff result expected
+diff -q -b result expected
 rm -f expected result mapfile
 
 echo "->goalign reformat auto from phylip"
@@ -616,7 +617,7 @@ Seq0003  GGCCA
 Seq0004  GAATC
 EOF
 goalign random -n 5 -l 5 --seed 10 -p | goalign reformat phylip --auto-detect > result
-diff result expected
+diff -q -b result expected
 rm -f expected result mapfile
 
 echo "->goalign reformat auto from fasta"
@@ -633,7 +634,7 @@ GGCCA
 GAATC
 EOF
 goalign random -n 5 -l 5 --seed 10 | goalign reformat fasta --auto-detect > result
-diff result expected
+diff -q -b result expected
 rm -f expected result mapfile
 
 echo "->goalign reformat paml from phylip"
@@ -660,7 +661,7 @@ GGCCA
 GAATC
 EOF
 goalign reformat paml -i input.test -p > output.paml
-diff output.paml expected
+diff -q -b output.paml expected
 rm -f expected output.paml input.test
 
 echo "->goalign compute distance -m f81"
@@ -672,8 +673,8 @@ Tip3	0.192803956978	0.082364641962	0.000000000000	0.071285264523	0.086842665158
 Tip2	0.232646053483	0.128396525775	0.071285264523	0.000000000000	0.111961817720
 Tip1	0.235379041630	0.142776083476	0.086842665158	0.111961817720	0.000000000000
 EOF
-goalign compute distance -m f81 -i tests/data/test_distance.phy.gz -p > result
-diff result expected
+goalign compute distance -m f81 -i ${TESTDATA}/test_distance.phy.gz -p > result
+diff -q -b result expected
 rm -f expected result mapfile
 
 
@@ -686,8 +687,8 @@ Tip3	3.000000000000	1.000000000000	0.000000000000	0.000000000000	1.000000000000
 Tip2	3.000000000000	1.000000000000	0.000000000000	0.000000000000	1.000000000000
 Tip1	4.000000000000	2.000000000000	1.000000000000	1.000000000000	0.000000000000
 EOF
-goalign compute distance -m rawdist -i tests/data/test_rawdistance.phy.gz -p > result
-diff result expected
+goalign compute distance -m rawdist -i ${TESTDATA}/test_rawdistance.phy.gz -p > result
+diff -q -b result expected
 rm -f expected result mapfile
 
 echo "->goalign compute distance -m rawdist2"
@@ -699,8 +700,8 @@ Tip3	3.000000000000	0.000000000000	0.000000000000	0.000000000000	1.000000000000
 Tip2	3.000000000000	0.000000000000	0.000000000000	0.000000000000	1.000000000000
 Tip1	4.000000000000	1.000000000000	1.000000000000	1.000000000000	0.000000000000
 EOF
-goalign compute distance -m rawdist -i tests/data/test_rawdistance2.phy.gz -p > result
-diff result expected
+goalign compute distance -m rawdist -i ${TESTDATA}/test_rawdistance2.phy.gz -p > result
+diff -q -b result expected
 rm -f expected result mapfile
 
 
@@ -713,8 +714,8 @@ Tip3	0.170000000000	0.078000000000	0.000000000000	0.068000000000	0.082000000000
 Tip2	0.200000000000	0.118000000000	0.068000000000	0.000000000000	0.104000000000
 Tip1	0.202000000000	0.130000000000	0.082000000000	0.104000000000	0.000000000000
 EOF
-goalign compute distance -m pdist -i tests/data/test_distance.phy.gz -p > result
-diff result expected
+goalign compute distance -m pdist -i ${TESTDATA}/test_distance.phy.gz -p > result
+diff -q -b result expected
 rm -f expected result mapfile
 
 echo "->goalign compute distance -m jc"
@@ -726,8 +727,8 @@ Tip3	0.192783827242	0.082361149505	0.000000000000	0.071282661515	0.086838774745
 Tip2	0.232616196228	0.128387859288	0.071282661515	0.000000000000	0.111955277061
 Tip1	0.235348439687	0.142765296368	0.086838774745	0.111955277061	0.000000000000
 EOF
-goalign compute distance -m jc -i tests/data/test_distance.phy.gz -p > result
-diff result expected
+goalign compute distance -m jc -i ${TESTDATA}/test_distance.phy.gz -p > result
+diff -q -b result expected
 rm -f expected result mapfile
 
 
@@ -740,8 +741,8 @@ Tip3	0.193245190192	0.082453892766	0.000000000000	0.071292715047	0.086845484497
 Tip2	0.233028942469	0.128434558659	0.071292715047	0.000000000000	0.111966480828
 Tip1	0.235571330668	0.142789108437	0.086845484497	0.111966480828	0.000000000000
 EOF
-goalign compute distance -m k2p -i tests/data/test_distance.phy.gz -p > result
-diff result expected
+goalign compute distance -m k2p -i ${TESTDATA}/test_distance.phy.gz -p > result
+diff -q -b result expected
 rm -f expected result mapfile
 
 
@@ -754,8 +755,8 @@ Tip3	0.193258659612	0.082456191295	0.000000000000	0.071294953075	0.086849003947
 Tip2	0.233050782717	0.128441770138	0.071294953075	0.000000000000	0.111972393604
 Tip1	0.235595781888	0.142798708889	0.086849003947	0.111972393604	0.000000000000
 EOF
-goalign compute distance -m f84 -i tests/data/test_distance.phy.gz -p > result
-diff result expected
+goalign compute distance -m f84 -i ${TESTDATA}/test_distance.phy.gz -p > result
+diff -q -b result expected
 rm -f expected result mapfile
 
 
@@ -768,8 +769,8 @@ Tip3	0.193263808045	0.082492772223	0.000000000000	0.071294993201	0.086849459942
 Tip2	0.233468379444	0.128715806962	0.071294993201	0.000000000000	0.112213623285
 Tip1	0.236008401698	0.142896903086	0.086849459942	0.112213623285	0.000000000000
 EOF
-goalign compute distance -m tn93 -i tests/data/test_distance.phy.gz -p > result
-diff result expected
+goalign compute distance -m tn93 -i ${TESTDATA}/test_distance.phy.gz -p > result
+diff -q -b result expected
 rm -f expected result mapfile
 
 echo "->goalign compute entropy"
@@ -795,9 +796,9 @@ Alignment	Site	Entropy
 0	17	0.000
 0	18	0.000
 EOF
-goalign compute entropy -i tests/data/test_distance.phy.gz -p > restmp
+goalign compute entropy -i ${TESTDATA}/test_distance.phy.gz -p > restmp
 head -n 20 restmp > result
-diff result expected
+diff -q -b result expected
 rm -f expected result restmp
 
 
@@ -824,9 +825,9 @@ cat > expected <<EOF
 18	0.004	1.953	0.004	0.004
 19	0.004	1.953	0.004	0.004
 EOF
-goalign compute pssm -n 4 -i tests/data/test_distance.phy.gz -p -c 0.01  > restmp
+goalign compute pssm -n 4 -i ${TESTDATA}/test_distance.phy.gz -p -c 0.01  > restmp
 head -n 20 restmp > result
-diff result expected
+diff -q -b result expected
 rm -f expected result restmp
 
 
@@ -854,7 +855,7 @@ TTTAAACACTTTTAAACACT
 TTTACATCGATTTACATCGA
 EOF
 goalign random -l 10 --seed 10 | goalign concat  <(goalign random -l 10 --seed 10 | goalign shuffle seqs) > result
-diff result expected
+diff -q -b result expected
 rm -f expected result
 
 echo "->goalign concat 2"
@@ -881,7 +882,7 @@ TTTAAACACTTTTAAACACT
 TTTACATCGATTTACATCGA
 EOF
 goalign random -l 10 --seed 10 | goalign concat  <(goalign random -l 10 --seed 10 | goalign shuffle seqs) > result
-diff result expected
+diff -q -b result expected
 rm -f expected result
 
 echo "->goalign concat (missing sequences in 1)"
@@ -942,7 +943,7 @@ AGAAGCTTTATTAAGTTTTC
 ----------TTTACATCGA
 EOF
 goalign concat -i none input1 input2 > result
-diff result expected
+diff -q -b result expected
 rm -f expected result input1 input2
 
 echo "->goalign concat (missing sequences in 2)"
@@ -1003,7 +1004,7 @@ TTTAAACACT----------
 TTTACATCGA----------
 EOF
 goalign concat -i none input1 input2 > result
-diff result expected
+diff -q -b result expected
 rm -f expected result input1 input2
 
 echo "->goalign concat (missing sequences in both)"
@@ -1056,7 +1057,7 @@ TTTACATCGA----------
 ----------CGCGAGCCTC
 EOF
 goalign concat -i none input1 input2 > result
-diff result expected
+diff -q -b result expected
 rm -f expected result input1 input2
 
 
@@ -1090,7 +1091,7 @@ do
 done
 goalign divide -i input -p -o divprefix -f
 cat divprefix_* > result
-diff result expected
+diff -q -b result expected
 rm -f expected result divprefix* input
 
 
@@ -1118,7 +1119,7 @@ GGTTGAAGGACT-TAGAGC-
 GTAAAGGGTATGGCCATGTG
 EOF
 goalign random --seed 10 -l 20 | goalign mutate gaps --seed 10 > result
-diff result expected
+diff -q -b result expected
 rm -f expected result
 
 
@@ -1146,7 +1147,7 @@ GGTTAAAGGACTCTATAGCT
 GAAAAGGGTATGGCCATGTG
 EOF
 goalign random --seed 10 -l 20 | goalign mutate snvs --seed 10 > result
-diff result expected
+diff -q -b result expected
 rm -f expected result
 
 
@@ -1171,7 +1172,7 @@ GAGAGGACTAGTTCATACTT
 TTTAAACACTTTTACATCGA
 EOF
 goalign random --seed 10 -l 20 -n 5 | goalign rename -m mapfile > result
-diff result expected
+diff -q -b result expected
 rm -f expected result mapfile
 
 echo "->goalign rename regexp"
@@ -1195,8 +1196,8 @@ GAGAGGACTAGTTCATACTT
 TTTAAACACTTTTACATCGA
 EOF
 goalign random --seed 10 -l 20 -n 5 | goalign rename --regexp 'Seq(\d+)' --replace 'New$1' -m mapfile2 > result
-diff result expected
-diff <(sort mapfile) <(sort mapfile2)
+diff -q -b result expected
+diff -q -b <(sort mapfile) <(sort mapfile2)
 rm -f expected result mapfile mapfile2
 
 
@@ -1229,7 +1230,7 @@ Se		q[]();.,0004	Se-q-0004
 EOF
 
 goalign rename --clean-names -i input -o result --map-file outmap
-diff result expected
+diff -q -b result expected
 rm -f input expected result outmap
 
 echo "->goalign rename --clean-names --unaligned"
@@ -1261,7 +1262,7 @@ Se		q[]();.,0004	Se-q-0004
 EOF
 
 goalign rename --unaligned --clean-names -i input -o result --map-file outmap
-diff result expected
+diff -q -b result expected
 rm -f input expected result outmap
 
 
@@ -1275,7 +1276,7 @@ GAATCTGAAG
 TTTAAACACT
 EOF
 goalign random -l 10 --seed 10 | goalign sample seqs -n 3 --seed 10 > result
-diff result expected
+diff -q -b result expected
 rm -f expected result
 
 
@@ -1304,7 +1305,7 @@ TAAAC
 TACAT
 EOF
 goalign random -l 10 --seed 10 | goalign sample sites -l 5 --seed 10 > result
-diff result expected
+diff -q -b result expected
 rm -f expected result
 
 
@@ -1333,7 +1334,7 @@ TTTAAACACT
 TTTACATCGA
 EOF
 goalign random -l 10 --seed 10 | goalign shuffle recomb -l 0.5 -n 0.25 --seed 11 > result
-diff result expected
+diff -q -b result expected
 rm -f expected result
 
 echo "->goalign shuffle recomb"
@@ -1360,7 +1361,7 @@ TTTAAACACT
 TTTACATCGA
 EOF
 goalign random -l 10 --seed 10 | goalign shuffle recomb -l 0.5 -n 0.25 --seed 11 > result
-diff result expected
+diff -q -b result expected
 rm -f expected result
 
 
@@ -1397,8 +1398,8 @@ Seq0007
 EOF
 
 goalign random -l 50 --seed 10 | goalign shuffle sites -r 0.5 --seed 10 --rogue 0.5 --rogue-file rogues.txt > result
-diff result expected
-diff rogueexpected rogues.txt
+diff -q -b result expected
+diff -q -b rogueexpected rogues.txt
 rm -f expected result rogueexpected rogues.txt
 
 echo "->goalign shuffle sites rogues stables"
@@ -1435,11 +1436,11 @@ EOF
 
 goalign random -l 50 --seed 10 | goalign shuffle sites -r 0.5 --seed 10 --rogue 0.5 --rogue-file rogues.txt --stable-rogues  > result
 goalign random -l 30 --seed 11 | goalign shuffle sites -r 0.5 --seed 10 --rogue 0.5 --rogue-file rogues2.txt --stable-rogues  > /dev/null
-diff result expected
-diff rogueexpected rogues.txt
+diff -q -b result expected
+diff -q -b rogueexpected rogues.txt
 # Should be the same list of rogues, even if random gen seed is
-# different and length is different (initial seq order is the same)
-diff rogues.txt rogues2.txt
+# diff -q -berent and length is diff -q -berent (initial seq order is the same)
+diff -q -b rogues.txt rogues2.txt
 rm -f expected result rogueexpected rogues.txt rogues2.txt
 
 echo "->goalign stats"
@@ -1456,7 +1457,7 @@ T	34	0.340000
 alphabet	nucleotide
 EOF
 goalign random -l 10 --seed 10 | goalign stats > result
-diff result expected
+diff -q -b result expected
 rm -f expected result
 
 
@@ -1472,7 +1473,7 @@ CCATACTCGT
 GCTGTGGAGC
 EOF
 goalign random -n 4 --seed 10 -l 10000 | goalign subseq -l 10 -s 5 > result
-diff result expected
+diff -q -b result expected
 rm -f expected result
 
 echo "->goalign subseq window phylip"
@@ -1553,10 +1554,10 @@ Seq0008  TACT
 Seq0009  AATT
 EOF
 goalign subseq -i input -p -l 4 -s 0 --step 1 -o output.phylip
-diff output.phylip expected.1
-diff output_sub1.phylip expected.2
-diff output_al1.phylip expected.3
-diff output_al1_sub1.phylip expected.4
+diff -q -b output.phylip expected.1
+diff -q -b output_sub1.phylip expected.2
+diff -q -b output_al1.phylip expected.3
+diff -q -b output_al1_sub1.phylip expected.4
 rm -f input expected.{1,2,3,4} \
    output.phylip output_sub1.phylip \
    output_al1.phylip output_al1_sub1.phylip
@@ -1569,7 +1570,7 @@ CCGTAGGCCA
 CGGGGCCGAC
 EOF
 goalign random -n 4000 --seed 10 -l 10 | goalign subset Seq0001 Seq3999 > result
-diff result expected
+diff -q -b result expected
 rm -f expected result
 
 
@@ -1591,8 +1592,8 @@ Seq0000	S01
 Seq0001	S02
 EOF
 goalign random --seed 10 -n 4 -l 5 | goalign trim name -n 3 -m mapfile > result
-diff result expected
-diff <(sort mapfile) <(sort expectedmap)
+diff -q -b result expected
+diff -q -b <(sort mapfile) <(sort expectedmap)
 rm -f expected result expectedmap mapfile
 
 
@@ -1614,8 +1615,8 @@ Seq0000	S1
 Seq0001	S2
 EOF
 goalign random --seed 10 -n 4 -l 5 | goalign trim name -a -m mapfile > result
-diff result expected
-diff <(sort mapfile) <(sort expectedmap)
+diff -q -b result expected
+diff -q -b <(sort mapfile) <(sort expectedmap)
 rm -f expected result expectedmap mapfile
 
 
@@ -1664,8 +1665,8 @@ Seq0006	S6
 Seq0007	S7
 EOF
 goalign trim name -i input -a -m mapfile2 -p > result
-diff result expected
-diff <(sort mapfile) <(sort mapfile2)
+diff -q -b result expected
+diff -q -b <(sort mapfile) <(sort mapfile2)
 rm -f expected result mapfile input mapfile2
 
 
@@ -1681,7 +1682,7 @@ TGAAG
 ACACT
 EOF
 goalign random --seed 10 -n 4 -l 10 | goalign trim seq -n 5 -s > result
-diff result expected
+diff -q -b result expected
 rm -f expected result 
 
 
@@ -1719,7 +1720,7 @@ ACCTACGGCTCTAGACAGCTGAAGTCCGGTTCCGAGCACTGTACGGAAACTTGAAAAGGCTCGACGGAGGCTTGTTCCGC
 AGAGTGGGACTATAACATAC
 EOF
 goalign random --seed 10 -p | goalign mutate gaps --seed 10 -p | goalign unalign -p > result
-diff result expected
+diff -q -b result expected
 rm -f expected result 
 
 
@@ -1761,7 +1762,7 @@ ACATAGAGGGTACCTCTAAGGCATAGAGGGTACCTCTAAG
 ACATAGAGGGTACCTCTAATTCATAGAGGGTACCTCTAAG
 EOF
 goalign reformat fasta -i nexus -x -o result
-diff expected result
+diff -q -b expected result
 rm -f expected result nexus
 
 
@@ -1805,7 +1806,7 @@ ACATAGAGGGTACCTCTAAGGCATAGAGGGTACCTCTAAG
 ACATAGAGGGTACCTCTAATTCATAGAGGGTACCTCTAAG
 EOF
 goalign reformat fasta -i nexus -x -o result
-diff expected result
+diff -q -b expected result
 rm -f expected result nexus
 
 
@@ -1823,7 +1824,7 @@ ATCGAACACT
 TTAAGTTTTC
 EOF
 goalign random --seed 10 -l 10 -n 5 | goalign shuffle seqs | goalign sort > result
-diff expected result
+diff -q -b expected result
 rm -f expected result
 
 echo "->goalign translate"
@@ -1839,7 +1840,7 @@ cat > expected <<EOF
 AAAALLLLLLRRRRRRKKNNMDDFFCCPPPPQQSSSSSSEETTTTGGGGWHHYYIIIVVVV***
 EOF
 goalign translate -i input --phase 0 -o result
-diff expected result
+diff -q -b expected result
 rm -f input expected result
 
 echo "->goalign translate unaligned"
@@ -1861,7 +1862,7 @@ AAAALLLLLLRRRRRRKKNNMDDFFCCPPPPQQSSSSSSEETTTTGGGGWHHYYIIIVVVV***
 AAALLLLLLRRRRRRKKNNMDDFFCCPPPPQQSSSSSSEETTTTGGGGWHHYYIIIVVV**
 EOF
 goalign translate -i input --phase 0 --unaligned -o result
-diff expected result
+diff -q -b expected result
 rm -f input expected result
 
 echo "->goalign translate 3 phases"
@@ -1878,7 +1879,7 @@ MSLSDKDKAAVKALW
 *VSLIRTRLL*KPY
 EOF
 goalign translate -i input --phase -1 -o result
-diff expected result
+diff -q -b expected result
 rm -f input expected result
 
 echo "->goalign dedup"
@@ -1897,7 +1898,7 @@ cat > expected <<EOF
 3  GGGGGG
 EOF
 goalign dedup -i input -o result -p
-diff expected result
+diff -q -b expected result
 rm -f input expected result
 
 echo "->goalign dedup /2"
@@ -1918,7 +1919,7 @@ cat > expected <<EOF
 2  CCCCCC
 EOF
 goalign dedup -i input -o result -p
-diff expected result
+diff -q -b expected result
 rm -f input expected result
 
 echo "->goalign build seqboot"
@@ -1944,10 +1945,10 @@ AAGGC
 EOF
 goalign random --seed 10 -l 5 -n 4 -o orig.fa
 goalign build seqboot --seed 10 -i orig.fa -n 2 -o boot
-diff boot0.fa expected.1
-diff boot1.fa expected.2
-diff orig.fa expected.1 > /dev/null || echo "expected.1 ok"
-diff orig.fa expected.2 > /dev/null || echo "expected.2 ok"
+diff -q -b boot0.fa expected.1
+diff -q -b boot1.fa expected.2
+diff -q -b orig.fa expected.1 > /dev/null || echo "expected.1 ok"
+diff -q -b orig.fa expected.2 > /dev/null || echo "expected.2 ok"
 if [[ $(ls boot*.fa| wc -l) -ne 2 ]]; then echo "Wrong number of bootstrap alignments"; exit 1; fi
 rm -f boot0.fa boot1.fa expected.2 expected.1 orig.fa
 
@@ -1974,8 +1975,8 @@ AAGGC
 EOF
 goalign random --seed 10 -l 5 -n 4 -o orig.fa
 goalign build seqboot --seed 10 -i orig.fa -n 2 -o boot --gz
-diff <(gunzip -c boot0.fa.gz) expected.1
-diff <(gunzip -c boot1.fa.gz) expected.2
+diff -q -b <(gunzip -c boot0.fa.gz) expected.1
+diff -q -b <(gunzip -c boot1.fa.gz) expected.2
 if [[ $(ls boot*.fa.gz| wc -l) -ne 2 ]]; then echo "Wrong number of bootstrap alignments"; exit 1; fi
 rm -f boot0.fa.gz boot1.fa.gz expected.2 expected.1 orig.fa
 
@@ -2003,8 +2004,8 @@ EOF
 goalign random --seed 10 -l 5 -n 4 -o orig.fa
 goalign build seqboot --seed 10 -i orig.fa -n 2 -o boot --gz --tar
 tar -xzf boot.tar.gz
-diff boot0.fa expected.1
-diff boot1.fa expected.2
+diff -q -b boot0.fa expected.1
+diff -q -b boot1.fa expected.2
 if [[ $(ls boot*.fa | wc -l) -ne 2 ]]; then echo "Wrong number of bootstrap alignments"; exit 1; fi
 rm -f boot0.fa boot1.fa boot.tar.gz  expected.2 expected.1 orig.fa
 
@@ -2037,7 +2038,7 @@ GAGAGGACTAGTTCATACTTTTTAAACACT
 EOF
 
 goalign codonalign -i input.aa -f input.nt -o result
-diff expected result
+diff -q -b expected result
 rm -f expected result input.aa input.nt
 
 echo "->goalign identical"
@@ -2089,13 +2090,13 @@ false
 EOF
 
 goalign identical -i input1 -c input2 > result
-diff expected1 result
+diff -q -b expected1 result
 
 goalign identical -i input1 -c input3 > result
-diff expected2 result
+diff -q -b expected2 result
 
 goalign identical -i input1 -c input4 > result
-diff expected2 result
+diff -q -b expected2 result
 
 rm -f input1 input2 input3 input4 expected1 expected2 results
 
@@ -2129,8 +2130,8 @@ MDDFFCCPPPPQQSSSSSSEETTTTGGGGWHHYYIIIVVV**
 EOF
 
 goalign phase -i input --unaligned -o result --aa-output result.aa
-diff expected result
-diff expected.aa result.aa
+diff -q -b expected result
+diff -q -b expected.aa result.aa
 rm -f input expected result expected.aa result.aa
 
 echo "->goalign phasent"
@@ -2162,8 +2163,8 @@ MDDFFCCPPPPQQSSSSSSEETTTTGGGGWHHYYIIIVVV**
 EOF
 
 goalign phasent -i input --unaligned -o result --aa-output result.aa
-diff expected result
-diff expected.aa result.aa
+diff -q -b expected result
+diff -q -b expected.aa result.aa
 rm -f input expected result expected.aa result.aa
 
 
@@ -2189,7 +2190,7 @@ CGGAGGGTGGCATCACTATTACATTATCATAGTTGTCGTATAATGA
 EOF
 
 goalign phase -i input --unaligned -o result  --reverse
-diff expected result
+diff -q -b expected result
 rm -f input expected result
 
 echo "->goalign phasent reverse"
@@ -2213,7 +2214,7 @@ ATGGATGACTTTTTCTGTTGCCCTCCCCCACCGCAACAGTCTTCCTCATCGAGTAGCGAAGAGACTACCACAACGGGTGG
 CGGAGGGTGGCATCACTATTACATTATCATAGTTGTCGTATAATGA
 EOF
 goalign phasent -i input --unaligned -o result  --reverse
-diff expected result
+diff -q -b expected result
 rm -f input expected result
 
 
@@ -2246,8 +2247,8 @@ MDDFFCCPPPPQQSSSSSSEETTTTGGGGWHHYYIIIVVV
 EOF
 
 goalign phase -i input --unaligned -o result --aa-output result.aa --reverse --cut-end
-diff expected result
-diff expected.aa result.aa
+diff -q -b expected result
+diff -q -b expected.aa result.aa
 rm -f input expected result expected.aa result.aa
 
 echo "->goalign phasent reverse cutends"
@@ -2279,8 +2280,8 @@ MDDFFCCPPPPQQSSSSSSEETTTTGGGGWHHYYIIIVVV*
 EOF
 
 goalign phasent -i input --unaligned -o result --aa-output result.aa --reverse --cut-end
-diff expected result
-diff expected.aa result.aa
+diff -q -b expected result
+diff -q -b expected.aa result.aa
 rm -f input expected result expected.aa result.aa
 
 
@@ -2312,7 +2313,7 @@ allcodons2  GCTGCAGCGT TATTGCTTCT CCTACTGCGT CGCCGACGGA GAAGGAAAAA GAATAACATG
 EOF
 
 goalign sw -i input -o result -p
-diff expected result
+diff -q -b expected result
 rm -f input expected result
 
 echo "->goalign sw / 2"
@@ -2334,7 +2335,7 @@ GT---------TAGCGGCG-CTCCA
 EOF
 
 goalign sw -i input -o result 
-diff expected result
+diff -q -b expected result
 rm -f input expected result
 
 
@@ -2355,7 +2356,7 @@ CNEQDYKHYY--YWEG-STYQ
 EOF
 
 goalign sw -i input -o result 
-diff expected result
+diff -q -b expected result
 rm -f input expected result
 
 
@@ -2378,7 +2379,7 @@ CGGAGGGTGGCATCACTATTACATTATCATAGTTGTCGTAGTGTAA
 EOF
 
 goalign orf -i input -o result
-diff expected result
+diff -q -b expected result
 rm -f input expected result
 
 
@@ -2397,7 +2398,7 @@ CGGAGGGTGGCATCACTATTACATTATCATAGTTGTCGTAGTGTAA
 EOF
 
 goalign orf -i input -o result --reverse
-diff expected result
+diff -q -b expected result
 rm -f input expected result
 
 echo "->goalign mask / prot"
@@ -2430,7 +2431,7 @@ Seq0009  XXTTAYLLGH DYNWFCSEKN
 EOF
 
 goalign mask -i input -o result -s 0 -l 2 -p
-diff expected result
+diff -q -b expected result
 
 cat > expected <<EOF
    10   20
@@ -2447,7 +2448,7 @@ Seq0009  PGTTAYLLXX XXNWFCSEKN
 EOF
 
 goalign mask -i input -o result -s 8 -l 4 -p
-diff expected result
+diff -q -b expected result
 
 cat > expected <<EOF
    10   20
@@ -2464,7 +2465,7 @@ Seq0009  PGTTAYLLGH DYNWFCSEXX
 EOF
 
 goalign mask -i input -o result -s 18 -l 2 -p
-diff expected result
+diff -q -b expected result
 
 cat > expected <<EOF
    10   20
@@ -2481,7 +2482,7 @@ Seq0009  XXXXXXXXXX XXXXXXXXXX
 EOF
 
 goalign mask -i input -o result -s 0 -l 20 -p
-diff expected result
+diff -q -b expected result
 
 cat > expected <<EOF
    10   20
@@ -2498,7 +2499,7 @@ Seq0009  XXXXXXXXXX XXXXXXXXXX
 EOF
 
 goalign mask -i input -o result -s 0 -l 200 -p
-diff expected result
+diff -q -b expected result
 
 echo "->goalign mask / nucl"
 cat > input <<EOF
@@ -2530,7 +2531,7 @@ Seq0009  NNAAAGGGTA TGGCCATGTG
 EOF
 
 goalign mask -i input -o result -s 0 -l 2 -p
-diff expected result
+diff -q -b expected result
 rm -f input expected result
 
 echo "->goalign replace"
@@ -2563,7 +2564,7 @@ Seq0009  G--AAGGG-- TGGCCATGTG
 EOF
 
 goalign replace -s TA -n '--' -i input -o result -p
-diff expected result
+diff -q -b expected result
 rm -f input expected result
 
 echo "->goalign replace unalign"
@@ -2614,7 +2615,7 @@ G--AAGGG--TGG
 EOF
 
 goalign replace -s TA -n '--' -i input -o result -p --unaligned
-diff expected result
+diff -q -b expected result
 rm -f input expected result
 
 
@@ -2648,6 +2649,6 @@ Seq0009  GTAAAGGGTA TGGCCATGTG
 EOF
 
 goalign replace -s 'GA.' -e -n '---' -p -i input -o result
-diff expected result
+diff -q -b expected result
 rm -f input expected result
 
