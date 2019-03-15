@@ -6,6 +6,8 @@ set -o pipefail
 
 TESTDATA="tests/data"
 
+GOALIGN=./goalign
+
 echo "->goalign addid"
 cat > expected <<EOF
 >prefix_Seq0000_suffix
@@ -24,7 +26,7 @@ AGGTATCTTCCTGTGTTACC
 CATAGCCCCTGATGCCCTGACCCGTGTCGCGGCAACGTCTACATTTCACGATAAATACTCCGCTGCTAGTCGGCTCTAGA
 TGCTTTTCTTCCAGATCTGG
 EOF
-goalign random --seed 10 -n 5 | goalign addid -n prefix_ | goalign addid -n _suffix -r > result
+${GOALIGN} random --seed 10 -n 5 | ${GOALIGN} addid -n prefix_ | ${GOALIGN} addid -n _suffix -r > result
 diff -q -b result expected
 rm -f expected result mapfile
 
@@ -57,7 +59,7 @@ AGGTATCTTCCTGTGTTACC
 >prefix_Seq0004_suffix
 CA
 EOF
-goalign addid -n prefix_ -i input --unaligned | goalign addid -n _suffix -r --unaligned > result
+${GOALIGN} addid -n prefix_ -i input --unaligned | ${GOALIGN} addid -n _suffix -r --unaligned > result
 diff -q -b result expected
 rm -f expected result mapfile input
 
@@ -90,7 +92,7 @@ cat > expectedlog <<EOF
 [Warning] in cmd/clean.go (line 56), message: Alignment (0) length after cleaning=39
 [Warning] in cmd/clean.go (line 57), message: Alignment (0) number of gaps=61
 EOF
-goalign random --seed 10 | goalign mutate gaps -n 1 -r 0.1 --seed 10 |  goalign clean sites > result 2>log
+${GOALIGN} random --seed 10 | ${GOALIGN} mutate gaps -n 1 -r 0.1 --seed 10 |  ${GOALIGN} clean sites > result 2>log
 diff -q -b result expected
 rm -f expected result mapfile log expectedlog
 
@@ -117,7 +119,7 @@ cat > expectedlog <<EOF
 [Warning] in cmd/cleanseqs.go (line 37), message: Alignment (0) #seqs after cleaning=5
 [Warning] in cmd/cleanseqs.go (line 38), message: Alignment (0) removed sequences=5
 EOF
-goalign random --seed 10 | goalign mutate gaps -n 0.5 -r 0.7 --seed 10 |  goalign clean seqs > result 2>log
+${GOALIGN} random --seed 10 | ${GOALIGN} mutate gaps -n 0.5 -r 0.7 --seed 10 |  ${GOALIGN} clean seqs > result 2>log
 diff -q -b result expected
 rm -f expected result mapfile log expectedlog
 
@@ -145,7 +147,7 @@ GGTTGAAGGACTCTAGAGCT
 >Seq0009
 GTAAAGGGTATGGCCATGTG
 EOF
-goalign random --seed 10 -l 20 > result
+${GOALIGN} random --seed 10 -l 20 > result
 diff -q -b result expected
 rm -f expected result mapfile
 
@@ -162,7 +164,7 @@ GGCCA
 >Seq0004
 GAATC
 EOF
-goalign random -n 5 -l 5 --seed 10 -p | goalign reformat fasta -p > result
+${GOALIGN} random -n 5 -l 5 --seed 10 -p | ${GOALIGN} reformat fasta -p > result
 diff -q -b result expected
 rm -f expected result mapfile
 
@@ -179,7 +181,7 @@ GGCCA
 >Seq0004
 GAATC
 EOF
-goalign random -n 5 -l 5 --seed 10 -p --input-strict | goalign reformat fasta -p > result
+${GOALIGN} random -n 5 -l 5 --seed 10 -p --input-strict | ${GOALIGN} reformat fasta -p > result
 diff -q -b result expected
 rm -f expected result mapfile
 
@@ -208,7 +210,7 @@ GGCCA
 >Seq0004
 GAATC
 EOF
-goalign reformat fasta -i input -o result
+${GOALIGN} reformat fasta -i input -o result
 diff -q -b result expected
 rm -f expected input result
 
@@ -237,7 +239,7 @@ GGCCA
 >Seq0004
 GAATC
 EOF
-goalign reformat fasta -i input -o result
+${GOALIGN} reformat fasta -i input -o result
 diff -q -b result expected
 rm -f expected input result
 
@@ -256,7 +258,7 @@ Seq0004  GAGTGGAGGC TTTATGGCAC AAGGTATTAG AGACTGAGGG GCACCCCGGC ATGGTAAGCA
    GAACAAATGA ACCCC
    GGAGCCATCG CGAAG
 EOF
-goalign random -n 5 -l 75 --seed 10 | goalign reformat phylip > result
+${GOALIGN} random -n 5 -l 75 --seed 10 | ${GOALIGN} reformat phylip > result
 diff -q -b result expected
 rm -f expected result mapfile
 
@@ -270,7 +272,7 @@ Seq0002  CTATTTTTCC GGTTGAAGGA CTCTAGAGCT GTAAAGGGTA TGGCCATGTG CTAAGCGCGG GCGGA
 Seq0003  AGCAAGGTTA AATACTCGGC AATGCCCCAT GATCCCCCAA GGACAATAAG AGCGAAGTTA GAACAAATGA ACCCC
 Seq0004  GAGTGGAGGC TTTATGGCAC AAGGTATTAG AGACTGAGGG GCACCCCGGC ATGGTAAGCA GGAGCCATCG CGAAG
 EOF
-goalign random -n 5 -l 75 --seed 10 | goalign reformat phylip --one-line > result
+${GOALIGN} random -n 5 -l 75 --seed 10 | ${GOALIGN} reformat phylip --one-line > result
 diff -q -b result expected
 rm -f expected result mapfile
 
@@ -283,7 +285,7 @@ Seq0002  CTATTTTTCCGGTTGAAGGACTCTAGAGCTGTAAAGGGTATGGCCATGTGCTAAGCGCGGGCGGATTGCTG
 Seq0003  AGCAAGGTTAAATACTCGGCAATGCCCCATGATCCCCCAAGGACAATAAGAGCGAAGTTAGAACAAATGAACCCC
 Seq0004  GAGTGGAGGCTTTATGGCACAAGGTATTAGAGACTGAGGGGCACCCCGGCATGGTAAGCAGGAGCCATCGCGAAG
 EOF
-goalign random -n 5 -l 75 --seed 10 | goalign reformat phylip --one-line --no-block > result
+${GOALIGN} random -n 5 -l 75 --seed 10 | ${GOALIGN} reformat phylip --one-line --no-block > result
 diff -q -b result expected
 rm -f expected result mapfile
 
@@ -302,7 +304,7 @@ Seq0004  GAGTGGAGGCTTTATGGCACAAGGTATTAGAGACTGAGGGGCACCCCGGCATGGTAAGCA
    GAACAAATGAACCCC
    GGAGCCATCGCGAAG
 EOF
-goalign random -n 5 -l 75 --seed 10 | goalign reformat phylip --no-block > result
+${GOALIGN} random -n 5 -l 75 --seed 10 | ${GOALIGN} reformat phylip --no-block > result
 diff -q -b result expected
 rm -f expected result mapfile
 
@@ -328,7 +330,7 @@ GGCCA
 >Seq		0004
 GAATC
 EOF
-goalign reformat phylip -i input.fa --clean-names > result
+${GOALIGN} reformat phylip -i input.fa --clean-names > result
 diff -q -b result expected
 rm -f expected result mapfile input.fa
 
@@ -354,7 +356,7 @@ GGCCA
 >Se		q[]();.,0004
 GAATC
 EOF
-goalign reformat fasta -i input.fa --clean-names > result
+${GOALIGN} reformat fasta -i input.fa --clean-names > result
 diff -q -b result expected
 rm -f expected result mapfile input.fa
 
@@ -371,7 +373,7 @@ GATTA
 > seq2 [A second comment] (Maybe a wrong sequence: to be updated?)
 CCGTA
 EOF
-goalign reformat fasta -i input.fa --clean-names > result
+${GOALIGN} reformat fasta -i input.fa --clean-names > result
 diff -q -b result expected
 rm -f expected result mapfile input.fa
 
@@ -384,7 +386,7 @@ Seq0002   CCGTA
 Seq0003   GGCCA
 Seq0004   GAATC
 EOF
-goalign random -n 5 -l 5 --seed 10 | goalign reformat phylip --output-strict > result
+${GOALIGN} random -n 5 -l 5 --seed 10 | ${GOALIGN} reformat phylip --output-strict > result
 diff -q -b result expected
 rm -f expected result mapfile
 
@@ -403,7 +405,7 @@ Seq0004 GAATC
 ;
 end;
 EOF
-goalign random -n 5 -l 5 --seed 10 | goalign reformat nexus > result
+${GOALIGN} random -n 5 -l 5 --seed 10 | ${GOALIGN} reformat nexus > result
 diff -q -b result expected
 rm -f expected result mapfile
 
@@ -473,7 +475,7 @@ GVYLGKAKNGGGGEYIFGGYDSTK
 AIG-ATQNQYGEFDIDCDNLSYMPTVVFEINGKMYPLTPSAYTSQDQGFCTSGFQSEN------HSQKWILGDVFIREYY
 SVFDRANNLVG----LAKAI----
 EOF
-goalign reformat fasta -i input -u > result
+${GOALIGN} reformat fasta -i input -u > result
 diff -q -b result expected
 rm -f expected result input
 
@@ -503,7 +505,7 @@ AGVGTVPMTDYGN-DIEYYGQVTIGTPGKK
 >1cms_1
 -----------------YTGSLHWVPVTVQ
 EOF
-goalign reformat fasta -i input -u | sed 's/ (goalign version.*//g'> result
+${GOALIGN} reformat fasta -i input -u | sed 's/ (GOALIGN version.*//g'> result
 diff -q -b result expected
 rm -f expected result input
 
@@ -534,7 +536,7 @@ CLUSTAL W
 1cms_1   -----------------YTGSLHWVPVTVQ 30
                           *   :        
 EOF
-goalign reformat clustal -i input | sed 's/ (goalign version.*//g'> result
+${GOALIGN} reformat clustal -i input | sed 's/ (goalign version.*//g'> result
 diff -q -b result expected
 rm -f expected result input
 
@@ -552,7 +554,7 @@ Seq0003 GGCCA
 Seq0004 GAATC
 ;
 EOF
-goalign random -n 5 -l 5 --seed 10 | goalign reformat tnt > result
+${GOALIGN} random -n 5 -l 5 --seed 10 | ${GOALIGN} reformat tnt > result
 diff -q -b result expected
 rm -f expected result mapfile
 
@@ -571,7 +573,7 @@ Seq0003 GGCCA
 Seq0004 GAATC
 ;
 EOF
-goalign random -n 5 -l 5 --seed 10 | goalign reformat tnt --auto-detect > result
+${GOALIGN} random -n 5 -l 5 --seed 10 | ${GOALIGN} reformat tnt --auto-detect > result
 diff -q -b result expected
 rm -f expected result mapfile
 
@@ -590,7 +592,7 @@ Seq0004 GAATC
 ;
 end;
 EOF
-goalign random -n 5 -l 5 --seed 10 -x | goalign reformat nexus --auto-detect > result
+${GOALIGN} random -n 5 -l 5 --seed 10 -x | ${GOALIGN} reformat nexus --auto-detect > result
 diff -q -b result expected
 rm -f expected result mapfile
 
@@ -603,7 +605,7 @@ Seq0002   CCGTA
 Seq0003   GGCCA
 Seq0004   GAATC
 EOF
-goalign random -n 5 -l 5 --seed 10 | goalign reformat phylip --output-strict | goalign reformat phylip --output-strict --auto-detect > result
+${GOALIGN} random -n 5 -l 5 --seed 10 | ${GOALIGN} reformat phylip --output-strict | ${GOALIGN} reformat phylip --output-strict --auto-detect > result
 diff -q -b result expected
 rm -f expected result mapfile
 
@@ -616,7 +618,7 @@ Seq0002  CCGTA
 Seq0003  GGCCA
 Seq0004  GAATC
 EOF
-goalign random -n 5 -l 5 --seed 10 -p | goalign reformat phylip --auto-detect > result
+${GOALIGN} random -n 5 -l 5 --seed 10 -p | ${GOALIGN} reformat phylip --auto-detect > result
 diff -q -b result expected
 rm -f expected result mapfile
 
@@ -633,7 +635,7 @@ GGCCA
 >Seq0004
 GAATC
 EOF
-goalign random -n 5 -l 5 --seed 10 | goalign reformat fasta --auto-detect > result
+${GOALIGN} random -n 5 -l 5 --seed 10 | ${GOALIGN} reformat fasta --auto-detect > result
 diff -q -b result expected
 rm -f expected result mapfile
 
@@ -660,7 +662,7 @@ CCGTA
 GGCCA
 GAATC
 EOF
-goalign reformat paml -i input.test -p > output.paml
+${GOALIGN} reformat paml -i input.test -p > output.paml
 diff -q -b output.paml expected
 rm -f expected output.paml input.test
 
@@ -673,7 +675,7 @@ Tip3	0.192803956978	0.082364641962	0.000000000000	0.071285264523	0.086842665158
 Tip2	0.232646053483	0.128396525775	0.071285264523	0.000000000000	0.111961817720
 Tip1	0.235379041630	0.142776083476	0.086842665158	0.111961817720	0.000000000000
 EOF
-goalign compute distance -m f81 -i ${TESTDATA}/test_distance.phy.gz -p > result
+${GOALIGN} compute distance -m f81 -i ${TESTDATA}/test_distance.phy.gz -p > result
 diff -q -b result expected
 rm -f expected result mapfile
 
@@ -687,7 +689,7 @@ Tip3	3.000000000000	1.000000000000	0.000000000000	0.000000000000	1.000000000000
 Tip2	3.000000000000	1.000000000000	0.000000000000	0.000000000000	1.000000000000
 Tip1	4.000000000000	2.000000000000	1.000000000000	1.000000000000	0.000000000000
 EOF
-goalign compute distance -m rawdist -i ${TESTDATA}/test_rawdistance.phy.gz -p > result
+${GOALIGN} compute distance -m rawdist -i ${TESTDATA}/test_rawdistance.phy.gz -p > result
 diff -q -b result expected
 rm -f expected result mapfile
 
@@ -700,7 +702,7 @@ Tip3	3.000000000000	0.000000000000	0.000000000000	0.000000000000	1.000000000000
 Tip2	3.000000000000	0.000000000000	0.000000000000	0.000000000000	1.000000000000
 Tip1	4.000000000000	1.000000000000	1.000000000000	1.000000000000	0.000000000000
 EOF
-goalign compute distance -m rawdist -i ${TESTDATA}/test_rawdistance2.phy.gz -p > result
+${GOALIGN} compute distance -m rawdist -i ${TESTDATA}/test_rawdistance2.phy.gz -p > result
 diff -q -b result expected
 rm -f expected result mapfile
 
@@ -714,7 +716,7 @@ Tip3	0.170000000000	0.078000000000	0.000000000000	0.068000000000	0.082000000000
 Tip2	0.200000000000	0.118000000000	0.068000000000	0.000000000000	0.104000000000
 Tip1	0.202000000000	0.130000000000	0.082000000000	0.104000000000	0.000000000000
 EOF
-goalign compute distance -m pdist -i ${TESTDATA}/test_distance.phy.gz -p > result
+${GOALIGN} compute distance -m pdist -i ${TESTDATA}/test_distance.phy.gz -p > result
 diff -q -b result expected
 rm -f expected result mapfile
 
@@ -727,7 +729,7 @@ Tip3	0.192783827242	0.082361149505	0.000000000000	0.071282661515	0.086838774745
 Tip2	0.232616196228	0.128387859288	0.071282661515	0.000000000000	0.111955277061
 Tip1	0.235348439687	0.142765296368	0.086838774745	0.111955277061	0.000000000000
 EOF
-goalign compute distance -m jc -i ${TESTDATA}/test_distance.phy.gz -p > result
+${GOALIGN} compute distance -m jc -i ${TESTDATA}/test_distance.phy.gz -p > result
 diff -q -b result expected
 rm -f expected result mapfile
 
@@ -741,7 +743,7 @@ Tip3	0.193245190192	0.082453892766	0.000000000000	0.071292715047	0.086845484497
 Tip2	0.233028942469	0.128434558659	0.071292715047	0.000000000000	0.111966480828
 Tip1	0.235571330668	0.142789108437	0.086845484497	0.111966480828	0.000000000000
 EOF
-goalign compute distance -m k2p -i ${TESTDATA}/test_distance.phy.gz -p > result
+${GOALIGN} compute distance -m k2p -i ${TESTDATA}/test_distance.phy.gz -p > result
 diff -q -b result expected
 rm -f expected result mapfile
 
@@ -755,7 +757,7 @@ Tip3	0.193258659612	0.082456191295	0.000000000000	0.071294953075	0.086849003947
 Tip2	0.233050782717	0.128441770138	0.071294953075	0.000000000000	0.111972393604
 Tip1	0.235595781888	0.142798708889	0.086849003947	0.111972393604	0.000000000000
 EOF
-goalign compute distance -m f84 -i ${TESTDATA}/test_distance.phy.gz -p > result
+${GOALIGN} compute distance -m f84 -i ${TESTDATA}/test_distance.phy.gz -p > result
 diff -q -b result expected
 rm -f expected result mapfile
 
@@ -769,7 +771,7 @@ Tip3	0.193263808045	0.082492772223	0.000000000000	0.071294993201	0.086849459942
 Tip2	0.233468379444	0.128715806962	0.071294993201	0.000000000000	0.112213623285
 Tip1	0.236008401698	0.142896903086	0.086849459942	0.112213623285	0.000000000000
 EOF
-goalign compute distance -m tn93 -i ${TESTDATA}/test_distance.phy.gz -p > result
+${GOALIGN} compute distance -m tn93 -i ${TESTDATA}/test_distance.phy.gz -p > result
 diff -q -b result expected
 rm -f expected result mapfile
 
@@ -796,7 +798,7 @@ Alignment	Site	Entropy
 0	17	0.000
 0	18	0.000
 EOF
-goalign compute entropy -i ${TESTDATA}/test_distance.phy.gz -p > restmp
+${GOALIGN} compute entropy -i ${TESTDATA}/test_distance.phy.gz -p > restmp
 head -n 20 restmp > result
 diff -q -b result expected
 rm -f expected result restmp
@@ -825,7 +827,7 @@ cat > expected <<EOF
 18	0.004	1.953	0.004	0.004
 19	0.004	1.953	0.004	0.004
 EOF
-goalign compute pssm -n 4 -i ${TESTDATA}/test_distance.phy.gz -p -c 0.01  > restmp
+${GOALIGN} compute pssm -n 4 -i ${TESTDATA}/test_distance.phy.gz -p -c 0.01  > restmp
 head -n 20 restmp > result
 diff -q -b result expected
 rm -f expected result restmp
@@ -854,7 +856,7 @@ TTTAAACACTTTTAAACACT
 >Seq0009
 TTTACATCGATTTACATCGA
 EOF
-goalign random -l 10 --seed 10 | goalign concat  <(goalign random -l 10 --seed 10 | goalign shuffle seqs) > result
+${GOALIGN} random -l 10 --seed 10 | ${GOALIGN} concat  <(${GOALIGN} random -l 10 --seed 10 | ${GOALIGN} shuffle seqs) > result
 diff -q -b result expected
 rm -f expected result
 
@@ -881,7 +883,7 @@ TTTAAACACTTTTAAACACT
 >Seq0009
 TTTACATCGATTTACATCGA
 EOF
-goalign random -l 10 --seed 10 | goalign concat  <(goalign random -l 10 --seed 10 | goalign shuffle seqs) > result
+${GOALIGN} random -l 10 --seed 10 | ${GOALIGN} concat  <(${GOALIGN} random -l 10 --seed 10 | ${GOALIGN} shuffle seqs) > result
 diff -q -b result expected
 rm -f expected result
 
@@ -942,7 +944,7 @@ AGAAGCTTTATTAAGTTTTC
 >Seq0009
 ----------TTTACATCGA
 EOF
-goalign concat -i none input1 input2 > result
+${GOALIGN} concat -i none input1 input2 > result
 diff -q -b result expected
 rm -f expected result input1 input2
 
@@ -1003,7 +1005,7 @@ TTTAAACACT----------
 >Seq0009
 TTTACATCGA----------
 EOF
-goalign concat -i none input1 input2 > result
+${GOALIGN} concat -i none input1 input2 > result
 diff -q -b result expected
 rm -f expected result input1 input2
 
@@ -1056,7 +1058,7 @@ TTTACATCGA----------
 >Seq0003
 ----------CGCGAGCCTC
 EOF
-goalign concat -i none input1 input2 > result
+${GOALIGN} concat -i none input1 input2 > result
 diff -q -b result expected
 rm -f expected result input1 input2
 
@@ -1087,9 +1089,9 @@ EOF
 rm -f input
 for i in {1..10}
 do
-    goalign random -n 1 -l 10 --seed 10 -p >> input
+    ${GOALIGN} random -n 1 -l 10 --seed 10 -p >> input
 done
-goalign divide -i input -p -o divprefix -f
+${GOALIGN} divide -i input -p -o divprefix -f
 cat divprefix_* > result
 diff -q -b result expected
 rm -f expected result divprefix* input
@@ -1118,7 +1120,7 @@ GGTTGAAGGACT-TAGAGC-
 >Seq0009
 GTAAAGGGTATGGCCATGTG
 EOF
-goalign random --seed 10 -l 20 | goalign mutate gaps --seed 10 > result
+${GOALIGN} random --seed 10 -l 20 | ${GOALIGN} mutate gaps --seed 10 > result
 diff -q -b result expected
 rm -f expected result
 
@@ -1146,7 +1148,7 @@ GGTTAAAGGACTCTATAGCT
 >Seq0009
 GAAAAGGGTATGGCCATGTG
 EOF
-goalign random --seed 10 -l 20 | goalign mutate snvs --seed 10 > result
+${GOALIGN} random --seed 10 -l 20 | ${GOALIGN} mutate snvs --seed 10 > result
 diff -q -b result expected
 rm -f expected result
 
@@ -1171,7 +1173,7 @@ GAGAGGACTAGTTCATACTT
 >New0004
 TTTAAACACTTTTACATCGA
 EOF
-goalign random --seed 10 -l 20 -n 5 | goalign rename -m mapfile > result
+${GOALIGN} random --seed 10 -l 20 -n 5 | ${GOALIGN} rename -m mapfile > result
 diff -q -b result expected
 rm -f expected result mapfile
 
@@ -1195,7 +1197,7 @@ GAGAGGACTAGTTCATACTT
 >New0004
 TTTAAACACTTTTACATCGA
 EOF
-goalign random --seed 10 -l 20 -n 5 | goalign rename --regexp 'Seq(\d+)' --replace 'New$1' -m mapfile2 > result
+${GOALIGN} random --seed 10 -l 20 -n 5 | ${GOALIGN} rename --regexp 'Seq(\d+)' --replace 'New$1' -m mapfile2 > result
 diff -q -b result expected
 diff -q -b <(sort mapfile) <(sort mapfile2)
 rm -f expected result mapfile mapfile2
@@ -1229,7 +1231,7 @@ cat > expectedmap <<EOF
 Se		q[]();.,0004	Se-q-0004
 EOF
 
-goalign rename --clean-names -i input -o result --map-file outmap
+${GOALIGN} rename --clean-names -i input -o result --map-file outmap
 diff -q -b result expected
 rm -f input expected result outmap
 
@@ -1261,7 +1263,7 @@ cat > expectedmap <<EOF
 Se		q[]();.,0004	Se-q-0004
 EOF
 
-goalign rename --unaligned --clean-names -i input -o result --map-file outmap
+${GOALIGN} rename --unaligned --clean-names -i input -o result --map-file outmap
 diff -q -b result expected
 rm -f input expected result outmap
 
@@ -1275,7 +1277,7 @@ GAATCTGAAG
 >Seq0008
 TTTAAACACT
 EOF
-goalign random -l 10 --seed 10 | goalign sample seqs -n 3 --seed 10 > result
+${GOALIGN} random -l 10 --seed 10 | ${GOALIGN} sample seqs -n 3 --seed 10 > result
 diff -q -b result expected
 rm -f expected result
 
@@ -1304,7 +1306,7 @@ TAAAC
 >Seq0009
 TACAT
 EOF
-goalign random -l 10 --seed 10 | goalign sample sites -l 5 --seed 10 > result
+${GOALIGN} random -l 10 --seed 10 | ${GOALIGN} sample sites -l 5 --seed 10 > result
 diff -q -b result expected
 rm -f expected result
 
@@ -1333,7 +1335,7 @@ TTTAAACACT
 >Seq0009
 TTTACATCGA
 EOF
-goalign random -l 10 --seed 10 | goalign shuffle recomb -l 0.5 -n 0.25 --seed 11 > result
+${GOALIGN} random -l 10 --seed 10 | ${GOALIGN} shuffle recomb -l 0.5 -n 0.25 --seed 11 > result
 diff -q -b result expected
 rm -f expected result
 
@@ -1360,7 +1362,7 @@ TTTAAACACT
 >Seq0009
 TTTACATCGA
 EOF
-goalign random -l 10 --seed 10 | goalign shuffle recomb -l 0.5 -n 0.25 --seed 11 > result
+${GOALIGN} random -l 10 --seed 10 | ${GOALIGN} shuffle recomb -l 0.5 -n 0.25 --seed 11 > result
 diff -q -b result expected
 rm -f expected result
 
@@ -1397,7 +1399,7 @@ Seq0008
 Seq0007
 EOF
 
-goalign random -l 50 --seed 10 | goalign shuffle sites -r 0.5 --seed 10 --rogue 0.5 --rogue-file rogues.txt > result
+${GOALIGN} random -l 50 --seed 10 | ${GOALIGN} shuffle sites -r 0.5 --seed 10 --rogue 0.5 --rogue-file rogues.txt > result
 diff -q -b result expected
 diff -q -b rogueexpected rogues.txt
 rm -f expected result rogueexpected rogues.txt
@@ -1434,8 +1436,8 @@ Seq0004
 Seq0006
 EOF
 
-goalign random -l 50 --seed 10 | goalign shuffle sites -r 0.5 --seed 10 --rogue 0.5 --rogue-file rogues.txt --stable-rogues  > result
-goalign random -l 30 --seed 11 | goalign shuffle sites -r 0.5 --seed 10 --rogue 0.5 --rogue-file rogues2.txt --stable-rogues  > /dev/null
+${GOALIGN} random -l 50 --seed 10 | ${GOALIGN} shuffle sites -r 0.5 --seed 10 --rogue 0.5 --rogue-file rogues.txt --stable-rogues  > result
+${GOALIGN} random -l 30 --seed 11 | ${GOALIGN} shuffle sites -r 0.5 --seed 10 --rogue 0.5 --rogue-file rogues2.txt --stable-rogues  > /dev/null
 diff -q -b result expected
 diff -q -b rogueexpected rogues.txt
 # Should be the same list of rogues, even if random gen seed is
@@ -1456,7 +1458,7 @@ G	17	0.170000
 T	34	0.340000
 alphabet	nucleotide
 EOF
-goalign random -l 10 --seed 10 | goalign stats > result
+${GOALIGN} random -l 10 --seed 10 | ${GOALIGN} stats > result
 diff -q -b result expected
 rm -f expected result
 
@@ -1472,7 +1474,7 @@ CCATACTCGT
 >Seq0003
 GCTGTGGAGC
 EOF
-goalign random -n 4 --seed 10 -l 10000 | goalign subseq -l 10 -s 5 > result
+${GOALIGN} random -n 4 --seed 10 -l 10000 | ${GOALIGN} subseq -l 10 -s 5 > result
 diff -q -b result expected
 rm -f expected result
 
@@ -1553,7 +1555,7 @@ Seq0007  GCAT
 Seq0008  TACT
 Seq0009  AATT
 EOF
-goalign subseq -i input -p -l 4 -s 0 --step 1 -o output.phylip
+${GOALIGN} subseq -i input -p -l 4 -s 0 --step 1 -o output.phylip
 diff -q -b output.phylip expected.1
 diff -q -b output_sub1.phylip expected.2
 diff -q -b output_al1.phylip expected.3
@@ -1569,7 +1571,7 @@ CCGTAGGCCA
 >Seq3999
 CGGGGCCGAC
 EOF
-goalign random -n 4000 --seed 10 -l 10 | goalign subset Seq0001 Seq3999 > result
+${GOALIGN} random -n 4000 --seed 10 -l 10 | ${GOALIGN} subset Seq0001 Seq3999 > result
 diff -q -b result expected
 rm -f expected result
 
@@ -1591,7 +1593,7 @@ Seq0003	S04
 Seq0000	S01
 Seq0001	S02
 EOF
-goalign random --seed 10 -n 4 -l 5 | goalign trim name -n 3 -m mapfile > result
+${GOALIGN} random --seed 10 -n 4 -l 5 | ${GOALIGN} trim name -n 3 -m mapfile > result
 diff -q -b result expected
 diff -q -b <(sort mapfile) <(sort expectedmap)
 rm -f expected result expectedmap mapfile
@@ -1614,7 +1616,7 @@ Seq0003	S4
 Seq0000	S1
 Seq0001	S2
 EOF
-goalign random --seed 10 -n 4 -l 5 | goalign trim name -a -m mapfile > result
+${GOALIGN} random --seed 10 -n 4 -l 5 | ${GOALIGN} trim name -a -m mapfile > result
 diff -q -b result expected
 diff -q -b <(sort mapfile) <(sort expectedmap)
 rm -f expected result expectedmap mapfile
@@ -1664,7 +1666,7 @@ Seq0005	S5
 Seq0006	S6
 Seq0007	S7
 EOF
-goalign trim name -i input -a -m mapfile2 -p > result
+${GOALIGN} trim name -i input -a -m mapfile2 -p > result
 diff -q -b result expected
 diff -q -b <(sort mapfile) <(sort mapfile2)
 rm -f expected result mapfile input mapfile2
@@ -1681,7 +1683,7 @@ TGAAG
 >Seq0003
 ACACT
 EOF
-goalign random --seed 10 -n 4 -l 10 | goalign trim seq -n 5 -s > result
+${GOALIGN} random --seed 10 -n 4 -l 10 | ${GOALIGN} trim seq -n 5 -s > result
 diff -q -b result expected
 rm -f expected result 
 
@@ -1719,7 +1721,7 @@ TGAGCTCTCT
 ACCTACGGCTCTAGACAGCTGAAGTCCGGTTCCGAGCACTGTACGGAAACTTGAAAAGGCTCGACGGAGGCTTGTTCCGC
 AGAGTGGGACTATAACATAC
 EOF
-goalign random --seed 10 -p | goalign mutate gaps --seed 10 -p | goalign unalign -p > result
+${GOALIGN} random --seed 10 -p | ${GOALIGN} mutate gaps --seed 10 -p | ${GOALIGN} unalign -p > result
 diff -q -b result expected
 rm -f expected result 
 
@@ -1761,7 +1763,7 @@ ACATAGAGGGTACCTCTAAGGCATAGAGGGTACCTCTAAG
 >mouse
 ACATAGAGGGTACCTCTAATTCATAGAGGGTACCTCTAAG
 EOF
-goalign reformat fasta -i nexus -x -o result
+${GOALIGN} reformat fasta -i nexus -x -o result
 diff -q -b expected result
 rm -f expected result nexus
 
@@ -1805,7 +1807,7 @@ ACATAGAGGGTACCTCTAAGGCATAGAGGGTACCTCTAAG
 >mouse
 ACATAGAGGGTACCTCTAATTCATAGAGGGTACCTCTAAG
 EOF
-goalign reformat fasta -i nexus -x -o result
+${GOALIGN} reformat fasta -i nexus -x -o result
 diff -q -b expected result
 rm -f expected result nexus
 
@@ -1823,7 +1825,7 @@ ATCGAACACT
 >Seq0004
 TTAAGTTTTC
 EOF
-goalign random --seed 10 -l 10 -n 5 | goalign shuffle seqs | goalign sort > result
+${GOALIGN} random --seed 10 -l 10 -n 5 | ${GOALIGN} shuffle seqs | ${GOALIGN} sort > result
 diff -q -b expected result
 rm -f expected result
 
@@ -1839,7 +1841,7 @@ cat > expected <<EOF
 >allcodons
 AAAALLLLLLRRRRRRKKNNMDDFFCCPPPPQQSSSSSSEETTTTGGGGWHHYYIIIVVVV***
 EOF
-goalign translate -i input --phase 0 -o result
+${GOALIGN} translate -i input --phase 0 -o result
 diff -q -b expected result
 rm -f input expected result
 
@@ -1861,7 +1863,7 @@ AAAALLLLLLRRRRRRKKNNMDDFFCCPPPPQQSSSSSSEETTTTGGGGWHHYYIIIVVVV***
 >allcodons2
 AAALLLLLLRRRRRRKKNNMDDFFCCPPPPQQSSSSSSEETTTTGGGGWHHYYIIIVVV**
 EOF
-goalign translate -i input --phase 0 --unaligned -o result
+${GOALIGN} translate -i input --phase 0 --unaligned -o result
 diff -q -b expected result
 rm -f input expected result
 
@@ -1878,7 +1880,7 @@ MSLSDKDKAAVKALW
 >test1 _2
 *VSLIRTRLL*KPY
 EOF
-goalign translate -i input --phase -1 -o result
+${GOALIGN} translate -i input --phase -1 -o result
 diff -q -b expected result
 rm -f input expected result
 
@@ -1897,7 +1899,7 @@ cat > expected <<EOF
 2  CCCCCC
 3  GGGGGG
 EOF
-goalign dedup -i input -o result -p
+${GOALIGN} dedup -i input -o result -p
 diff -q -b expected result
 rm -f input expected result
 
@@ -1918,7 +1920,7 @@ cat > expected <<EOF
 1_0001  AAAAAC
 2  CCCCCC
 EOF
-goalign dedup -i input -o result -p
+${GOALIGN} dedup -i input -o result -p
 diff -q -b expected result
 rm -f input expected result
 
@@ -1943,8 +1945,8 @@ AACCT
 >Seq0003
 AAGGC
 EOF
-goalign random --seed 10 -l 5 -n 4 -o orig.fa
-goalign build seqboot --seed 10 -i orig.fa -n 2 -o boot
+${GOALIGN} random --seed 10 -l 5 -n 4 -o orig.fa
+${GOALIGN} build seqboot --seed 10 -i orig.fa -n 2 -o boot
 diff -q -b boot0.fa expected.1
 diff -q -b boot1.fa expected.2
 diff -q -b orig.fa expected.1 > /dev/null || echo "expected.1 ok"
@@ -1973,8 +1975,8 @@ AACCT
 >Seq0003
 AAGGC
 EOF
-goalign random --seed 10 -l 5 -n 4 -o orig.fa
-goalign build seqboot --seed 10 -i orig.fa -n 2 -o boot --gz
+${GOALIGN} random --seed 10 -l 5 -n 4 -o orig.fa
+${GOALIGN} build seqboot --seed 10 -i orig.fa -n 2 -o boot --gz
 diff -q -b <(gunzip -c boot0.fa.gz) expected.1
 diff -q -b <(gunzip -c boot1.fa.gz) expected.2
 if [[ $(ls boot*.fa.gz| wc -l) -ne 2 ]]; then echo "Wrong number of bootstrap alignments"; exit 1; fi
@@ -2001,8 +2003,8 @@ AACCT
 >Seq0003
 AAGGC
 EOF
-goalign random --seed 10 -l 5 -n 4 -o orig.fa
-goalign build seqboot --seed 10 -i orig.fa -n 2 -o boot --gz --tar
+${GOALIGN} random --seed 10 -l 5 -n 4 -o orig.fa
+${GOALIGN} build seqboot --seed 10 -i orig.fa -n 2 -o boot --gz --tar
 tar -xzf boot.tar.gz
 diff -q -b boot0.fa expected.1
 diff -q -b boot1.fa expected.2
@@ -2037,7 +2039,7 @@ ATCGAA---TTTAAGTTT---CTTCTAATG
 GAGAGGACTAGTTCATACTTTTTAAACACT
 EOF
 
-goalign codonalign -i input.aa -f input.nt -o result
+${GOALIGN} codonalign -i input.aa -f input.nt -o result
 diff -q -b expected result
 rm -f expected result input.aa input.nt
 
@@ -2089,13 +2091,13 @@ cat > expected2 <<EOF
 false
 EOF
 
-goalign identical -i input1 -c input2 > result
+${GOALIGN} identical -i input1 -c input2 > result
 diff -q -b expected1 result
 
-goalign identical -i input1 -c input3 > result
+${GOALIGN} identical -i input1 -c input3 > result
 diff -q -b expected2 result
 
-goalign identical -i input1 -c input4 > result
+${GOALIGN} identical -i input1 -c input4 > result
 diff -q -b expected2 result
 
 rm -f input1 input2 input3 input4 expected1 expected2 results
@@ -2129,7 +2131,7 @@ MDDFFCCPPPPQQSSSSSSEETTTTGGGGWHHYYIIIVVVV***
 MDDFFCCPPPPQQSSSSSSEETTTTGGGGWHHYYIIIVVV**
 EOF
 
-goalign phase -i input --unaligned -o result --aa-output result.aa
+${GOALIGN} phase -i input --unaligned -o result --aa-output result.aa
 diff -q -b expected result
 diff -q -b expected.aa result.aa
 rm -f input expected result expected.aa result.aa
@@ -2162,7 +2164,7 @@ MDDFFCCPPPPQQSSSSSSEETTTTGGGGWHHYYIIIVVVV***
 MDDFFCCPPPPQQSSSSSSEETTTTGGGGWHHYYIIIVVV**
 EOF
 
-goalign phasent -i input --unaligned -o result --aa-output result.aa
+${GOALIGN} phasent -i input --unaligned -o result --aa-output result.aa
 diff -q -b expected result
 diff -q -b expected.aa result.aa
 rm -f input expected result expected.aa result.aa
@@ -2189,7 +2191,7 @@ ATGGATGACTTTTTCTGTTGCCCTCCCCCACCGCAACAGTCTTCCTCATCGAGTAGCGAAGAGACTACCACAACGGGTGG
 CGGAGGGTGGCATCACTATTACATTATCATAGTTGTCGTATAATGA
 EOF
 
-goalign phase -i input --unaligned -o result  --reverse
+${GOALIGN} phase -i input --unaligned -o result  --reverse
 diff -q -b expected result
 rm -f input expected result
 
@@ -2213,7 +2215,7 @@ CGGAGGGTGGCATCACTATTACATTATCATAGTTGTCGTAGTGTAATGATAGC
 ATGGATGACTTTTTCTGTTGCCCTCCCCCACCGCAACAGTCTTCCTCATCGAGTAGCGAAGAGACTACCACAACGGGTGG
 CGGAGGGTGGCATCACTATTACATTATCATAGTTGTCGTATAATGA
 EOF
-goalign phasent -i input --unaligned -o result  --reverse
+${GOALIGN} phasent -i input --unaligned -o result  --reverse
 diff -q -b expected result
 rm -f input expected result
 
@@ -2246,7 +2248,7 @@ MDDFFCCPPPPQQSSSSSSEETTTTGGGGWHHYYIIIVVVV*
 MDDFFCCPPPPQQSSSSSSEETTTTGGGGWHHYYIIIVVV
 EOF
 
-goalign phase -i input --unaligned -o result --aa-output result.aa --reverse --cut-end
+${GOALIGN} phase -i input --unaligned -o result --aa-output result.aa --reverse --cut-end
 diff -q -b expected result
 diff -q -b expected.aa result.aa
 rm -f input expected result expected.aa result.aa
@@ -2279,7 +2281,7 @@ MDDFFCCPPPPQQSSSSSSEETTTTGGGGWHHYYIIIVVVV*
 MDDFFCCPPPPQQSSSSSSEETTTTGGGGWHHYYIIIVVV*
 EOF
 
-goalign phasent -i input --unaligned -o result --aa-output result.aa --reverse --cut-end
+${GOALIGN} phasent -i input --unaligned -o result --aa-output result.aa --reverse --cut-end
 diff -q -b expected result
 diff -q -b expected.aa result.aa
 rm -f input expected result expected.aa result.aa
@@ -2312,7 +2314,7 @@ allcodons2  GCTGCAGCGT TATTGCTTCT CCTACTGCGT CGCCGACGGA GAAGGAAAAA GAATAACATG
    TAATGA
 EOF
 
-goalign sw -i input -o result -p
+${GOALIGN} sw -i input -o result -p
 diff -q -b expected result
 rm -f input expected result
 
@@ -2334,7 +2336,7 @@ GTTTGCATAGACCCGTTATGCCA--GCAGAT------ACAG---CGTCACAAACTTAGG----CTG--------TAGGGC
 GT---------TAGCGGCG-CTCCA
 EOF
 
-goalign sw -i input -o result 
+${GOALIGN} sw -i input -o result 
 diff -q -b expected result
 rm -f input expected result
 
@@ -2355,7 +2357,7 @@ CSLCTYEHVLNNIWNGTSRYQ
 CNEQDYKHYY--YWEG-STYQ
 EOF
 
-goalign sw -i input -o result 
+${GOALIGN} sw -i input -o result 
 diff -q -b expected result
 rm -f input expected result
 
@@ -2378,7 +2380,7 @@ ATGGATGACTTTTTCTGTTGCCCTCCCCCACCGCAACAGTCTTCCTCATCGAGTAGCGAAGAGACTACCACAACGGGTGG
 CGGAGGGTGGCATCACTATTACATTATCATAGTTGTCGTAGTGTAA
 EOF
 
-goalign orf -i input -o result
+${GOALIGN} orf -i input -o result
 diff -q -b expected result
 rm -f input expected result
 
@@ -2397,7 +2399,7 @@ ATGGATGACTTTTTCTGTTGCCCTCCCCCACCGCAACAGTCTTCCTCATCGAGTAGCGAAGAGACTACCACAACGGGTGG
 CGGAGGGTGGCATCACTATTACATTATCATAGTTGTCGTAGTGTAA
 EOF
 
-goalign orf -i input -o result --reverse
+${GOALIGN} orf -i input -o result --reverse
 diff -q -b expected result
 rm -f input expected result
 
@@ -2430,7 +2432,7 @@ Seq0008  XXKVPHTLPH QDQSCLTEWG
 Seq0009  XXTTAYLLGH DYNWFCSEKN
 EOF
 
-goalign mask -i input -o result -s 0 -l 2 -p
+${GOALIGN} mask -i input -o result -s 0 -l 2 -p
 diff -q -b expected result
 
 cat > expected <<EOF
@@ -2447,7 +2449,7 @@ Seq0008  YYKVPHTLXX XXQSCLTEWG
 Seq0009  PGTTAYLLXX XXNWFCSEKN
 EOF
 
-goalign mask -i input -o result -s 8 -l 4 -p
+${GOALIGN} mask -i input -o result -s 8 -l 4 -p
 diff -q -b expected result
 
 cat > expected <<EOF
@@ -2464,7 +2466,7 @@ Seq0008  YYKVPHTLPH QDQSCLTEXX
 Seq0009  PGTTAYLLGH DYNWFCSEXX
 EOF
 
-goalign mask -i input -o result -s 18 -l 2 -p
+${GOALIGN} mask -i input -o result -s 18 -l 2 -p
 diff -q -b expected result
 
 cat > expected <<EOF
@@ -2481,7 +2483,7 @@ Seq0008  XXXXXXXXXX XXXXXXXXXX
 Seq0009  XXXXXXXXXX XXXXXXXXXX
 EOF
 
-goalign mask -i input -o result -s 0 -l 20 -p
+${GOALIGN} mask -i input -o result -s 0 -l 20 -p
 diff -q -b expected result
 
 cat > expected <<EOF
@@ -2498,7 +2500,7 @@ Seq0008  XXXXXXXXXX XXXXXXXXXX
 Seq0009  XXXXXXXXXX XXXXXXXXXX
 EOF
 
-goalign mask -i input -o result -s 0 -l 200 -p
+${GOALIGN} mask -i input -o result -s 0 -l 200 -p
 diff -q -b expected result
 
 echo "->goalign mask / nucl"
@@ -2530,7 +2532,7 @@ Seq0008  NNTTGAAGGA CTCTAGAGCT
 Seq0009  NNAAAGGGTA TGGCCATGTG
 EOF
 
-goalign mask -i input -o result -s 0 -l 2 -p
+${GOALIGN} mask -i input -o result -s 0 -l 2 -p
 diff -q -b expected result
 rm -f input expected result
 
@@ -2563,7 +2565,7 @@ Seq0008  GGTTGAAGGA CTC--GAGCT
 Seq0009  G--AAGGG-- TGGCCATGTG
 EOF
 
-goalign replace -s TA -n '--' -i input -o result -p
+${GOALIGN} replace -s TA -n '--' -i input -o result -p
 diff -q -b expected result
 rm -f input expected result
 
@@ -2614,7 +2616,7 @@ GGTTGAAGGACTC--GAGCT
 G--AAGGG--TGG
 EOF
 
-goalign replace -s TA -n '--' -i input -o result -p --unaligned
+${GOALIGN} replace -s TA -n '--' -i input -o result -p --unaligned
 diff -q -b expected result
 rm -f input expected result
 
@@ -2648,7 +2650,7 @@ Seq0008  GGTT---G-- -TCTA---CT
 Seq0009  GTAAAGGGTA TGGCCATGTG
 EOF
 
-goalign replace -s 'GA.' -e -n '---' -p -i input -o result
+${GOALIGN} replace -s 'GA.' -e -n '---' -p -i input -o result
 diff -q -b expected result
 rm -f input expected result
 
