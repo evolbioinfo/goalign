@@ -917,12 +917,12 @@ func TestPhaseReverseCutEnds(t *testing.T) {
 
 	exp := NewSeqBag(UNKNOWN)
 	exp.AddSequence("Seq0000", "ATGGATGACTTTTTCTGTTGCCCTCCCCCACCGCAACAGTCTTCCTCATCGAGTAGCGAAGAGACTACCACAACGGGTGGCGGAGGGTGGCATCACTATTACATTATCATAGTTGTCGTAGTGTAA", "")
-	exp.AddSequence("Seq0001", "ATGGATGACTTTTTCTGTTGCCCTCCCCCACCGCAACAGTCTTCCTCATCGAGTAGCGAAGAGACTACCACAACGGGTGGCGGAGGGTGGCATCACTATTACATTATCATAGTTGTCGTA", "")
+	exp.AddSequence("Seq0001", "ATGGATGACTTTTTCTGTTGCCCTCCCCCACCGCAACAGTCTTCCTCATCGAGTAGCGAAGAGACTACCACAACGGGTGGCGGAGGGTGGCATCACTATTACATTATCATAGTTGTCGTATAATGA", "")
 	exp.AutoAlphabet()
 
 	expaa := NewSeqBag(UNKNOWN)
 	expaa.AddSequence("Seq0000", "MDDFFCCPPPPQQSSSSSSEETTTTGGGGWHHYYIIIVVVV*", "")
-	expaa.AddSequence("Seq0001", "MDDFFCCPPPPQQSSSSSSEETTTTGGGGWHHYYIIIVVV", "")
+	expaa.AddSequence("Seq0001", "MDDFFCCPPPPQQSSSSSSEETTTTGGGGWHHYYIIIVVV**", "")
 	expaa.AutoAlphabet()
 
 	phaser := NewPhaser()
@@ -954,7 +954,7 @@ func TestPhaseReverseCutEnds(t *testing.T) {
 		t.Error(fmt.Errorf("Expected sequences are different from phased sequences (with reverse) \n%s \n%s", exp.String(), seqs.String()))
 	}
 	if !expaa.Identical(seqsaa) {
-		t.Error(fmt.Errorf("Expected sequences are different from phased sequences (with reverse)"))
+		t.Error(fmt.Errorf("Expected sequences are different from phased sequences (with reverse) \n%s \n%s", expaa.String(), seqsaa.String()))
 	}
 }
 

@@ -423,7 +423,7 @@ func (a *pwaligner) backTrack_SW() {
 				j--
 			}
 		}
-		if i > 0 && j > 0 && a.matrix[i][j] <= .0 {
+		if i > 0 && j > 0 && a.matrix[i][j] <= .0 && a.algo != ALIGN_ALGO_ATG {
 			break
 		}
 	}
