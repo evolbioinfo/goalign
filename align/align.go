@@ -22,7 +22,17 @@ type Alignment interface {
 	CharStatsSite(site int) (map[rune]int, error)
 	Clone() (Alignment, error)
 	CodonAlign(ntseqs SeqBag) (codonAl *align, err error)
-	Concat(Alignment) error                             // concatenates the given alignment with this alignment
+	// concatenates the given alignment with this alignment
+	Concat(Alignment) error
+	// Compares all sequences to the first one and counts all differences per sequence
+	//
+	// - alldiffs: The set of all differences that have been seen at least once
+	// - diffs   : The number of occurences of each difference, for each sequence
+	//             Sequences are ordered as the original alignment. Differences are
+	//             written as REF-NEW, ex: diffs["A-C"]=12 .
+	CountDifferences() (alldiffs []string, diffs []map[string]int)
+	// Compares all sequences to the first one and replace identical characters with .
+	DiffWithFirst()
 	Entropy(site int, removegaps bool) (float64, error) // Entropy of the given site
 	// Positions of potential frameshifts
 	// if startinggapsasincomplete is true, then considers gaps as the beginning
@@ -1027,6 +1037,68 @@ func (a *align) Concat(c Alignment) (err error) {
 	a.length = leng
 
 	return err
+}
+
+// Compares all sequences to the first one and replaces identical characters with .
+func (a *align) DiffWithFirst() {
+	var seqs []Sequence
+	var first, other []rune
+	var i, l int
+	if a.NbSequences() < 2 {
+		return
+	}
+	seqs = a.Sequences()
+	first = seqs[0].SequenceChar()
+	for i = 1; i < a.NbSequences(); i++ {
+		other = seqs[i].SequenceChar()
+		for l = 0; l < len(first); l++ {
+			if first[l] == other[l] {
+				other[l] = '.'
+			}
+		}
+	}
+}
+
+// Compares all sequences to the first one and counts all differences per sequence
+//
+// - alldiffs: The set of all differences that have been seen at least once
+// - diffs   : The number of occurences of each difference, for each sequence
+//             Sequences are ordered as the original alignment. Differences are
+//             written as REF-NEW, ex: diffs["A-C"]=12.
+func (a *align) CountDifferences() (alldiffs []string, diffs []map[string]int) {
+	var alldiffsmap map[string]bool
+	var diffmap map[string]int
+	var first, other []rune
+	var key string
+	var ok bool
+	var i, l, count int
+	var seqs []Sequence
+
+	alldiffs = make([]string, 0)
+	diffs = make([]map[string]int, a.NbSequences()-1)
+	if a.NbSequences() < 2 {
+		return
+	}
+	seqs = a.Sequences()
+	alldiffsmap = make(map[string]bool, 0)
+	first = seqs[0].SequenceChar()
+	for i = 1; i < a.NbSequences(); i++ {
+		diffmap = make(map[string]int)
+		other = seqs[i].SequenceChar()
+		for l = 0; l < len(first); l++ {
+			if first[l] != other[l] {
+				key = fmt.Sprintf("%c-%c", first[l], other[l])
+				count = diffmap[key]
+				diffmap[key] = count + 1
+				if _, ok = alldiffsmap[key]; !ok {
+					alldiffs = append(alldiffs, key)
+					alldiffsmap[key] = true
+				}
+			}
+		}
+		diffs[i-1] = diffmap
+	}
+	return
 }
 
 /*

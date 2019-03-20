@@ -3,6 +3,7 @@ package align
 import (
 	"fmt"
 	"math"
+	"sort"
 	"strings"
 	"testing"
 )
@@ -1043,4 +1044,128 @@ func TestMaskProt(t *testing.T) {
 			t.Error(fmt.Errorf("Expected sequences are different from masked sequences"))
 		}
 	}
+}
+
+func TestDiff(t *testing.T) {
+	in := NewAlign(UNKNOWN)
+	in.AddSequence("Seq0000", "GATTAATTTGCCGTAGGCCAGAATCTGAAGATCGAACACTTTAAGTTTTCACTTCTAATGGAGAGGACTAGTTCATACTTTTTAAACACTTTTACATCGA", "")
+	in.AddSequence("Seq0001", "TGTCGGACCTAAGTATTGAGTACAACGGTGTATTCCAGCGGTGGAGAGGTCTATTTTTCCGGTTGAAGGACTCTAGAGCTGTAAAGGGTATGGCCATGTG", "")
+	in.AddSequence("Seq0002", "CTAAGCGCGGGCGGATTGCTGTTGGAGCAAGGTTAAATACTCGGCAATGCCCCATGATCCCCCAAGGACAATAAGAGCGAAGTTAGAACAAATGAACCCC", "")
+	in.AddSequence("Seq0003", "GAGTGGAGGCTTTATGGCACAAGGTATTAGAGACTGAGGGGCACCCCGGCATGGTAAGCAGGAGCCATCGCGAAGGCTTCAGGTATCTTCCTGTGTTACC", "")
+	in.AddSequence("Seq0004", "CATAGCCCCTGATGCCCTGACCCGTGTCGCGGCAACGTCTACATTTCACGATAAATACTCCGCTGCTAGTCGGCTCTAGATGCTTTTCTTCCAGATCTGG", "")
+	in.AddSequence("Seq0005", "AGTTTGACTATGAGCGCCGGCTTAGTGCTGACAGTGATGCTCCGTTGTAAGGGTCCTGATGTTCTTGTGCTCGCGCATATTAGAGCTGAGTTTCCCAAAG", "")
+	in.AddSequence("Seq0006", "TCGCCACGGTGTGGAATGTACGTTATGGCAGTAATCAGCGGCTTTCACCGACATGCCCCCTCCGTGGCTCCTTGCGACCATCGGCGGACCTGCGGTGTCG", "")
+	in.AddSequence("Seq0007", "CTGGTAATACCTGCGCTATTTCGTCAGTTCGTGTACGGGTAACGATAGCGGTTAATGCTTATTCCGATCAGCTCACACCCATGAAGGTGGCTCTGGAGCC", "")
+	in.AddSequence("Seq0008", "TCGTTAACCCACTCTAACCACCTCCTGTAGCGACATCGGGTGCTCGGCTTGGATACCTTCGTCATATTGGACCCCAGGTCTCAACCTCGTGAGCTCTCTG", "")
+	in.AddSequence("Seq0009", "ACCTACGGCTCTAGACAGCTGAAGTCCGGTTCCGAGCACTGTACGGAAACTTGAAAAGGCTCGACGGAGGCTTGTTCCGCAGAGTGGGACTATAACATAC", "")
+	in.AutoAlphabet()
+
+	exp := NewAlign(UNKNOWN)
+	exp.AddSequence("Seq0000", "GATTAATTTGCCGTAGGCCAGAATCTGAAGATCGAACACTTTAAGTTTTCACTTCTAATGGAGAGGACTAGTTCATACTTTTTAAACACTTTTACATCGA", "")
+	exp.AddSequence("Seq0001", "TG.CGGACCTAA...TTGAGT.CAAC.GT.TATTCCAG.GG.GGAGAGGTCTA.T.TTCC.GTT.A.GG.C.CT.G.GC.G.A..GGGTA.GGC...GTG", "")
+	exp.AddSequence("Seq0002", "CTAAGCGCG.G..G.TTG.T.TTGGA.C.AGGTT..ATAC.CGGCAA.G.C.CATG.TCCCCC.A.GAC.A.AAGAG.GAAG.T.GA..AAA.GA.C.CC", "")
+	exp.AddSequence("Seq0003", "..G.GGAGGCTTTAT...ACA.GGTATT...GACTGAGGGGC.CCCCGG..TGGTA.GCA.GAGCC.TCGCGAAGGCT.CAGGT.T.TTCC.GTGT.ACC", "")
+	exp.AddSequence("Seq0004", "C..AGCCCCTGATGCCCTG.CCCGTGTCGCGG.A.CGT..AC.TT.CACG.TAAA..C.CCGCT.CTAGTCGG.TCTAGA.GCTTTTCT.CCAGATCT.G", "")
+	exp.AddSequence("Seq0005", "AG..TGAC.ATGAGC.C.GGCTTAG..CT..CA.TGATGC.CCGT.G.AAGGG..CTGAT.TTCTTGTGCTCG.GC.TA..AG.GCTGAG...C.CAAAG", "")
+	exp.AddSequence("Seq0006", "TCGCC.CGGTGT.G.ATGT.CGT.A..GCAG.AATCAG.GGCTTTCACCG..A.GCCCCCTCCGT.G..CC..GCG..CA.CGGCGG..C.GCGGTGTCG", "")
+	exp.AddSequence("Seq0007", "CTGGT.A.AC.T.CGCTATTTCG..A.TTCG.GT.CGGG.AACGA.AGCGGT.AA.GC.TATTCC..TC..C...C..CCA.G..GGTGGC.CTGGAGCC", "")
+	exp.AddSequence("Seq0008", "TCG.T.ACCCA.TCTAA...CCTC...T..CGAC.T.GGG.GCTCGGC.TGGA.ACCT.C.TC.TATTGGACC.CAGG.C.CA.CCTCG.GAGCTC..TG", "")
+	exp.AddSequence("Seq0009", "ACC..CGGCT.TAG.CAG.T...GTCCGGTTC...G....G..C.GAAA.TTGAAA.GGCTC..C.GAGGC..GT.C.GCAGAGTGGGAC.A..ACATAC", "")
+
+	in.DiffWithFirst()
+	if !exp.Identical(in) {
+		t.Error(fmt.Errorf("Expected sequences are different from Diff sequences"))
+	}
+}
+
+func TestDiff2(t *testing.T) {
+	in := NewAlign(UNKNOWN)
+	in.AddSequence("Seq0000", "GATTAATTTGCCGTAGGCCAGAATCTGAAGATCGAACACTTTAAGTTTTCACTTCTAATGGAGAGGACTAGTTCATACTTTTTAAACACTTTTACATCGA", "")
+	in.AddSequence("Seq0001", "GATTAATTTGCCGTAGGCCAGAATCTGAAGATCGAACACTTTAAGTTTTCACTTCTAATGGAGAGGACTAGTTCATACTTTTTAAACACTTTTACATCGA", "")
+	in.AddSequence("Seq0002", "GATTAATTTGCCGTAGGCCAGAATCTGAAGATCGAACACTTTAAGTTTTCACTTCTAATGGAGAGGACTAGTTCATACTTTTTAAACACTTTTACATCGA", "")
+	in.AddSequence("Seq0003", "GATTAATTTGCCGTAGGCCAGAATCTGAAGATCGAACACTTTAAGTTTTCACTTCTAATGGAGAGGACTAGTTCATACTTTTTAAACACTTTTACATCGA", "")
+	in.AddSequence("Seq0004", "GATTAATTTGCCGTAGGCCAGAATCTGAAGATCGAACACTTTAAGTTTTCACTTCTAATGGAGAGGACTAGTTCATACTTTTTAAACACTTTTACATCGA", "")
+	in.AddSequence("Seq0005", "GATTAATTTGCCGTAGGCCAGAATCTGAAGATCGAACACTTTAAGTTTTCACTTCTAATGGAGAGGACTAGTTCATACTTTTTAAACACTTTTACATCGA", "")
+	in.AddSequence("Seq0006", "GATTAATTTGCCGTAGGCCAGAATCTGAAGATCGAACACTTTAAGTTTTCACTTCTAATGGAGAGGACTAGTTCATACTTTTTAAACACTTTTACATCGA", "")
+	in.AddSequence("Seq0007", "GATTAATTTGCCGTAGGCCAGAATCTGAAGATCGAACACTTTAAGTTTTCACTTCTAATGGAGAGGACTAGTTCATACTTTTTAAACACTTTTACATCGA", "")
+	in.AddSequence("Seq0008", "GATTAATTTGCCGTAGGCCAGAATCTGAAGATCGAACACTTTAAGTTTTCACTTCTAATGGAGAGGACTAGTTCATACTTTTTAAACACTTTTACATCGA", "")
+	in.AddSequence("Seq0009", "GATTAATTTGCCGTAGGCCAGAATCTGAAGATCGAACACTTTAAGTTTTCACTTCTAATGGAGAGGACTAGTTCATACTTTTTAAACACTTTTACATCGA", "")
+	in.AutoAlphabet()
+
+	exp := NewAlign(UNKNOWN)
+	exp.AddSequence("Seq0000", "GATTAATTTGCCGTAGGCCAGAATCTGAAGATCGAACACTTTAAGTTTTCACTTCTAATGGAGAGGACTAGTTCATACTTTTTAAACACTTTTACATCGA", "")
+	exp.AddSequence("Seq0001", "....................................................................................................", "")
+	exp.AddSequence("Seq0002", "....................................................................................................", "")
+	exp.AddSequence("Seq0003", "....................................................................................................", "")
+	exp.AddSequence("Seq0004", "....................................................................................................", "")
+	exp.AddSequence("Seq0005", "....................................................................................................", "")
+	exp.AddSequence("Seq0006", "....................................................................................................", "")
+	exp.AddSequence("Seq0007", "....................................................................................................", "")
+	exp.AddSequence("Seq0008", "....................................................................................................", "")
+	exp.AddSequence("Seq0009", "....................................................................................................", "")
+
+	in.DiffWithFirst()
+	if !exp.Identical(in) {
+		t.Error(fmt.Errorf("Expected sequences are different from Diff sequences"))
+	}
+}
+
+func TestDiffCount(t *testing.T) {
+	in := NewAlign(UNKNOWN)
+	in.AddSequence("Seq0000", "GATTAATTTGCCGTAGGCCAGAATCTGAAGATCGAACACTTTAAGTTTTCACTTCTAATGGAGAGGACTAGTTCATACTTTTTAAACACTTTTACATCGA", "")
+	in.AddSequence("Seq0001", "TGTCGGACCTAAGTATTGAGTACAACGGTGTATTCCAGCGGTGGAGAGGTCTATTTTTCCGGTTGAAGGACTCTAGAGCTGTAAAGGGTATGGCCATGTG", "")
+	in.AddSequence("Seq0002", "GATTAATTTGCCGTAGGCCAGAATCTGAAGATCGAACACTTTAAGTTTTCACTTCTAATGGAGAGGACTAGTTCATACTTTTTAAACACTTTGACATCGA", "")
+	in.AddSequence("Seq0003", "GATTAATTTGCCGTAGGCCAGAATCTGAAGATCGAACACTTTAAGTTTTCACTTCTAATGGAGAGGACTAGTTCATACTTTTTAAACACTTTTACATCGA", "")
+	in.AutoAlphabet()
+
+	exp := []string{"A-C", "A-G", "A-T", "C-A", "C-G", "C-T", "G-A", "G-C", "G-T", "T-A", "T-C", "T-G"}
+	expdiffs := []map[string]int{
+		{
+			"A-C": 5,
+			"A-G": 12,
+			"A-T": 5,
+			"C-A": 5,
+			"C-G": 5,
+			"C-T": 6,
+			"G-A": 2,
+			"G-C": 2,
+			"G-T": 8,
+			"T-A": 7,
+			"T-C": 7,
+			"T-G": 10,
+		},
+		{
+			"T-G": 1,
+		},
+		{},
+	}
+	res, resdiffs := in.CountDifferences()
+
+	sort.Strings(res)
+
+	if len(res) != len(exp) {
+		t.Error(fmt.Errorf("Number of different mutations is not the same between results and expected %d vs. %d", len(res), len(exp)))
+	}
+
+	for i, e := range exp {
+		if e != res[i] {
+			t.Error(fmt.Errorf("Mutation is not the same between results and expected %s vs. %s", res[i], e))
+		}
+	}
+
+	if len(resdiffs) != len(expdiffs) {
+		t.Error(fmt.Errorf("Number of different mutations is not the same between results and expected %d vs. %d", len(res), len(exp)))
+	}
+
+	for i, seqdiff := range expdiffs {
+		if len(seqdiff) != len(resdiffs[i]) {
+			t.Error(fmt.Errorf("Number of different mutations is not the same between results and expected for seq %d : %d vs. %d", i, len(resdiffs[i]), len(seqdiff)))
+		}
+		for k, v := range seqdiff {
+			if resdiffs[i][k] != v {
+				t.Error(fmt.Errorf("Mutation %s does not have the same nb of occurences between results and expected in seq %d : %d vs. %d", k, i, resdiffs[i][k], v))
+			}
+		}
+	}
+
 }
