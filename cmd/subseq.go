@@ -67,7 +67,7 @@ If several alignments are present in the input file and the output is a file
   with "_al<i>" and "_sub<i> suffixes (ex out_al1_sub1.fasta, out_al1_sub2.fasta, etc.)
 `,
 	RunE: func(cmd *cobra.Command, args []string) (err error) {
-		var aligns align.AlignChannel
+		var aligns *align.AlignChannel
 		var f *os.File
 		var subalign align.Alignment
 

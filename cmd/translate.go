@@ -52,7 +52,7 @@ It only translates using the standard genetic code so far.
 			}
 			writeSequences(seqs, f)
 		} else {
-			var aligns align.AlignChannel
+			var aligns *align.AlignChannel
 			var al align.Alignment
 
 			if aligns, err = readalign(infile); err != nil {

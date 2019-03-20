@@ -25,7 +25,7 @@ Weights follow a Dirichlet distribution D(n;1,...,1)
 
 `,
 	RunE: func(cmd *cobra.Command, args []string) (err error) {
-		var aligns align.AlignChannel
+		var aligns *align.AlignChannel
 		var f *os.File
 		var weights []float64 = nil
 

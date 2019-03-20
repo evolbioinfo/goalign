@@ -53,7 +53,7 @@ goalign build seqboot -i align.phylip -p -n 500 -o boot --tar-gz
 goalign build seqboot -i align.phylip -p -n 500 -o boot_ 
 `,
 	RunE: func(cmd *cobra.Command, args []string) (err error) {
-		var aligns align.AlignChannel
+		var aligns *align.AlignChannel
 
 		if aligns, err = readalign(infile); err != nil {
 			io.LogError(err)

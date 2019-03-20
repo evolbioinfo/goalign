@@ -41,7 +41,7 @@ is considered as 0). Sum of counts of all sequences must be > n.
 Output: An alignment (phylip or fasta).
 `,
 	RunE: func(cmd *cobra.Command, args []string) (err error) {
-		var aligns align.AlignChannel
+		var aligns *align.AlignChannel
 		var f *os.File
 		var counts map[string]int
 		var sample align.Alignment

@@ -23,7 +23,7 @@ It take a random start position, and extract the alignment starting at that posi
 and with a given length.
 `,
 	RunE: func(cmd *cobra.Command, args []string) (err error) {
-		var aligns align.AlignChannel
+		var aligns *align.AlignChannel
 		var f *os.File
 		var subalign align.Alignment
 

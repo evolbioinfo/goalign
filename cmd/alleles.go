@@ -14,7 +14,7 @@ var allelesCmd = &cobra.Command{
 	Short: "Prints the average number of alleles per sites of the alignment",
 	Long:  `Prints the average number of alleles per sites of the alignment.`,
 	RunE: func(cmd *cobra.Command, args []string) (err error) {
-		var aligns align.AlignChannel
+		var aligns *align.AlignChannel
 
 		if aligns, err = readalign(infile); err != nil {
 			io.LogError(err)

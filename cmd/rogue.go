@@ -45,7 +45,7 @@ S3 12345678    S3 1634527 <= This one: 2 nucleotides are shuffled
 S4 12345678    S4 1234567
 `,
 	RunE: func(cmd *cobra.Command, args []string) (err error) {
-		var aligns align.AlignChannel
+		var aligns *align.AlignChannel
 		var namefile *os.File
 		var f *os.File
 

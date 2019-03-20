@@ -30,9 +30,8 @@ or goalign concat -i none -p align*.phy
 
 `,
 	RunE: func(cmd *cobra.Command, args []string) (err error) {
-
-		var aligns align.AlignChannel
-		var alchan align.AlignChannel
+		var aligns *align.AlignChannel
+		var alchan *align.AlignChannel
 		var align align.Alignment = nil
 		var f *os.File
 

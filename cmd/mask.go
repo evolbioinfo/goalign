@@ -33,7 +33,7 @@ This will replace 10 positions with N|X from the 10th position.
 The output format is the same than input format.
 `,
 	RunE: func(cmd *cobra.Command, args []string) (err error) {
-		var aligns align.AlignChannel
+		var aligns *align.AlignChannel
 		var f *os.File
 
 		if aligns, err = readalign(infile); err != nil {

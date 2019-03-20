@@ -27,7 +27,7 @@ Examples:
 If cutoff is <0 or >1, it will be considered as 0, which means that every site with at least 1 gap
 will be removed.`,
 	RunE: func(cmd *cobra.Command, args []string) (err error) {
-		var aligns align.AlignChannel
+		var aligns *align.AlignChannel
 		var f *os.File
 
 		if aligns, err = readalign(infile); err != nil {

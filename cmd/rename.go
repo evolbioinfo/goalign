@@ -102,7 +102,7 @@ while ignoring formatting options (phylip, etc.).
 			}
 			writeSequences(seqs, f)
 		} else {
-			var aligns align.AlignChannel
+			var aligns *align.AlignChannel
 			if aligns, err = readalign(infile); err != nil {
 				io.LogError(err)
 				return

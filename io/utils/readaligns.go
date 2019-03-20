@@ -67,10 +67,11 @@ func ParseAlignmentAuto(r *bufio.Reader, rootinputstrict bool) (al align.Alignme
 // after parsing is finished (even in the go routine in the case of several input alignments).
 // If the alignment comes from a file for exemple, the file will be closed by this function, so no need to
 // do it in the calling function
-func ParseMultiAlignmentsAuto(f io.Closer, r *bufio.Reader, rootinputstrict bool) (alchan align.AlignChannel, format int, err error) {
+func ParseMultiAlignmentsAuto(f io.Closer, r *bufio.Reader, rootinputstrict bool) (alchan *align.AlignChannel, format int, err error) {
 	var al align.Alignment
-	alchan.Achan = make(chan align.Alignment, 15)
 	var firstbyte byte
+
+	alchan = &align.AlignChannel{}
 
 	if firstbyte, err = r.ReadByte(); err != nil {
 		return
@@ -85,6 +86,7 @@ func ParseMultiAlignmentsAuto(f io.Closer, r *bufio.Reader, rootinputstrict bool
 			return
 		}
 		format = align.FORMAT_FASTA
+		alchan.Achan = make(chan align.Alignment, 1)
 		alchan.Achan <- al
 		if f != nil {
 			f.Close()
@@ -95,6 +97,7 @@ func ParseMultiAlignmentsAuto(f io.Closer, r *bufio.Reader, rootinputstrict bool
 			return
 		}
 		format = align.FORMAT_NEXUS
+		alchan.Achan = make(chan align.Alignment, 1)
 		alchan.Achan <- al
 		if f != nil {
 			f.Close()
@@ -105,6 +108,7 @@ func ParseMultiAlignmentsAuto(f io.Closer, r *bufio.Reader, rootinputstrict bool
 			return
 		}
 		format = align.FORMAT_CLUSTAL
+		alchan.Achan = make(chan align.Alignment, 1)
 		alchan.Achan <- al
 		if f != nil {
 			f.Close()
@@ -113,10 +117,9 @@ func ParseMultiAlignmentsAuto(f io.Closer, r *bufio.Reader, rootinputstrict bool
 	} else {
 		format = align.FORMAT_PHYLIP
 		// Finally test Phylip
+		alchan.Achan = make(chan align.Alignment, 15)
 		go func() {
-			if err := phylip.NewParser(r, rootinputstrict).ParseMultiple(alchan.Achan); err != nil {
-				alchan.Err = err
-			}
+			phylip.NewParser(r, rootinputstrict).ParseMultiple(alchan)
 			if f != nil {
 				f.Close()
 			}

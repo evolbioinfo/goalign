@@ -40,7 +40,7 @@ goalign stats length -i align.fasta
 				fmt.Println(name, "\t", len(sequence))
 			})
 		} else {
-			var aligns align.AlignChannel
+			var aligns *align.AlignChannel
 
 			if aligns, err = readalign(infile); err != nil {
 				io.LogError(err)

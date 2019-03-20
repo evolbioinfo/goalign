@@ -32,7 +32,7 @@ Once gaps are added, if the nucleotide alignment length does not match
 the protein alignment length * 3, returns an error.
 `,
 	RunE: func(cmd *cobra.Command, args []string) (err error) {
-		var aligns align.AlignChannel
+		var aligns *align.AlignChannel
 		var f *os.File
 		var ntseqsf *bufio.Reader
 		var toclose goio.Closer

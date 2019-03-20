@@ -48,7 +48,7 @@ if -a is given: display only the average distance
 	RunE: func(cmd *cobra.Command, args []string) (err error) {
 		var f *os.File
 		var model distance.DistModel
-		var aligns align.AlignChannel
+		var aligns *align.AlignChannel
 
 		if f, err = openWriteFile(computedistOutput); err != nil {
 			io.LogError(err)

@@ -22,7 +22,7 @@ See http://msa.biojs.net/ for more informations
 `,
 	RunE: func(cmd *cobra.Command, args []string) (err error) {
 		var l draw.AlignLayout
-		var aligns align.AlignChannel
+		var aligns *align.AlignChannel
 		var f *os.File
 
 		if aligns, err = readalign(infile); err != nil {

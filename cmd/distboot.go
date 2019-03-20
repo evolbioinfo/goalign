@@ -43,7 +43,7 @@ goalign build distboot -m k2p -i align.fa -o mats.txt
 
 	RunE: func(cmd *cobra.Command, args []string) (err error) {
 		var model distance.DistModel
-		var aligns align.AlignChannel
+		var aligns *align.AlignChannel
 		var f *os.File
 
 		if aligns, err = readalign(infile); err != nil {

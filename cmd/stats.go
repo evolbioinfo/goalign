@@ -26,13 +26,12 @@ If the input alignment contains several alignments, will process all of them
 
 `,
 	RunE: func(cmd *cobra.Command, args []string) (err error) {
-		var aligns align.AlignChannel
+		var aligns *align.AlignChannel
 
 		if aligns, err = readalign(infile); err != nil {
 			io.LogError(err)
 			return
 		}
-
 		for al := range aligns.Achan {
 			fmt.Fprintf(os.Stdout, "length\t%d\n", al.Length())
 			fmt.Fprintf(os.Stdout, "nseqs\t%d\n", al.NbSequences())

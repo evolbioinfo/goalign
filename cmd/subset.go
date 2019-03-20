@@ -43,7 +43,7 @@ given in the comand line.
 `,
 	RunE: func(cmd *cobra.Command, args []string) (err error) {
 		var subset map[string]int
-		var aligns align.AlignChannel
+		var aligns *align.AlignChannel
 		var seqs align.SeqBag
 		var f *os.File
 		var r *regexp.Regexp

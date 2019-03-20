@@ -17,7 +17,7 @@ var identicalCmd = &cobra.Command{
 
 `,
 	RunE: func(cmd *cobra.Command, args []string) (err error) {
-		var aligns, compaligns align.AlignChannel
+		var aligns, compaligns *align.AlignChannel
 
 		if compalign == "none" {
 			io.LogError(fmt.Errorf("No compared alignment has been given"))

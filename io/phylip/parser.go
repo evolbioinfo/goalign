@@ -129,21 +129,26 @@ func (p *Parser) Parse() (align.Alignment, error) {
 		if p.strict {
 			// if strict
 			name := p.s.Read(10)
+			if []rune(name)[len(name)-1] == eof {
+				return nil, fmt.Errorf("Bad Phylip format, less sequences in the file than indicated in the header : %d vs. %d", nbseq, i)
+			}
 			if name == "" {
-				return nil, errors.New("Bad Phylip format, we should have an sequence identifier after the header : " + lit)
+				return nil, fmt.Errorf("Bad Phylip format, we should have an sequence identifier after the header : %s", lit)
 			}
 			// We remove spaces from names...
 			name = strings.Replace(name, " ", "", -1)
 			names[i] = name
 		} else {
-
 			tok, lit = p.scan()
+			if tok == EOF {
+				return nil, fmt.Errorf("Bad Phylip format, less sequences in the file than indicated in the header : %d vs. %d", nbseq, i)
+			}
 			if tok != IDENTIFIER && tok != NUMERIC {
-				return nil, errors.New("Bad Phylip format, we should have an sequence identifier after the header : " + lit)
+				return nil, fmt.Errorf("Bad Phylip format, we should have an sequence identifier after the header : %s", lit)
 			}
 			names[i] = lit
-
 		}
+
 		tok, lit = p.scan()
 		seqs[i] = new(bytes.Buffer)
 		for tok != ENDOFLINE {
@@ -221,22 +226,20 @@ func (p *Parser) Parse() (align.Alignment, error) {
 
 /*
 Parses mutliple phylip alignments and give them to the channel
-At the end (or in case of error), it closes the channel
+At the end (or in case of error), it closes the channel.
+It is better to call this functioni from a go routine
+since it can block the buffered channel.
 */
-func (p *Parser) ParseMultiple(aligns chan<- align.Alignment) error {
-	al, err := p.Parse()
-	if err != nil {
-		close(aligns)
-		return err
-	}
+func (p *Parser) ParseMultiple(aligns *align.AlignChannel) {
+	var al align.Alignment
+	var err error
+	al, err = p.Parse()
 	for err == nil && al != nil {
-		aligns <- al
+		aligns.Achan <- al
 		al, err = p.Parse()
-		if err != nil {
-			close(aligns)
-			return err
-		}
 	}
-	close(aligns)
-	return nil
+	aligns.Err = err
+
+	close(aligns.Achan)
+	return
 }

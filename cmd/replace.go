@@ -21,7 +21,7 @@ var replaceCmd = &cobra.Command{
 If the replacement changes sequence length, then returns an error.
 `,
 	RunE: func(cmd *cobra.Command, args []string) (err error) {
-		var aligns align.AlignChannel
+		var aligns *align.AlignChannel
 		var f *os.File
 		var seqs align.SeqBag
 

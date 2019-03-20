@@ -16,7 +16,7 @@ var alphabetCmd = &cobra.Command{
 
 `,
 	RunE: func(cmd *cobra.Command, args []string) (err error) {
-		var aligns align.AlignChannel
+		var aligns *align.AlignChannel
 		var seqs align.SeqBag
 
 		if unaligned {

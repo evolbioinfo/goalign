@@ -39,7 +39,7 @@ If a site is made fully of '-' (if --remove-gaps is given) or '*', then its entr
 and it will not be taken into account in the average.
 `,
 	RunE: func(cmd *cobra.Command, args []string) (err error) {
-		var aligns align.AlignChannel
+		var aligns *align.AlignChannel
 		var e float64
 
 		if aligns, err = readalign(infile); err != nil {

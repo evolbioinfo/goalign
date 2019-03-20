@@ -35,7 +35,7 @@ Possible to add pseudo counts (before normalization) with --pseudo-count (-c)
 Possible to log2 transform the (normalized) value with --log (-l). Not taken into account with logo normalization
 `,
 	RunE: func(cmd *cobra.Command, args []string) (err error) {
-		var aligns align.AlignChannel
+		var aligns *align.AlignChannel
 		var pssm map[rune][]float64
 		var pssmstring string
 

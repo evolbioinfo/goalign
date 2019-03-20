@@ -23,7 +23,7 @@ goalign stats taxa -i align.phylip -p
 goalign stats taxa -i align.fasta
 `,
 	RunE: func(cmd *cobra.Command, args []string) (err error) {
-		var aligns align.AlignChannel
+		var aligns *align.AlignChannel
 
 		if aligns, err = readalign(infile); err != nil {
 			io.LogError(err)

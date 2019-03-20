@@ -78,7 +78,7 @@ Output file is an unaligned set of sequences in fasta.
 				return
 			}
 		} else {
-			var aligns align.AlignChannel
+			var aligns *align.AlignChannel
 
 			if aligns, err = readalign(infile); err != nil {
 				io.LogError(err)

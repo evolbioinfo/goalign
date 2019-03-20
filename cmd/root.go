@@ -108,10 +108,12 @@ func readsequences(file string) (sequences align.SeqBag, err error) {
 }
 
 // Read aligned sequences from an input file
-func readalign(file string) (alchan align.AlignChannel, err error) {
+func readalign(file string) (alchan *align.AlignChannel, err error) {
 	var fi goio.Closer
 	var r *bufio.Reader
 	var format int
+
+	alchan = &align.AlignChannel{}
 
 	if fi, r, err = utils.GetReader(file); err != nil {
 		return
@@ -128,12 +130,10 @@ func readalign(file string) (alchan align.AlignChannel, err error) {
 			rootclustal = true
 		}
 	} else {
-		alchan.Achan = make(chan align.Alignment, 15)
 		if rootphylip {
+			alchan.Achan = make(chan align.Alignment, 15)
 			go func() {
-				if err2 := phylip.NewParser(r, rootinputstrict).ParseMultiple(alchan.Achan); err2 != nil {
-					alchan.Err = err2
-				}
+				phylip.NewParser(r, rootinputstrict).ParseMultiple(alchan)
 				fi.Close()
 			}()
 		} else if rootnexus {
@@ -141,6 +141,7 @@ func readalign(file string) (alchan align.AlignChannel, err error) {
 			if al, err = nexus.NewParser(r).Parse(); err != nil {
 				return
 			}
+			alchan.Achan = make(chan align.Alignment, 1)
 			alchan.Achan <- al
 			fi.Close()
 			close(alchan.Achan)
@@ -149,6 +150,7 @@ func readalign(file string) (alchan align.AlignChannel, err error) {
 			if al, err = clustal.NewParser(r).Parse(); err != nil {
 				return
 			}
+			alchan.Achan = make(chan align.Alignment, 1)
 			alchan.Achan <- al
 			fi.Close()
 			close(alchan.Achan)
@@ -157,6 +159,7 @@ func readalign(file string) (alchan align.AlignChannel, err error) {
 			if al, err = fasta.NewParser(r).Parse(); err != nil {
 				return
 			}
+			alchan.Achan = make(chan align.Alignment, 1)
 			alchan.Achan <- al
 			fi.Close()
 			close(alchan.Achan)

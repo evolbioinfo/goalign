@@ -40,8 +40,7 @@ The string may be added to the left or to the right of each sequence name.
 			writeSequences(seqs, f)
 		} else {
 
-			var aligns align.AlignChannel
-
+			var aligns *align.AlignChannel
 			if aligns, err = readalign(infile); err != nil {
 				io.LogError(err)
 				return

@@ -2654,3 +2654,17 @@ ${GOALIGN} replace -s 'GA.' -e -n '---' -p -i input -o result
 diff -q -b expected result
 rm -f input expected result
 
+echo "->goalign stats auto from 1000 random phylip alignments"
+cat > expected.nb <<EOF
+100
+EOF
+cat > expected.len <<EOF
+5
+EOF
+for i in {1..100}; do ${GOALIGN} random -p -n 10 -l 5; done | ${GOALIGN} stats nseq --auto-detect | wc -l > result.nb
+for i in {1..100}; do ${GOALIGN} random -p -n 10 -l 5; done | ${GOALIGN} stats length --auto-detect | sort -u > result.len
+
+diff -q -b result.nb expected.nb
+diff -q -b result.len expected.len
+
+rm -f expected.len expected.nb result.len result.nb

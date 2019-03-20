@@ -25,7 +25,7 @@ As output, writes an alignment containing a sample of the sequences
 
 `,
 	RunE: func(cmd *cobra.Command, args []string) (err error) {
-		var aligns align.AlignChannel
+		var aligns *align.AlignChannel
 		var f *os.File
 		var sample align.Alignment
 
