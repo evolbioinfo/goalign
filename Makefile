@@ -1,5 +1,5 @@
 GO_EXECUTABLE := go
-DEP_EXECUTABLE := dep
+DEP_EXECUTABLE := ${GOPATH}/bin/dep
 VERSION := $(shell git describe --abbrev=10 --dirty --always --tags)
 DIST_DIRS := find * -type d -exec
 VERSION_PACKAGE := github.com/fredericlemoine/goalign/version.Version
