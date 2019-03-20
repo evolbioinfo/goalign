@@ -23,30 +23,45 @@ goalign stats taxa -i align.phylip -p
 goalign stats taxa -i align.fasta
 `,
 	RunE: func(cmd *cobra.Command, args []string) (err error) {
-		var aligns *align.AlignChannel
 
-		if aligns, err = readalign(infile); err != nil {
-			io.LogError(err)
-			return
+		if unaligned {
+			var seqs align.SeqBag
+
+			if seqs, err = readsequences(infile); err != nil {
+				io.LogError(err)
+				return
+			}
+			i := 0
+			seqs.Iterate(func(name string, sequence string) {
+				fmt.Print(fmt.Sprintf("%d\t%s\n", i, name))
+				i++
+			})
+		} else {
+			var aligns *align.AlignChannel
+
+			if aligns, err = readalign(infile); err != nil {
+				io.LogError(err)
+				return
+			}
+
+			al, _ := <-aligns.Achan
+			if aligns.Err != nil {
+				err = aligns.Err
+				io.LogError(err)
+				return
+			}
+
+			i := 0
+			al.Iterate(func(name string, sequence string) {
+				fmt.Print(fmt.Sprintf("%d\t%s\n", i, name))
+				i++
+			})
 		}
-
-		al, _ := <-aligns.Achan
-		if aligns.Err != nil {
-			err = aligns.Err
-			io.LogError(err)
-			return
-		}
-
-		i := 0
-		al.Iterate(func(name string, sequence string) {
-			fmt.Print(fmt.Sprintf("%d\t%s\n", i, name))
-			i++
-		})
-
 		return
 	},
 }
 
 func init() {
+	statsCmd.PersistentFlags().BoolVar(&unaligned, "unaligned", false, "Considers sequences as unaligned and format fasta (phylip, nexus,... options are ignored)")
 	statsCmd.AddCommand(taxaCmd)
 }
