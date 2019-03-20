@@ -29,7 +29,7 @@ type Alignment interface {
 	// - alldiffs: The set of all differences that have been seen at least once
 	// - diffs   : The number of occurences of each difference, for each sequence
 	//             Sequences are ordered as the original alignment. Differences are
-	//             written as REF-NEW, ex: diffs["A-C"]=12 .
+	//             written as REFNEW, ex: diffs["AC"]=12 .
 	CountDifferences() (alldiffs []string, diffs []map[string]int)
 	// Compares all sequences to the first one and replace identical characters with .
 	DiffWithFirst()
@@ -1064,7 +1064,7 @@ func (a *align) DiffWithFirst() {
 // - alldiffs: The set of all differences that have been seen at least once
 // - diffs   : The number of occurences of each difference, for each sequence
 //             Sequences are ordered as the original alignment. Differences are
-//             written as REF-NEW, ex: diffs["A-C"]=12.
+//             written as REFNEW, ex: diffs["AC"]=12.
 func (a *align) CountDifferences() (alldiffs []string, diffs []map[string]int) {
 	var alldiffsmap map[string]bool
 	var diffmap map[string]int
@@ -1087,7 +1087,7 @@ func (a *align) CountDifferences() (alldiffs []string, diffs []map[string]int) {
 		other = seqs[i].SequenceChar()
 		for l = 0; l < len(first); l++ {
 			if first[l] != other[l] {
-				key = fmt.Sprintf("%c-%c", first[l], other[l])
+				key = fmt.Sprintf("%c%c", first[l], other[l])
 				count = diffmap[key]
 				diffmap[key] = count + 1
 				if _, ok = alldiffsmap[key]; !ok {

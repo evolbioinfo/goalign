@@ -1118,24 +1118,24 @@ func TestDiffCount(t *testing.T) {
 	in.AddSequence("Seq0003", "GATTAATTTGCCGTAGGCCAGAATCTGAAGATCGAACACTTTAAGTTTTCACTTCTAATGGAGAGGACTAGTTCATACTTTTTAAACACTTTTACATCGA", "")
 	in.AutoAlphabet()
 
-	exp := []string{"A-C", "A-G", "A-T", "C-A", "C-G", "C-T", "G-A", "G-C", "G-T", "T-A", "T-C", "T-G"}
+	exp := []string{"AC", "AG", "AT", "CA", "CG", "CT", "GA", "GC", "GT", "TA", "TC", "TG"}
 	expdiffs := []map[string]int{
 		{
-			"A-C": 5,
-			"A-G": 12,
-			"A-T": 5,
-			"C-A": 5,
-			"C-G": 5,
-			"C-T": 6,
-			"G-A": 2,
-			"G-C": 2,
-			"G-T": 8,
-			"T-A": 7,
-			"T-C": 7,
-			"T-G": 10,
+			"AC": 5,
+			"AG": 12,
+			"AT": 5,
+			"CA": 5,
+			"CG": 5,
+			"CT": 6,
+			"GA": 2,
+			"GC": 2,
+			"GT": 8,
+			"TA": 7,
+			"TC": 7,
+			"TG": 10,
 		},
 		{
-			"T-G": 1,
+			"TG": 1,
 		},
 		{},
 	}

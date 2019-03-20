@@ -108,7 +108,7 @@ gotree diff -i input.phy -p --one-line
 
 Should print:
 ```
-	A-C	A-G	A-T	C-A	C-G	C-T	G-A	G-C	G-T	T-A	T-C	T-G
+	AC	AG	AT	CA	CG	CT	GA	GC	GT	TA	TC	TG
 Seq0001	5	12	5	5	5	6	2	2	8	7	7	10
 Seq0002	5	9	7	6	3	2	3	6	3	13	7	9
 Seq0003	4	10	8	5	2	8	3	7	2	6	8	16
@@ -119,4 +119,3 @@ Seq0007	6	9	8	2	8	4	2	6	5	9	9	5
 Seq0008	11	5	9	3	4	4	4	6	4	5	10	9
 Seq0009	7	9	5	4	3	4	4	5	3	9	6	11
 ```
-

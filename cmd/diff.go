@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"sort"
+	"strings"
 
 	"github.com/fredericlemoine/goalign/align"
 	"github.com/fredericlemoine/goalign/io"
@@ -12,6 +13,7 @@ import (
 
 var diffOutput string
 var diffCount bool
+var diffNoGaps bool
 
 // statsCmd represents the stats command
 var diffCmd = &cobra.Command{
@@ -66,7 +68,9 @@ The format is tab separated, with following columns:
 func writeDiffCounts(al align.Alignment, alldiffs []string, diffs []map[string]int, f *os.File) {
 	sort.Strings(alldiffs)
 	for _, d := range alldiffs {
-		fmt.Fprintf(f, "\t%s", d)
+		if !(strings.Contains(d, "-") && diffNoGaps) {
+			fmt.Fprintf(f, "\t%s", d)
+		}
 	}
 	fmt.Fprintf(f, "\n")
 
@@ -74,7 +78,9 @@ func writeDiffCounts(al align.Alignment, alldiffs []string, diffs []map[string]i
 		name, _ := al.GetSequenceNameById(i + 1)
 		fmt.Fprintf(f, "%s", name)
 		for _, d := range alldiffs {
-			fmt.Fprintf(f, "\t%d", diffs[i][d])
+			if !(strings.Contains(d, "-") && diffNoGaps) {
+				fmt.Fprintf(f, "\t%d", diffs[i][d])
+			}
 		}
 		fmt.Fprintf(f, "\n")
 	}
@@ -83,5 +89,6 @@ func writeDiffCounts(al align.Alignment, alldiffs []string, diffs []map[string]i
 func init() {
 	diffCmd.PersistentFlags().StringVarP(&diffOutput, "output", "o", "stdout", "Diff output file")
 	diffCmd.PersistentFlags().BoolVar(&diffCount, "counts", false, "Count differences instead of writting only identical characters")
+	diffCmd.PersistentFlags().BoolVar(&diffNoGaps, "no-gaps", false, "Do not count gaps (only with --counts)")
 	RootCmd.AddCommand(diffCmd)
 }
