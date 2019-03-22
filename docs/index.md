@@ -1,6 +1,6 @@
 # Goalign: toolkit and api for alignment manipulation
 ## Github repository
-[Goalign github repository](https://github.com/fredericlemoine/goalign).
+[Goalign github repository](https://github.com/evolbioinfo/goalign).
 ## Introduction
 Goalign is a set of command line tools to manipulate multiple alignments. It is implemented in [Go](https://golang.org/) language.
 
@@ -8,7 +8,7 @@ The goal is to handle multiple alignments in different input and output formats 
 
 ## Installation
 ### Binaries
-You can download already compiled binaries for the latest release in the [release](https://github.com/fredericlemoine/goalign/releases) section.
+You can download already compiled binaries for the latest release in the [release](https://github.com/evolbioinfo/goalign/releases) section.
 Binaries are available for MacOS, Linux, and Windows (32 and 64 bits).
 
 Once downloaded, you can just run the executable without any other downloads.
@@ -18,13 +18,13 @@ In order to compile goalign, you must first [download](https://golang.org/dl/) a
 
 Then you just have to type :
 ```bash
-go get github.com/fredericlemoine/goalign/
+go get github.com/evolbioinfo/goalign/
 ```
 This will download Goalign sources from github, and all its dependencies.
 
 You can then build it with:
 ```bash
-cd $GOPATH/src/github.com/fredericlemoine/goalign/
+cd $GOPATH/src/github.com/evolbioinfo/goalign/
 make
 ```
 The `goalign` executable should be located in the `$GOPATH/bin` folder.

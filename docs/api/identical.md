@@ -14,9 +14,9 @@ import (
 	"fmt"
 	"io"
 
-	"github.com/fredericlemoine/goalign/align"
-	"github.com/fredericlemoine/goalign/io/fasta"
-	"github.com/fredericlemoine/goalign/io/utils"
+	"github.com/evolbioinfo/goalign/align"
+	"github.com/evolbioinfo/goalign/io/fasta"
+	"github.com/evolbioinfo/goalign/io/utils"
 )
 
 func main() {

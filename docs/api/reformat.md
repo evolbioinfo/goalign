@@ -14,13 +14,13 @@ import (
 	"fmt"
 	"io"
 
-	"github.com/fredericlemoine/goalign/align"
-	"github.com/fredericlemoine/goalign/io/fasta"
-	"github.com/fredericlemoine/goalign/io/nexus"
-	"github.com/fredericlemoine/goalign/io/paml"
-	"github.com/fredericlemoine/goalign/io/phylip"
-	"github.com/fredericlemoine/goalign/io/clustal"
-	"github.com/fredericlemoine/goalign/io/utils"
+	"github.com/evolbioinfo/goalign/align"
+	"github.com/evolbioinfo/goalign/io/fasta"
+	"github.com/evolbioinfo/goalign/io/nexus"
+	"github.com/evolbioinfo/goalign/io/paml"
+	"github.com/evolbioinfo/goalign/io/phylip"
+	"github.com/evolbioinfo/goalign/io/clustal"
+	"github.com/evolbioinfo/goalign/io/utils"
 )
 
 func main() {

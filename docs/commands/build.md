@@ -78,7 +78,7 @@ Global Flags:
 
 #### Examples
 
-* Generate a random tree with 100 leaves ([Gotree](https://github.com/fredericlemoine/gotree)), then simulate an alignment with 500 sites ([seq-gen](https://github.com/rambaut/Seq-Gen)), compute 100 bootstrap distance matrices with Goalign (f81 model and 10 threads), infer trees for all bootstrap distance matrices and for simulated alignment ([FastME](http://www.atgc-montpellier.fr/fastme/)), and compute bootstrap supports ([Gotree](https://github.com/fredericlemoine/gotree)):
+* Generate a random tree with 100 leaves ([Gotree](https://github.com/evolbioinfo/gotree)), then simulate an alignment with 500 sites ([seq-gen](https://github.com/rambaut/Seq-Gen)), compute 100 bootstrap distance matrices with Goalign (f81 model and 10 threads), infer trees for all bootstrap distance matrices and for simulated alignment ([FastME](http://www.atgc-montpellier.fr/fastme/)), and compute bootstrap supports ([Gotree](https://github.com/evolbioinfo/gotree)):
 
 ```
 gotree generate yuletree -l 100 --seed 1 -o true_tree.nw
@@ -93,7 +93,7 @@ Should give the following tree with branches having > 70% support highlighted.
 
 ![Distance supports](build_image_1.svg)
 
-* Generate a random tree with 100 leaves ([Gotree](https://github.com/fredericlemoine/gotree)), then simulate an alignment with 500 sites ([seq-gen](https://github.com/rambaut/Seq-Gen)), compute 100 bootstrap alignments Goalign (f81 model and 10 threads), infer trees for all bootstrap alignments and for the simulated alignment ([FastTree](http://www.microbesonline.org/fasttree/)), and compute bootstrap supports ([Gotree](https://github.com/fredericlemoine/gotree)):
+* Generate a random tree with 100 leaves ([Gotree](https://github.com/evolbioinfo/gotree)), then simulate an alignment with 500 sites ([seq-gen](https://github.com/rambaut/Seq-Gen)), compute 100 bootstrap alignments Goalign (f81 model and 10 threads), infer trees for all bootstrap alignments and for the simulated alignment ([FastTree](http://www.microbesonline.org/fasttree/)), and compute bootstrap supports ([Gotree](https://github.com/evolbioinfo/gotree)):
 
 ```
 gotree generate yuletree -l 100 --seed 1 -o true_tree.nw

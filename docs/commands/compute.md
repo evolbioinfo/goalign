@@ -75,7 +75,7 @@ Global Flags:
 
 #### Examples
 
-* Generating a random tree with 5 tips ([Gotree](https://github.com/fredericlemoine/gotree)), simulating an alignment from this tree ([seq-gen](https://github.com/rambaut/Seq-Gen), and computing a distance matrix (model f81) from this alignment:
+* Generating a random tree with 5 tips ([Gotree](https://github.com/evolbioinfo/gotree)), simulating an alignment from this tree ([seq-gen](https://github.com/rambaut/Seq-Gen), and computing a distance matrix (model f81) from this alignment:
 ```
 gotree generate yuletree -l 5 --seed 1 -o true_tree.nw
 seq-gen -op -mGTR -l500 -z 2 -n 1 true_tree.nw > alignment.phy
@@ -93,7 +93,7 @@ Tip2    0.232646053483  0.128396525775  0.071285264523  0.000000000000  0.111961
 Tip1    0.235379041630  0.142776083476  0.086842665158  0.111961817720  0.000000000000
 ```
 
-* Generating a random tree with 100 tips ([Gotree](https://github.com/fredericlemoine/gotree)), simulating an alignment from this tree ([seq-gen](https://github.com/rambaut/Seq-Gen), and computing entropy of each site of this alignment:
+* Generating a random tree with 100 tips ([Gotree](https://github.com/evolbioinfo/gotree)), simulating an alignment from this tree ([seq-gen](https://github.com/rambaut/Seq-Gen), and computing entropy of each site of this alignment:
 ```
 gotree generate yuletree -l 200 --seed 1 -o true_tree.nw
 seq-gen -op -mGTR -l10 -z 2 -n 1 true_tree.nw > alignment.phy
@@ -115,7 +115,7 @@ Alignment  Site  Entropy
 0          9     0.816
 ```
 
-* Generating a random tree with 100 tips ([Gotree](https://github.com/fredericlemoine/gotree)), simulating an alignment from this tree ([seq-gen](https://github.com/rambaut/Seq-Gen)), and computing a logo from this alignment:
+* Generating a random tree with 100 tips ([Gotree](https://github.com/evolbioinfo/gotree)), simulating an alignment from this tree ([seq-gen](https://github.com/rambaut/Seq-Gen)), and computing a logo from this alignment:
 ```
 gotree generate yuletree -l 200 --seed 1 -o true_tree.nw
 seq-gen -op -mGTR -l10 -z 2 -n 1 true_tree.nw > alignment.phy

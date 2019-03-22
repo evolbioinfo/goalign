@@ -1,5 +1,5 @@
 # Goalign
-[![build](https://travis-ci.org/fredericlemoine/goalign.svg?branch=master)](https://travis-ci.org/fredericlemoine/goalign) [![Anaconda-Server Badge](https://anaconda.org/bioconda/goalign/badges/installer/conda.svg)](https://anaconda.org/bioconda/goalign) [![Docker hub](https://img.shields.io/docker/build/evolbioinfo/goalign.svg)](https://hub.docker.com/r/evolbioinfo/goalign/builds/)
+[![build](https://travis-ci.org/evolbioinfo/goalign.svg?branch=master)](https://travis-ci.org/evolbioinfo/goalign) [![Anaconda-Server Badge](https://anaconda.org/bioconda/goalign/badges/installer/conda.svg)](https://anaconda.org/bioconda/goalign) [![Docker hub](https://img.shields.io/docker/build/evolbioinfo/goalign.svg)](https://hub.docker.com/r/evolbioinfo/goalign/builds/)
 
 ![Goalign Logo](images/logo.png)
 
@@ -17,11 +17,11 @@ Gzipped input files (`.gz` extension) are supported.
 
 **Note**:
 
-TO manipulate phylogenetic trees, See also [Gotree](https://github.com/fredericlemoine/gotree).
+TO manipulate phylogenetic trees, See also [Gotree](https://github.com/evolbioinfo/gotree).
 
 ## Installation
 ### Easy way: Binaries
-You can download ready to run binaries for the latest release in the [release](https://github.com/fredericlemoine/goalign/releases) section.
+You can download ready to run binaries for the latest release in the [release](https://github.com/evolbioinfo/goalign/releases) section.
 Binaries are available for MacOS, Linux, and Windows (32 and 64 bits).
 
 Once downloaded, you can just run the executable without any other downloads.
@@ -56,14 +56,14 @@ In order to compile Goalign, you must first [download](https://golang.org/dl/) a
 
 Then you just have to type :
 ```
-go get github.com/fredericlemoine/goalign/
+go get github.com/evolbioinfo/goalign/
 go get -u github.com/golang/dep/cmd/dep
 ```
 This will download GoAlign sources from github, and all its dependencies.
 
 You can then build it with:
 ```
-cd $GOPATH/src/github.com/fredericlemoine/goalign/
+cd $GOPATH/src/github.com/evolbioinfo/goalign/
 dep ensure
 make
 ```
@@ -257,9 +257,9 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/fredericlemoine/goalign/align"
-	"github.com/fredericlemoine/goalign/io/fasta"
-	"github.com/fredericlemoine/goalign/io/phylip"
+	"github.com/evolbioinfo/goalign/align"
+	"github.com/evolbioinfo/goalign/io/fasta"
+	"github.com/evolbioinfo/goalign/io/phylip"
 )
 
 func main() {
@@ -287,9 +287,9 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/fredericlemoine/goalign/align"
-	"github.com/fredericlemoine/goalign/io/fasta"
-	"github.com/fredericlemoine/goalign/io/phylip"
+	"github.com/evolbioinfo/goalign/align"
+	"github.com/evolbioinfo/goalign/io/fasta"
+	"github.com/evolbioinfo/goalign/io/phylip"
 )
 
 func main() {
@@ -319,9 +319,9 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/fredericlemoine/goalign/align"
-	"github.com/fredericlemoine/goalign/io/fasta"
-	"github.com/fredericlemoine/goalign/io/nexus"
+	"github.com/evolbioinfo/goalign/align"
+	"github.com/evolbioinfo/goalign/io/fasta"
+	"github.com/evolbioinfo/goalign/io/nexus"
 )
 
 func main() {
@@ -348,9 +348,9 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/fredericlemoine/goalign/align"
-	"github.com/fredericlemoine/goalign/io/fasta"
-	"github.com/fredericlemoine/goalign/io/phylip"
+	"github.com/evolbioinfo/goalign/align"
+	"github.com/evolbioinfo/goalign/io/fasta"
+	"github.com/evolbioinfo/goalign/io/phylip"
 )
 
 func main() {
@@ -417,7 +417,7 @@ align.ShuffleSequences()
 ```
 * Compute evolutionary ditance matrix (5 threads)
 ```go
-import "github.com/fredericlemoine/goalign/distance"
+import "github.com/evolbioinfo/goalign/distance"
 //...
 var model distance.DistModel
 var distMatrix [][]float64
