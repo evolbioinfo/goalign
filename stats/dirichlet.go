@@ -3,7 +3,7 @@ package stats
 import (
 	"errors"
 	"fmt"
-	"github.com/fredericlemoine/goalign/io"
+	"github.com/evolbioinfo/goalign/io"
 )
 
 // Dirichlet returns a set of random numbers from dirichlet distribution

@@ -8,7 +8,7 @@ import (
 	"strconv"
 	"strings"
 
-	alignio "github.com/fredericlemoine/goalign/io"
+	alignio "github.com/evolbioinfo/goalign/io"
 )
 
 // Scanner represents a lexical scanner.

@@ -7,7 +7,7 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/fredericlemoine/goalign/align"
+	"github.com/evolbioinfo/goalign/align"
 )
 
 // Parser represents a parser.

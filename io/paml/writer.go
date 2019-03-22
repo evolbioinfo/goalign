@@ -3,7 +3,7 @@ package paml
 import (
 	"bytes"
 	"fmt"
-	"github.com/fredericlemoine/goalign/align"
+	"github.com/evolbioinfo/goalign/align"
 )
 
 const (

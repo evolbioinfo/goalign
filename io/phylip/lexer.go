@@ -4,7 +4,7 @@ import (
 	"bufio"
 	"bytes"
 	"errors"
-	alignio "github.com/fredericlemoine/goalign/io"
+	alignio "github.com/evolbioinfo/goalign/io"
 	"io"
 	"strconv"
 )

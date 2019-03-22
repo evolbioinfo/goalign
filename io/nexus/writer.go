@@ -3,7 +3,7 @@ package nexus
 import (
 	"bytes"
 	"fmt"
-	"github.com/fredericlemoine/goalign/align"
+	"github.com/evolbioinfo/goalign/align"
 )
 
 func min_int(a int, b int) int {

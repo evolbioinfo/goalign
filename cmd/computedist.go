@@ -8,9 +8,9 @@ import (
 	"math"
 	"os"
 
-	"github.com/fredericlemoine/goalign/align"
-	"github.com/fredericlemoine/goalign/distance"
-	"github.com/fredericlemoine/goalign/io"
+	"github.com/evolbioinfo/goalign/align"
+	"github.com/evolbioinfo/goalign/distance"
+	"github.com/evolbioinfo/goalign/io"
 )
 
 var computedistOutput string

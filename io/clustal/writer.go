@@ -4,8 +4,8 @@ import (
 	"bytes"
 	"fmt"
 
-	"github.com/fredericlemoine/goalign/align"
-	"github.com/fredericlemoine/goalign/version"
+	"github.com/evolbioinfo/goalign/align"
+	"github.com/evolbioinfo/goalign/version"
 )
 
 const (

@@ -7,7 +7,7 @@ Package intended to draw alignmentd on different devices :
 package draw
 
 import (
-	"github.com/fredericlemoine/goalign/align"
+	"github.com/evolbioinfo/goalign/align"
 )
 
 /*

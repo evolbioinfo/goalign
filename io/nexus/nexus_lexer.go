@@ -7,7 +7,7 @@ import (
 	"strconv"
 	"strings"
 
-	aio "github.com/fredericlemoine/goalign/io"
+	aio "github.com/evolbioinfo/goalign/io"
 )
 
 // Scanner represents a lexical scanner.

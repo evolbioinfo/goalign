@@ -5,7 +5,7 @@ package stats
 import (
 	"errors"
 	"fmt"
-	"github.com/fredericlemoine/goalign/io"
+	"github.com/evolbioinfo/goalign/io"
 	"math"
 	"math/rand"
 )

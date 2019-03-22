@@ -2,7 +2,7 @@ package fasta
 
 import (
 	"bytes"
-	"github.com/fredericlemoine/goalign/align"
+	"github.com/evolbioinfo/goalign/align"
 )
 
 const (

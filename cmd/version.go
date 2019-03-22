@@ -3,7 +3,7 @@ package cmd
 import (
 	"fmt"
 
-	"github.com/fredericlemoine/goalign/version"
+	"github.com/evolbioinfo/goalign/version"
 	"github.com/spf13/cobra"
 )
 

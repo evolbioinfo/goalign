@@ -2,9 +2,9 @@ GO_EXECUTABLE := go
 DEP_EXECUTABLE := ${GOPATH}/bin/dep
 VERSION := $(shell git describe --abbrev=10 --dirty --always --tags)
 DIST_DIRS := find * -type d -exec
-VERSION_PACKAGE := github.com/fredericlemoine/goalign/version.Version
+VERSION_PACKAGE := github.com/evolbioinfo/goalign/version.Version
 NAME := goalign
-PACKAGE:=github.com/fredericlemoine/goalign
+PACKAGE:=github.com/evolbioinfo/goalign
 
 all: dep build test 
 

@@ -5,8 +5,8 @@ import (
 	"io"
 	"strconv"
 
-	"github.com/fredericlemoine/goalign/align"
-	aio "github.com/fredericlemoine/goalign/io"
+	"github.com/evolbioinfo/goalign/align"
+	aio "github.com/evolbioinfo/goalign/io"
 )
 
 // Parser represents a parser.

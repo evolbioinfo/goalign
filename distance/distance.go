@@ -6,8 +6,8 @@ import (
 	"sync"
 	"unicode"
 
-	"github.com/fredericlemoine/goalign/align"
-	"github.com/fredericlemoine/goalign/stats"
+	"github.com/evolbioinfo/goalign/align"
+	"github.com/evolbioinfo/goalign/stats"
 )
 
 type DistModel interface {

@@ -7,8 +7,8 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/fredericlemoine/goalign/align"
-	"github.com/fredericlemoine/goalign/io"
+	"github.com/evolbioinfo/goalign/align"
+	"github.com/evolbioinfo/goalign/io"
 	"github.com/spf13/cobra"
 )
 

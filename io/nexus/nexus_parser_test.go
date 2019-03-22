@@ -4,7 +4,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/fredericlemoine/goalign/io/nexus"
+	"github.com/evolbioinfo/goalign/io/nexus"
 )
 
 // Ensure the parser can parse strings into Statement ASTs.

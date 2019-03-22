@@ -12,7 +12,7 @@ import (
 	"strings"
 	"unicode"
 
-	"github.com/fredericlemoine/goalign/io"
+	"github.com/evolbioinfo/goalign/io"
 )
 
 type SeqBag interface {
