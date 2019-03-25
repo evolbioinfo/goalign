@@ -17,33 +17,46 @@ var sortCmd = &cobra.Command{
 	Long: `sorts input algignment by sequence name.
 `,
 	RunE: func(cmd *cobra.Command, args []string) (err error) {
-		var aligns *align.AlignChannel
 		var f *os.File
 
-		if aligns, err = readalign(infile); err != nil {
-			io.LogError(err)
-			return
-		}
 		if f, err = openWriteFile(sortOutput); err != nil {
 			io.LogError(err)
 			return
 		}
 		defer closeWriteFile(f, sortOutput)
 
-		for al := range aligns.Achan {
-			al.Sort()
-			writeAlign(al, f)
-		}
+		if unaligned {
+			var seqs align.SeqBag
+			if seqs, err = readsequences(infile); err != nil {
+				io.LogError(err)
+				return
+			}
+			seqs.Sort()
+			writeSequences(seqs, f)
+		} else {
+			var aligns *align.AlignChannel
 
-		if aligns.Err != nil {
-			err = aligns.Err
-			io.LogError(err)
+			if aligns, err = readalign(infile); err != nil {
+				io.LogError(err)
+				return
+			}
+
+			for al := range aligns.Achan {
+				al.Sort()
+				writeAlign(al, f)
+			}
+
+			if aligns.Err != nil {
+				err = aligns.Err
+				io.LogError(err)
+			}
 		}
 		return
 	},
 }
 
 func init() {
-	RootCmd.AddCommand(sortCmd)
+	sortCmd.PersistentFlags().BoolVar(&unaligned, "unaligned", false, "Considers sequences as unaligned and format fasta (phylip, nexus,... options are ignored)")
 	sortCmd.PersistentFlags().StringVarP(&sortOutput, "output", "o", "stdout", "Sorted alignment output file")
+	RootCmd.AddCommand(sortCmd)
 }

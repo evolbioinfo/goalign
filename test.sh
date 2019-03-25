@@ -1829,6 +1829,35 @@ ${GOALIGN} random --seed 10 -l 10 -n 5 | ${GOALIGN} shuffle seqs | ${GOALIGN} so
 diff -q -b expected result
 rm -f expected result
 
+echo "->goalign sort --unaligned"
+cat > input <<EOF
+>Seq0004
+TTAAG
+>Seq0000
+GATTAATT
+>Seq0002
+GAATCTGAAGC
+>Seq0003
+ATCGAACACT
+>Seq0001
+CCGTAGGCCACTG
+EOF
+cat > expected <<EOF
+>Seq0000
+GATTAATT
+>Seq0001
+CCGTAGGCCACTG
+>Seq0002
+GAATCTGAAGC
+>Seq0003
+ATCGAACACT
+>Seq0004
+TTAAG
+EOF
+${GOALIGN} sort -i input --unaligned > result
+diff -q -b expected result
+rm -f expected result input
+
 echo "->goalign translate"
 cat > input <<EOF
 >allcodons
