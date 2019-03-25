@@ -67,6 +67,6 @@ goalign shuffle seqs -i align.fasta
 }
 
 func init() {
-	shuffleCmd.PersistentFlags().BoolVar(&unaligned, "unaligned", false, "Considers sequences as unaligned and format fasta (phylip, nexus,... options are ignored)")
+	seqsCmd.PersistentFlags().BoolVar(&unaligned, "unaligned", false, "Considers sequences as unaligned and format fasta (phylip, nexus,... options are ignored)")
 	shuffleCmd.AddCommand(seqsCmd)
 }
