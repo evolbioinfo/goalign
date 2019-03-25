@@ -1858,6 +1858,36 @@ ${GOALIGN} sort -i input --unaligned > result
 diff -q -b expected result
 rm -f expected result input
 
+echo "->goalign shuffle seqs --unaligned"
+cat > input <<EOF
+>Seq0004
+TTAAG
+>Seq0000
+GATTAATT
+>Seq0002
+GAATCTGAAGC
+>Seq0003
+ATCGAACACT
+>Seq0001
+CCGTAGGCCACTG
+EOF
+cat > expected <<EOF
+>Seq0000
+GATTAATT
+>Seq0001
+CCGTAGGCCACTG
+>Seq0002
+GAATCTGAAGC
+>Seq0003
+ATCGAACACT
+>Seq0004
+TTAAG
+EOF
+${GOALIGN} shuffle seqs -i input --unaligned | ${GOALIGN} sort --unaligned  > result
+diff -q -b expected result
+rm -f expected result input
+
+
 echo "->goalign translate"
 cat > input <<EOF
 >allcodons
@@ -2827,3 +2857,4 @@ diff -q -b result.nb expected.nb
 diff -q -b result.len expected.len
 
 rm -f expected.len expected.nb result.len result.nb
+

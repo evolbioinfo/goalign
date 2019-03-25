@@ -28,32 +28,45 @@ goalign shuffle seqs -i align.fasta
 
 `,
 	RunE: func(cmd *cobra.Command, args []string) (err error) {
-		var aligns *align.AlignChannel
 		var f *os.File
 
-		if aligns, err = readalign(infile); err != nil {
-			io.LogError(err)
-			return
-		}
 		if f, err = openWriteFile(shuffleOutput); err != nil {
 			io.LogError(err)
 			return
 		}
 		defer closeWriteFile(f, shuffleOutput)
 
-		for al := range aligns.Achan {
-			al.ShuffleSequences()
-			writeAlign(al, f)
-		}
+		if unaligned {
+			var seqs align.SeqBag
+			if seqs, err = readsequences(infile); err != nil {
+				io.LogError(err)
+				return
+			}
+			seqs.ShuffleSequences()
+			writeSequences(seqs, f)
+		} else {
+			var aligns *align.AlignChannel
 
-		if aligns.Err != nil {
-			err = aligns.Err
-			io.LogError(err)
+			if aligns, err = readalign(infile); err != nil {
+				io.LogError(err)
+				return
+			}
+
+			for al := range aligns.Achan {
+				al.ShuffleSequences()
+				writeAlign(al, f)
+			}
+
+			if aligns.Err != nil {
+				err = aligns.Err
+				io.LogError(err)
+			}
 		}
 		return
 	},
 }
 
 func init() {
+	shuffleCmd.PersistentFlags().BoolVar(&unaligned, "unaligned", false, "Considers sequences as unaligned and format fasta (phylip, nexus,... options are ignored)")
 	shuffleCmd.AddCommand(seqsCmd)
 }
