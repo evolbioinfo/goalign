@@ -11,6 +11,7 @@ import (
 	"strings"
 	"unicode"
 
+	"github.com/armon/go-radix"
 	"github.com/evolbioinfo/goalign/io"
 )
 
@@ -22,6 +23,9 @@ type Alignment interface {
 	CharStatsSite(site int) (map[rune]int, error)
 	Clone() (Alignment, error)
 	CodonAlign(ntseqs SeqBag) (codonAl *align, err error)
+	// Remove identical patterns/sites and return number of occurence
+	// of each pattern (order of patterns/sites may have changed)
+	Compress() []int
 	// concatenates the given alignment with this alignment
 	Concat(Alignment) error
 	// Compares all sequences to the first one and counts all differences per sequence
@@ -986,6 +990,49 @@ func (a *align) RandSubAlign(length int) (Alignment, error) {
 		subalign.AddSequenceChar(seq.name, seq.SequenceChar()[start:start+length], seq.Comment())
 	}
 	return subalign, nil
+}
+
+/*
+Remove identical patterns/sites and return number of occurence
+ of each pattern (order of patterns/sites may have changed)
+*/
+func (a *align) Compress() (weights []int) {
+	var count interface{}
+	var ok bool
+	r := radix.New()
+	npat := 0
+	// We add new patterns if not already insterted in the radix tree
+	for site := 0; site < a.Length(); site++ {
+		pattern := make([]rune, a.NbSequences())
+		for seq := 0; seq < a.NbSequences(); seq++ {
+			pattern[seq] = a.seqs[seq].sequence[site]
+		}
+		patstring := string(pattern)
+		if count, ok = r.Get(patstring); !ok {
+			npat++
+			count = &struct{ count int }{0}
+		}
+		count.(*struct{ count int }).count++
+		r.Insert(patstring, count)
+	}
+	// Init weights
+	weights = make([]int, npat)
+	// We add the patterns
+	npat = 0
+	r.Walk(func(pattern string, count interface{}) bool {
+		weights[npat] = count.(*struct{ count int }).count
+		for seq, c := range pattern {
+			a.seqs[seq].sequence[npat] = c
+		}
+		npat++
+		return false
+	})
+	// We remove what remains of the sequences after al patterns
+	for seq := 0; seq < a.NbSequences(); seq++ {
+		a.seqs[seq].sequence = a.seqs[seq].sequence[:npat]
+	}
+	a.length = npat
+	return
 }
 
 /*

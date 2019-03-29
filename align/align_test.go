@@ -1169,3 +1169,71 @@ func TestDiffCount(t *testing.T) {
 	}
 
 }
+
+func TestCompress(t *testing.T) {
+	in := NewAlign(UNKNOWN)
+	in.AddSequence("Seq0000", "GGTTTTTTTT", "")
+	in.AddSequence("Seq0001", "TTCCCCACCC", "")
+	in.AddSequence("Seq0002", "GGTTTTTTTT", "")
+	in.AddSequence("Seq0003", "GGTTTTTTTT", "")
+	in.AutoAlphabet()
+
+	exp := NewAlign(UNKNOWN)
+	exp.AddSequence("Seq0000", "GTT", "")
+	exp.AddSequence("Seq0001", "TAC", "")
+	exp.AddSequence("Seq0002", "GTT", "")
+	exp.AddSequence("Seq0003", "GTT", "")
+	exp.AutoAlphabet()
+
+	expw := []int{2, 1, 7}
+
+	w := in.Compress()
+
+	if len(w) != len(expw) {
+		t.Error(fmt.Errorf("Number patterns is not what is expected %v vs. %v", w, expw))
+	}
+
+	for i, e := range w {
+		if e != expw[i] {
+			t.Error(fmt.Errorf("Pattern %d is different %v vs. %v", i, w, expw))
+		}
+	}
+
+	if !exp.Identical(in) {
+		t.Error(fmt.Errorf("Compressed alignment is different from expected \n %s \n vs. \n %s", in.String(), exp.String()))
+	}
+}
+
+func TestCompress2(t *testing.T) {
+	in := NewAlign(UNKNOWN)
+	in.AddSequence("Seq0000", "GGGGGGGGGGGGGGGGGGGG", "")
+	in.AddSequence("Seq0001", "TTTTTTTTTTTTTTTTTTTT", "")
+	in.AddSequence("Seq0002", "GGGGGGGGGGGGGGGGGGGG", "")
+	in.AddSequence("Seq0003", "AAAAAAAAAAAAAAAAAAAA", "")
+	in.AutoAlphabet()
+
+	exp := NewAlign(UNKNOWN)
+	exp.AddSequence("Seq0000", "G", "")
+	exp.AddSequence("Seq0001", "T", "")
+	exp.AddSequence("Seq0002", "G", "")
+	exp.AddSequence("Seq0003", "A", "")
+	exp.AutoAlphabet()
+
+	expw := []int{20}
+
+	w := in.Compress()
+
+	if len(w) != len(expw) {
+		t.Error(fmt.Errorf("Number patterns is not what is expected %v vs. %v", w, expw))
+	}
+
+	for i, e := range w {
+		if e != expw[i] {
+			t.Error(fmt.Errorf("Pattern %d is different %v vs. %v", i, w, expw))
+		}
+	}
+
+	if !exp.Identical(in) {
+		t.Error(fmt.Errorf("Compressed alignment is different from expected \n %s \n vs. \n %s", in.String(), exp.String()))
+	}
+}

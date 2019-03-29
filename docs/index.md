@@ -61,6 +61,7 @@ Command                                                     | Subcommand |      
 --                                                          | sites      | Removes sequences with gaps
 --                                                          | seqs       | Removes sites with gaps
 [codonalign](commands/codonalign.md) ([api](api/codonalign.md))|         | Adds gaps in nt sequences, according to its corresponding protein alignment
+[compress](commands/compress.md) ([api](api/compress.md))   |            | Removes identical patterns/sites from an input alignment
 [compute](commands/compute.md) ([api](api/compute.md))      |            | Different computations (distances, entropy, etc.)
 --                                                          | distance   | Computes distance matrix from inpu alignment
 --                                                          | entropy    | Computes entropy of sites of a given alignment

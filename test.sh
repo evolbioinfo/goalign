@@ -2850,7 +2850,7 @@ EOF
 cat > expected.len <<EOF
 5
 EOF
-for i in {1..100}; do ${GOALIGN} random -p -n 10 -l 5; done | ${GOALIGN} stats nseq --auto-detect | wc -l > result.nb
+for i in {1..100}; do ${GOALIGN} random -p -n 10 -l 5; done | ${GOALIGN} stats nseq --auto-detect | wc -l | sed 's/^[ \t]*//g' > result.nb
 for i in {1..100}; do ${GOALIGN} random -p -n 10 -l 5; done | ${GOALIGN} stats length --auto-detect | sort -u > result.len
 
 diff -q -b result.nb expected.nb
@@ -2858,3 +2858,33 @@ diff -q -b result.len expected.len
 
 rm -f expected.len expected.nb result.len result.nb
 
+
+echo "->goalign compress"
+
+cat > input <<EOF
+   4   20
+1 GGGGGGGGGGGGGGGGGGGG
+2 TTTTTTTTTTTTTTTTTTTT
+3 GGGGGGGGGGCCCCTTTTTT
+4 AAAAAAAAAAAAAAAAAAAA
+EOF
+
+cat > expected <<EOF
+   4   3
+1 GGG
+2 TTT
+3 CGT
+4 AAA
+EOF
+
+cat > wexp <<EOF
+4
+10
+6
+EOF
+
+${GOALIGN} compress -i input -p -o result --weight-out wres
+diff -q -b  expected result
+diff -q -b  wres wexp
+
+rm -f input expected result wexp wres
