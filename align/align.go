@@ -45,7 +45,7 @@ type Alignment interface {
 	// Positions of potential stop in frame
 	// if startinggapsasincomplete is true, then considers gaps as the beginning
 	// as incomplete sequence, then take the right phase
-	Stops(startingGapsAsIncomplete bool) []int
+	Stops(startingGapsAsIncomplete bool, geneticode int) (stops []int, err error)
 	Length() int                  // Length of the alignment
 	Mask(start, length int) error // Masks given positions
 	MaxCharStats() ([]rune, []int)
@@ -304,8 +304,8 @@ func (a *align) Swap(rate float64) {
 
 // Translates the alignment, and update the length of
 // the alignment
-func (a *align) Translate(phase int) (err error) {
-	err = a.seqbag.Translate(phase)
+func (a *align) Translate(phase int, geneticcode int) (err error) {
+	err = a.seqbag.Translate(phase, geneticcode)
 	if len(a.seqs) > 0 {
 		a.length = len(a.seqs[0].sequence)
 	} else {
@@ -785,7 +785,13 @@ func (a *align) Frameshifts(startingGapsAsIncomplete bool) (fs []struct{ Start, 
 }
 
 // Position of the first encountered STOP in frame
-func (a *align) Stops(startingGapsAsIncomplete bool) (stops []int) {
+func (a *align) Stops(startingGapsAsIncomplete bool, geneticcode int) (stops []int, err error) {
+	var code map[string]rune
+
+	if code, err = geneticCode(geneticcode); err != nil {
+		return
+	}
+
 	stops = make([]int, a.NbSequences())
 	codon := make([]rune, 3)
 	ref := a.seqs[0]
@@ -825,7 +831,7 @@ func (a *align) Stops(startingGapsAsIncomplete bool) (stops []int) {
 
 			if codonpos == 3 {
 				codonstr := strings.Replace(strings.ToUpper(string(codon)), "U", "T", -1)
-				aa, found := standardcode[codonstr]
+				aa, found := code[codonstr]
 				if !found {
 					aa = 'X'
 				}

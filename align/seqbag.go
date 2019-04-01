@@ -47,10 +47,10 @@ type SeqBag interface {
 	NbSequences() int
 	Rename(namemap map[string]string)
 	RenameRegexp(regex, replace string, namemap map[string]string) error
-	Replace(old, new string, regex bool) error // Replaces old string with new string in sequences of the alignment
-	ShuffleSequences()                         // Shuffle sequence order
-	String() string                            // Raw string representation (just write all sequences)
-	Translate(phase int) (err error)           // Translates nt sequence in aa
+	Replace(old, new string, regex bool) error        // Replaces old string with new string in sequences of the alignment
+	ShuffleSequences()                                // Shuffle sequence order
+	String() string                                   // Raw string representation (just write all sequences)
+	Translate(phase int, geneticcode int) (err error) // Translates nt sequence in aa
 	TrimNames(namemap map[string]string, size int) error
 	TrimNamesAuto(namemap map[string]string, curid *int) error
 	Sort() // Sorts the sequences by name
@@ -534,15 +534,18 @@ sequence names. At the end 3x more sequences in the seqbag.
 - if the alphabet is not NUCLEOTIDES: returns an error
 
 The seqbag is cleared and old sequences are replaced with aminoacid sequences
-
-It only translates using the standard code so far.
 */
-func (sb *seqbag) Translate(phase int) (err error) {
+func (sb *seqbag) Translate(phase int, geneticcode int) (err error) {
 	var oldseqs []*seq
 	var buffer bytes.Buffer
 	var firststart, laststart int
 	var name string
 	var suffix bool
+	var code map[string]rune
+
+	if code, err = geneticCode(geneticcode); err != nil {
+		return
+	}
 
 	if sb.Alphabet() != NUCLEOTIDS {
 		err = errors.New("Wrong alphabet, cannot translate to AA")
@@ -575,7 +578,7 @@ func (sb *seqbag) Translate(phase int) (err error) {
 			}
 			for i := phase; i < len(seq.sequence)-2; i += 3 {
 				codon := strings.Replace(strings.ToUpper(string(seq.sequence[i:i+3])), "U", "T", -1)
-				aa, found := standardcode[codon]
+				aa, found := code[codon]
 				if !found {
 					aa = 'X'
 				}

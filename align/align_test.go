@@ -985,7 +985,7 @@ func TestTranslate(t *testing.T) {
 	exp3phases.AddSequence("Seq0001_2", "G*LFLLPSPTATVFLIE*RRDYHNGWRRVASLLHYHSCRIM", "")
 	exp3phases.AutoAlphabet()
 
-	if err := in.Translate(0); err != nil {
+	if err := in.Translate(0, 0); err != nil {
 		t.Error(err)
 	} else {
 		if !expaa.Identical(in) {
@@ -993,7 +993,50 @@ func TestTranslate(t *testing.T) {
 		}
 	}
 
-	if err := in2.Translate(-1); err != nil {
+	if err := in2.Translate(-1, 0); err != nil {
+		t.Error(err)
+	} else {
+		if !exp3phases.Identical(in2) {
+			t.Error(fmt.Errorf("Expected sequences are different from 3 phase translated sequences"))
+		}
+	}
+}
+
+func TestTranslateMito(t *testing.T) {
+
+	in := NewSeqBag(UNKNOWN)
+	in.AddSequence("Seq0000", "ATGGATGACTTTTTCTGTTGCCCTCCCCCACCGCAACAGTCTTCCTCATCGAGTAGCGAAGAGACTACCACAACGGGTGGCGGAGGGTGGCATCACTATTACATTATCATAGTTGTCGTAGTGTAATGATAGC", "")
+	in.AddSequence("Seq0001", "ATGGATGACTTTTTCTGTTGCCCTCCCCCACCGCAACAGTCTTCCTCATCGAGTAGCGAAGAGACTACCACAACGGGTGGCGGAGGGTGGCATCACTATTACATTATCATAGTTGTCGTATAATGA", "")
+	in.AutoAlphabet()
+
+	in2, err2 := in.CloneSeqBag()
+	if err2 != nil {
+		t.Error(err2)
+	}
+
+	expaa := NewSeqBag(UNKNOWN)
+	expaa.AddSequence("Seq0000", "MDDFFCCPPPPQQSSSSSSEETTTTGGGGWHHYYIIMVVVV*W*", "")
+	expaa.AddSequence("Seq0001", "MDDFFCCPPPPQQSSSSSSEETTTTGGGGWHHYYIIMVVV*W", "")
+	expaa.AutoAlphabet()
+
+	exp3phases := NewSeqBag(UNKNOWN)
+	exp3phases.AddSequence("Seq0000_0", "MDDFFCCPPPPQQSSSSSSEETTTTGGGGWHHYYIIMVVVV*W*", "")
+	exp3phases.AddSequence("Seq0000_1", "WMTFSVALPHRNSLPHRVAK*LPQRVAEGGITITLS*LS*CNDS", "")
+	exp3phases.AddSequence("Seq0000_2", "GWLFLLPSPTATVFLIE*R*DYHNGWR*VASLLHYHSCRSVMM", "")
+	exp3phases.AddSequence("Seq0001_0", "MDDFFCCPPPPQQSSSSSSEETTTTGGGGWHHYYIIMVVV*W", "")
+	exp3phases.AddSequence("Seq0001_1", "WMTFSVALPHRNSLPHRVAK*LPQRVAEGGITITLS*LSYN", "")
+	exp3phases.AddSequence("Seq0001_2", "GWLFLLPSPTATVFLIE*R*DYHNGWR*VASLLHYHSCRMM", "")
+	exp3phases.AutoAlphabet()
+
+	if err := in.Translate(0, 1); err != nil {
+		t.Error(err)
+	} else {
+		if !expaa.Identical(in) {
+			t.Error(fmt.Errorf("Expected sequences are different from phased sequences"))
+		}
+	}
+
+	if err := in2.Translate(-1, 1); err != nil {
 		t.Error(err)
 	} else {
 		if !exp3phases.Identical(in2) {

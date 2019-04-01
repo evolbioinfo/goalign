@@ -12,6 +12,7 @@ import (
 
 var phaseOutput string
 var phaseAAOutput string
+var phaseGeneticCode string
 var phaseLogOutput string
 var orfsequence string
 var lencutoff float64
@@ -59,6 +60,7 @@ Output file is an unaligned set of sequences in fasta.
 		var inseqs align.SeqBag
 		var reforf align.SeqBag
 		var orf align.Sequence
+		var geneticcode int
 
 		if f, err = openWriteFile(phaseOutput); err != nil {
 			io.LogError(err)
@@ -109,13 +111,23 @@ Output file is an unaligned set of sequences in fasta.
 			reforf.AutoAlphabet()
 		}
 
+		switch phaseGeneticCode {
+		case "standard":
+			geneticcode = align.GENETIC_CODE_STANDARD
+		case "mitov":
+			geneticcode = align.GENETIC_CODE_VETEBRATE_MITO
+		default:
+			err = fmt.Errorf("Unknown genetic code : %s", phaseGeneticCode)
+			return
+		}
+
 		phaser := align.NewPhaser()
 		phaser.SetLenCutoff(lencutoff)
 		phaser.SetMatchCutoff(matchcutoff)
 		phaser.SetReverse(phasereverse)
 		phaser.SetCutEnd(phasecutend)
 		phaser.SetCpus(rootcpus)
-		phaser.SetTranslate(true)
+		phaser.SetTranslate(true, geneticcode)
 		if cmd.Flags().Changed("mismatch") || cmd.Flags().Changed("match") {
 			phaser.SetAlignScores(match, mismatch)
 		}
@@ -160,6 +172,7 @@ Output file is an unaligned set of sequences in fasta.
 func init() {
 	RootCmd.AddCommand(phaseCmd)
 	phaseCmd.PersistentFlags().StringVarP(&phaseOutput, "output", "o", "stdout", "Output \"phased\" FASTA file")
+	phaseCmd.PersistentFlags().StringVar(&phaseGeneticCode, "genetic-code", "standard", "Genetic Code: standard, or mitov (vertebrate mitochondrial)")
 	phaseCmd.PersistentFlags().StringVar(&phaseAAOutput, "aa-output", "none", "Output Met \"phased\" aa FASTA file")
 	phaseCmd.PersistentFlags().StringVarP(&phaseLogOutput, "log", "l", "none", "Output log: positions of the considered Start for each sequence")
 	phaseCmd.PersistentFlags().Float64Var(&lencutoff, "len-cutoff", -1.0, "Length cutoff, over orf length, to consider sequence hits (-1==No cutoff)")

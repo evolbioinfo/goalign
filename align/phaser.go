@@ -49,7 +49,7 @@ type Phaser interface {
 	SetReverse(reverse bool)
 	SetCutEnd(cutend bool)
 	SetCpus(cpus int)
-	SetTranslate(translate bool)
+	SetTranslate(translate bool, geneticcode int) (err error)
 	SetAlignScores(match, mismatch float64)
 }
 
@@ -67,7 +67,8 @@ type phaser struct {
 	// Translate orf (1st phase) & input sequences in 3 or 6 phases
 	// to search for the best phase. If false, just align sequences
 	// as is
-	translate bool
+	translate   bool
+	geneticcode int
 	//
 	// For Pairwise alignment
 	changedscores bool
@@ -101,6 +102,7 @@ func NewPhaser() Phaser {
 		cutend:        false,
 		cpus:          1,
 		translate:     true,
+		geneticcode:   GENETIC_CODE_STANDARD,
 		changedscores: false,
 		matchscore:    -1,
 		mismatchscore: -1,
@@ -122,8 +124,13 @@ func (p *phaser) SetCutEnd(cutend bool) {
 func (p *phaser) SetCpus(cpus int) {
 	p.cpus = cpus
 }
-func (p *phaser) SetTranslate(translate bool) {
+func (p *phaser) SetTranslate(translate bool, geneticcode int) (err error) {
+	if _, err = geneticCode(geneticcode); err != nil {
+		return
+	}
 	p.translate = translate
+	p.geneticcode = geneticcode
+	return
 }
 func (p *phaser) SetAlignScores(match, mismatch float64) {
 	p.matchscore = match
@@ -163,7 +170,7 @@ func (p *phaser) Phase(orfs, seqs SeqBag) (phased chan PhasedSequence, err error
 		return
 	}
 	if alphabet == NUCLEOTIDS {
-		if err = orfsaa.Translate(0); err != nil {
+		if err = orfsaa.Translate(0, p.geneticcode); err != nil {
 			return
 		}
 	}
@@ -246,7 +253,7 @@ func (p *phaser) alignAgainstRefsAA(seq Sequence, orfsaa []Sequence) (ph PhasedS
 			} else {
 				tmpseq = revcomp
 			}
-			if seqaa, err = tmpseq.Translate(phase % 3); err != nil {
+			if seqaa, err = tmpseq.Translate(phase%3, p.geneticcode); err != nil {
 				ph = PhasedSequence{Err: fmt.Errorf("Error while translating %s : %v", seq.Name(), err)}
 				return
 			}
@@ -401,7 +408,7 @@ func (p *phaser) alignAgainstRefsNT(seq Sequence, orfs []Sequence) (ph PhasedSeq
 		Ali: bestali,
 	}
 
-	ph.AaSeq, err = ph.AaSeq.Translate(0)
+	ph.AaSeq, err = ph.AaSeq.Translate(0, p.geneticcode)
 
 	// We set a threshold for matches over the alignment length...
 	if (p.matchcutoff > .0 && bestratematches <= p.matchcutoff) ||

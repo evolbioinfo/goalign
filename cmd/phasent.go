@@ -52,6 +52,7 @@ Output file is an unaligned set of sequences in fasta.
 		var inseqs align.SeqBag
 		var reforf align.SeqBag
 		var orf align.Sequence
+		var geneticcode int
 
 		if f, err = openWriteFile(phaseOutput); err != nil {
 			io.LogError(err)
@@ -114,13 +115,24 @@ Output file is an unaligned set of sequences in fasta.
 			reforf.AutoAlphabet()
 		}
 
+		switch phaseGeneticCode {
+		case "standard":
+			geneticcode = align.GENETIC_CODE_STANDARD
+		case "mitov":
+			geneticcode = align.GENETIC_CODE_VETEBRATE_MITO
+		default:
+			err = fmt.Errorf("Unknown genetic code : %s", phaseGeneticCode)
+			return
+		}
+
 		phaser := align.NewPhaser()
 		phaser.SetLenCutoff(lencutoff)
 		phaser.SetMatchCutoff(matchcutoff)
 		phaser.SetReverse(phasereverse)
 		phaser.SetCutEnd(phasecutend)
 		phaser.SetCpus(rootcpus)
-		phaser.SetTranslate(false)
+		phaser.SetTranslate(false, geneticcode)
+
 		if cmd.Flags().Changed("mismatch") || cmd.Flags().Changed("match") {
 			phaser.SetAlignScores(match, mismatch)
 		}
@@ -138,6 +150,7 @@ Output file is an unaligned set of sequences in fasta.
 		phasedseqsaa := align.NewSeqBag(align.UNKNOWN)
 
 		for p := range phased {
+			var stops []int
 			if p.Err != nil {
 				err = p.Err
 				io.LogError(p.Err)
@@ -157,7 +170,9 @@ Output file is an unaligned set of sequences in fasta.
 						fs += fmt.Sprintf("%d-%d=%d", f.Start, f.End, f.End-f.Start)
 					}
 				}
-				stops := p.Ali.Stops(true)
+				if stops, err = p.Ali.Stops(true, geneticcode); err != nil {
+					return
+				}
 				s := ""
 				for i, f := range stops {
 					if i > 0 {
@@ -181,6 +196,7 @@ func init() {
 	RootCmd.AddCommand(phasentCmd)
 	phasentCmd.PersistentFlags().StringVarP(&phaseOutput, "output", "o", "stdout", "Output ATG \"phased\" FASTA file")
 	phasentCmd.PersistentFlags().StringVar(&phaseCodonOutput, "nt-output", "none", "Output ATG \"phased\" FASTA file + first nts not in ref phase removed (nt corresponding to aa-output sequence)")
+	phasentCmd.PersistentFlags().StringVar(&phaseGeneticCode, "genetic-code", "standard", "Genetic Code: standard, or mitov (vertebrate mitochondrial)")
 	phasentCmd.PersistentFlags().StringVar(&phaseAAOutput, "aa-output", "none", "Output translated sequences FASTA file")
 	phasentCmd.PersistentFlags().StringVarP(&phaseLogOutput, "log", "l", "none", "Output log: positions of the considered ATG for each sequence")
 	phasentCmd.PersistentFlags().Float64Var(&lencutoff, "len-cutoff", -1.0, "Length cutoff, over orf length, to consider sequence hits (-1==No cutoff)")

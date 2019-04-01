@@ -20,9 +20,9 @@ type Sequence interface {
 	Length() int
 	LongestORF() (start, end int) // Detects the longest ORF in forward strand only
 	Reverse()
-	Complement() error                     // Returns an error if not nucleotide sequence
-	Translate(phase int) (Sequence, error) // Translates the sequence using the standard code
-	DetectAlphabet() int                   // Try to detect alphabet (nt or aa)
+	Complement() error                                      // Returns an error if not nucleotide sequence
+	Translate(phase int, geneticcode int) (Sequence, error) // Translates the sequence using the given code
+	DetectAlphabet() int                                    // Try to detect alphabet (nt or aa)
 	Clone() Sequence
 }
 
@@ -178,8 +178,13 @@ func (s *seq) DetectAlphabet() int {
 //
 // If the sequence is not nucleotidic, then throws an error
 // If sequence length is < 3+phase then thropws an error
-func (s *seq) Translate(phase int) (tr Sequence, err error) {
+func (s *seq) Translate(phase int, geneticcode int) (tr Sequence, err error) {
 	var buffer bytes.Buffer
+	var code map[string]rune
+
+	if code, err = geneticCode(geneticcode); err != nil {
+		return
+	}
 
 	if s.DetectAlphabet() != NUCLEOTIDS && s.DetectAlphabet() != BOTH {
 		err = fmt.Errorf("Cannot translate this sequence, wrong alphabet")
@@ -193,7 +198,7 @@ func (s *seq) Translate(phase int) (tr Sequence, err error) {
 
 	for i := phase; i < len(s.sequence)-2; i += 3 {
 		codon := strings.Replace(strings.ToUpper(string(s.sequence[i:i+3])), "U", "T", -1)
-		aa, found := standardcode[codon]
+		aa, found := code[codon]
 		if !found {
 			aa = 'X'
 		}
