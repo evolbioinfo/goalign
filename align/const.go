@@ -31,8 +31,9 @@ const (
 	POSITION_SEMI_CONSERVED = 2 // Same weak group
 	POSITION_NOT_CONSERVED  = 3 // None of the above values
 
-	GENETIC_CODE_STANDARD       = 0 // Standard genetic code
-	GENETIC_CODE_VETEBRATE_MITO = 1 // Vertebrate mitochondrial genetic code
+	GENETIC_CODE_STANDARD         = 0 // Standard genetic code
+	GENETIC_CODE_VETEBRATE_MITO   = 1 // Vertebrate mitochondrial genetic code
+	GENETIC_CODE_INVETEBRATE_MITO = 2 // Invertebrate mitochondrial genetic code
 )
 
 var stdaminoacid = []rune{'A', 'R', 'N', 'D', 'C', 'Q', 'E', 'G', 'H', 'I', 'L', 'K', 'M', 'F', 'P', 'S', 'T', 'W', 'Y', 'V'}
@@ -88,12 +89,39 @@ var vertebratemitocode = map[string]rune{
 	"AGA": '*', "AGG": '*', "TAA": '*', "TAG": '*',
 }
 
+var invertebratemitocode = map[string]rune{
+	"---": '-',
+	"GCT": 'A', "GCC": 'A', "GCA": 'A', "GCG": 'A',
+	"TTA": 'L', "TTG": 'L', "CTT": 'L', "CTC": 'L', "CTA": 'L', "CTG": 'L',
+	"CGT": 'R', "CGC": 'R', "CGA": 'R', "CGG": 'R',
+	"AAA": 'K', "AAG": 'K',
+	"AAT": 'N', "AAC": 'N',
+	"ATG": 'M', "ATA": 'M',
+	"GAT": 'D', "GAC": 'D',
+	"TTT": 'F', "TTC": 'F',
+	"TGT": 'C', "TGC": 'C',
+	"CCT": 'P', "CCC": 'P', "CCA": 'P', "CCG": 'P',
+	"CAA": 'Q', "CAG": 'Q',
+	"AGA": 'S', "AGG": 'S', "TCT": 'S', "TCC": 'S', "TCA": 'S', "TCG": 'S', "AGT": 'S', "AGC": 'S',
+	"GAA": 'E', "GAG": 'E',
+	"ACT": 'T', "ACC": 'T', "ACA": 'T', "ACG": 'T',
+	"GGT": 'G', "GGC": 'G', "GGA": 'G', "GGG": 'G',
+	"TGG": 'W', "TGA": 'W',
+	"CAT": 'H', "CAC": 'H',
+	"TAT": 'Y', "TAC": 'Y',
+	"ATT": 'I', "ATC": 'I',
+	"GTT": 'V', "GTC": 'V', "GTA": 'V', "GTG": 'V',
+	"TAA": '*', "TAG": '*',
+}
+
 func geneticCode(code int) (gencode map[string]rune, err error) {
 	switch code {
 	case GENETIC_CODE_STANDARD:
 		gencode = standardcode
 	case GENETIC_CODE_VETEBRATE_MITO:
 		gencode = vertebratemitocode
+	case GENETIC_CODE_INVETEBRATE_MITO:
+		gencode = invertebratemitocode
 	default:
 		err = fmt.Errorf("This genetic code does not exis")
 	}

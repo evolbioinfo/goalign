@@ -1045,6 +1045,49 @@ func TestTranslateMito(t *testing.T) {
 	}
 }
 
+func TestTranslateMitoI(t *testing.T) {
+
+	in := NewSeqBag(UNKNOWN)
+	in.AddSequence("Seq0000", "ATGGATGACTTTTTCTGTTGCCCTCCCCCACCGCAACAGTCTTCCTCATCGAGTAGCGAAGAGACTACCACAACGGGTGGCGGAGGGTGGCATCACTATTACATTATCATAGTTGTCGTAGTGTAATGATAGC", "")
+	in.AddSequence("Seq0001", "ATGGATGACTTTTTCTGTTGCCCTCCCCCACCGCAACAGTCTTCCTCATCGAGTAGCGAAGAGACTACCACAACGGGTGGCGGAGGGTGGCATCACTATTACATTATCATAGTTGTCGTATAATGA", "")
+	in.AutoAlphabet()
+
+	in2, err2 := in.CloneSeqBag()
+	if err2 != nil {
+		t.Error(err2)
+	}
+
+	expaa := NewSeqBag(UNKNOWN)
+	expaa.AddSequence("Seq0000", "MDDFFCCPPPPQQSSSSSSEETTTTGGGGWHHYYIIMVVVV*W*", "")
+	expaa.AddSequence("Seq0001", "MDDFFCCPPPPQQSSSSSSEETTTTGGGGWHHYYIIMVVV*W", "")
+	expaa.AutoAlphabet()
+
+	exp3phases := NewSeqBag(UNKNOWN)
+	exp3phases.AddSequence("Seq0000_0", "MDDFFCCPPPPQQSSSSSSEETTTTGGGGWHHYYIIMVVVV*W*", "")
+	exp3phases.AddSequence("Seq0000_1", "WMTFSVALPHRNSLPHRVAKSLPQRVAEGGITITLS*LS*CNDS", "")
+	exp3phases.AddSequence("Seq0000_2", "GWLFLLPSPTATVFLIE*RSDYHNGWRSVASLLHYHSCRSVMM", "")
+	exp3phases.AddSequence("Seq0001_0", "MDDFFCCPPPPQQSSSSSSEETTTTGGGGWHHYYIIMVVV*W", "")
+	exp3phases.AddSequence("Seq0001_1", "WMTFSVALPHRNSLPHRVAKSLPQRVAEGGITITLS*LSYN", "")
+	exp3phases.AddSequence("Seq0001_2", "GWLFLLPSPTATVFLIE*RSDYHNGWRSVASLLHYHSCRMM", "")
+	exp3phases.AutoAlphabet()
+
+	if err := in.Translate(0, 2); err != nil {
+		t.Error(err)
+	} else {
+		if !expaa.Identical(in) {
+			t.Error(fmt.Errorf("Expected sequences are different from phased sequences"))
+		}
+	}
+
+	if err := in2.Translate(-1, 2); err != nil {
+		t.Error(err)
+	} else {
+		if !exp3phases.Identical(in2) {
+			t.Error(fmt.Errorf("Expected sequences are different from 3 phase translated sequences"))
+		}
+	}
+}
+
 func TestMaskNt(t *testing.T) {
 	in := NewAlign(UNKNOWN)
 	in.AddSequence("Seq0000", "GATTAATTTGCCGTAGGCCA", "")

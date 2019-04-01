@@ -120,6 +120,8 @@ Output file is an unaligned set of sequences in fasta.
 			geneticcode = align.GENETIC_CODE_STANDARD
 		case "mitov":
 			geneticcode = align.GENETIC_CODE_VETEBRATE_MITO
+		case "mitoi":
+			geneticcode = align.GENETIC_CODE_INVETEBRATE_MITO
 		default:
 			err = fmt.Errorf("Unknown genetic code : %s", phaseGeneticCode)
 			return
@@ -196,7 +198,7 @@ func init() {
 	RootCmd.AddCommand(phasentCmd)
 	phasentCmd.PersistentFlags().StringVarP(&phaseOutput, "output", "o", "stdout", "Output ATG \"phased\" FASTA file")
 	phasentCmd.PersistentFlags().StringVar(&phaseCodonOutput, "nt-output", "none", "Output ATG \"phased\" FASTA file + first nts not in ref phase removed (nt corresponding to aa-output sequence)")
-	phasentCmd.PersistentFlags().StringVar(&phaseGeneticCode, "genetic-code", "standard", "Genetic Code: standard, or mitov (vertebrate mitochondrial)")
+	phasentCmd.PersistentFlags().StringVar(&phaseGeneticCode, "genetic-code", "standard", "Genetic Code: standard, mitoi (invertebrate mitochondrial) or mitov (vertebrate mitochondrial)")
 	phasentCmd.PersistentFlags().StringVar(&phaseAAOutput, "aa-output", "none", "Output translated sequences FASTA file")
 	phasentCmd.PersistentFlags().StringVarP(&phaseLogOutput, "log", "l", "none", "Output log: positions of the considered ATG for each sequence")
 	phasentCmd.PersistentFlags().Float64Var(&lencutoff, "len-cutoff", -1.0, "Length cutoff, over orf length, to consider sequence hits (-1==No cutoff)")

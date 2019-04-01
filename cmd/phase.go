@@ -116,6 +116,8 @@ Output file is an unaligned set of sequences in fasta.
 			geneticcode = align.GENETIC_CODE_STANDARD
 		case "mitov":
 			geneticcode = align.GENETIC_CODE_VETEBRATE_MITO
+		case "mitoi":
+			geneticcode = align.GENETIC_CODE_INVETEBRATE_MITO
 		default:
 			err = fmt.Errorf("Unknown genetic code : %s", phaseGeneticCode)
 			return
@@ -172,7 +174,7 @@ Output file is an unaligned set of sequences in fasta.
 func init() {
 	RootCmd.AddCommand(phaseCmd)
 	phaseCmd.PersistentFlags().StringVarP(&phaseOutput, "output", "o", "stdout", "Output \"phased\" FASTA file")
-	phaseCmd.PersistentFlags().StringVar(&phaseGeneticCode, "genetic-code", "standard", "Genetic Code: standard, or mitov (vertebrate mitochondrial)")
+	phaseCmd.PersistentFlags().StringVar(&phaseGeneticCode, "genetic-code", "standard", "Genetic Code: standard, mitoi (invertebrate mitochondrial) or mitov (vertebrate mitochondrial)")
 	phaseCmd.PersistentFlags().StringVar(&phaseAAOutput, "aa-output", "none", "Output Met \"phased\" aa FASTA file")
 	phaseCmd.PersistentFlags().StringVarP(&phaseLogOutput, "log", "l", "none", "Output log: positions of the considered Start for each sequence")
 	phaseCmd.PersistentFlags().Float64Var(&lencutoff, "len-cutoff", -1.0, "Length cutoff, over orf length, to consider sequence hits (-1==No cutoff)")

@@ -47,6 +47,9 @@ It only translates using the standard genetic code so far.
 			geneticcode = align.GENETIC_CODE_STANDARD
 		case "mitov":
 			geneticcode = align.GENETIC_CODE_VETEBRATE_MITO
+		case "mitoi":
+			geneticcode = align.GENETIC_CODE_INVETEBRATE_MITO
+
 		default:
 			err = fmt.Errorf("Unknown genetic code : %s", translateGeneticCode)
 			return
@@ -92,7 +95,7 @@ It only translates using the standard genetic code so far.
 
 func init() {
 	RootCmd.AddCommand(translateCmd)
-	translateCmd.PersistentFlags().StringVar(&translateGeneticCode, "genetic-code", "standard", "Genetic Code: standard, or mitov (vertebrate mitochondrial)")
+	translateCmd.PersistentFlags().StringVar(&translateGeneticCode, "genetic-code", "standard", "Genetic Code: standard, mitoi (invertebrate mitochondrial) or mitov (vertebrate mitochondrial)")
 	translateCmd.PersistentFlags().StringVarP(&translateOutput, "output", "o", "stdout", "Output translated alignment file")
 	translateCmd.PersistentFlags().IntVar(&translatePhase, "phase", 0, "Number of characters to drop from the start of the alignment (if -1: Translate in the 3 phases, from positions 0, 1, and 2)")
 	translateCmd.PersistentFlags().BoolVar(&unaligned, "unaligned", false, "Considers sequences as unaligned and format fasta (phylip, nexus,... options are ignored)")
