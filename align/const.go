@@ -63,7 +63,7 @@ var standardcode = map[string]rune{
 	"TAA": '*', "TGA": '*', "TAG": '*',
 }
 
-var vertrebatemitocode = map[string]rune{
+var vertebratemitocode = map[string]rune{
 	"---": '-',
 	"GCT": 'A', "GCC": 'A', "GCA": 'A', "GCG": 'A',
 	"TTA": 'L', "TTG": 'L', "CTT": 'L', "CTC": 'L', "CTA": 'L', "CTG": 'L',
@@ -93,7 +93,7 @@ func geneticCode(code int) (gencode map[string]rune, err error) {
 	case GENETIC_CODE_STANDARD:
 		gencode = standardcode
 	case GENETIC_CODE_VETEBRATE_MITO:
-		gencode = vertrebatemitocode
+		gencode = vertebratemitocode
 	default:
 		err = fmt.Errorf("This genetic code does not exis")
 	}
