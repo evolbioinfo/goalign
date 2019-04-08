@@ -8,7 +8,6 @@ package protein
 import (
 	"fmt"
 	"math"
-	"math/cmplx"
 
 	"github.com/evolbioinfo/goalign/align"
 	"gonum.org/v1/gonum/mat"
@@ -61,7 +60,7 @@ func (model *ProtModel) InitModel(a align.Alignment) error {
 	model.mat.Apply(func(i, j int, v float64) float64 { return v / model.mr }, model.mat)
 
 	eigen := &mat.Eigen{}
-	if ok = eigen.Factorize(model.mat, mat.EigenBoth); !ok {
+	if ok = eigen.Factorize(model.mat, mat.EigenRight); !ok {
 		return fmt.Errorf("Problem during matrix decomposition")
 	}
 	model.eigen = eigen
@@ -181,18 +180,23 @@ func (model *ProtModel) pMatZeroBrLen() {
  *   8000 = 20x20x20 times the operation + */
 func (model *ProtModel) pMatEmpirical(len float64) {
 	var i, k int
-	var U, V *mat.CDense
+	var U *mat.CDense
+	var V *mat.Dense
 	var R []complex128
 	var expt []float64
 	var uexpt *mat.Dense
 	var tmp float64
 	n := model.ns
 
-	U = model.eigen.VectorsTo(nil)     //mod->eigen->r_e_vect;
-	V = model.eigen.LeftVectorsTo(nil) //mod->eigen->l_e_vect;
-	R = model.eigen.Values(nil)        //mod->eigen->e_val;// To take only real part from that vector /* eigen value matrix */
-	expt = make([]float64, n)          //model.eigen.Values(nil) // To take only imaginary part from that vector
-	uexpt = mat.NewDense(n, n, nil)    //model.eigen.Vectors() //  don't know yet how to handle that // mod->eigen->r_e_vect_im;
+	U = model.eigen.VectorsTo(nil)  //mod->eigen->r_e_vect;
+	R = model.eigen.Values(nil)     //mod->eigen->e_val;// To take only real part from that vector /* eigen value matrix */
+	expt = make([]float64, n)       //model.eigen.Values(nil) // To take only imaginary part from that vector
+	uexpt = mat.NewDense(n, n, nil) //model.eigen.Vectors() //  don't know yet how to handle that // mod->eigen->r_e_vect_im;
+
+	V = mat.NewDense(20, 20, nil)
+	mt := mat.NewDense(20, 20, nil)
+	mt.Apply(func(i, j int, val float64) float64 { return real(U.At(i, j)) }, mt)
+	V.Inverse(mt)
 
 	model.pij.Apply(func(i, j int, v float64) float64 { return .0 }, model.pij)
 	tmp = .0
@@ -214,10 +218,12 @@ func (model *ProtModel) pMatEmpirical(len float64) {
 	}
 
 	// multiply Vr* pow (alpha / (alpha - e_val[i] * l), alpha) *Vi into Pij
-	uexpt.Apply(func(i, j int, v float64) float64 { return cmplx.Abs(U.At(i, j)) * expt[j] }, uexpt)
+	uexpt.Apply(func(i, j int, v float64) float64 {
+		return real(U.At(i, j)) * expt[j]
+	}, uexpt)
 	model.pij.Apply(func(i, j int, v float64) float64 {
 		for k = 0; k < n; k++ {
-			v += uexpt.At(i, k) * cmplx.Abs(V.At(k, j))
+			v += uexpt.At(i, k) * V.At(k, j)
 		}
 		if v < DBL_MIN {
 			return DBL_MIN
