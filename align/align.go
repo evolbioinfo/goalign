@@ -15,6 +15,7 @@ import (
 	"github.com/evolbioinfo/goalign/io"
 )
 
+
 type Alignment interface {
 	SeqBag
 	AddGaps(rate, lenprop float64)
@@ -1302,4 +1303,3 @@ func (a *align) SiteConservation(position int) (conservation int, err error) {
 	}
 
 	return
-}
