@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"math"
 
-	"github.com/gonum/matrix/mat64"
+	"gonum.org/v1/gonum/mat"
 )
 
 const (
@@ -22,15 +22,15 @@ const (
 var DBL_EPSILON float64 = math.Nextafter(1, 2) - 1
 
 type ProtModel struct {
-	pi            []float64    // aa frequency
-	mat           *mat64.Dense // substitution matrix
-	globalAAFreq  bool         // Global amino acid frequency: If true we use model frequencies, else data frequencies
-	mr            float64      //MeanRate
-	eigen         *mat64.Eigen // Eigen Values/vectors
-	leigenvect    *mat64.Dense // Left Eigen Vector (Inv of Eigen Vector)
-	ns            int          // Number of states in the model
-	pij           *mat64.Dense // Matrix of Pij
-	alpha         float64      // Alpha
+	pi            []float64  // aa frequency
+	mat           *mat.Dense // substitution matrix
+	globalAAFreq  bool       // Global amino acid frequency: If true we use model frequencies, else data frequencies
+	mr            float64    //MeanRate
+	eigen         *mat.Eigen // Eigen Values/vectors
+	leigenvect    *mat.Dense // Left Eigen Vector (Inv of Eigen Vector)
+	ns            int        // Number of states in the model
+	pij           *mat.Dense // Matrix of Pij
+	alpha         float64    // Alpha
 	stepsize      int
 	n_categ       int // gamma categories // TJS 1...
 	gamma_rr      float64
@@ -41,31 +41,31 @@ type ProtModel struct {
 // Initialize a new protein model, given the name of the model as const int:
 // MODEL_DAYHOFF, MODEL_JTT, MODEL_MTREV, MODEL_LG or MODEL_WAG
 func NewProtModel(model int, globalAAFreq bool, usegamma bool, alpha float64) (*ProtModel, error) {
-	var mat *mat64.Dense
+	var m *mat.Dense
 	var pi []float64
 	switch model {
 	case MODEL_DAYHOFF:
-		mat, pi = DayoffMats()
+		m, pi = DayoffMats()
 	case MODEL_JTT:
-		mat, pi = JTTMats()
+		m, pi = JTTMats()
 	case MODEL_MTREV:
-		mat, pi = MtREVMats()
+		m, pi = MtREVMats()
 	case MODEL_LG:
-		mat, pi = LGMats()
+		m, pi = LGMats()
 	case MODEL_WAG:
-		mat, pi = WAGMats()
+		m, pi = WAGMats()
 	default:
 		return nil, fmt.Errorf("This protein model is not implemented")
 	}
 	return &ProtModel{
 		pi,
-		mat,
+		m,
 		globalAAFreq,
 		-1.0,
 		nil,
 		nil,
 		len(pi),
-		mat64.NewDense(len(pi), len(pi), nil),
+		mat.NewDense(len(pi), len(pi), nil),
 		alpha,
 		1,
 		1,

@@ -9,3 +9,7 @@
 [[constraint]]
   branch = "master"
   name = "github.com/fredericlemoine/cobrashell"
+
+[[constraint]]
+  branch = "master"
+  name = "gonum.org/v1/gonum"

@@ -3,19 +3,21 @@ package protein
 // This package implements Functions to compute distance matrices from
 // Amino acid alignments. It implements several matrices (LG, Dayoff, Wag, JTT, MtREV)
 // Code is heavily borrowed from FastME, excepted for eigenvectors/values computations
-// which is done using gonum/mat64.
+// which is done using gonum/mat.
 
 import (
 	"fmt"
 	"math"
+	"math/cmplx"
 
-	"github.com/fredericlemoine/goalign/align"
-	"github.com/gonum/matrix/mat64"
+	"github.com/evolbioinfo/goalign/align"
+	"gonum.org/v1/gonum/mat"
 )
 
 func (model *ProtModel) InitModel(a align.Alignment) error {
 	var i, j int
 	var sum float64
+	var ok bool
 
 	ns := len(a.AlphabetCharacters())
 	if ns != 20 {
@@ -58,15 +60,11 @@ func (model *ProtModel) InitModel(a align.Alignment) error {
 	/* scale instantaneous rate matrix so that mu=1 */
 	model.mat.Apply(func(i, j int, v float64) float64 { return v / model.mr }, model.mat)
 
-	eigen := &mat64.Eigen{}
-	ok := eigen.Factorize(model.mat, true, true)
-	if !ok {
+	eigen := &mat.Eigen{}
+	if ok = eigen.Factorize(model.mat, mat.EigenBoth); !ok {
 		return fmt.Errorf("Problem during matrix decomposition")
 	}
 	model.eigen = eigen
-	inv := mat64.NewDense(20, 20, nil)
-	inv.Inverse(eigen.Vectors())
-	model.leigenvect = inv
 	return nil
 }
 
@@ -89,7 +87,7 @@ func aaFrequency(a align.Alignment, weights []float64) ([]float64, error) {
 	a.IterateChar(func(name string, sequence []rune) {
 		for j = 0; j < len(sequence); j++ {
 			w = weights[j]
-			idx := a.CharToIndex(sequence[j])
+			idx := a.AlphabetCharToIndex(sequence[j])
 			if idx >= 0 {
 				num[idx] += w
 			} else {
@@ -183,18 +181,18 @@ func (model *ProtModel) pMatZeroBrLen() {
  *   8000 = 20x20x20 times the operation + */
 func (model *ProtModel) pMatEmpirical(len float64) {
 	var i, k int
-	var U, V *mat64.Dense
+	var U, V *mat.CDense
 	var R []complex128
 	var expt []float64
-	var uexpt *mat64.Dense
+	var uexpt *mat.Dense
 	var tmp float64
 	n := model.ns
 
-	U = model.eigen.Vectors()         //mod->eigen->r_e_vect;
-	V = model.leigenvect              //mod->eigen->l_e_vect;
-	R = model.eigen.Values(nil)       //mod->eigen->e_val;// To take only real part from that vector /* eigen value matrix */
-	expt = make([]float64, n)         //model.eigen.Values(nil) // To take only imaginary part from that vector
-	uexpt = mat64.NewDense(n, n, nil) //model.eigen.Vectors() //  don't know yet how to handle that // mod->eigen->r_e_vect_im;
+	U = model.eigen.VectorsTo(nil)     //mod->eigen->r_e_vect;
+	V = model.eigen.LeftVectorsTo(nil) //mod->eigen->l_e_vect;
+	R = model.eigen.Values(nil)        //mod->eigen->e_val;// To take only real part from that vector /* eigen value matrix */
+	expt = make([]float64, n)          //model.eigen.Values(nil) // To take only imaginary part from that vector
+	uexpt = mat.NewDense(n, n, nil)    //model.eigen.Vectors() //  don't know yet how to handle that // mod->eigen->r_e_vect_im;
 
 	model.pij.Apply(func(i, j int, v float64) float64 { return .0 }, model.pij)
 	tmp = .0
@@ -216,10 +214,10 @@ func (model *ProtModel) pMatEmpirical(len float64) {
 	}
 
 	// multiply Vr* pow (alpha / (alpha - e_val[i] * l), alpha) *Vi into Pij
-	uexpt.Apply(func(i, j int, v float64) float64 { return v * expt[j] }, U)
+	uexpt.Apply(func(i, j int, v float64) float64 { return cmplx.Abs(U.At(i, j)) * expt[j] }, uexpt)
 	model.pij.Apply(func(i, j int, v float64) float64 {
 		for k = 0; k < n; k++ {
-			v += uexpt.At(i, k) * V.At(k, j)
+			v += uexpt.At(i, k) * cmplx.Abs(V.At(k, j))
 		}
 		if v < DBL_MIN {
 			return DBL_MIN
@@ -230,14 +228,14 @@ func (model *ProtModel) pMatEmpirical(len float64) {
 }
 
 // Basic JC69 Protein Distance Matrix
-func (model *ProtModel) JC69Dist(a align.Alignment, weights []float64) (p *mat64.Dense, q *mat64.Dense, dist *mat64.Dense) {
+func (model *ProtModel) JC69Dist(a align.Alignment, weights []float64) (p *mat.Dense, q *mat.Dense, dist *mat.Dense) {
 	var site, i, j, k int
-	var len *mat64.Dense
+	var len *mat.Dense
 
-	len = mat64.NewDense(a.NbSequences(), a.NbSequences(), nil)
-	p = mat64.NewDense(a.NbSequences(), a.NbSequences(), nil)
-	q = mat64.NewDense(a.NbSequences(), a.NbSequences(), nil)
-	dist = mat64.NewDense(a.NbSequences(), a.NbSequences(), nil)
+	len = mat.NewDense(a.NbSequences(), a.NbSequences(), nil)
+	p = mat.NewDense(a.NbSequences(), a.NbSequences(), nil)
+	q = mat.NewDense(a.NbSequences(), a.NbSequences(), nil)
+	dist = mat.NewDense(a.NbSequences(), a.NbSequences(), nil)
 
 	for site = 0; site < a.Length(); site += model.stepsize {
 		for j = 0; j < a.NbSequences()-1; j++ {
@@ -286,5 +284,5 @@ func (model *ProtModel) JC69Dist(a align.Alignment, weights []float64) (p *mat64
 }
 
 func isAmbigu(c rune) bool {
-	return (c == align.GAP || c == align.POINT || c == align.OTHER || c == align.AMBIG)
+	return (c == align.GAP || c == align.POINT || c == align.OTHER || c == align.ALL_AMINO)
 }

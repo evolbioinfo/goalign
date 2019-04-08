@@ -22,7 +22,8 @@ type SeqBag interface {
 	Alphabet() int
 	AlphabetStr() string
 	AlphabetCharacters() []rune
-	AutoAlphabet() // detects and sets alphabet automatically for all the sequences
+	AlphabetCharToIndex(c rune) int // Returns index of the character (nt or aa) in the AlphabetCharacters() array
+	AutoAlphabet()                  // detects and sets alphabet automatically for all the sequences
 	CharStats() map[rune]int64
 	CleanNames(namemap map[string]string)   // Clean sequence names (newick special char)
 	Clear()                                 // Removes all sequences
@@ -135,6 +136,74 @@ func (sb *seqbag) AlphabetCharacters() (alphabet []rune) {
 		return stdaminoacid
 	} else {
 		return stdnucleotides
+	}
+}
+
+// Returns index of the character (nt or aa) in the AlphabetCharacters() array
+// If character does not exist or alphabet is unkown, then returns -1
+func (sb *seqbag) AlphabetCharToIndex(c rune) int {
+	switch sb.Alphabet() {
+	case AMINOACIDS:
+		switch unicode.ToUpper(c) {
+		case 'A':
+			return 0
+		case 'R':
+			return 1
+		case 'N':
+			return 2
+		case 'D':
+			return 3
+		case 'C':
+			return 4
+		case 'Q':
+			return 5
+		case 'E':
+			return 6
+		case 'G':
+			return 7
+		case 'H':
+			return 8
+		case 'I':
+			return 9
+		case 'L':
+			return 10
+		case 'K':
+			return 11
+		case 'M':
+			return 12
+		case 'F':
+			return 13
+		case 'P':
+			return 14
+		case 'S':
+			return 15
+		case 'T':
+			return 16
+		case 'W':
+			return 17
+		case 'Y':
+			return 18
+		case 'V':
+			return 19
+		default:
+			return -1
+		}
+	case NUCLEOTIDS:
+		switch unicode.ToUpper(c) {
+		case 'A':
+			return 0
+		case 'C':
+			return 1
+		case 'G':
+
+			return 2
+		case 'T':
+			return 3
+		default:
+			return -1
+		}
+	default:
+		return -1
 	}
 }
 

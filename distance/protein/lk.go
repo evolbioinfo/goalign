@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"math"
 
-	"github.com/fredericlemoine/goalign/align"
-	"github.com/fredericlemoine/goalign/io"
-	"github.com/gonum/matrix/mat64"
+	"github.com/evolbioinfo/goalign/align"
+	"github.com/evolbioinfo/goalign/io"
+	"gonum.org/v1/gonum/mat"
 )
 
 type seqpairdist struct {
@@ -23,14 +23,14 @@ const (
 	DBL_MIN     = 2.2250738585072014e-308
 )
 
-func (model *ProtModel) MLDist(a align.Alignment, weights []float64) (p, q, dist *mat64.Dense, err error) {
+func (model *ProtModel) MLDist(a align.Alignment, weights []float64) (p, q, dist *mat.Dense, err error) {
 	var j, k, l int
 	var state0, state1 int
 	var len float64
 	var init, sum float64
 	var warn bool
 	var d_max float64
-	var Fs *mat64.Dense
+	var Fs *mat.Dense
 
 	p, q, dist = model.JC69Dist(a, weights)
 
@@ -40,7 +40,7 @@ func (model *ProtModel) MLDist(a align.Alignment, weights []float64) (p, q, dist
 	warn = false
 
 	// Create F for one thread
-	Fs = mat64.NewDense(model.ns, model.ns, nil)
+	Fs = mat.NewDense(model.ns, model.ns, nil)
 
 	// Alignment of 2 sequences
 	for j = 0; j < a.NbSequences(); j++ { // begin for j->n_otu
@@ -68,8 +68,8 @@ func (model *ProtModel) MLDist(a align.Alignment, weights []float64) (p, q, dist
 					if pair.seq1Ambigu[l] || pair.seq2Ambigu[l] {
 						w = 0.0
 					}
-					state0 = a.CharToIndex(pair.seq1[l])
-					state1 = a.CharToIndex(pair.seq2[l])
+					state0 = a.AlphabetCharToIndex(pair.seq1[l])
+					state1 = a.AlphabetCharToIndex(pair.seq2[l])
 					if (state0 > -1) && (state1 > -1) {
 						Fs.Set(state0, state1, Fs.At(state0, state1)+w)
 						len += w
@@ -80,7 +80,7 @@ func (model *ProtModel) MLDist(a align.Alignment, weights []float64) (p, q, dist
 					Fs.Apply(func(i, j int, v float64) float64 { return (v / len) }, Fs)
 				}
 
-				sum = mat64.Sum(Fs)
+				sum = mat.Sum(Fs)
 
 				if sum < .001 {
 					d_max = -1.
@@ -110,7 +110,7 @@ func (model *ProtModel) MLDist(a align.Alignment, weights []float64) (p, q, dist
 	return
 }
 
-func (model *ProtModel) lk_Dist(F *mat64.Dense, dist float64) float64 {
+func (model *ProtModel) lk_Dist(F *mat.Dense, dist float64) float64 {
 	var i, j int
 	var len, lnL float64
 
@@ -144,7 +144,7 @@ func (model *ProtModel) partialLK(i, j int) float64 {
 	return lk
 }
 
-func (model *ProtModel) opt_Dist_F(dist float64, F *mat64.Dense) float64 {
+func (model *ProtModel) opt_Dist_F(dist float64, F *mat.Dense) float64 {
 	var ax, bx, cx float64
 	var optdist float64
 
@@ -161,7 +161,7 @@ func (model *ProtModel) opt_Dist_F(dist float64, F *mat64.Dense) float64 {
 	return optdist
 }
 
-func (model *ProtModel) dist_F_Brent(ax, bx, cx, tol float64, n_iter_max int, param *float64, F *mat64.Dense) float64 {
+func (model *ProtModel) dist_F_Brent(ax, bx, cx, tol float64, n_iter_max int, param *float64, F *mat.Dense) float64 {
 	var iter int
 	var a, b, d, etemp, fu, fv, fw, fx, p, q, r, tol1, tol2, u, v, w, x, xm float64
 	var curr_lnL float64
