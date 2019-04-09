@@ -59,11 +59,20 @@ func (model *ProtModel) InitModel(a align.Alignment) error {
 	/* scale instantaneous rate matrix so that mu=1 */
 	model.mat.Apply(func(i, j int, v float64) float64 { return v / model.mr }, model.mat)
 
-	eigen := &mat.Eigen{}
-	if ok = eigen.Factorize(model.mat, mat.EigenRight); !ok {
+	model.eigen = &mat.Eigen{}
+	if ok = model.eigen.Factorize(model.mat, mat.EigenRight); !ok {
 		return fmt.Errorf("Problem during matrix decomposition")
 	}
-	model.eigen = eigen
+	model.reigenvect = mat.NewDense(ns, ns, nil)
+	model.leigenvect = mat.NewDense(20, 20, nil)
+	u := model.eigen.VectorsTo(nil)
+	model.eval = make([]float64, ns)
+	for i, b := range model.eigen.Values(nil) {
+		model.eval[i] = real(b)
+	}
+	model.reigenvect.Apply(func(i, j int, val float64) float64 { return real(u.At(i, j)) }, model.reigenvect)
+	model.leigenvect.Inverse(model.reigenvect)
+
 	return nil
 }
 
@@ -180,46 +189,41 @@ func (model *ProtModel) pMatZeroBrLen() {
  *   8000 = 20x20x20 times the operation + */
 func (model *ProtModel) pMatEmpirical(len float64) {
 	var i, k int
-	var U *mat.CDense
-	var V *mat.Dense
-	var R []complex128
+	var U, V *mat.Dense
+	var R []float64
 	var expt []float64
 	var uexpt *mat.Dense
 	var tmp float64
 	n := model.ns
 
-	U = model.eigen.VectorsTo(nil)  //mod->eigen->r_e_vect;
-	R = model.eigen.Values(nil)     //mod->eigen->e_val;// To take only real part from that vector /* eigen value matrix */
+	U = model.reigenvect //mod->eigen->r_e_vect;
+	R = model.eval       //mod->eigen->e_val;// To take only real part from that vector /* eigen value matrix */
+	V = model.leigenvect
 	expt = make([]float64, n)       //model.eigen.Values(nil) // To take only imaginary part from that vector
 	uexpt = mat.NewDense(n, n, nil) //model.eigen.Vectors() //  don't know yet how to handle that // mod->eigen->r_e_vect_im;
-
-	V = mat.NewDense(20, 20, nil)
-	mt := mat.NewDense(20, 20, nil)
-	mt.Apply(func(i, j int, val float64) float64 { return real(U.At(i, j)) }, mt)
-	V.Inverse(mt)
 
 	model.pij.Apply(func(i, j int, v float64) float64 { return .0 }, model.pij)
 	tmp = .0
 
 	for k = 0; k < n; k++ {
-		expt[k] = real(R[k])
+		expt[k] = R[k]
 	}
 
 	if model.usegamma && (math.Abs(model.alpha) > DBL_EPSILON) {
 		// compute pow (alpha / (alpha - e_val[i] * l), alpha)
 		for i = 0; i < n; i++ {
-			tmp = model.alpha / (model.alpha - (real(R[i]) * len))
+			tmp = model.alpha / (model.alpha - (R[i] * len))
 			expt[i] = math.Pow(tmp, model.alpha)
 		}
 	} else {
 		for i = 0; i < n; i++ {
-			expt[i] = float64(math.Exp(real(R[i]) * len))
+			expt[i] = float64(math.Exp(R[i] * len))
 		}
 	}
 
 	// multiply Vr* pow (alpha / (alpha - e_val[i] * l), alpha) *Vi into Pij
 	uexpt.Apply(func(i, j int, v float64) float64 {
-		return real(U.At(i, j)) * expt[j]
+		return U.At(i, j) * expt[j]
 	}, uexpt)
 	model.pij.Apply(func(i, j int, v float64) float64 {
 		for k = 0; k < n; k++ {

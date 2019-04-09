@@ -28,6 +28,8 @@ type ProtModel struct {
 	mr            float64    //MeanRate
 	eigen         *mat.Eigen // Eigen Values/vectors
 	leigenvect    *mat.Dense // Left Eigen Vector (Inv of Eigen Vector)
+	reigenvect    *mat.Dense // Right Eigen Vector
+	eval          []float64  // Eigen values
 	ns            int        // Number of states in the model
 	pij           *mat.Dense // Matrix of Pij
 	alpha         float64    // Alpha
@@ -62,6 +64,8 @@ func NewProtModel(model int, globalAAFreq bool, usegamma bool, alpha float64) (*
 		m,
 		globalAAFreq,
 		-1.0,
+		nil,
+		nil,
 		nil,
 		nil,
 		len(pi),
