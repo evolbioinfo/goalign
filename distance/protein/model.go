@@ -78,3 +78,22 @@ func NewProtModel(model int, globalAAFreq bool, usegamma bool, alpha float64) (*
 		usegamma,
 	}, nil
 }
+
+// Returns code of the model
+// If the model does not exist, returns -1
+func ModelStringToInt(model string) int {
+	switch model {
+	case "dayoff":
+		return MODEL_DAYHOFF
+	case "jtt":
+		return MODEL_JTT
+	case "mtrev":
+		return MODEL_MTREV
+	case "lg":
+		return MODEL_LG
+	case "wag":
+		return MODEL_WAG
+	default:
+		return -1
+	}
+}

@@ -10,25 +10,29 @@ import (
 
 	"github.com/evolbioinfo/goalign/align"
 	"github.com/evolbioinfo/goalign/distance"
+	"github.com/evolbioinfo/goalign/distance/protein"
 	"github.com/evolbioinfo/goalign/io"
+	"gonum.org/v1/gonum/mat"
 )
 
 var computedistOutput string
 var computedistModel string
 var computedistRemoveGaps bool
 var computedistAverage bool
+var computedistAlpha float64
 
 // computedistCmd represents the computedist command
 var computedistCmd = &cobra.Command{
 	Use:   "distance",
-	Short: "Compute distance matrix of 2 sequences",
-	Long: `Compute distance matrix of 2 sequences
+	Short: "Compute distance matrix ",
+	Long: `Compute distance matrix
 
 If the input alignment contains several alignments, will compute distances
 for all of them.
 
 Available Distances:
 
+Nucleotides:
 - pdist
 - rawdist : raw distance (like pdist, without normalization by length)
 - jc      : Juke-Cantor
@@ -36,6 +40,12 @@ Available Distances:
 - f81     : Felsenstein 81
 - f84     : Felsenstein 84
 - tn93    : Tamura and Nei 1993
+Proteins:
+- DAYHOFF
+- JTT
+- MtRev 
+- LG
+- WAG
 
 For example:
 
@@ -49,6 +59,7 @@ if -a is given: display only the average distance
 		var f *os.File
 		var model distance.DistModel
 		var aligns *align.AlignChannel
+		var protmodel int
 
 		if f, err = openWriteFile(computedistOutput); err != nil {
 			io.LogError(err)
@@ -56,35 +67,65 @@ if -a is given: display only the average distance
 		}
 		defer closeWriteFile(f, computedistOutput)
 
-		if model, err = distance.Model(computedistModel, computedistRemoveGaps); err != nil {
-			io.LogError(err)
-			return
-		}
-
 		if aligns, err = readalign(infile); err != nil {
 			io.LogError(err)
 			return
 		}
-		for align := range aligns.Achan {
-			var distMatrix [][]float64
-			distMatrix, err = distance.DistMatrix(align, nil, model, rootcpus)
-			if err != nil {
-				io.LogError(err)
-				return
-			}
-			if computedistAverage {
-				writeDistAverage(align, distMatrix, f)
-			} else {
-				if err = writeDistMatrix(align, distMatrix, f); err != nil {
+
+		// If prot model
+		protmodel = protein.ModelStringToInt(computedistModel)
+		if protmodel != -1 {
+			var d *mat.Dense
+			m, _ := protein.NewProtModel(protmodel, true, cmd.Flags().Changed("alpha"), computedistAlpha)
+			m.InitModel(nil)
+			for align := range aligns.Achan {
+				if _, _, d, err = m.MLDist(align, nil); err != nil {
 					io.LogError(err)
 					return
 				}
+				if computedistAverage {
+					writeDistAverage(align, denseToSlice(d), f)
+				} else {
+					if err = writeDistMatrix(align, denseToSlice(d), f); err != nil {
+						io.LogError(err)
+						return
+					}
+				}
 			}
-		}
 
-		if aligns.Err != nil {
-			err = aligns.Err
-			io.LogError(err)
+			if aligns.Err != nil {
+				err = aligns.Err
+				io.LogError(err)
+			}
+
+		} else {
+
+			if model, err = distance.Model(computedistModel, computedistRemoveGaps); err != nil {
+				io.LogError(err)
+				return
+			}
+
+			for align := range aligns.Achan {
+				var distMatrix [][]float64
+				distMatrix, err = distance.DistMatrix(align, nil, model, rootcpus)
+				if err != nil {
+					io.LogError(err)
+					return
+				}
+				if computedistAverage {
+					writeDistAverage(align, distMatrix, f)
+				} else {
+					if err = writeDistMatrix(align, distMatrix, f); err != nil {
+						io.LogError(err)
+						return
+					}
+				}
+			}
+
+			if aligns.Err != nil {
+				err = aligns.Err
+				io.LogError(err)
+			}
 		}
 		return
 	},
@@ -96,6 +137,7 @@ func init() {
 	computedistCmd.PersistentFlags().StringVarP(&computedistModel, "model", "m", "k2p", "Model for distance computation")
 	computedistCmd.PersistentFlags().BoolVarP(&computedistRemoveGaps, "rm-gaps", "r", false, "Do not take into account positions containing >=1 gaps")
 	computedistCmd.PersistentFlags().BoolVarP(&computedistAverage, "average", "a", false, "Compute only the average distance between all pairs of sequences")
+	computedistCmd.PersistentFlags().Float64Var(&computedistAlpha, "alpha", 0.0, "Gamma alpha parameter (only for protein models so far), if not given : no gamma")
 }
 
 func writeDistMatrix(al align.Alignment, matrix [][]float64, f *os.File) (err error) {
@@ -133,4 +175,16 @@ func writeDistAverage(al align.Alignment, matrix [][]float64, f *os.File) {
 	}
 	sum /= float64(total)
 	f.WriteString(fmt.Sprintf("%.12f\n", sum))
+}
+
+func denseToSlice(m *mat.Dense) (s [][]float64) {
+	r, c := m.Dims()
+	s = make([][]float64, r)
+	for i := 0; i < r; i++ {
+		s[i] = make([]float64, c)
+		for j := 0; j < c; j++ {
+			s[i][j] = m.At(i, j)
+		}
+	}
+	return
 }

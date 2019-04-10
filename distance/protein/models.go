@@ -18,10 +18,7 @@ func (model *ProtModel) InitModel(a align.Alignment) error {
 	var sum float64
 	var ok bool
 
-	ns := len(a.AlphabetCharacters())
-	if ns != 20 {
-		return fmt.Errorf("Alphabet has not a length of 20")
-	}
+	ns := 20
 
 	if model.mat == nil || model.pi == nil {
 		return fmt.Errorf("Matrices have not been initialized")
@@ -29,6 +26,11 @@ func (model *ProtModel) InitModel(a align.Alignment) error {
 
 	// Count equilibrium frequencies from input alignment (do not use model frequencies)
 	if !model.globalAAFreq {
+		ns = len(a.AlphabetCharacters())
+		if ns != 20 {
+			return fmt.Errorf("Alphabet has not a length of 20")
+		}
+
 		w := make([]float64, a.Length())
 		for i, _ := range w {
 			w[i] = 1.0
@@ -194,29 +196,28 @@ func (model *ProtModel) pMatEmpirical(len float64) {
 	var expt []float64
 	var uexpt *mat.Dense
 	var tmp float64
-	n := model.ns
 
 	U = model.reigenvect //mod->eigen->r_e_vect;
 	R = model.eval       //mod->eigen->e_val;// To take only real part from that vector /* eigen value matrix */
 	V = model.leigenvect
-	expt = make([]float64, n)       //model.eigen.Values(nil) // To take only imaginary part from that vector
-	uexpt = mat.NewDense(n, n, nil) //model.eigen.Vectors() //  don't know yet how to handle that // mod->eigen->r_e_vect_im;
+	expt = make([]float64, model.ns)              //model.eigen.Values(nil) // To take only imaginary part from that vector
+	uexpt = mat.NewDense(model.ns, model.ns, nil) //model.eigen.Vectors() //  don't know yet how to handle that // mod->eigen->r_e_vect_im;
 
 	model.pij.Apply(func(i, j int, v float64) float64 { return .0 }, model.pij)
 	tmp = .0
 
-	for k = 0; k < n; k++ {
+	for k = 0; k < model.ns; k++ {
 		expt[k] = R[k]
 	}
 
 	if model.usegamma && (math.Abs(model.alpha) > DBL_EPSILON) {
 		// compute pow (alpha / (alpha - e_val[i] * l), alpha)
-		for i = 0; i < n; i++ {
+		for i = 0; i < model.ns; i++ {
 			tmp = model.alpha / (model.alpha - (R[i] * len))
 			expt[i] = math.Pow(tmp, model.alpha)
 		}
 	} else {
-		for i = 0; i < n; i++ {
+		for i = 0; i < model.ns; i++ {
 			expt[i] = float64(math.Exp(R[i] * len))
 		}
 	}
@@ -226,14 +227,14 @@ func (model *ProtModel) pMatEmpirical(len float64) {
 		return U.At(i, j) * expt[j]
 	}, uexpt)
 	model.pij.Apply(func(i, j int, v float64) float64 {
-		for k = 0; k < n; k++ {
+		for k = 0; k < model.ns; k++ {
 			v += uexpt.At(i, k) * V.At(k, j)
 		}
 		if v < DBL_MIN {
-			return DBL_MIN
-		} else {
-			return v
+			v = DBL_MIN
 		}
+		return v
+
 	}, model.pij)
 }
 

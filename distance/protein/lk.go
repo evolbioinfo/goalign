@@ -32,6 +32,13 @@ func (model *ProtModel) MLDist(a align.Alignment, weights []float64) (p, q, dist
 	var d_max float64
 	var Fs *mat.Dense
 
+	if weights == nil {
+		weights = make([]float64, a.Length())
+		for i := range weights {
+			weights[i] = 1.
+		}
+	}
+
 	p, q, dist = model.JC69Dist(a, weights)
 
 	model.gamma_rr = 1.0
