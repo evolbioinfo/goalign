@@ -35,3 +35,27 @@ func (m *JCModel) InitModel(al align.Alignment, weights []float64) (err error) {
 	m.numSites, m.selectedSites = selectedSites(al, weights, m.removegaps)
 	return
 }
+
+func (m *JCModel) Eigens() (val []float64, leftvector, rightvector [][]float64, err error) {
+	val = []float64{
+		0,
+		-4. / 3.,
+		-4. / 3.,
+		-4. / 3.,
+	}
+
+	leftvector = [][]float64{
+		[]float64{1. / 4., 1. / 4., 1. / 4., 1. / 4.},
+		[]float64{-1. / 4., -1. / 4., -3. / 4., -1. / 4.},
+		[]float64{-1. / 4., 3. / 4., -1. / 4., -1. / 4.},
+		[]float64{3. / 4., -1. / 4., -1. / 4., -1. / 4.},
+	}
+
+	rightvector = [][]float64{
+		[]float64{1., 0., 0., 1.},
+		[]float64{1., 0., 1., 0.},
+		[]float64{1., 1., 0., 0.},
+		[]float64{1., -1., -1., -1.},
+	}
+	return
+}
