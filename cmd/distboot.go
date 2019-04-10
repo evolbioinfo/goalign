@@ -6,8 +6,8 @@ import (
 	"os"
 
 	"github.com/evolbioinfo/goalign/align"
-	"github.com/evolbioinfo/goalign/distance"
 	"github.com/evolbioinfo/goalign/io"
+	"github.com/evolbioinfo/goalign/models/dna"
 )
 
 var distbootOutput string
@@ -42,7 +42,7 @@ goalign build distboot -m k2p -i align.fa -o mats.txt
 	//`,
 
 	RunE: func(cmd *cobra.Command, args []string) (err error) {
-		var model distance.DistModel
+		var model dna.DistModel
 		var aligns *align.AlignChannel
 		var f *os.File
 
@@ -63,7 +63,7 @@ goalign build distboot -m k2p -i align.fa -o mats.txt
 			return
 		}
 
-		if model, err = distance.Model(distbootmodel, distboolRemoveGaps); err != nil {
+		if model, err = dna.Model(distbootmodel, distboolRemoveGaps); err != nil {
 			io.LogError(err)
 			return
 		}
@@ -72,15 +72,15 @@ goalign build distboot -m k2p -i align.fa -o mats.txt
 			var weights []float64 = nil
 			var distMatrix [][]float64
 			if distbootcontinuous {
-				weights = distance.BuildWeightsDirichlet(align)
-				if distMatrix, err = distance.DistMatrix(align, weights, model, rootcpus); err != nil {
+				weights = dna.BuildWeightsDirichlet(align)
+				if distMatrix, err = dna.DistMatrix(align, weights, model, rootcpus); err != nil {
 					io.LogError(err)
 					return
 				}
 				writeDistBootMatrix(distMatrix, align, f)
 			} else {
 				boot := align.BuildBootstrap()
-				if distMatrix, err = distance.DistMatrix(boot, nil, model, rootcpus); err != nil {
+				if distMatrix, err = dna.DistMatrix(boot, nil, model, rootcpus); err != nil {
 					io.LogError(err)
 					return
 				}

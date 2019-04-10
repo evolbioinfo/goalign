@@ -38,11 +38,12 @@ type ProtModel struct {
 	gamma_rr      float64
 	gamma_r_proba float64
 	usegamma      bool
+	removegaps    bool
 }
 
 // Initialize a new protein model, given the name of the model as const int:
 // MODEL_DAYHOFF, MODEL_JTT, MODEL_MTREV, MODEL_LG or MODEL_WAG
-func NewProtModel(model int, globalAAFreq bool, usegamma bool, alpha float64) (*ProtModel, error) {
+func NewProtModel(model int, globalAAFreq bool, usegamma bool, alpha float64, removegaps bool) (*ProtModel, error) {
 	var m *mat.Dense
 	var pi []float64
 	switch model {
@@ -76,5 +77,25 @@ func NewProtModel(model int, globalAAFreq bool, usegamma bool, alpha float64) (*
 		.0,
 		.0,
 		usegamma,
+		removegaps,
 	}, nil
+}
+
+// Returns code of the model
+// If the model does not exist, returns -1
+func ModelStringToInt(model string) int {
+	switch model {
+	case "dayoff":
+		return MODEL_DAYHOFF
+	case "jtt":
+		return MODEL_JTT
+	case "mtrev":
+		return MODEL_MTREV
+	case "lg":
+		return MODEL_LG
+	case "wag":
+		return MODEL_WAG
+	default:
+		return -1
+	}
 }

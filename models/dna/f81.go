@@ -1,4 +1,4 @@
-package distance
+package dna
 
 import (
 	"math"
@@ -7,42 +7,35 @@ import (
 	"gonum.org/v1/gonum/mat"
 )
 
-type TN93Model struct {
-	/* Vector of nt proba */
-	pi            []float64 // proba of each nt
+type F81Model struct {
+	pi            []float64 // Vector of nt stationary proba
+	b1            float64   // Parameter for distance computation
 	numSites      float64   // Number of selected sites (no gaps)
 	selectedSites []bool    // true for selected sites
 	removegaps    bool      // If true, we will remove posision with >=1 gaps
+
 	// Parameters (for eigen values/vectors computation)
 	// See https://en.wikipedia.org/wiki/Models_of_DNA_evolution#F81_model_(Felsenstein_1981)
-	qmatrix mat.Dense
+	qmatrix [][]float64
 }
 
-func NewTN93Model(removegaps bool) *TN93Model {
-	return &TN93Model{
+func NewF81Model(removegaps bool) *F81Model {
+	return &F81Model{
 		nil,
+		0,
 		0,
 		nil,
 		removegaps,
+		nil,
 	}
 }
 
-/* computes TN93 distance between 2 sequences */
-func (m *TN93Model) Distance(seq1 []rune, seq2 []rune, weights []float64) (float64, error) {
-	trS, trV, p1, p2, total := countMutations(seq1, seq2, m.selectedSites, weights)
-	trS, trV, p1, p2 = trS/total, trV/total, p1/total, p2/total
+/* computes F81 distance between 2 sequences */
+func (m *F81Model) Distance(seq1 []rune, seq2 []rune, weights []float64) (float64, error) {
+	diff, total := countDiffs(seq1, seq2, m.selectedSites, weights)
+	diff = diff / total
 
-	piy := m.pi[1] + m.pi[3]
-	pir := m.pi[0] + m.pi[2]
-	y := m.pi[0] * m.pi[2] / (m.pi[0]*m.pi[2] + m.pi[1]*m.pi[3])
-	e1 := 1 - trV/(2*piy*pir)
-	e2 := 1 - trV/(2*pir) - pir*p1/(2*m.pi[0]*m.pi[2])
-	e3 := 1 - trV/(2*piy) - piy*p2/(2*m.pi[1]*m.pi[3])
-	b1 := piy/pir*math.Log(e1) - 1/pir*math.Log(e2)
-	b2 := pir/piy*math.Log(e1) - 1/piy*math.Log(e3)
-	b3 := -math.Log(e1)
-
-	dist := 2*(m.pi[0]*m.pi[2]+m.pi[1]*m.pi[3])*(y*b1+(1-y)*b2) + 2*pir*piy*b3
+	dist := -1.0 * m.b1 * math.Log(1.0-diff/m.b1)
 	if dist > 0 {
 		return dist, nil
 	} else {
@@ -50,21 +43,28 @@ func (m *TN93Model) Distance(seq1 []rune, seq2 []rune, weights []float64) (float
 	}
 }
 
-func (m *TN93Model) InitModel(al align.Alignment, weights []float64) (err error) {
+func (m *F81Model) InitModel(al align.Alignment, weights []float64) (err error) {
 	m.numSites, m.selectedSites = selectedSites(al, weights, m.removegaps)
+	m.b1 = 0.0
 	m.pi, err = probaNt(al, m.selectedSites, weights)
+	if err == nil {
+		for i, _ := range m.pi {
+			m.b1 += m.pi[i] * m.pi[i]
+		}
+		m.b1 = 1 - m.b1
+	}
 	return
 }
 
-func (m *F81Model) SetParameters(kappa1, kappa2, piA, piC, piG, piT float64) {
+func (m *F81Model) SetParameters(piA, piC, piG, piT float64) {
 	m.qmatrix = mat.NewDense(4, 4, []float64{
-		-(piC + kappa1*piG + piT), piC, kappa1 * piG, piT,
-		piA, -(piA + piG + kappa2*piT), piG, kappa2 * piT,
-		kappa1 * piA, piC, -(kappa1*piA + piC + piT), piT,
-		piA, kappa2 * piC, piG, -(piA + kappa2*piC + piG),
+		-(piC + piG + piT), piC, piG, pit,
+		piA, -(piA + piG + piT), piG, piT,
+		piA, piC, -(piA + piC + piT), piT,
+		piA, piC, piG, -(piA + piC + piG),
 	})
 	// Normalization of Q
-	norm := 1. / (2. * (piA*piC + piC*piG + piA*piT + piG*piT + kappa2*piC*piT + kappa1*piA*piG))
+	norm := 1. / (3 * (piA + piC + piG + piT))
 	m.qmatrix.Apply(func(i, j int, v float64) float64 { v * norm }, m.qmatrix)
 }
 

@@ -13,15 +13,12 @@ import (
 	"gonum.org/v1/gonum/mat"
 )
 
-func (model *ProtModel) InitModel(a align.Alignment) error {
+func (model *ProtModel) InitModel(a align.Alignment, weights []float64) error {
 	var i, j int
 	var sum float64
 	var ok bool
 
-	ns := len(a.AlphabetCharacters())
-	if ns != 20 {
-		return fmt.Errorf("Alphabet has not a length of 20")
-	}
+	ns := 20
 
 	if model.mat == nil || model.pi == nil {
 		return fmt.Errorf("Matrices have not been initialized")
@@ -29,11 +26,19 @@ func (model *ProtModel) InitModel(a align.Alignment) error {
 
 	// Count equilibrium frequencies from input alignment (do not use model frequencies)
 	if !model.globalAAFreq {
-		w := make([]float64, a.Length())
-		for i, _ := range w {
-			w[i] = 1.0
+		ns = len(a.AlphabetCharacters())
+		if ns != 20 {
+			return fmt.Errorf("Alphabet has not a length of 20")
 		}
-		if freq, err := aaFrequency(a, w); err != nil {
+
+		if weights == nil {
+			weights = make([]float64, a.Length())
+			for i, _ := range weights {
+				weights[i] = 1.0
+			}
+		}
+		_, selected := selectedSites(a, weights, model.removegaps)
+		if freq, err := aaFrequency(a, weights, selected); err != nil {
 			return err
 		} else {
 			for i = 0; i < ns; i++ {
@@ -76,7 +81,7 @@ func (model *ProtModel) InitModel(a align.Alignment) error {
 	return nil
 }
 
-func aaFrequency(a align.Alignment, weights []float64) ([]float64, error) {
+func aaFrequency(a align.Alignment, weights []float64, selected []bool) ([]float64, error) {
 	var i, j int
 	var w, sum float64
 	if a.Alphabet() != align.AMINOACIDS {
@@ -94,13 +99,15 @@ func aaFrequency(a align.Alignment, weights []float64) ([]float64, error) {
 	// Count occurences of different amino acids
 	a.IterateChar(func(name string, sequence []rune) {
 		for j = 0; j < len(sequence); j++ {
-			w = weights[j]
-			idx := a.AlphabetCharToIndex(sequence[j])
-			if idx >= 0 {
-				num[idx] += w
-			} else {
-				for i = 0; i < ns; i++ {
-					num[i] = w * freq[i]
+			if selected[j] {
+				w = weights[j]
+				idx := a.AlphabetCharToIndex(sequence[j])
+				if idx >= 0 {
+					num[idx] += w
+				} else {
+					for i = 0; i < ns; i++ {
+						num[i] = w * freq[i]
+					}
 				}
 			}
 		}
@@ -194,29 +201,28 @@ func (model *ProtModel) pMatEmpirical(len float64) {
 	var expt []float64
 	var uexpt *mat.Dense
 	var tmp float64
-	n := model.ns
 
 	U = model.reigenvect //mod->eigen->r_e_vect;
 	R = model.eval       //mod->eigen->e_val;// To take only real part from that vector /* eigen value matrix */
 	V = model.leigenvect
-	expt = make([]float64, n)       //model.eigen.Values(nil) // To take only imaginary part from that vector
-	uexpt = mat.NewDense(n, n, nil) //model.eigen.Vectors() //  don't know yet how to handle that // mod->eigen->r_e_vect_im;
+	expt = make([]float64, model.ns)              //model.eigen.Values(nil) // To take only imaginary part from that vector
+	uexpt = mat.NewDense(model.ns, model.ns, nil) //model.eigen.Vectors() //  don't know yet how to handle that // mod->eigen->r_e_vect_im;
 
 	model.pij.Apply(func(i, j int, v float64) float64 { return .0 }, model.pij)
 	tmp = .0
 
-	for k = 0; k < n; k++ {
+	for k = 0; k < model.ns; k++ {
 		expt[k] = R[k]
 	}
 
 	if model.usegamma && (math.Abs(model.alpha) > DBL_EPSILON) {
 		// compute pow (alpha / (alpha - e_val[i] * l), alpha)
-		for i = 0; i < n; i++ {
+		for i = 0; i < model.ns; i++ {
 			tmp = model.alpha / (model.alpha - (R[i] * len))
 			expt[i] = math.Pow(tmp, model.alpha)
 		}
 	} else {
-		for i = 0; i < n; i++ {
+		for i = 0; i < model.ns; i++ {
 			expt[i] = float64(math.Exp(R[i] * len))
 		}
 	}
@@ -226,19 +232,19 @@ func (model *ProtModel) pMatEmpirical(len float64) {
 		return U.At(i, j) * expt[j]
 	}, uexpt)
 	model.pij.Apply(func(i, j int, v float64) float64 {
-		for k = 0; k < n; k++ {
+		for k = 0; k < model.ns; k++ {
 			v += uexpt.At(i, k) * V.At(k, j)
 		}
 		if v < DBL_MIN {
-			return DBL_MIN
-		} else {
-			return v
+			v = DBL_MIN
 		}
+		return v
+
 	}, model.pij)
 }
 
 // Basic JC69 Protein Distance Matrix
-func (model *ProtModel) JC69Dist(a align.Alignment, weights []float64) (p *mat.Dense, q *mat.Dense, dist *mat.Dense) {
+func (model *ProtModel) JC69Dist(a align.Alignment, weights []float64, selected []bool) (p *mat.Dense, q *mat.Dense, dist *mat.Dense) {
 	var site, i, j, k int
 	var len *mat.Dense
 
@@ -248,17 +254,19 @@ func (model *ProtModel) JC69Dist(a align.Alignment, weights []float64) (p *mat.D
 	dist = mat.NewDense(a.NbSequences(), a.NbSequences(), nil)
 
 	for site = 0; site < a.Length(); site += model.stepsize {
-		for j = 0; j < a.NbSequences()-1; j++ {
-			s1, _ := a.GetSequenceCharById(j)
-			for k = j + 1; k < a.NbSequences(); k++ {
-				s2, _ := a.GetSequenceCharById(k)
-				if (!isAmbigu(s1[site])) && (!isAmbigu(s2[site])) {
-					len.Set(j, k, len.At(j, k)+weights[site])
-					len.Set(k, j, weights[site])
-					for n, c1 := range s1[site : site+model.stepsize] {
-						if c1 != s2[site+n] {
-							p.Set(j, k, p.At(j, k)+weights[site])
-							break
+		if selected[site] {
+			for j = 0; j < a.NbSequences()-1; j++ {
+				s1, _ := a.GetSequenceCharById(j)
+				for k = j + 1; k < a.NbSequences(); k++ {
+					s2, _ := a.GetSequenceCharById(k)
+					if (!isAmbigu(s1[site])) && (!isAmbigu(s2[site])) {
+						len.Set(j, k, len.At(j, k)+weights[site])
+						len.Set(k, j, weights[site])
+						for n, c1 := range s1[site : site+model.stepsize] {
+							if c1 != s2[site+n] {
+								p.Set(j, k, p.At(j, k)+weights[site])
+								break
+							}
 						}
 					}
 				}

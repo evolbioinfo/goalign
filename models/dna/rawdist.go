@@ -1,4 +1,4 @@
-package distance
+package dna
 
 import (
 	"github.com/evolbioinfo/goalign/align"
