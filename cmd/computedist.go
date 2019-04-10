@@ -9,9 +9,9 @@ import (
 	"os"
 
 	"github.com/evolbioinfo/goalign/align"
-	"github.com/evolbioinfo/goalign/distance"
-	"github.com/evolbioinfo/goalign/distance/protein"
 	"github.com/evolbioinfo/goalign/io"
+	"github.com/evolbioinfo/goalign/models/dna"
+	"github.com/evolbioinfo/goalign/models/protein"
 	"gonum.org/v1/gonum/mat"
 )
 
@@ -57,7 +57,7 @@ if -a is given: display only the average distance
 `,
 	RunE: func(cmd *cobra.Command, args []string) (err error) {
 		var f *os.File
-		var model distance.DistModel
+		var model dna.DistModel
 		var aligns *align.AlignChannel
 		var protmodel int
 
@@ -100,14 +100,14 @@ if -a is given: display only the average distance
 
 		} else {
 
-			if model, err = distance.Model(computedistModel, computedistRemoveGaps); err != nil {
+			if model, err = dna.Model(computedistModel, computedistRemoveGaps); err != nil {
 				io.LogError(err)
 				return
 			}
 
 			for align := range aligns.Achan {
 				var distMatrix [][]float64
-				distMatrix, err = distance.DistMatrix(align, nil, model, rootcpus)
+				distMatrix, err = dna.DistMatrix(align, nil, model, rootcpus)
 				if err != nil {
 					io.LogError(err)
 					return
