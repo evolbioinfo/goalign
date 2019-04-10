@@ -29,16 +29,16 @@ func (m *GTRModel) InitModel(al align.Alignment, weights []float64) (err error) 
 }
 
 //  /          \
-// | *  d  -  b |
+// | *  d  f  b |
 // | d  *  e  a |
-// | -  e  *  c |
+// | f  e  *  c |
 // | b  a  c  * |
 //  \          /
-func (m *GTRModel) SetParameters(a, b, c, d, e, piA, piC, piG, piT float64) {
+func (m *GTRModel) SetParameters(d, f, b, e, a, c, piA, piC, piG, piT float64) {
 	m.qmatrix = mat.NewDense(4, 4, []float64{
-		-(d*piC + piG + b*piT), d * piC, piG, b * piT,
+		-(d*piC + f + piG + b*piT), d * piC, f + piG, b * piT,
 		d * piA, -(d*piA + e*piG + a*piT), e * piG, a * piT,
-		piA, e * piC, -(piA + e*piC + c*piT), c * piT,
+		f + piA, e * piC, -(f + piA + e*piC + c*piT), c * piT,
 		b * piA, a * piC, c * piG, -(b*piA + a*piC + c*piG),
 	})
 	// Normalization of Q
