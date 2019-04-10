@@ -25,6 +25,7 @@ func NewF84Model(removegaps bool) *F84Model {
 		0,
 		nil,
 		removegaps,
+		1. / 4., 1. / 4., 1. / 4., 1. / 4.,
 		1.0,
 	}
 }
@@ -52,7 +53,7 @@ func (m *F84Model) InitModel(al align.Alignment, weights []float64) (err error) 
 	return
 }
 
-func (m *F81Model) SetParameters(kappa, piA, piC, piG, piT float64) {
+func (m *F84Model) SetParameters(kappa, piA, piC, piG, piT float64) {
 	//m.qmatrix = mat.NewDense(4, 4, []float64{
 	//	-(piC + (1+kappa/piR)*piG + piT), piC, (1 + kappa/piR) * piG, piT,
 	//	piA, -(piA + piG + (1+kappa/piY)*piT), piG, (1 + kappa/piY) * piT,
@@ -68,10 +69,10 @@ func (m *F81Model) SetParameters(kappa, piA, piC, piG, piT float64) {
 }
 
 // See http://biopp.univ-montp2.fr/Documents/ClassDocumentation/bpp-phyl/html/F84_8cpp_source.html
-func (m *F81Model) Eigens() (val []float64, leftvector, rightvector [][]float64, err error) {
+func (m *F84Model) Eigens() (val []float64, leftvector, rightvector [][]float64, err error) {
 	piY := m.piT + m.piC
 	piR := m.piA + m.piG
-	norm := 1. / (1 - m.piA_*m.piA_ - m.piC_*m.piC_ - m.piG_*m.piG_ - m.piT_*m.piT_ + 2.*m.kappa_*(m.piC_*m.piT_/piY_+m.piA_*m.piG_/piR_))
+	norm := 1. / (1 - m.piA*m.piA - m.piC*m.piC - m.piG*m.piG - m.piT*m.piT + 2.*m.kappa*(m.piC*m.piT/piY+m.piA*m.piG/piR))
 
 	val = []float64{
 		0,
@@ -83,8 +84,8 @@ func (m *F81Model) Eigens() (val []float64, leftvector, rightvector [][]float64,
 	leftvector = [][]float64{
 		[]float64{m.piA, m.piC, m.piG, m.piT},
 		[]float64{0., m.piT / piY, 0., -m.piT / piY},
-		[]float64{m.piG / piR, 0., -piG / piR, 0.},
-		[]float64{m.piA * piY / piR, -piC, m.piG * piY / piR, -m.piT},
+		[]float64{m.piG / piR, 0., -m.piG / piR, 0.},
+		[]float64{m.piA * piY / piR, -m.piC, m.piG * piY / piR, -m.piT},
 	}
 
 	rightvector = [][]float64{

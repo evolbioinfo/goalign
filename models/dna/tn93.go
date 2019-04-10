@@ -1,6 +1,7 @@
 package dna
 
 import (
+	"fmt"
 	"math"
 
 	"github.com/evolbioinfo/goalign/align"
@@ -15,7 +16,7 @@ type TN93Model struct {
 	removegaps    bool      // If true, we will remove posision with >=1 gaps
 	// Parameters (for eigen values/vectors computation)
 	// See https://en.wikipedia.org/wiki/Models_of_DNA_evolution#F81_model_(Felsenstein_1981)
-	qmatrix mat.Dense
+	qmatrix *mat.Dense
 }
 
 func NewTN93Model(removegaps bool) *TN93Model {
@@ -24,6 +25,7 @@ func NewTN93Model(removegaps bool) *TN93Model {
 		0,
 		nil,
 		removegaps,
+		nil,
 	}
 }
 
@@ -56,7 +58,7 @@ func (m *TN93Model) InitModel(al align.Alignment, weights []float64) (err error)
 	return
 }
 
-func (m *F81Model) SetParameters(kappa1, kappa2, piA, piC, piG, piT float64) {
+func (m *TN93Model) SetParameters(kappa1, kappa2, piA, piC, piG, piT float64) {
 	m.qmatrix = mat.NewDense(4, 4, []float64{
 		-(piC + kappa1*piG + piT), piC, kappa1 * piG, piT,
 		piA, -(piA + piG + kappa2*piT), piG, kappa2 * piT,
@@ -65,26 +67,26 @@ func (m *F81Model) SetParameters(kappa1, kappa2, piA, piC, piG, piT float64) {
 	})
 	// Normalization of Q
 	norm := 1. / (2. * (piA*piC + piC*piG + piA*piT + piG*piT + kappa2*piC*piT + kappa1*piA*piG))
-	m.qmatrix.Apply(func(i, j int, v float64) float64 { v * norm }, m.qmatrix)
+	m.qmatrix.Apply(func(i, j int, v float64) float64 { return v * norm }, m.qmatrix)
 }
 
-func (m *F81Model) Eigens() (val []float64, leftvector, rightvector [][]float64, err error) {
+func (m *TN93Model) Eigens() (val []float64, leftvector, rightvector [][]float64, err error) {
 	// Compute eigen values, left and right eigenvectors of Q
 	eigen := &mat.Eigen{}
-	if ok = eigen.Factorize(model.qmatrix, mat.EigenRight); !ok {
+	if ok := eigen.Factorize(m.qmatrix, mat.EigenRight); !ok {
 		err = fmt.Errorf("Problem during matrix decomposition")
 		return
 	}
 
 	val = make([]float64, 4)
-	for i, b := range model.eigen.Values(nil) {
+	for i, b := range eigen.Values(nil) {
 		val[i] = real(b)
 	}
-	u := model.eigen.VectorsTo(nil)
+	u := eigen.VectorsTo(nil)
 	reigenvect := mat.NewDense(4, 4, nil)
 	leigenvect := mat.NewDense(4, 4, nil)
 	reigenvect.Apply(func(i, j int, val float64) float64 { return real(u.At(i, j)) }, reigenvect)
-	leigenvect.Inverse(model.reigenvect)
+	leigenvect.Inverse(reigenvect)
 
 	leftvector = [][]float64{
 		leigenvect.RawRowView(0),

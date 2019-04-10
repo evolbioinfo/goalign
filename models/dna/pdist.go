@@ -1,6 +1,8 @@
 package dna
 
 import (
+	"fmt"
+
 	"github.com/evolbioinfo/goalign/align"
 )
 
@@ -27,5 +29,10 @@ func (m *PDistModel) Distance(seq1 []rune, seq2 []rune, weights []float64) (floa
 
 func (m *PDistModel) InitModel(al align.Alignment, weights []float64) (err error) {
 	m.numSites, m.selectedSites = selectedSites(al, weights, m.removegaps)
+	return
+}
+
+func (m *PDistModel) Eigens() (val []float64, leftvector, rightvector [][]float64, err error) {
+	err = fmt.Errorf("Cannot compute eigen values/vectors for pdist model")
 	return
 }

@@ -13,6 +13,7 @@ import (
 type DistModel interface {
 	InitModel(al align.Alignment, weights []float64) error
 	Distance(seq1 []rune, seq2 []rune, weigths []float64) (float64, error)
+	Eigens() (val []float64, leftvector, rightvector [][]float64, err error)
 }
 
 type seqpairdist struct {
@@ -43,8 +44,8 @@ func Model(modelType string, removegaps bool) (model DistModel, err error) {
 		model = NewRawDistModel(removegaps)
 	case "f81":
 		model = NewF81Model(removegaps)
-	case "tn82":
-		model = NewTN82Model(removegaps)
+	// case "tn82":
+	// 	model = NewTN82Model(removegaps)
 	case "tn93":
 		model = NewTN93Model(removegaps)
 	case "f84":
