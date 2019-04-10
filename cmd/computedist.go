@@ -76,8 +76,8 @@ if -a is given: display only the average distance
 		protmodel = protein.ModelStringToInt(computedistModel)
 		if protmodel != -1 {
 			var d *mat.Dense
-			m, _ := protein.NewProtModel(protmodel, true, cmd.Flags().Changed("alpha"), computedistAlpha)
-			m.InitModel(nil)
+			m, _ := protein.NewProtModel(protmodel, true, cmd.Flags().Changed("alpha"), computedistAlpha, computedistRemoveGaps)
+			m.InitModel(nil, nil)
 			for align := range aligns.Achan {
 				if _, _, d, err = m.MLDist(align, nil); err != nil {
 					io.LogError(err)

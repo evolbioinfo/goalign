@@ -383,7 +383,7 @@ func selectedSites(al align.Alignment, weights []float64, removeGappedPositions 
 		selectedSites[l] = true
 		for i := 0; i < al.NbSequences() && removeGappedPositions; i++ {
 			seq, _ := al.GetSequenceCharById(i)
-			if !isNuc(seq[l]) || seq[l] == '*' || seq[l] == '?' || seq[l] == '-' {
+			if al.AlphabetCharToIndex(seq[l]) == -1 || seq[l] == '*' || seq[l] == '?' || seq[l] == '-' {
 				selectedSites[l] = false
 			}
 		}

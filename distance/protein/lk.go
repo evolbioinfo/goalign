@@ -31,6 +31,7 @@ func (model *ProtModel) MLDist(a align.Alignment, weights []float64) (p, q, dist
 	var warn bool
 	var d_max float64
 	var Fs *mat.Dense
+	var selected []bool
 
 	if weights == nil {
 		weights = make([]float64, a.Length())
@@ -39,7 +40,9 @@ func (model *ProtModel) MLDist(a align.Alignment, weights []float64) (p, q, dist
 		}
 	}
 
-	p, q, dist = model.JC69Dist(a, weights)
+	_, selected = selectedSites(a, weights, model.removegaps)
+
+	p, q, dist = model.JC69Dist(a, weights, selected)
 
 	model.gamma_rr = 1.0
 	model.gamma_r_proba = 1.0
@@ -71,15 +74,17 @@ func (model *ProtModel) MLDist(a align.Alignment, weights []float64) (p, q, dist
 				len = 0.0
 
 				for l = 0; l < a.Length(); l++ {
-					w := weights[l]
-					if pair.seq1Ambigu[l] || pair.seq2Ambigu[l] {
-						w = 0.0
-					}
-					state0 = a.AlphabetCharToIndex(pair.seq1[l])
-					state1 = a.AlphabetCharToIndex(pair.seq2[l])
-					if (state0 > -1) && (state1 > -1) {
-						Fs.Set(state0, state1, Fs.At(state0, state1)+w)
-						len += w
+					if selected[l] {
+						w := weights[l]
+						if pair.seq1Ambigu[l] || pair.seq2Ambigu[l] {
+							w = 0.0
+						}
+						state0 = a.AlphabetCharToIndex(pair.seq1[l])
+						state1 = a.AlphabetCharToIndex(pair.seq2[l])
+						if (state0 > -1) && (state1 > -1) {
+							Fs.Set(state0, state1, Fs.At(state0, state1)+w)
+							len += w
+						}
 					}
 				}
 
