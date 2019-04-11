@@ -730,9 +730,13 @@ Tip1	4.000000000000	2.000000000000	1.000000000000	1.000000000000	0.000000000000
 EOF
 ${GOALIGN} compute distance -m rawdist -i ${TESTDATA}/test_rawdistance.phy.gz -p > result
 diff -q -b result expected
-${GOALIGN} compute distance -m rawdist --gap-mut -i ${TESTDATA}/test_rawdistance.phy.gz -p > result
+${GOALIGN} compute distance -m rawdist --gap-mut 2 -i ${TESTDATA}/test_rawdistance.phy.gz -p > result
+diff -q -b result expected
+${GOALIGN} compute distance -m rawdist --gap-mut 1 -i ${TESTDATA}/test_rawdistance.phy.gz -p > result
 diff -q -b result expected
 rm -f expected result mapfile
+
+
 
 echo "->goalign compute distance -m rawdist2"
 cat > expected <<EOF
@@ -757,7 +761,9 @@ Tip3	4.000000000000	1.000000000000	0.000000000000	0.000000000000	1.000000000000
 Tip2	4.000000000000	1.000000000000	0.000000000000	0.000000000000	1.000000000000
 Tip1	5.000000000000	2.000000000000	1.000000000000	1.000000000000	0.000000000000
 EOF
-${GOALIGN} compute distance -m rawdist --gap-mut -i ${TESTDATA}/test_rawdistance2.phy.gz -p > result
+${GOALIGN} compute distance -m rawdist --gap-mut 2 -i ${TESTDATA}/test_rawdistance2.phy.gz -p > result
+diff -q -b result expected
+${GOALIGN} compute distance -m rawdist --gap-mut 1 -i ${TESTDATA}/test_rawdistance2.phy.gz -p > result
 diff -q -b result expected
 rm -f expected result mapfile
 
@@ -771,7 +777,9 @@ Tip3	0.148148148148	0.037037037037	0.000000000000  0.000000000000  0.03846153846
 Tip2	0.148148148148	0.037037037037	0.000000000000  0.000000000000  0.038461538462
 Tip1	0.185185185185	0.074074074074	0.038461538462  0.038461538462	0.000000000000
 EOF
-${GOALIGN} compute distance -m pdist --gap-mut -i ${TESTDATA}/test_rawdistance2.phy.gz -p > result
+${GOALIGN} compute distance -m pdist --gap-mut 2 -i ${TESTDATA}/test_rawdistance2.phy.gz -p > result
+diff -q -b result expected
+${GOALIGN} compute distance -m pdist --gap-mut 1 -i ${TESTDATA}/test_rawdistance2.phy.gz -p > result
 diff -q -b result expected
 rm -f expected result mapfile
 
@@ -787,9 +795,57 @@ Tip1	0.202000000000	0.130000000000	0.082000000000	0.104000000000	0.000000000000
 EOF
 ${GOALIGN} compute distance -m pdist -i ${TESTDATA}/test_distance.phy.gz -p > result
 diff -q -b result expected
-${GOALIGN} compute distance -m pdist --gap-mut -i ${TESTDATA}/test_distance.phy.gz -p > result
+${GOALIGN} compute distance -m pdist --gap-mut 2 -i ${TESTDATA}/test_distance.phy.gz -p > result
+diff -q -b result expected
+${GOALIGN} compute distance -m pdist --gap-mut 1 -i ${TESTDATA}/test_distance.phy.gz -p > result
 diff -q -b result expected
 rm -f expected result mapfile
+
+
+echo "->goalign compute distance -m raw / gaps start"
+cat >input <<EOF
+ 5 27
+Tip4      CAATGTCCCCCAATCACCCGGTCGACG
+Tip0      CAATGTCCCCGAAGGACCCGGTGGACG
+Tip3      -------CCCXAAGGACCCG-------
+Tip2      ---TGTCCCC-AAGGACCCGGTGGACG
+Tip1      CAATGTCCCC-AAGGACCCGGTGGCCG
+EOF
+
+cat > expected <<EOF
+5
+Tip4	0.000000000000	4.000000000000	3.000000000000	4.000000000000	5.000000000000
+Tip0	4.000000000000	0.000000000000	1.000000000000	1.000000000000	2.000000000000
+Tip3	3.000000000000	1.000000000000	0.000000000000	0.000000000000	0.000000000000
+Tip2	4.000000000000	1.000000000000	0.000000000000	0.000000000000	1.000000000000
+Tip1	5.000000000000	2.000000000000	0.000000000000	1.000000000000	0.000000000000
+EOF
+${GOALIGN} compute distance -m rawdist --gap-mut 1 -i input -p > result
+diff -q -b result expected
+rm -f expected result mapfile
+
+echo "->goalign compute distance -m pdist / gaps start"
+cat >input <<EOF
+ 5 27
+Tip4      CAATGTCCCCCAATCACCCGGTCGACG
+Tip0      CAATGTCCCCGAAGGACCCGGTGGACG
+Tip3      -------CCCXAAGGACCCG-------
+Tip2      ---TGTCCCC-AAGGACCCGGTGGACG
+Tip1      CAATGTCCCC-AAGGACCCGGTGGCCG
+EOF
+
+cat > expected <<EOF
+5
+Tip4	0.000000000000	0.148148148148	0.230769230769	0.166666666667	0.185185185185
+Tip0	0.148148148148	0.000000000000	0.076923076923	0.041666666667	0.074074074074
+Tip3	0.230769230769	0.076923076923	0.000000000000	0.000000000000	0.000000000000
+Tip2	0.166666666667	0.041666666667	0.000000000000	0.000000000000	0.043478260870
+Tip1	0.185185185185	0.074074074074	0.000000000000	0.043478260870	0.000000000000
+EOF
+${GOALIGN} compute distance -m pdist --gap-mut 1 -i input -p > result
+diff -q -b result expected
+rm -f expected result mapfile
+
 
 echo "->goalign compute distance -m jc"
 cat > expected <<EOF
