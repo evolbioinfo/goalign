@@ -57,6 +57,7 @@ If align contains 3 alignments, this will generate 3 files:
 			}
 			writeSequences(al.Unalign(), f)
 			closeWriteFile(f, filename)
+			i++
 		}
 
 		if aligns.Err != nil {
