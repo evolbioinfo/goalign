@@ -55,9 +55,9 @@ type Alignment interface {
 	Rarefy(nb int, counts map[string]int) (Alignment, error)                                    // Take a new rarefied sample taking into accounts weights
 	RandSubAlign(length int) (Alignment, error)                                                 // Extract a random subalignment with given length from this alignment
 	Recombine(rate float64, lenprop float64)
-	RemoveGapSeqs(cutoff float64)     // Removes sequences having >= cutoff gaps
-	RemoveGapSites(cutoff float64)    // Removes sites having >= cutoff gaps
-	Sample(nb int) (Alignment, error) // generate a sub sample of the sequences
+	RemoveGapSeqs(cutoff float64)             // Removes sequences having >= cutoff gaps
+	RemoveGapSites(cutoff float64, ends bool) // Removes sites having >= cutoff gaps
+	Sample(nb int) (Alignment, error)         // generate a sub sample of the sequences
 	ShuffleSites(rate float64, roguerate float64, randroguefirst bool) []string
 	SimulateRogue(prop float64, proplen float64) ([]string, []string) // add "rogue" sequences
 	SiteConservation(position int) (int, error)                       // If the site is conserved:
@@ -211,13 +211,22 @@ func (a *align) ShuffleSites(rate float64, roguerate float64, randroguefirst boo
 // Cutoff must be between 0 and 1, otherwise set to 0.
 // 0 means that positions with > 0 gaps will be removed
 // other cutoffs : ]0,1] mean that positions with >= cutoff gaps will be removed
-func (a *align) RemoveGapSites(cutoff float64) {
+//
+// If ends is true: then only removes consecutive positions that match the cutoff
+// from start or from end of alignment.
+// Example with a cutoff of 0.3 and ends and with the given proportion of gaps:
+// 0.4 0.5 0.1 0.5 0.6 0.1 0.8 will remove positions 0,1 and 6
+func (a *align) RemoveGapSites(cutoff float64, ends bool) {
 	var nbgaps int
 	if cutoff < 0 || cutoff > 1 {
 		cutoff = 0
 	}
 
 	toremove := make([]int, 0, 10)
+	// To remove only gap positions at start and ends positions
+	firstcontinuous := -1
+	lastcontinuous := a.Length()
+
 	for site := 0; site < a.Length(); site++ {
 		nbgaps = 0
 		for seq := 0; seq < a.NbSequences(); seq++ {
@@ -227,16 +236,27 @@ func (a *align) RemoveGapSites(cutoff float64) {
 		}
 		if (cutoff > 0.0 && float64(nbgaps) >= cutoff*float64(a.NbSequences())) || (cutoff == 0 && nbgaps > 0) {
 			toremove = append(toremove, site)
+			if site == firstcontinuous+1 {
+				firstcontinuous++
+			}
 		}
 	}
 	/* Now we remove gap positions, starting at the end */
 	sort.Ints(toremove)
+	nbremoved := 0
 	for i := (len(toremove) - 1); i >= 0; i-- {
-		for seq := 0; seq < a.NbSequences(); seq++ {
-			a.seqs[seq].sequence = append(a.seqs[seq].sequence[:toremove[i]], a.seqs[seq].sequence[toremove[i]+1:]...)
+		if toremove[i] == lastcontinuous-1 {
+			lastcontinuous--
+		}
+
+		if !ends || lastcontinuous == toremove[i] || toremove[i] <= firstcontinuous {
+			nbremoved++
+			for seq := 0; seq < a.NbSequences(); seq++ {
+				a.seqs[seq].sequence = append(a.seqs[seq].sequence[:toremove[i]], a.seqs[seq].sequence[toremove[i]+1:]...)
+			}
 		}
 	}
-	a.length -= len(toremove)
+	a.length -= nbremoved
 }
 
 // Removes sequences constituted of [cutoff*100%,100%] Gaps

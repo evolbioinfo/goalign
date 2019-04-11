@@ -96,6 +96,45 @@ ${GOALIGN} random --seed 10 | ${GOALIGN} mutate gaps -n 1 -r 0.1 --seed 10 |  ${
 diff -q -b result expected
 rm -f expected result mapfile log expectedlog
 
+
+echo "->goalign clean sites --ends"
+cat > input <<EOF
+>Seq0000
+--GGTCCACTCTTTTGTCTT-TACCTA-G-
+>Seq0001
+G---CACCGGC-CGTAATGACG-ACCC--T
+>Seq0002
+-T-G-TTTCCTGC-AACAT-ACC-AAC-C-
+>Seq0003
+A-ACCACAACAGTCA-GTACTCTT-TG--T
+>Seq0004
+-----GAAGG-CCAAGGT-TCGCCGCCC--
+EOF
+
+cat > expected <<EOF
+>Seq0000
+GTCCACTCTTTTGTCTT-TACCTA
+>Seq0001
+-CACCGGC-CGTAATGACG-ACCC
+>Seq0002
+G-TTTCCTGC-AACAT-ACC-AAC
+>Seq0003
+CCACAACAGTCA-GTACTCTT-TG
+>Seq0004
+--GAAGG-CCAAGGT-TCGCCGCC
+EOF
+
+cat > expectedlog <<EOF
+[Warning] in cmd/cleansites.go (line 52), message: Alignment (0) length before cleaning=30
+[Warning] in cmd/cleansites.go (line 53), message: Alignment (0) length after cleaning=24
+[Warning] in cmd/cleansites.go (line 54), message: Alignment (0) number of gaps=6
+EOF
+${GOALIGN} clean sites -i input -c 0.5 > result 2>log
+diff -q -b result expected
+diff -q -b log expectedlog
+rm -f expected result log expectedlog
+
+
 echo "->goalign clean seqs"
 cat > expected <<EOF
 >Seq0000

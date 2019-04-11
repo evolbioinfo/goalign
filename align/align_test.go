@@ -84,7 +84,7 @@ func TestRemoveOneGapSite(t *testing.T) {
 		pos++
 	})
 
-	a.RemoveGapSites(0.0)
+	a.RemoveGapSites(0.0, false)
 
 	if a.Length() != 0 {
 		t.Error("We should have removed all positions")
@@ -122,7 +122,7 @@ func TestRemoveAllGapSites(t *testing.T) {
 	/* Remove position 20 */
 	backupseq = append(backupseq[:20], backupseq[21:]...)
 
-	a.RemoveGapSites(1.0)
+	a.RemoveGapSites(1.0, false)
 
 	if a.Length() != 299 {
 		t.Error("We should have removed only one position")
@@ -143,6 +143,86 @@ func TestRemoveAllGapSites(t *testing.T) {
 		if c != backupseq[i] {
 			t.Error(fmt.Sprintf("Char at position %d should be %c and is %c", i, backupseq[i], c))
 		}
+	}
+}
+
+func TestRemoveOneGapSiteEnds(t *testing.T) {
+	a, err := RandomAlignment(AMINOACIDS, 300, 300)
+	if err != nil {
+		t.Error(err)
+
+	}
+
+	/* We add 1 gap per site */
+	pos := 0
+	a.IterateChar(func(name string, sequence []rune) {
+		sequence[pos] = GAP
+		pos++
+	})
+
+	a.RemoveGapSites(0.0, true)
+
+	if a.Length() != 0 {
+		t.Error("We should have removed all positions")
+	}
+	a.IterateChar(func(name string, sequence []rune) {
+		if len(sequence) != 0 {
+			t.Error(fmt.Sprintf("Sequence length after removing gaps should be 0 and is : %d", len(sequence)))
+		}
+	})
+}
+
+func TestRemoveAllGapSitesEnds(t *testing.T) {
+	a, err := RandomAlignment(AMINOACIDS, 300, 300)
+	if err != nil {
+		t.Error(err)
+
+	}
+
+	/* We add all gaps on 1 site */
+	/* And one gap at all sites */
+	pos1 := 20
+	pos2 := 0
+	a.IterateChar(func(name string, sequence []rune) {
+		sequence[pos1] = GAP
+		sequence[pos2] = GAP
+		pos2++
+	})
+
+	a.RemoveGapSites(1.0, true)
+
+	if a.Length() != 300 {
+		t.Error(fmt.Sprintf("We should not have removed any positions: %d", a.Length()))
+	}
+
+	a.IterateChar(func(name string, sequence []rune) {
+		if len(sequence) != 300 {
+			t.Error(fmt.Sprintf("Sequence length after removing gaps should be 299 and is : %d", len(sequence)))
+		}
+	})
+}
+
+func TestRemoveGapSitesEnds(t *testing.T) {
+	in := NewAlign(UNKNOWN)
+	in.AddSequence("Seq0000", "--GGTCCACTCTTTTGTCTT-TACCTA-G-", "")
+	in.AddSequence("Seq0001", "G---CACCGGC-CGTAATGACG-ACCC--T", "")
+	in.AddSequence("Seq0002", "-T-G-TTTCCTGC-AACAT-ACC-AAC-C-", "")
+	in.AddSequence("Seq0003", "A-ACCACAACAGTCA-GTACTCTT-TG--T", "")
+	in.AddSequence("Seq0004", "-----GAAGG-CCAAGGT-TCGCCGCCC--", "")
+	in.AutoAlphabet()
+
+	exp := NewAlign(UNKNOWN)
+	exp.AddSequence("Seq0000", "GTCCACTCTTTTGTCTT-TACCTA", "")
+	exp.AddSequence("Seq0001", "-CACCGGC-CGTAATGACG-ACCC", "")
+	exp.AddSequence("Seq0002", "G-TTTCCTGC-AACAT-ACC-AAC", "")
+	exp.AddSequence("Seq0003", "CCACAACAGTCA-GTACTCTT-TG", "")
+	exp.AddSequence("Seq0004", "--GAAGG-CCAAGGT-TCGCCGCC", "")
+	exp.AutoAlphabet()
+
+	in.RemoveGapSites(0.5, true)
+
+	if !exp.Identical(in) {
+		t.Error(fmt.Errorf("Alignment after removing gap ends is different from expected \n %s \n vs. \n %s", in.String(), exp.String()))
 	}
 }
 
@@ -255,7 +335,7 @@ func TestClone(t *testing.T) {
 		t.Error(err2)
 	}
 
-	a.RemoveGapSites(0.0)
+	a.RemoveGapSites(0.0, false)
 
 	a2.IterateChar(func(name string, sequence []rune) {
 		if len(sequence) != 300 {

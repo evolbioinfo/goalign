@@ -9,6 +9,8 @@ import (
 	"github.com/spf13/cobra"
 )
 
+var cleanEnds bool
+
 // cleansitesCmd represents the cleansites command
 var cleansitesCmd = &cobra.Command{
 	Use:   "sites",
@@ -43,7 +45,7 @@ will be removed.`,
 		i := 0
 		for al := range aligns.Achan {
 			beforelength := al.Length()
-			al.RemoveGapSites(cleanCutoff)
+			al.RemoveGapSites(cleanCutoff, cleanEnds)
 			afterlength := al.Length()
 			writeAlign(al, f)
 			if !cleanQuiet {
@@ -62,5 +64,6 @@ will be removed.`,
 }
 
 func init() {
+	cleansitesCmd.PersistentFlags().BoolVar(&cleanEnds, "ends", false, "If true, then only remove consecutive gap positions from alignment start and end")
 	cleanCmd.AddCommand(cleansitesCmd)
 }
