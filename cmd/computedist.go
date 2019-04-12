@@ -20,6 +20,7 @@ var computedistModel string
 var computedistRemoveGaps bool
 var computedistAverage bool
 var computedistAlpha float64
+var computedistCountGaps int
 
 // computedistCmd represents the computedist command
 var computedistCmd = &cobra.Command{
@@ -73,8 +74,7 @@ if -a is given: display only the average distance
 		}
 
 		// If prot model
-		protmodel = protein.ModelStringToInt(computedistModel)
-		if protmodel != -1 {
+		if protmodel = protein.ModelStringToInt(computedistModel); protmodel != -1 {
 			var d *mat.Dense
 			m, _ := protein.NewProtModel(protmodel, true, cmd.Flags().Changed("alpha"), computedistAlpha, computedistRemoveGaps)
 			m.InitModel(nil, nil)
@@ -99,10 +99,27 @@ if -a is given: display only the average distance
 			}
 
 		} else {
-
-			if model, err = dna.Model(computedistModel, computedistRemoveGaps); err != nil {
-				io.LogError(err)
-				return
+			switch computedistModel {
+			case "rawdist":
+				m := dna.NewRawDistModel(computedistRemoveGaps)
+				m.SetCountGapMutations(computedistCountGaps)
+				if err = m.SetCountGapMutations(computedistCountGaps); err != nil {
+					io.LogError(err)
+					return
+				}
+				model = m
+			case "pdist":
+				m := dna.NewPDistModel(computedistRemoveGaps)
+				if err = m.SetCountGapMutations(computedistCountGaps); err != nil {
+					io.LogError(err)
+					return
+				}
+				model = m
+			default:
+				if model, err = dna.Model(computedistModel, computedistRemoveGaps); err != nil {
+					io.LogError(err)
+					return
+				}
 			}
 
 			for align := range aligns.Achan {
@@ -136,6 +153,7 @@ func init() {
 	computedistCmd.PersistentFlags().StringVarP(&computedistOutput, "output", "o", "stdout", "Distance matrix output file")
 	computedistCmd.PersistentFlags().StringVarP(&computedistModel, "model", "m", "k2p", "Model for distance computation")
 	computedistCmd.PersistentFlags().BoolVarP(&computedistRemoveGaps, "rm-gaps", "r", false, "Do not take into account positions containing >=1 gaps")
+	computedistCmd.PersistentFlags().IntVar(&computedistCountGaps, "gap-mut", 0, "Count gaps to nt as mutations: 0: inactivated, 1: only internal gaps, 2: all gaps. Only available for rawdist and pdist (nt)")
 	computedistCmd.PersistentFlags().BoolVarP(&computedistAverage, "average", "a", false, "Compute only the average distance between all pairs of sequences")
 	computedistCmd.PersistentFlags().Float64Var(&computedistAlpha, "alpha", 0.0, "Gamma alpha parameter (only for protein models so far), if not given : no gamma")
 }

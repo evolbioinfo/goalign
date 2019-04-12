@@ -3,6 +3,7 @@ package dna
 import (
 	"errors"
 	"fmt"
+	"math"
 	"sync"
 	"unicode"
 
@@ -213,6 +214,67 @@ func countDiffs(seq1 []rune, seq2 []rune, selectedSites []bool, weights []float6
 			total += w
 		}
 	}
+	return
+}
+
+/* Count number of mutations (including gaps to nt) */
+func countDiffsWithGaps(seq1 []rune, seq2 []rune, selectedSites []bool, weights []float64) (nbdiffs float64, total float64) {
+	nbdiffs = 0.0
+	total = 0.0
+	for i := 0; i < len(seq1); i++ {
+		w := 1.0
+		if weights != nil {
+			w = weights[i]
+		}
+
+		if (isNuc(seq1[i]) || isNuc(seq2[i])) && selectedSites[i] {
+			if seq1[i] != seq2[i] {
+				nbdiffs += float64(w)
+			}
+			total += w
+		}
+	}
+	return
+}
+
+/* Count number of mutations (including gaps to nt when they are internal, not on the border) */
+func countDiffsWithInternalGaps(seq1 []rune, seq2 []rune, selectedSites []bool, weights []float64) (nbdiffs float64, total float64) {
+	nbdiffs = 0.0
+	total = 0.0
+	firstgaps1 := true
+	firstgaps2 := true
+	tmpgapdiffs1 := 0.0
+	tmpgapdiffs2 := 0.0
+
+	for i := 0; i < len(seq1); i++ {
+		w := 1.0
+		if weights != nil {
+			w = weights[i]
+		}
+		firstgaps1 = firstgaps1 && !isNuc(seq1[i])
+		firstgaps2 = firstgaps2 && !isNuc(seq2[i])
+
+		if (isNuc(seq1[i]) || isNuc(seq2[i])) && selectedSites[i] && (!firstgaps1 && !firstgaps2) {
+			if seq1[i] != seq2[i] {
+				nbdiffs += float64(w)
+				tmpgapdiffs1 += w
+				tmpgapdiffs2 += w
+			}
+			total += w
+
+			if isNuc(seq1[i]) {
+				tmpgapdiffs1 = .0
+			}
+
+			if isNuc(seq2[i]) {
+				tmpgapdiffs2 = .0
+			}
+		}
+	}
+
+	nbdiffs -= math.Max(tmpgapdiffs1, tmpgapdiffs2)
+	total -= math.Max(tmpgapdiffs1, tmpgapdiffs2)
+
 	return
 }
 
