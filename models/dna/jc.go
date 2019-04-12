@@ -46,7 +46,7 @@ func (m *JCModel) Eigens() (val []float64, leftvector, rightvector [][]float64, 
 
 	leftvector = [][]float64{
 		[]float64{1. / 4., 1. / 4., 1. / 4., 1. / 4.},
-		[]float64{-1. / 4., -1. / 4., -3. / 4., -1. / 4.},
+		[]float64{-1. / 4., -1. / 4., 3. / 4., -1. / 4.},
 		[]float64{-1. / 4., 3. / 4., -1. / 4., -1. / 4.},
 		[]float64{3. / 4., -1. / 4., -1. / 4., -1. / 4.},
 	}
