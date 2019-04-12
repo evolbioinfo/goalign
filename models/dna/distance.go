@@ -14,7 +14,8 @@ import (
 type DistModel interface {
 	InitModel(al align.Alignment, weights []float64) error
 	Distance(seq1 []rune, seq2 []rune, weigths []float64) (float64, error)
-	Eigens() (val []float64, leftvector, rightvector [][]float64, err error)
+	// Left vectors and right vectors are given in column-major format
+	Eigens() (val []float64, leftvectors, rightvectors []float64, err error)
 }
 
 type seqpairdist struct {

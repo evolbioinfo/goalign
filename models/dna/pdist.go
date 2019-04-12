@@ -55,7 +55,7 @@ func (m *PDistModel) InitModel(al align.Alignment, weights []float64) (err error
 	return
 }
 
-func (m *PDistModel) Eigens() (val []float64, leftvector, rightvector [][]float64, err error) {
+func (m *PDistModel) Eigens() (val []float64, leftvectors, rightvectors []float64, err error) {
 	err = fmt.Errorf("Cannot compute eigen values/vectors for pdist model")
 	return
 }

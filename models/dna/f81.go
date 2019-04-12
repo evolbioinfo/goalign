@@ -65,11 +65,11 @@ func (m *F81Model) SetParameters(piA, piC, piG, piT float64) {
 		piA, piC, piG, -(piA + piC + piG),
 	})
 	// Normalization of Q
-	norm := 1. / (3 * (piA + piC + piG + piT))
+	norm := 1. / (2 * (piA*piC + piA*piG + piA*piT + piC*piG + piC*piT + piG*piT))
 	m.qmatrix.Apply(func(i, j int, v float64) float64 { return v * norm }, m.qmatrix)
 }
 
-func (m *F81Model) Eigens() (val []float64, leftvector, rightvector [][]float64, err error) {
+func (m *F81Model) Eigens() (val []float64, leftvectors, rightvectors []float64, err error) {
 	// Compute eigen values, left and right eigenvectors of Q
 	eigen := &mat.Eigen{}
 	if ok := eigen.Factorize(m.qmatrix, mat.EigenRight); !ok {
@@ -87,18 +87,8 @@ func (m *F81Model) Eigens() (val []float64, leftvector, rightvector [][]float64,
 	reigenvect.Apply(func(i, j int, val float64) float64 { return real(u.At(i, j)) }, reigenvect)
 	leigenvect.Inverse(reigenvect)
 
-	leftvector = [][]float64{
-		leigenvect.RawRowView(0),
-		leigenvect.RawRowView(1),
-		leigenvect.RawRowView(2),
-		leigenvect.RawRowView(3),
-	}
-	rightvector = [][]float64{
-		reigenvect.RawRowView(0),
-		reigenvect.RawRowView(1),
-		reigenvect.RawRowView(2),
-		reigenvect.RawRowView(3),
-	}
+	leftvectors = leigenvect.RawMatrix().Data
+	rightvectors = reigenvect.RawMatrix().Data
 
 	return
 }

@@ -66,11 +66,14 @@ func (m *TN93Model) SetParameters(kappa1, kappa2, piA, piC, piG, piT float64) {
 		piA, kappa2 * piC, piG, -(piA + kappa2*piC + piG),
 	})
 	// Normalization of Q
-	norm := 1. / (2. * (piA*piC + piC*piG + piA*piT + piG*piT + kappa2*piC*piT + kappa1*piA*piG))
-	m.qmatrix.Apply(func(i, j int, v float64) float64 { return v * norm }, m.qmatrix)
+	norm := -piA*m.qmatrix.At(0, 0) -
+		piC*m.qmatrix.At(1, 1) -
+		piG*m.qmatrix.At(2, 2) -
+		piT*m.qmatrix.At(3, 3)
+	m.qmatrix.Apply(func(i, j int, v float64) float64 { return v / norm }, m.qmatrix)
 }
 
-func (m *TN93Model) Eigens() (val []float64, leftvector, rightvector [][]float64, err error) {
+func (m *TN93Model) Eigens() (val []float64, leftvectors, rightvectors []float64, err error) {
 	// Compute eigen values, left and right eigenvectors of Q
 	eigen := &mat.Eigen{}
 	if ok := eigen.Factorize(m.qmatrix, mat.EigenRight); !ok {
@@ -88,18 +91,7 @@ func (m *TN93Model) Eigens() (val []float64, leftvector, rightvector [][]float64
 	reigenvect.Apply(func(i, j int, val float64) float64 { return real(u.At(i, j)) }, reigenvect)
 	leigenvect.Inverse(reigenvect)
 
-	leftvector = [][]float64{
-		leigenvect.RawRowView(0),
-		leigenvect.RawRowView(1),
-		leigenvect.RawRowView(2),
-		leigenvect.RawRowView(3),
-	}
-	rightvector = [][]float64{
-		reigenvect.RawRowView(0),
-		reigenvect.RawRowView(1),
-		reigenvect.RawRowView(2),
-		reigenvect.RawRowView(3),
-	}
-
+	leftvectors = leigenvect.RawMatrix().Data
+	rightvectors = reigenvect.RawMatrix().Data
 	return
 }

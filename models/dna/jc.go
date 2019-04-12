@@ -1,8 +1,9 @@
 package dna
 
 import (
-	"github.com/evolbioinfo/goalign/align"
 	"math"
+
+	"github.com/evolbioinfo/goalign/align"
 )
 
 type JCModel struct {
@@ -36,7 +37,8 @@ func (m *JCModel) InitModel(al align.Alignment, weights []float64) (err error) {
 	return
 }
 
-func (m *JCModel) Eigens() (val []float64, leftvector, rightvector [][]float64, err error) {
+// Left vectors and right vectors are given in column-major format
+func (m *JCModel) Eigens() (val []float64, leftvectors, rightvectors []float64, err error) {
 	val = []float64{
 		0,
 		-4. / 3.,
@@ -44,18 +46,18 @@ func (m *JCModel) Eigens() (val []float64, leftvector, rightvector [][]float64, 
 		-4. / 3.,
 	}
 
-	leftvector = [][]float64{
-		[]float64{1. / 4., 1. / 4., 1. / 4., 1. / 4.},
-		[]float64{-1. / 4., -1. / 4., 3. / 4., -1. / 4.},
-		[]float64{-1. / 4., 3. / 4., -1. / 4., -1. / 4.},
-		[]float64{3. / 4., -1. / 4., -1. / 4., -1. / 4.},
+	leftvectors = []float64{
+		1. / 4., 1. / 4., 1. / 4., 1. / 4.,
+		-1. / 4., -1. / 4., 3. / 4., -1. / 4.,
+		-1. / 4., 3. / 4., -1. / 4., -1. / 4.,
+		3. / 4., -1. / 4., -1. / 4., -1. / 4.,
 	}
 
-	rightvector = [][]float64{
-		[]float64{1., 0., 0., 1.},
-		[]float64{1., 0., 1., 0.},
-		[]float64{1., 1., 0., 0.},
-		[]float64{1., -1., -1., -1.},
+	rightvectors = []float64{
+		1., 0., 0., 1.,
+		1., 0., 1., 0.,
+		1., 1., 0., 0.,
+		1., -1., -1., -1.,
 	}
 	return
 }

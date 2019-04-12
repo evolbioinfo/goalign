@@ -69,7 +69,7 @@ func (m *F84Model) SetParameters(kappa, piA, piC, piG, piT float64) {
 }
 
 // See http://biopp.univ-montp2.fr/Documents/ClassDocumentation/bpp-phyl/html/F84_8cpp_source.html
-func (m *F84Model) Eigens() (val []float64, leftvector, rightvector [][]float64, err error) {
+func (m *F84Model) Eigens() (val []float64, leftvectors, rightvectors []float64, err error) {
 	piY := m.piT + m.piC
 	piR := m.piA + m.piG
 	norm := 1. / (1 - m.piA*m.piA - m.piC*m.piC - m.piG*m.piG - m.piT*m.piT + 2.*m.kappa*(m.piC*m.piT/piY+m.piA*m.piG/piR))
@@ -81,18 +81,18 @@ func (m *F84Model) Eigens() (val []float64, leftvector, rightvector [][]float64,
 		-norm,
 	}
 
-	leftvector = [][]float64{
-		[]float64{m.piA, m.piC, m.piG, m.piT},
-		[]float64{0., m.piT / piY, 0., -m.piT / piY},
-		[]float64{m.piG / piR, 0., -m.piG / piR, 0.},
-		[]float64{m.piA * piY / piR, -m.piC, m.piG * piY / piR, -m.piT},
+	leftvectors = []float64{
+		m.piA, m.piC, m.piG, m.piT,
+		0., m.piT / piY, 0., -m.piT / piY,
+		m.piG / piR, 0., -m.piG / piR, 0.,
+		m.piA * piY / piR, -m.piC, m.piG * piY / piR, -m.piT,
 	}
 
-	rightvector = [][]float64{
-		[]float64{1., 0., 1., 1.},
-		[]float64{1., 1., 0., -piR / piY},
-		[]float64{1., 0., -m.piA / m.piG, 1.},
-		[]float64{1., -m.piC / m.piT, 0., -piR / piY},
+	rightvectors = []float64{
+		1., 0., 1., 1.,
+		1., 1., 0., -piR / piY,
+		1., 0., -m.piA / m.piG, 1.,
+		1., -m.piC / m.piT, 0., -piR / piY,
 	}
 
 	return

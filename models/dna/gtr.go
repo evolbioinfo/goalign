@@ -36,17 +36,20 @@ func (m *GTRModel) InitModel(al align.Alignment, weights []float64) (err error) 
 //  \          /
 func (m *GTRModel) SetParameters(d, f, b, e, a, c, piA, piC, piG, piT float64) {
 	m.qmatrix = mat.NewDense(4, 4, []float64{
-		-(d*piC + f + piG + b*piT), d * piC, f + piG, b * piT,
+		-(d*piC + f*piG + b*piT), d * piC, f * piG, b * piT,
 		d * piA, -(d*piA + e*piG + a*piT), e * piG, a * piT,
-		f + piA, e * piC, -(f + piA + e*piC + c*piT), c * piT,
+		f * piA, e * piC, -(f*piA + e*piC + c*piT), c * piT,
 		b * piA, a * piC, c * piG, -(b*piA + a*piC + c*piG),
 	})
 	// Normalization of Q
-	norm := 1. / (piA*(d+1+b) + piC*(d+e+a) + piG*(1+e+c) + piT*(b+a+c))
-	m.qmatrix.Apply(func(i, j int, v float64) float64 { return v * norm }, m.qmatrix)
+	norm := -piA*m.qmatrix.At(0, 0) -
+		piC*m.qmatrix.At(1, 1) -
+		piG*m.qmatrix.At(2, 2) -
+		piT*m.qmatrix.At(3, 3)
+	m.qmatrix.Apply(func(i, j int, v float64) float64 { return v / norm }, m.qmatrix)
 }
 
-func (m *GTRModel) Eigens() (val []float64, leftvector, rightvector [][]float64, err error) {
+func (m *GTRModel) Eigens() (val []float64, leftvectors, rightvectors []float64, err error) {
 	// Compute eigen values, left and right eigenvectors of Q
 	eigen := &mat.Eigen{}
 	if ok := eigen.Factorize(m.qmatrix, mat.EigenRight); !ok {
@@ -63,19 +66,8 @@ func (m *GTRModel) Eigens() (val []float64, leftvector, rightvector [][]float64,
 	leigenvect := mat.NewDense(4, 4, nil)
 	reigenvect.Apply(func(i, j int, val float64) float64 { return real(u.At(i, j)) }, reigenvect)
 	leigenvect.Inverse(reigenvect)
-
-	leftvector = [][]float64{
-		leigenvect.RawRowView(0),
-		leigenvect.RawRowView(1),
-		leigenvect.RawRowView(2),
-		leigenvect.RawRowView(3),
-	}
-	rightvector = [][]float64{
-		reigenvect.RawRowView(0),
-		reigenvect.RawRowView(1),
-		reigenvect.RawRowView(2),
-		reigenvect.RawRowView(3),
-	}
+	leftvectors = leigenvect.RawMatrix().Data
+	rightvectors = reigenvect.RawMatrix().Data
 
 	return
 }

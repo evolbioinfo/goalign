@@ -47,7 +47,7 @@ func (m *K2PModel) SetParameters(kappa float64) {
 	m.kappa = kappa
 }
 
-func (m *K2PModel) Eigens() (val []float64, leftvector, rightvector [][]float64, err error) {
+func (m *K2PModel) Eigens() (val []float64, leftvectors, rightvectors []float64, err error) {
 	val = []float64{
 		0,
 		-2 * (1 + m.kappa) / (m.kappa + 2),
@@ -55,18 +55,18 @@ func (m *K2PModel) Eigens() (val []float64, leftvector, rightvector [][]float64,
 		-4 / (m.kappa + 2),
 	}
 
-	leftvector = [][]float64{
-		[]float64{1. / 4., 1. / 4., 1. / 4., 1. / 4.},
-		[]float64{0, 1. / 2., 0, -1. / 2.},
-		[]float64{1. / 2., 0, -1. / 2., 0},
-		[]float64{1. / 4., -1. / 4., 1. / 4., -1. / 4.},
+	leftvectors = []float64{
+		1. / 4., 1. / 4., 1. / 4., 1. / 4.,
+		0, 1. / 2., 0, -1. / 2.,
+		1. / 2., 0, -1. / 2., 0,
+		1. / 4., -1. / 4., 1. / 4., -1. / 4.,
 	}
 
-	rightvector = [][]float64{
-		[]float64{1., 0., 1., 1.},
-		[]float64{1., 1., 0., -1.},
-		[]float64{1., 0., -1., 1.},
-		[]float64{1., -1., 0., -1.},
+	rightvectors = []float64{
+		1., 0., 1., 1.,
+		1., 1., 0., -1.,
+		1., 0., -1., 1.,
+		1., -1., 0., -1.,
 	}
 	return
 }
