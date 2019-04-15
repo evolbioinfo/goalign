@@ -14,23 +14,23 @@ const (
 )
 
 type ProtDistModel struct {
-	model        *protein.ProtModel
-	globalAAFreq bool // Global amino acid frequency: If true we use model frequencies, else data frequencies
-	removegaps   bool
-	pij          *mat.Dense // Matrix of Pij
-	stepsize     int
+	model      *protein.ProtModel
+	modelfreqs bool //  amino acid frequency: If true we use model frequencies, else empirical data frequencies
+	removegaps bool
+	pij        *mat.Dense // Matrix of Pij
+	stepsize   int
 }
 
 // Initialize a new protein model, given the name of the model as const int:
 // MODEL_DAYHOFF, MODEL_JTT, MODEL_MTREV, MODEL_LG or MODEL_WAG
-func NewProtDistModel(model int, globalAAFreq bool, usegamma bool, alpha float64, removegaps bool) (*ProtDistModel, error) {
+func NewProtDistModel(model int, modelfreqs bool, usegamma bool, alpha float64, removegaps bool) (*ProtDistModel, error) {
 	m, err := protein.NewProtModel(model, usegamma, alpha)
 	if err != nil {
 		return nil, err
 	}
 	return &ProtDistModel{
 		m,
-		globalAAFreq,
+		modelfreqs,
 		removegaps,
 		nil,
 		1,
@@ -43,7 +43,7 @@ func (model *ProtDistModel) InitModel(a align.Alignment, weights []float64) (err
 	ns := model.Ns()
 
 	// Count equilibrium frequencies from input alignment (do not use model frequencies)
-	if !model.globalAAFreq {
+	if !model.modelfreqs {
 		if ns = len(a.AlphabetCharacters()); ns != model.Ns() {
 			err = fmt.Errorf("Alphabet has not a length of 20")
 			return
