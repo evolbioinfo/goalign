@@ -1,6 +1,9 @@
 package protein
 
 import (
+	"fmt"
+	"math"
+
 	"github.com/evolbioinfo/goalign/align"
 )
 

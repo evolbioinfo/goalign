@@ -17,6 +17,7 @@ type ProtDistModel struct {
 	model        *protein.ProtModel
 	globalAAFreq bool // Global amino acid frequency: If true we use model frequencies, else data frequencies
 	removegaps   bool
+	stepsize     int
 }
 
 // Initialize a new protein model, given the name of the model as const int:
@@ -30,13 +31,11 @@ func NewProtDistModel(model int, globalAAFreq bool, usegamma bool, alpha float64
 		m,
 		globalAAFreq,
 		removegaps,
-	}
+		1,
+	}, nil
 }
 
 func (model *ProtDistModel) InitModel(a align.Alignment, weights []float64) (err error) {
-	var i, j int
-	var sum float64
-	var ok bool
 	var pi []float64
 
 	ns := 20
@@ -59,7 +58,7 @@ func (model *ProtDistModel) InitModel(a align.Alignment, weights []float64) (err
 		}
 	}
 
-	model.m.InitModel(pi)
+	model.model.InitModel(pi)
 	return nil
 }
 
@@ -67,6 +66,7 @@ func (model *ProtDistModel) InitModel(a align.Alignment, weights []float64) (err
 func (model *ProtDistModel) JC69Dist(a align.Alignment, weights []float64, selected []bool) (p *mat.Dense, q *mat.Dense, dist *mat.Dense) {
 	var site, i, j, k int
 	var len *mat.Dense
+	ns := model.Ns()
 
 	len = mat.NewDense(a.NbSequences(), a.NbSequences(), nil)
 	p = mat.NewDense(a.NbSequences(), a.NbSequences(), nil)
@@ -104,10 +104,10 @@ func (model *ProtDistModel) JC69Dist(a align.Alignment, weights []float64, selec
 
 			p.Set(j, i, p.At(i, j))
 
-			if (1. - float64(model.ns)/float64(model.ns-1.)*p.At(i, j)) < .0 {
+			if (1. - float64(ns)/float64(ns-1.)*p.At(i, j)) < .0 {
 				dist.Set(i, j, PROT_DIST_MAX)
 			} else {
-				dist.Set(i, j, -float64(model.ns-1.)/float64(model.ns)*math.Log(1.-float64(model.ns)/float64(model.ns-1.)*p.At(i, j)))
+				dist.Set(i, j, -float64(ns-1.)/float64(ns)*math.Log(1.-float64(ns)/float64(ns-1.)*p.At(i, j)))
 			}
 			if dist.At(i, j) > PROT_DIST_MAX {
 				dist.Set(i, j, PROT_DIST_MAX)
@@ -127,4 +127,11 @@ func (model *ProtDistModel) Ns() int {
 
 func (model *ProtDistModel) pMat(len float64) {
 	model.model.PMat(len)
+}
+func (model *ProtDistModel) pij(i, j int) float64 {
+	return model.model.Pij(i, j)
+}
+
+func (model *ProtDistModel) pi(i int) float64 {
+	return model.model.Pi(i)
 }

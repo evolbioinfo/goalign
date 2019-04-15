@@ -12,6 +12,8 @@ import (
 	"github.com/evolbioinfo/goalign/io"
 	"github.com/evolbioinfo/goalign/models/dna"
 	"github.com/evolbioinfo/goalign/models/protein"
+	pm "github.com/evolbioinfo/gotree/models/protein"
+
 	"gonum.org/v1/gonum/mat"
 )
 
@@ -74,9 +76,9 @@ if -a is given: display only the average distance
 		}
 
 		// If prot model
-		if protmodel = protein.ModelStringToInt(computedistModel); protmodel != -1 {
+		if protmodel = pm.ModelStringToInt(computedistModel); protmodel != -1 {
 			var d *mat.Dense
-			m, _ := protein.NewProtModel(protmodel, true, cmd.Flags().Changed("alpha"), computedistAlpha, computedistRemoveGaps)
+			m, _ := protein.NewProtDistModel(protmodel, true, cmd.Flags().Changed("alpha"), computedistAlpha, computedistRemoveGaps)
 			m.InitModel(nil, nil)
 			for align := range aligns.Achan {
 				if _, _, d, err = m.MLDist(align, nil); err != nil {

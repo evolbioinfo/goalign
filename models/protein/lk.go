@@ -14,7 +14,12 @@ const (
 	BRENT_ZEPS  = 1.e-10
 	BRENT_CGOLD = 0.3819660
 	DBL_MIN     = 2.2250738585072014e-308
+
+	BL_MIN = 1.e-08
+	BL_MAX = 100.0
 )
+
+var DBL_EPSILON float64 = math.Nextafter(1, 2) - 1
 
 func (model *ProtDistModel) MLDist(a align.Alignment, weights []float64) (p, q, dist *mat.Dense, err error) {
 	var j, k, l int
@@ -143,7 +148,7 @@ func (model *ProtDistModel) partialLK(i, j int) float64 {
 	var lk float64
 	lk = .0
 
-	lk += model.Pi(i) * model.Pij(i, j) // * model.gamma_r_proba
+	lk += model.pi(i) * model.pij(i, j) // * model.gamma_r_proba
 	return lk
 }
 
