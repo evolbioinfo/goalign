@@ -17,6 +17,7 @@ type ProtDistModel struct {
 	model        *protein.ProtModel
 	globalAAFreq bool // Global amino acid frequency: If true we use model frequencies, else data frequencies
 	removegaps   bool
+	pij          *mat.Dense // Matrix of Pij
 	stepsize     int
 }
 
@@ -31,6 +32,7 @@ func NewProtDistModel(model int, globalAAFreq bool, usegamma bool, alpha float64
 		m,
 		globalAAFreq,
 		removegaps,
+		nil,
 		1,
 	}, nil
 }
@@ -38,11 +40,11 @@ func NewProtDistModel(model int, globalAAFreq bool, usegamma bool, alpha float64
 func (model *ProtDistModel) InitModel(a align.Alignment, weights []float64) (err error) {
 	var pi []float64
 
-	ns := 20
+	ns := model.Ns()
 
 	// Count equilibrium frequencies from input alignment (do not use model frequencies)
 	if !model.globalAAFreq {
-		if ns = len(a.AlphabetCharacters()); ns != 20 {
+		if ns = len(a.AlphabetCharacters()); ns != model.Ns() {
 			err = fmt.Errorf("Alphabet has not a length of 20")
 			return
 		}
@@ -57,7 +59,7 @@ func (model *ProtDistModel) InitModel(a align.Alignment, weights []float64) (err
 			return
 		}
 	}
-
+	model.pij = mat.NewDense(len(pi), len(pi), nil)
 	model.model.InitModel(pi)
 	return nil
 }
@@ -122,16 +124,114 @@ func (model *ProtDistModel) JC69Dist(a align.Alignment, weights []float64, selec
 }
 
 func (model *ProtDistModel) Ns() int {
-	return model.model.Ns()
+	return 20
 }
 
-func (model *ProtDistModel) pMat(len float64) {
-	model.model.PMat(len)
-}
-func (model *ProtDistModel) pij(i, j int) float64 {
-	return model.model.Pij(i, j)
+func (model *ProtDistModel) pMat(l float64) {
+	if l < BL_MIN {
+		model.pMatZeroBrLen()
+	} else {
+		model.pMatEmpirical(l)
+	}
 }
 
-func (model *ProtDistModel) pi(i int) float64 {
-	return model.model.Pi(i)
+func (model *ProtDistModel) pMatZeroBrLen() {
+	model.pij.Apply(func(i, j int, v float64) float64 {
+		if i == j {
+			return 1.0
+		}
+		return 0.0
+	}, model.pij)
+}
+
+/********************************************************************/
+/*                    Code taken from FastME                        */
+/* Computes the substitution probability matrix
+ * from the initial substitution rate matrix and frequency vector
+ * and one specific branch length
+ *
+ * input : l , branch length
+ * input : mod , choosen model parameters, qmat and pi
+ * ouput : Pij , substitution probability matrix
+ *
+ * matrix P(l) is computed as follows :
+ * P(l) = exp(Q*t) , where :
+ *
+ *   Q = substitution rate matrix = Vr*D*inverse(Vr) , where :
+ *
+ *     Vr = right eigenvector matrix for Q
+ *     D  = diagonal matrix of eigenvalues for Q
+ *
+ *   t = time interval = l / mr , where :
+ *
+ *     mr = mean rate = branch length/time interval
+ *        = sum(i)(pi[i]*p(i->j)) , where :
+ *
+ *       pi = state frequency vector
+ *       p(i->j) = subst. probability from i to a different state
+ *               = -Q[ii] , as sum(j)(Q[ij]) +Q[ii] = 0
+ *
+ * the Taylor development of exp(Q*t) gives :
+ * P(l) = Vr*exp(D*t)        *inverse(Vr)
+ *      = Vr*pow(exp(D/mr),l)*inverse(Vr)
+ *
+ * for performance we compute only once the following matrices :
+ * Vr, inverse(Vr), exp(D/mr)
+ * thus each time we compute P(l) we only have to :
+ * make 20 times the operation pow()
+ * make 2 20x20 matrix multiplications, that is :
+ *   16000 = 2x20x20x20 times the operation *
+ *   16000 = 2x20x20x20 times the operation +
+ *   which can be reduced to (the central matrix being diagonal) :
+ *   8400 = 20x20 + 20x20x20 times the operation *
+ *   8000 = 20x20x20 times the operation + */
+func (model *ProtDistModel) pMatEmpirical(len float64) {
+	var i, k int
+	var U, V *mat.Dense
+	var R []float64
+	var expt []float64
+	var uexpt *mat.Dense
+	var tmp float64
+
+	ns := model.Ns()
+	U = model.model.ReigenVects() //mod->eigen->r_e_vect;
+	R = model.model.Eval()        //mod->eigen->e_val;// To take only real part from that vector /* eigen value matrix */
+	V = model.model.LeigenVects()
+	expt = make([]float64, ns)        //model.eigen.Values(nil) // To take only imaginary part from that vector
+	uexpt = mat.NewDense(ns, ns, nil) //model.eigen.Vectors() //  don't know yet how to handle that // mod->eigen->r_e_vect_im;
+
+	model.pij.Apply(func(i, j int, v float64) float64 { return .0 }, model.pij)
+	tmp = .0
+
+	for k = 0; k < ns; k++ {
+		expt[k] = R[k]
+	}
+
+	alpha := model.model.Alpha()
+	if model.model.UseGamma() && (math.Abs(alpha) > DBL_EPSILON) {
+		// compute pow (alpha / (alpha - e_val[i] * l), alpha)
+		for i = 0; i < ns; i++ {
+			tmp = alpha / (alpha - (R[i] * len))
+			expt[i] = math.Pow(tmp, alpha)
+		}
+	} else {
+		for i = 0; i < ns; i++ {
+			expt[i] = float64(math.Exp(R[i] * len))
+		}
+	}
+
+	// multiply Vr* pow (alpha / (alpha - e_val[i] * l), alpha) *Vi into Pij
+	uexpt.Apply(func(i, j int, v float64) float64 {
+		return U.At(i, j) * expt[j]
+	}, uexpt)
+	model.pij.Apply(func(i, j int, v float64) float64 {
+		for k = 0; k < ns; k++ {
+			v += uexpt.At(i, k) * V.At(k, j)
+		}
+		if v < DBL_MIN {
+			v = DBL_MIN
+		}
+		return v
+
+	}, model.pij)
 }

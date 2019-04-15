@@ -148,7 +148,7 @@ func (model *ProtDistModel) partialLK(i, j int) float64 {
 	var lk float64
 	lk = .0
 
-	lk += model.pi(i) * model.pij(i, j) // * model.gamma_r_proba
+	lk += model.model.Pi(i) * model.pij.At(i, j) // * model.gamma_r_proba
 	return lk
 }
 
