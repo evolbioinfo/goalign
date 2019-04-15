@@ -9,9 +9,9 @@ import (
 	"os"
 
 	"github.com/evolbioinfo/goalign/align"
+	"github.com/evolbioinfo/goalign/distance/dna"
+	"github.com/evolbioinfo/goalign/distance/protein"
 	"github.com/evolbioinfo/goalign/io"
-	"github.com/evolbioinfo/goalign/models/dna"
-	"github.com/evolbioinfo/goalign/models/protein"
 	pm "github.com/evolbioinfo/gotree/models/protein"
 
 	"gonum.org/v1/gonum/mat"
