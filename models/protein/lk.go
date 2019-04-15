@@ -9,13 +9,6 @@ import (
 	"gonum.org/v1/gonum/mat"
 )
 
-type seqpairdist struct {
-	i, j       int
-	seq1, seq2 []rune
-	seq1Ambigu []bool
-	seq2Ambigu []bool
-}
-
 const (
 	BRENT_ITMAX = 10000
 	BRENT_ZEPS  = 1.e-10
@@ -23,7 +16,7 @@ const (
 	DBL_MIN     = 2.2250738585072014e-308
 )
 
-func (model *ProtModel) MLDist(a align.Alignment, weights []float64) (p, q, dist *mat.Dense, err error) {
+func (model *ProtDistModel) MLDist(a align.Alignment, weights []float64) (p, q, dist *mat.Dense, err error) {
 	var j, k, l int
 	var state0, state1 int
 	var len float64
@@ -44,13 +37,10 @@ func (model *ProtModel) MLDist(a align.Alignment, weights []float64) (p, q, dist
 
 	p, q, dist = model.JC69Dist(a, weights, selected)
 
-	model.gamma_rr = 1.0
-	model.gamma_r_proba = 1.0
-
 	warn = false
 
 	// Create F for one thread
-	Fs = mat.NewDense(model.ns, model.ns, nil)
+	Fs = mat.NewDense(model.Ns(), model.Ns(), nil)
 
 	// Alignment of 2 sequences
 	for j = 0; j < a.NbSequences(); j++ { // begin for j->n_otu
@@ -122,13 +112,13 @@ func (model *ProtModel) MLDist(a align.Alignment, weights []float64) (p, q, dist
 	return
 }
 
-func (model *ProtModel) lk_Dist(F *mat.Dense, dist float64) float64 {
+func (model *ProtDistModel) lk_Dist(F *mat.Dense, dist float64) float64 {
 	var i, j int
 	var len, lnL float64
 
 	len = -1.
 
-	len = dist * model.gamma_rr
+	len = dist // * model.gamma_rr
 
 	if len < BL_MIN {
 		len = BL_MIN
@@ -139,8 +129,9 @@ func (model *ProtModel) lk_Dist(F *mat.Dense, dist float64) float64 {
 
 	lnL = .0
 
-	for i = 0; i < model.ns; i++ {
-		for j = 0; j < model.ns; j++ {
+	ns := model.Ns()
+	for i = 0; i < ns; i++ {
+		for j = 0; j < ns; j++ {
 			lnL += F.At(i, j) * math.Log(model.partialLK(i, j))
 		}
 	}
@@ -148,15 +139,15 @@ func (model *ProtModel) lk_Dist(F *mat.Dense, dist float64) float64 {
 	return lnL
 }
 
-func (model *ProtModel) partialLK(i, j int) float64 {
+func (model *ProtDistModel) partialLK(i, j int) float64 {
 	var lk float64
 	lk = .0
 
-	lk += model.gamma_r_proba * model.pi[i] * model.pij.At(i, j)
+	lk += model.Pi(i) * model.Pij(i, j) // * model.gamma_r_proba
 	return lk
 }
 
-func (model *ProtModel) opt_Dist_F(dist float64, F *mat.Dense) float64 {
+func (model *ProtDistModel) opt_Dist_F(dist float64, F *mat.Dense) float64 {
 	var ax, bx, cx float64
 	var optdist float64
 
@@ -173,7 +164,7 @@ func (model *ProtModel) opt_Dist_F(dist float64, F *mat.Dense) float64 {
 	return optdist
 }
 
-func (model *ProtModel) dist_F_Brent(ax, bx, cx, tol float64, n_iter_max int, param *float64, F *mat.Dense) float64 {
+func (model *ProtDistModel) dist_F_Brent(ax, bx, cx, tol float64, n_iter_max int, param *float64, F *mat.Dense) float64 {
 	var iter int
 	var a, b, d, etemp, fu, fv, fw, fx, p, q, r, tol1, tol2, u, v, w, x, xm float64
 	var curr_lnL float64
@@ -300,46 +291,4 @@ func (model *ProtModel) dist_F_Brent(ax, bx, cx, tol float64, n_iter_max int, pa
 	panic("Too many iterations in BRENT.")
 
 	return (-1)
-}
-
-func sign(a, b float64) float64 {
-	if b > .0 {
-		return math.Abs(a)
-	} else {
-		return -math.Abs(a)
-	}
-}
-
-func shift(a, b, c, d *float64) {
-	(*a) = (*b)
-	(*b) = (*c)
-	(*c) = (*d)
-}
-
-func checkAmbiguities(pair *seqpairdist, stepsize int) (ambig []bool) {
-	var j int
-	pair.seq1Ambigu = make([]bool, len(pair.seq1))
-	pair.seq2Ambigu = make([]bool, len(pair.seq2))
-
-	for j = 0; j < len(pair.seq1); j += stepsize {
-		pair.seq1Ambigu[j] = false
-		pair.seq2Ambigu[j] = false
-		if isAmbigu(pair.seq1[j]) {
-			pair.seq1Ambigu[j] = true
-		}
-		if isAmbigu(pair.seq2[j]) {
-			pair.seq2Ambigu[j] = true
-		}
-	}
-	return
-}
-
-func check2SequencesDiff(pair *seqpairdist) (ret bool) {
-	var i int
-	for i = 0; i < len(pair.seq1); i++ {
-		if (!pair.seq1Ambigu[i] && !pair.seq2Ambigu[i]) && (pair.seq1[i] != pair.seq2[i]) {
-			return true
-		}
-	}
-	return false
 }

@@ -62,8 +62,3 @@ func (m *RawDistModel) InitModel(al align.Alignment, weights []float64) (err err
 	m.numSites, m.selectedSites = selectedSites(al, weights, m.removegaps)
 	return
 }
-
-func (m *RawDistModel) Eigens() (val []float64, leftvectors, rightvectors []float64, err error) {
-	err = fmt.Errorf("Cannot compute eigen values/vectors for pdist model")
-	return
-}
