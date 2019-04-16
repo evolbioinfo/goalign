@@ -9,7 +9,8 @@ import (
 // Tests models with parameters making them equal to JC
 
 func TestJCEigens(t *testing.T) {
-	var v, l, r []float64
+	var v []float64
+	var l, r *mat.Dense
 	var vMat, lMat, rMat mat.Matrix
 	var err error
 	var expQMatrix *mat.Dense
@@ -30,13 +31,13 @@ func TestJCEigens(t *testing.T) {
 	}
 
 	// Transpose because it was in col-major format
-	lMat = mat.NewDense(4, 4, l).T()
-	rMat = mat.NewDense(4, 4, r).T()
+	lMat = l
+	rMat = r
 
 	vMat = mat.NewDiagDense(4, v)
 
-	resQMatrix.Mul(lMat, vMat)
-	resQMatrix.Mul(resQMatrix, rMat)
+	resQMatrix.Mul(rMat, vMat)
+	resQMatrix.Mul(resQMatrix, lMat)
 	sub.Sub(resQMatrix, expQMatrix)
 
 	for i := 0; i < 4; i++ {
@@ -70,7 +71,8 @@ func TestJCEigens(t *testing.T) {
 // }
 
 func TestF81Eigens(t *testing.T) {
-	var v, l, r []float64
+	var v []float64
+	var l, r *mat.Dense
 	var vMat, lMat, rMat mat.Matrix
 	var err error
 	var expQMatrix *mat.Dense
@@ -93,13 +95,13 @@ func TestF81Eigens(t *testing.T) {
 	}
 
 	// Transpose because it was in col-major formrat
-	lMat = mat.NewDense(4, 4, l).T()
-	rMat = mat.NewDense(4, 4, r).T()
+	lMat = l
+	rMat = r
 
 	vMat = mat.NewDiagDense(4, v)
 
-	resQMatrix.Mul(lMat, vMat)
-	resQMatrix.Mul(resQMatrix, rMat)
+	resQMatrix.Mul(rMat, vMat)
+	resQMatrix.Mul(resQMatrix, lMat)
 	sub.Sub(resQMatrix, expQMatrix)
 
 	t.Logf("resQ = %v", mat.Formatted(resQMatrix, mat.Prefix("                 "), mat.Squeeze()))
@@ -114,7 +116,8 @@ func TestF81Eigens(t *testing.T) {
 }
 
 func TestF84Eigens(t *testing.T) {
-	var v, l, r []float64
+	var v []float64
+	var l, r *mat.Dense
 	var vMat, lMat, rMat mat.Matrix
 	var err error
 	var expQMatrix *mat.Dense
@@ -137,13 +140,13 @@ func TestF84Eigens(t *testing.T) {
 	}
 
 	// Transpose because it was in col-major formrat
-	lMat = mat.NewDense(4, 4, l).T()
-	rMat = mat.NewDense(4, 4, r).T()
+	lMat = l
+	rMat = r
 
 	vMat = mat.NewDiagDense(4, v)
 
-	resQMatrix.Mul(lMat, vMat)
-	resQMatrix.Mul(resQMatrix, rMat)
+	resQMatrix.Mul(rMat, vMat)
+	resQMatrix.Mul(resQMatrix, lMat)
 	sub.Sub(resQMatrix, expQMatrix)
 
 	t.Logf("resQ = %v", mat.Formatted(resQMatrix, mat.Prefix("                 "), mat.Squeeze()))
@@ -158,7 +161,8 @@ func TestF84Eigens(t *testing.T) {
 }
 
 func TestGTREigens(t *testing.T) {
-	var v, l, r []float64
+	var v []float64
+	var l, r *mat.Dense
 	var vMat, lMat, rMat mat.Matrix
 	var err error
 	var expQMatrix *mat.Dense
@@ -181,13 +185,13 @@ func TestGTREigens(t *testing.T) {
 	}
 
 	// Transpose because it was in col-major formrat
-	lMat = mat.NewDense(4, 4, l).T()
-	rMat = mat.NewDense(4, 4, r).T()
+	lMat = l
+	rMat = r
 
 	vMat = mat.NewDiagDense(4, v)
 
-	resQMatrix.Mul(lMat, vMat)
-	resQMatrix.Mul(resQMatrix, rMat)
+	resQMatrix.Mul(rMat, vMat)
+	resQMatrix.Mul(resQMatrix, lMat)
 	sub.Sub(resQMatrix, expQMatrix)
 	t.Logf("resQ = %v", mat.Formatted(resQMatrix, mat.Prefix("                 "), mat.Squeeze()))
 
@@ -201,7 +205,8 @@ func TestGTREigens(t *testing.T) {
 }
 
 func TestTN93Eigens(t *testing.T) {
-	var v, l, r []float64
+	var v []float64
+	var l, r *mat.Dense
 	var vMat, lMat, rMat mat.Matrix
 	var err error
 	var expQMatrix *mat.Dense
@@ -224,13 +229,13 @@ func TestTN93Eigens(t *testing.T) {
 	}
 
 	// Transpose because it was in col-major formrat
-	lMat = mat.NewDense(4, 4, l).T()
-	rMat = mat.NewDense(4, 4, r).T()
+	lMat = l
+	rMat = r
 
 	vMat = mat.NewDiagDense(4, v)
 
-	resQMatrix.Mul(lMat, vMat)
-	resQMatrix.Mul(resQMatrix, rMat)
+	resQMatrix.Mul(rMat, vMat)
+	resQMatrix.Mul(resQMatrix, lMat)
 	sub.Sub(resQMatrix, expQMatrix)
 	t.Logf("resQ = %v", mat.Formatted(resQMatrix, mat.Prefix("                 "), mat.Squeeze()))
 
