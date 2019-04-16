@@ -32,8 +32,14 @@ func (m *F81Model) InitModel(piA, piC, piG, piT float64) (err error) {
 		piA, piC, piG, -(piA + piC + piG),
 	})
 	// Normalization of Q
-	norm := 1. / (2 * (piA*piC + piA*piG + piA*piT + piC*piG + piC*piT + piG*piT))
-	m.qmatrix.Apply(func(i, j int, v float64) float64 { return v * norm }, m.qmatrix)
+	norm := -piA*m.qmatrix.At(0, 0) -
+		piC*m.qmatrix.At(1, 1) -
+		piG*m.qmatrix.At(2, 2) -
+		piT*m.qmatrix.At(3, 3)
+	//norm := 1. / (2 * (piA*piC + piA*piG + piA*piT + piC*piG + piC*piT + piG*piT))
+	m.qmatrix.Apply(func(i, j int, v float64) float64 { return v / norm }, m.qmatrix)
+
+	//fmt.Printf("Q=%v\n", mat.Formatted(m.qmatrix, mat.Prefix("  "), mat.Squeeze()))
 
 	err = m.computeEigens()
 
@@ -65,9 +71,9 @@ func (m *F81Model) computeEigens() (err error) {
 	return
 }
 
-func (m *F81Model) Eigens() (val []float64, leftvectors, rightvectors []float64, err error) {
-	leftvectors = m.leigenvect.RawMatrix().Data
-	rightvectors = m.reigenvect.RawMatrix().Data
+func (m *F81Model) Eigens() (val []float64, leftvectors, rightvectors *mat.Dense, err error) {
+	leftvectors = m.leigenvect
+	rightvectors = m.reigenvect
 	val = m.val
 
 	return

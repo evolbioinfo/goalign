@@ -11,7 +11,7 @@ const (
 )
 
 type DNAModel interface {
-	Eigens() (val []float64, leftvectors, rightvectors []float64, err error)
+	Eigens() (val []float64, leftvectors, rightvectors *mat.Dense, err error)
 }
 
 // Probability matrix
@@ -30,7 +30,7 @@ func NewPij(m DNAModel, l float64) (pij *Pij, err error) {
 func (pij *Pij) SetLength(l float64) (err error) {
 	var i int
 	var v []float64
-	var left, right []float64
+	var left, right *mat.Dense
 	var expt []float64
 	var uexpt *mat.Dense
 	ns := 4
@@ -45,11 +45,8 @@ func (pij *Pij) SetLength(l float64) (err error) {
 	}
 
 	uexpt = mat.NewDense(ns, ns, nil)
-	lMat := mat.NewDense(ns, ns, left).T()
-	rMat := mat.NewDense(ns, ns, right).T()
-
-	uexpt.Mul(lMat, mat.NewDiagDense(ns, expt))
-	pij.pij.Mul(uexpt, rMat)
+	uexpt.Mul(right, mat.NewDiagDense(ns, expt))
+	pij.pij.Mul(uexpt, left)
 
 	return
 }

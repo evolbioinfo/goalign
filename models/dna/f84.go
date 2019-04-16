@@ -1,5 +1,9 @@
 package dna
 
+import (
+	"gonum.org/v1/gonum/mat"
+)
+
 type F84Model struct {
 	// Parameters (for eigen values/vectors computation)
 	// https://en.wikipedia.org/wiki/Models_of_DNA_evolution#HKY85_model_(Hasegawa,_Kishino_and_Yano_1985)
@@ -30,7 +34,7 @@ func (m *F84Model) InitModel(kappa, piA, piC, piG, piT float64) {
 }
 
 // See http://biopp.univ-montp2.fr/Documents/ClassDocumentation/bpp-phyl/html/F84_8cpp_source.html
-func (m *F84Model) Eigens() (val []float64, leftvectors, rightvectors []float64, err error) {
+func (m *F84Model) Eigens() (val []float64, leftvectors, rightvectors *mat.Dense, err error) {
 	piY := m.piT + m.piC
 	piR := m.piA + m.piG
 	norm := 1. / (1 - m.piA*m.piA - m.piC*m.piC - m.piG*m.piG - m.piT*m.piT + 2.*m.kappa*(m.piC*m.piT/piY+m.piA*m.piG/piR))
@@ -42,19 +46,19 @@ func (m *F84Model) Eigens() (val []float64, leftvectors, rightvectors []float64,
 		-norm,
 	}
 
-	leftvectors = []float64{
+	leftvectors = mat.NewDense(4, 4, []float64{
 		m.piA, m.piC, m.piG, m.piT,
 		0., m.piT / piY, 0., -m.piT / piY,
 		m.piG / piR, 0., -m.piG / piR, 0.,
 		m.piA * piY / piR, -m.piC, m.piG * piY / piR, -m.piT,
-	}
+	})
 
-	rightvectors = []float64{
+	rightvectors = mat.NewDense(4, 4, []float64{
 		1., 0., 1., 1.,
 		1., 1., 0., -piR / piY,
 		1., 0., -m.piA / m.piG, 1.,
 		1., -m.piC / m.piT, 0., -piR / piY,
-	}
+	})
 
 	return
 }

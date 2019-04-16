@@ -32,7 +32,7 @@ func (m *F84Model) Distance(seq1 []rune, seq2 []rune, weights []float64) (float6
 	if dist > 0 {
 		return dist, nil
 	} else {
-		return 0, nil
+		return NT_DIST_MAX, nil
 	}
 }
 

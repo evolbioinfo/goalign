@@ -65,9 +65,9 @@ func (m *TN93Model) computeEigens() (err error) {
 	return
 }
 
-func (m *TN93Model) Eigens() (val []float64, leftvectors, rightvectors []float64, err error) {
-	leftvectors = m.leigenvect.RawMatrix().Data
-	rightvectors = m.reigenvect.RawMatrix().Data
+func (m *TN93Model) Eigens() (val []float64, leftvectors, rightvectors *mat.Dense, err error) {
+	leftvectors = m.leigenvect
+	rightvectors = m.reigenvect
 	val = m.val
 	return
 }

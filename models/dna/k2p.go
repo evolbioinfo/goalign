@@ -1,5 +1,9 @@
 package dna
 
+import (
+	"gonum.org/v1/gonum/mat"
+)
+
 type K2PModel struct {
 	// Parameters (for eigen values/vectors computation)
 	// Default 1.0
@@ -19,7 +23,7 @@ func (m *K2PModel) InitModel(kappa float64) {
 	m.kappa = kappa
 }
 
-func (m *K2PModel) Eigens() (val []float64, leftvectors, rightvectors []float64, err error) {
+func (m *K2PModel) Eigens() (val []float64, leftvectors, rightvectors *mat.Dense, err error) {
 	val = []float64{
 		0,
 		-2 * (1 + m.kappa) / (m.kappa + 2),
@@ -27,18 +31,19 @@ func (m *K2PModel) Eigens() (val []float64, leftvectors, rightvectors []float64,
 		-4 / (m.kappa + 2),
 	}
 
-	leftvectors = []float64{
+	leftvectors = mat.NewDense(4, 4, []float64{
 		1. / 4., 1. / 4., 1. / 4., 1. / 4.,
 		0, 1. / 2., 0, -1. / 2.,
 		1. / 2., 0, -1. / 2., 0,
 		1. / 4., -1. / 4., 1. / 4., -1. / 4.,
-	}
+	})
 
-	rightvectors = []float64{
+	rightvectors = mat.NewDense(4, 4, []float64{
 		1., 0., 1., 1.,
 		1., 1., 0., -1.,
 		1., 0., -1., 1.,
 		1., -1., 0., -1.,
-	}
+	})
+
 	return
 }
