@@ -5,7 +5,7 @@ import (
 	"math"
 
 	"github.com/evolbioinfo/goalign/align"
-	"github.com/evolbioinfo/gotree/models/protein"
+	"github.com/evolbioinfo/goalign/models/protein"
 	"gonum.org/v1/gonum/mat"
 )
 
@@ -191,7 +191,6 @@ func (model *ProtDistModel) pMatEmpirical(len float64) {
 	var R []float64
 	var expt []float64
 	var uexpt *mat.Dense
-	var tmp float64
 
 	ns := model.Ns()
 	U = model.model.ReigenVects() //mod->eigen->r_e_vect;
@@ -200,19 +199,13 @@ func (model *ProtDistModel) pMatEmpirical(len float64) {
 	expt = make([]float64, ns)        //model.eigen.Values(nil) // To take only imaginary part from that vector
 	uexpt = mat.NewDense(ns, ns, nil) //model.eigen.Vectors() //  don't know yet how to handle that // mod->eigen->r_e_vect_im;
 
-	model.pij.Apply(func(i, j int, v float64) float64 { return .0 }, model.pij)
-	tmp = .0
-
-	for k = 0; k < ns; k++ {
-		expt[k] = R[k]
-	}
+	model.pij.Zero()
 
 	alpha := model.model.Alpha()
 	if model.model.UseGamma() && (math.Abs(alpha) > DBL_EPSILON) {
 		// compute pow (alpha / (alpha - e_val[i] * l), alpha)
 		for i = 0; i < ns; i++ {
-			tmp = alpha / (alpha - (R[i] * len))
-			expt[i] = math.Pow(tmp, alpha)
+			expt[i] = math.Pow(alpha/(alpha-(R[i]*len)), alpha)
 		}
 	} else {
 		for i = 0; i < ns; i++ {

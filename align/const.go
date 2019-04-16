@@ -1,6 +1,10 @@
 package align
 
-import "fmt"
+import (
+	"errors"
+	"fmt"
+	"unicode"
+)
 
 const (
 	AMINOACIDS = 0 // Amino acid sequence alphabet
@@ -289,4 +293,98 @@ var complement_nuc_mapping = map[rune]rune{
 	'H': 'D',
 	'V': 'B',
 	'N': 'N',
+}
+
+/*
+Returns the index of each nts
+A=0
+C=1
+G=2
+T=3
+*/
+func Nt2Index(nt rune) (idx int, err error) {
+	switch unicode.ToUpper(nt) {
+	case 'A':
+		idx = 0
+	case 'C':
+		idx = 1
+	case 'G':
+		idx = 2
+	case 'T':
+		idx = 3
+	default:
+		err = errors.New(fmt.Sprintf("No index for character: %c", nt))
+	}
+	return
+}
+
+/*
+Returns the index of each nts
+0=A
+1=C
+2=G
+3=T
+*/
+func Index2Nt(index int) (nt rune, err error) {
+	if index < 0 || index > len(stdnucleotides) {
+		err = errors.New(fmt.Sprintf("No nt for index %d", index))
+	}
+	nt = stdnucleotides[index]
+	return
+}
+
+func AA2Index(aa rune) (idx int, err error) {
+	switch unicode.ToUpper(aa) {
+	case 'A':
+		idx = 0
+	case 'R':
+		idx = 1
+	case 'N':
+		idx = 2
+	case 'D':
+		idx = 3
+	case 'C':
+		idx = 4
+	case 'Q':
+		idx = 5
+	case 'E':
+		idx = 6
+	case 'G':
+		idx = 7
+	case 'H':
+		idx = 8
+	case 'I':
+		idx = 9
+	case 'L':
+		idx = 10
+	case 'K':
+		idx = 11
+	case 'M':
+		idx = 12
+	case 'F':
+		idx = 13
+	case 'P':
+		idx = 14
+	case 'S':
+		idx = 15
+	case 'T':
+		idx = 16
+	case 'W':
+		idx = 17
+	case 'Y':
+		idx = 18
+	case 'V':
+		idx = 19
+	default:
+		err = errors.New(fmt.Sprintf("No index for aa: %c", aa))
+	}
+	return
+}
+
+func Index2AA(index int) (aa rune, err error) {
+	if index < 0 || index > len(stdaminoacid) {
+		err = errors.New(fmt.Sprintf("No aa for index %d", index))
+	}
+	aa = stdaminoacid[index]
+	return
 }

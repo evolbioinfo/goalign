@@ -29,7 +29,7 @@ func TestJCEigens(t *testing.T) {
 		t.Errorf("Error while computing JC eigen vectors: %v", err)
 	}
 
-	// Transpose because it was in col-major formrat
+	// Transpose because it was in col-major format
 	lMat = mat.NewDense(4, 4, l).T()
 	rMat = mat.NewDense(4, 4, r).T()
 
@@ -47,6 +47,27 @@ func TestJCEigens(t *testing.T) {
 		}
 	}
 }
+
+// func TestJCPij(t *testing.T) {
+// 	var v, l, r []float64
+// 	var vMat, lMat, rMat mat.Matrix
+// 	var err error
+// 	var expQMatrix *mat.Dense
+// 	var resQMatrix *mat.Dense = mat.NewDense(4, 4, nil)
+// 	var sub *mat.Dense = mat.NewDense(4, 4, nil)
+
+// 	m := NewJCModel()
+// 	m.InitModel()
+
+// 	for _, l := range []float64{0.1, 0.2, 0.5, 1., 2.} {
+// 		pij := NewPij(m, l)
+// 		for i := 0; i < 4; i++ {
+// 			for j := 0; j < 4; j++ {
+
+// 			}
+// 		}
+// 	}
+// }
 
 func TestF81Eigens(t *testing.T) {
 	var v, l, r []float64

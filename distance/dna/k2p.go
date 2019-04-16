@@ -1,8 +1,9 @@
 package dna
 
 import (
-	"github.com/evolbioinfo/goalign/align"
 	"math"
+
+	"github.com/evolbioinfo/goalign/align"
 )
 
 type K2PModel struct {
@@ -23,11 +24,13 @@ func NewK2PModel(removegaps bool) *K2PModel {
 func (m *K2PModel) Distance(seq1 []rune, seq2 []rune, weights []float64) (float64, error) {
 	trS, trV, _, _, total := countMutations(seq1, seq2, m.selectedSites, weights)
 	trS, trV = trS/total, trV/total
+
 	dist := -0.5*math.Log(1.0-2.0*trS-trV) - 0.25*math.Log(1.0-2.0*trV)
+
 	if dist > 0 {
 		return dist, nil
 	} else {
-		return 0, nil
+		return NT_DIST_MAX, nil
 	}
 }
 

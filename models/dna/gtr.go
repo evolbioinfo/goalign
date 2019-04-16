@@ -7,11 +7,17 @@ import (
 )
 
 type GTRModel struct {
-	qmatrix *mat.Dense
+	qmatrix    *mat.Dense
+	leigenvect *mat.Dense
+	val        []float64
+	reigenvect *mat.Dense
 }
 
 func NewGTRModel() *GTRModel {
 	return &GTRModel{
+		nil,
+		nil,
+		nil,
 		nil,
 	}
 }
@@ -22,7 +28,7 @@ func NewGTRModel() *GTRModel {
 // | f  e  *  c |
 // | b  a  c  * |
 //  \          /
-func (m *GTRModel) InitModel(d, f, b, e, a, c, piA, piC, piG, piT float64) {
+func (m *GTRModel) InitModel(d, f, b, e, a, c, piA, piC, piG, piT float64) (err error) {
 	m.qmatrix = mat.NewDense(4, 4, []float64{
 		-(d*piC + f*piG + b*piT), d * piC, f * piG, b * piT,
 		d * piA, -(d*piA + e*piG + a*piT), e * piG, a * piT,
@@ -35,9 +41,12 @@ func (m *GTRModel) InitModel(d, f, b, e, a, c, piA, piC, piG, piT float64) {
 		piG*m.qmatrix.At(2, 2) -
 		piT*m.qmatrix.At(3, 3)
 	m.qmatrix.Apply(func(i, j int, v float64) float64 { return v / norm }, m.qmatrix)
+	err = m.computeEigens()
+
+	return
 }
 
-func (m *GTRModel) Eigens() (val []float64, leftvectors, rightvectors []float64, err error) {
+func (m *GTRModel) computeEigens() (err error) {
 	// Compute eigen values, left and right eigenvectors of Q
 	eigen := &mat.Eigen{}
 	if ok := eigen.Factorize(m.qmatrix, mat.EigenRight); !ok {
@@ -45,7 +54,7 @@ func (m *GTRModel) Eigens() (val []float64, leftvectors, rightvectors []float64,
 		return
 	}
 
-	val = make([]float64, 4)
+	val := make([]float64, 4)
 	for i, b := range eigen.Values(nil) {
 		val[i] = real(b)
 	}
@@ -54,8 +63,18 @@ func (m *GTRModel) Eigens() (val []float64, leftvectors, rightvectors []float64,
 	leigenvect := mat.NewDense(4, 4, nil)
 	reigenvect.Apply(func(i, j int, val float64) float64 { return real(u.At(i, j)) }, reigenvect)
 	leigenvect.Inverse(reigenvect)
-	leftvectors = leigenvect.RawMatrix().Data
-	rightvectors = reigenvect.RawMatrix().Data
+
+	m.leigenvect = leigenvect
+	m.reigenvect = reigenvect
+	m.val = val
+
+	return
+}
+
+func (m *GTRModel) Eigens() (val []float64, leftvectors, rightvectors []float64, err error) {
+	leftvectors = m.leigenvect.RawMatrix().Data
+	rightvectors = m.reigenvect.RawMatrix().Data
+	val = m.val
 
 	return
 }

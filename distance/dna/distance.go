@@ -2,13 +2,16 @@ package dna
 
 import (
 	"errors"
-	"fmt"
 	"math"
 	"sync"
 	"unicode"
 
 	"github.com/evolbioinfo/goalign/align"
 	"github.com/evolbioinfo/goalign/stats"
+)
+
+const (
+	NT_DIST_MAX = 5.0
 )
 
 type DistModel interface {
@@ -298,7 +301,7 @@ func probaNt(al align.Alignment, selectedSites []bool, weights []float64) ([]flo
 			char := seq1[pos]
 			if selectedSites[pos] {
 				if isNuc(seq1[pos]) {
-					if idx, err := indexNt(char); err != nil {
+					if idx, err := align.Nt2Index(char); err != nil {
 						return nil, err
 					} else {
 						pi[idx] += w
@@ -332,12 +335,12 @@ func probaNt2Seqs(seq1 []rune, seq2 []rune, selectedSites []bool, weights []floa
 		}
 		if selectedSites[pos] {
 			if isNuc(seq1[pos]) && isNuc(seq2[pos]) {
-				if idx, err := indexNt(seq1[pos]); err != nil {
+				if idx, err := align.Nt2Index(seq1[pos]); err != nil {
 					return nil, err
 				} else {
 					pi[idx] += w
 				}
-				if idx, err := indexNt(seq2[pos]); err != nil {
+				if idx, err := align.Nt2Index(seq2[pos]); err != nil {
 					return nil, err
 				} else {
 					pi[idx] += w
@@ -390,10 +393,10 @@ func countNtPairs2Seq(seq1, seq2 []rune, selectedSites []bool, weights []float64
 				var id1, id2 int
 				var err1, err2 error
 
-				if id1, err1 = indexNt(char1); err1 != nil {
+				if id1, err1 = align.Nt2Index(char1); err1 != nil {
 					return 0.0, err1
 				}
-				if id2, err2 = indexNt(seq2[pos]); err2 != nil {
+				if id2, err2 = align.Nt2Index(seq2[pos]); err2 != nil {
 					return 0.0, err2
 				}
 				psi[id1][id2] += w
@@ -403,29 +406,6 @@ func countNtPairs2Seq(seq1, seq2 []rune, selectedSites []bool, weights []float64
 		}
 	}
 	return total, nil
-}
-
-/*
-Returns the index of each nts
-A=0
-C=1
-G=2
-T=3
-*/
-func indexNt(nt rune) (idx int, err error) {
-	switch unicode.ToUpper(nt) {
-	case 'A':
-		idx = 0
-	case 'C':
-		idx = 1
-	case 'G':
-		idx = 2
-	case 'T':
-		idx = 3
-	default:
-		err = errors.New(fmt.Sprintf("No index for character: %c", nt))
-	}
-	return
 }
 
 func isNuc(r rune) bool {

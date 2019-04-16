@@ -9,16 +9,22 @@ import (
 type F81Model struct {
 	// Parameters (for eigen values/vectors computation)
 	// See https://en.wikipedia.org/wiki/Models_of_DNA_evolution#F81_model_(Felsenstein_1981)
-	qmatrix *mat.Dense
+	qmatrix    *mat.Dense
+	leigenvect *mat.Dense
+	val        []float64
+	reigenvect *mat.Dense
 }
 
 func NewF81Model() *F81Model {
 	return &F81Model{
 		nil,
+		nil,
+		nil,
+		nil,
 	}
 }
 
-func (m *F81Model) InitModel(piA, piC, piG, piT float64) {
+func (m *F81Model) InitModel(piA, piC, piG, piT float64) (err error) {
 	m.qmatrix = mat.NewDense(4, 4, []float64{
 		-(piC + piG + piT), piC, piG, piT,
 		piA, -(piA + piG + piT), piG, piT,
@@ -28,9 +34,13 @@ func (m *F81Model) InitModel(piA, piC, piG, piT float64) {
 	// Normalization of Q
 	norm := 1. / (2 * (piA*piC + piA*piG + piA*piT + piC*piG + piC*piT + piG*piT))
 	m.qmatrix.Apply(func(i, j int, v float64) float64 { return v * norm }, m.qmatrix)
+
+	err = m.computeEigens()
+
+	return
 }
 
-func (m *F81Model) Eigens() (val []float64, leftvectors, rightvectors []float64, err error) {
+func (m *F81Model) computeEigens() (err error) {
 	// Compute eigen values, left and right eigenvectors of Q
 	eigen := &mat.Eigen{}
 	if ok := eigen.Factorize(m.qmatrix, mat.EigenRight); !ok {
@@ -38,7 +48,7 @@ func (m *F81Model) Eigens() (val []float64, leftvectors, rightvectors []float64,
 		return
 	}
 
-	val = make([]float64, 4)
+	val := make([]float64, 4)
 	for i, b := range eigen.Values(nil) {
 		val[i] = real(b)
 	}
@@ -48,8 +58,17 @@ func (m *F81Model) Eigens() (val []float64, leftvectors, rightvectors []float64,
 	reigenvect.Apply(func(i, j int, val float64) float64 { return real(u.At(i, j)) }, reigenvect)
 	leigenvect.Inverse(reigenvect)
 
-	leftvectors = leigenvect.RawMatrix().Data
-	rightvectors = reigenvect.RawMatrix().Data
+	m.leigenvect = leigenvect
+	m.reigenvect = reigenvect
+	m.val = val
+
+	return
+}
+
+func (m *F81Model) Eigens() (val []float64, leftvectors, rightvectors []float64, err error) {
+	leftvectors = m.leigenvect.RawMatrix().Data
+	rightvectors = m.reigenvect.RawMatrix().Data
+	val = m.val
 
 	return
 }
