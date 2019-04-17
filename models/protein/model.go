@@ -100,7 +100,9 @@ func (model *ProtModel) InitModel(aafreqs []float64) error {
 	if aafreqs != nil && len(aafreqs) != ns {
 		return fmt.Errorf("aa frequency array does not have a length of 20")
 	}
-	model.pi = aafreqs
+	if aafreqs != nil {
+		model.pi = aafreqs
+	}
 
 	/* multiply the nth col of Q by the nth term of pi/100 just as in PAML */
 	model.mat.Apply(func(i, j int, v float64) float64 { return v * model.pi[j] / 100.0 }, model.mat)

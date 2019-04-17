@@ -76,8 +76,7 @@ goalign build distboot -m k2p -i align.fa -o mats.txt
 			io.LogError(err)
 			return
 		}
-
-		if protmodelI = pm.ModelStringToInt(computedistModel); protmodelI != -1 {
+		if protmodelI = pm.ModelStringToInt(distbootmodel); protmodelI != -1 {
 			protmodel, _ = protein.NewProtDistModel(protmodelI, true, cmd.Flags().Changed("alpha"), distbootAlpha, distbootRemoveGaps)
 			protmodel.InitModel(nil, nil)
 			for i := 0; i < distbootnb; i++ {

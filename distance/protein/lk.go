@@ -31,6 +31,10 @@ func (model *ProtDistModel) MLDist(a align.Alignment, weights []float64) (p, q, 
 	var Fs *mat.Dense
 	var selected []bool
 
+	if a.Alphabet() != align.AMINOACIDS {
+		err = fmt.Errorf("Cannot compute protein distance with this alignment: Wrong alphabet")
+	}
+
 	if weights == nil {
 		weights = make([]float64, a.Length())
 		for i := range weights {

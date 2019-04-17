@@ -59,7 +59,7 @@ func (model *ProtDistModel) InitModel(a align.Alignment, weights []float64) (err
 			return
 		}
 	}
-	model.pij = mat.NewDense(len(pi), len(pi), nil)
+	model.pij = mat.NewDense(ns, ns, nil)
 	model.model.InitModel(pi)
 	return nil
 }
