@@ -54,7 +54,7 @@ func (m *TN82Model) Distance(seq1 []rune, seq2 []rune, weights []float64) (float
 	}
 }
 
-func (m *TN82Model) InitModel(al align.Alignment, weights []float64) (err error) {
+func (m *TN82Model) InitModel(al align.Alignment, weights []float64, gamma bool, alpha float64) (err error) {
 	m.numSites, m.selectedSites = selectedSites(al, weights, m.removegaps)
 	m.pi, err = probaNt(al, m.selectedSites, weights)
 	return

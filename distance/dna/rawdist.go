@@ -58,7 +58,7 @@ func (m *RawDistModel) Distance(seq1 []rune, seq2 []rune, weights []float64) (di
 	return
 }
 
-func (m *RawDistModel) InitModel(al align.Alignment, weights []float64) (err error) {
+func (m *RawDistModel) InitModel(al align.Alignment, weights []float64, gamma bool, alpha float64) (err error) {
 	m.numSites, m.selectedSites = selectedSites(al, weights, m.removegaps)
 	return
 }

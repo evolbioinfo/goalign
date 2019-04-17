@@ -15,7 +15,7 @@ const (
 )
 
 type DistModel interface {
-	InitModel(al align.Alignment, weights []float64) error
+	InitModel(al align.Alignment, weights []float64, gamma bool, alpha float64) error
 	Distance(seq1 []rune, seq2 []rune, weigths []float64) (float64, error)
 }
 
@@ -96,12 +96,12 @@ func BuildWeightsDirichlet(al align.Alignment) []float64 {
 
 /* Compute a matrix distance, with weights associated to each alignment positions */
 /* If weights == nil, then all weights are considered 1 */
-func DistMatrix(al align.Alignment, weights []float64, model DistModel, cpus int) (outmatrix [][]float64, err error) {
+func DistMatrix(al align.Alignment, weights []float64, model DistModel, gamma bool, alpha float64, cpus int) (outmatrix [][]float64, err error) {
 	if al.Alphabet() != align.NUCLEOTIDS {
 		err = errors.New("The alignment is not nucleotidic")
 		return
 	}
-	model.InitModel(al, weights)
+	model.InitModel(al, weights, gamma, alpha)
 	distchan := make(chan seqpairdist, 100)
 
 	outmatrix = make([][]float64, al.NbSequences())
