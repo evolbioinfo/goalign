@@ -7,14 +7,18 @@ import (
 
 	"github.com/evolbioinfo/goalign/align"
 	"github.com/evolbioinfo/goalign/distance/dna"
+	"github.com/evolbioinfo/goalign/distance/protein"
 	"github.com/evolbioinfo/goalign/io"
+	pm "github.com/evolbioinfo/goalign/models/protein"
+	"gonum.org/v1/gonum/mat"
 )
 
 var distbootOutput string
 var distbootnb int
+var distbootAlpha float64
 var distbootmodel string
 var distbootcontinuous bool = false
-var distboolRemoveGaps bool
+var distbootRemoveGaps bool
 
 // distbootCmd represents the distboot command
 var distbootCmd = &cobra.Command{
@@ -32,6 +36,12 @@ Available Distances:
 - f81  : Felsenstein 81
 - f84  : Felsenstein 84
 - tn93 : Tamura and Nei 1993
+Proteins:
+- DAYHOFF
+- JTT
+- MtRev 
+- LG
+- WAG
 
 For example:
 
@@ -42,9 +52,13 @@ goalign build distboot -m k2p -i align.fa -o mats.txt
 	//`,
 
 	RunE: func(cmd *cobra.Command, args []string) (err error) {
-		var model dna.DistModel
+		var dnamodel dna.DistModel
+		var protmodel *protein.ProtDistModel
+		var protmodelI int
+		var d *mat.Dense
 		var aligns *align.AlignChannel
 		var f *os.File
+		var weights []float64
 
 		if aligns, err = readalign(infile); err != nil {
 			io.LogError(err)
@@ -63,31 +77,50 @@ goalign build distboot -m k2p -i align.fa -o mats.txt
 			return
 		}
 
-		if model, err = dna.Model(distbootmodel, distboolRemoveGaps); err != nil {
-			io.LogError(err)
-			return
-		}
-
-		for i := 0; i < distbootnb; i++ {
-			var weights []float64 = nil
-			var distMatrix [][]float64
-			if distbootcontinuous {
-				weights = dna.BuildWeightsDirichlet(align)
-				if distMatrix, err = dna.DistMatrix(align, weights, model, rootcpus); err != nil {
-					io.LogError(err)
-					return
+		if protmodelI = pm.ModelStringToInt(computedistModel); protmodelI != -1 {
+			protmodel, _ = protein.NewProtDistModel(protmodelI, true, cmd.Flags().Changed("alpha"), distbootAlpha, distbootRemoveGaps)
+			protmodel.InitModel(nil, nil)
+			for i := 0; i < distbootnb; i++ {
+				if distbootcontinuous {
+					weights = dna.BuildWeightsDirichlet(align)
+					if _, _, d, err = protmodel.MLDist(align, weights); err != nil {
+						io.LogError(err)
+						return
+					}
+					writeDenseDistBootMatrix(d, align, f)
+				} else {
+					boot := align.BuildBootstrap()
+					if _, _, d, err = protmodel.MLDist(boot, nil); err != nil {
+						io.LogError(err)
+						return
+					}
+					writeDenseDistBootMatrix(d, boot, f)
 				}
-				writeDistBootMatrix(distMatrix, align, f)
-			} else {
-				boot := align.BuildBootstrap()
-				if distMatrix, err = dna.DistMatrix(boot, nil, model, rootcpus); err != nil {
-					io.LogError(err)
-					return
+			}
+		} else {
+			if dnamodel, err = dna.Model(distbootmodel, distbootRemoveGaps); err != nil {
+				io.LogError(err)
+				return
+			}
+			for i := 0; i < distbootnb; i++ {
+				var weights []float64 = nil
+				var distMatrix [][]float64
+				if distbootcontinuous {
+					weights = dna.BuildWeightsDirichlet(align)
+					if distMatrix, err = dna.DistMatrix(align, weights, dnamodel, cmd.Flags().Changed("alpha"), distbootAlpha, rootcpus); err != nil {
+						io.LogError(err)
+						return
+					}
+				} else {
+					boot := align.BuildBootstrap()
+					if distMatrix, err = dna.DistMatrix(boot, nil, dnamodel, cmd.Flags().Changed("alpha"), distbootAlpha, rootcpus); err != nil {
+						io.LogError(err)
+						return
+					}
 				}
 				writeDistBootMatrix(distMatrix, align, f)
 			}
 		}
-
 		return
 	},
 }
@@ -98,7 +131,8 @@ func init() {
 	distbootCmd.PersistentFlags().StringVarP(&distbootmodel, "model", "m", "k2p", "Model for distance computation")
 	distbootCmd.PersistentFlags().IntVarP(&distbootnb, "nboot", "n", 1, "Number of bootstrap replicates to build")
 	//distbootCmd.PersistentFlags().BoolVarP(&distbootcontinuous, "continuous", "c", false, "Bootstraps are done by weighting alignment with continuous weights (dirichlet)")
-	distbootCmd.PersistentFlags().BoolVarP(&distboolRemoveGaps, "rm-gaps", "r", false, "Do not take into account positions containing >=1 gaps")
+	distbootCmd.PersistentFlags().BoolVarP(&distbootRemoveGaps, "rm-gaps", "r", false, "Do not take into account positions containing >=1 gaps")
+	distbootCmd.PersistentFlags().Float64Var(&distbootAlpha, "alpha", 0.0, "Gamma alpha parameter, if not given : no gamma")
 }
 
 func writeDistBootMatrix(matrix [][]float64, a align.Alignment, f *os.File) {
@@ -112,6 +146,23 @@ func writeDistBootMatrix(matrix [][]float64, a align.Alignment, f *os.File) {
 		}
 		for j := 0; j < len(matrix); j++ {
 			f.WriteString(fmt.Sprintf("\t%.12f", matrix[i][j]))
+		}
+		f.WriteString("\n")
+	}
+}
+
+func writeDenseDistBootMatrix(matrix *mat.Dense, a align.Alignment, f *os.File) {
+	r, c := matrix.Dims()
+	f.WriteString(fmt.Sprintf("%d\n", c))
+	for i := 0; i < r; i++ {
+		name, ok := a.GetSequenceNameById(i)
+		if !ok {
+			f.WriteString(fmt.Sprintf("%d", i))
+		} else {
+			f.WriteString(fmt.Sprintf("%s", name))
+		}
+		for j := 0; j < c; j++ {
+			f.WriteString(fmt.Sprintf("\t%.12f", matrix.At(i, j)))
 		}
 		f.WriteString("\n")
 	}

@@ -126,7 +126,7 @@ if -a is given: display only the average distance
 
 			for align := range aligns.Achan {
 				var distMatrix [][]float64
-				distMatrix, err = dna.DistMatrix(align, nil, model, rootcpus)
+				distMatrix, err = dna.DistMatrix(align, nil, model, cmd.Flags().Changed("alpha"), computedistAlpha, rootcpus)
 				if err != nil {
 					io.LogError(err)
 					return
@@ -157,7 +157,7 @@ func init() {
 	computedistCmd.PersistentFlags().BoolVarP(&computedistRemoveGaps, "rm-gaps", "r", false, "Do not take into account positions containing >=1 gaps")
 	computedistCmd.PersistentFlags().IntVar(&computedistCountGaps, "gap-mut", 0, "Count gaps to nt as mutations: 0: inactivated, 1: only internal gaps, 2: all gaps. Only available for rawdist and pdist (nt)")
 	computedistCmd.PersistentFlags().BoolVarP(&computedistAverage, "average", "a", false, "Compute only the average distance between all pairs of sequences")
-	computedistCmd.PersistentFlags().Float64Var(&computedistAlpha, "alpha", 0.0, "Gamma alpha parameter (only for protein models so far), if not given : no gamma")
+	computedistCmd.PersistentFlags().Float64Var(&computedistAlpha, "alpha", 0.0, "Gamma alpha parameter, if not given : no gamma")
 }
 
 func writeDistMatrix(al align.Alignment, matrix [][]float64, f *os.File) (err error) {
