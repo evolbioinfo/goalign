@@ -19,34 +19,49 @@ type Pij struct {
 	length float64  // branch length / t
 	model  DNAModel // Model
 	pij    *mat.Dense
+	expt   []float64  // tmp array
+	uexpt  *mat.Dense // tmp Dense
 }
 
 func NewPij(m DNAModel, l float64) (pij *Pij, err error) {
-	pij = &Pij{l, m, mat.NewDense(4, 4, nil)}
+	pij = &Pij{DBL_MIN, m, mat.NewDense(4, 4, []float64{1.0, 0., 0., 0., 0., 1., 0., 0., 0., 0., 1., 0., 0., 0., 0., 1.}), make([]float64, 4), mat.NewDense(4, 4, nil)}
 	err = pij.SetLength(l)
 	return
 }
 
 func (pij *Pij) SetLength(l float64) (err error) {
-	var i int
-	var v []float64
-	var left, right *mat.Dense
-	var expt []float64
-	var uexpt *mat.Dense
-	ns := 4
+	if pij.length != l {
+		var i, j, k int
+		var val []float64
+		var left, right *mat.Dense
+		ns := 4
 
-	if v, left, right, err = pij.model.Eigens(); err != nil {
-		return
+		if val, left, right, err = pij.model.Eigens(); err != nil {
+			return
+		}
+
+		for i = 0; i < ns; i++ {
+			pij.expt[i] = float64(math.Exp(val[i] * l))
+		}
+		for i = 0; i < ns; i++ {
+			for j = 0; j < ns; j++ {
+				pij.uexpt.Set(i, j, right.At(i, j)*pij.expt[j])
+			}
+		}
+		v := 0.0
+		for i = 0; i < ns; i++ {
+			for j = 0; j < ns; j++ {
+				v = 0.0
+				for k = 0; k < ns; k++ {
+					v += pij.uexpt.At(i, k) * left.At(k, j)
+				}
+				if v < DBL_MIN {
+					v = DBL_MIN
+				}
+				pij.pij.Set(i, j, v)
+			}
+		}
 	}
-
-	expt = make([]float64, ns)
-	for i = 0; i < ns; i++ {
-		expt[i] = float64(math.Exp(v[i] * l))
-	}
-
-	uexpt = mat.NewDense(ns, ns, nil)
-	uexpt.Mul(right, mat.NewDiagDense(ns, expt))
-	pij.pij.Mul(uexpt, left)
 
 	return
 }
