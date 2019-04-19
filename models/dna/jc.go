@@ -1,6 +1,8 @@
 package dna
 
 import (
+	"math"
+
 	"gonum.org/v1/gonum/mat"
 )
 
@@ -38,4 +40,16 @@ func (m *JCModel) Eigens() (val []float64, leftvectors, rightvectors *mat.Dense,
 		1., -1., -1., -1.,
 	})
 	return
+}
+
+func (m *JCModel) pij(i, j int, l float64) float64 {
+	p := 0.25 * (1.0 - math.Exp(-4.0/3.0*l))
+	if i != j {
+		return p
+	}
+	return p + math.Exp(-4.0/3.0*l)
+}
+
+func (m *JCModel) analytical() bool {
+	return true
 }

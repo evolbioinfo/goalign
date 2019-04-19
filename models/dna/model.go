@@ -12,6 +12,8 @@ const (
 
 type DNAModel interface {
 	Eigens() (val []float64, leftvectors, rightvectors *mat.Dense, err error)
+	analytical() bool                // returns true if analytical pij computation is possible and implemented
+	pij(i, j int, l float64) float64 // Returns -1 if not possible to compute it anatically without eigens (or not yet implemented)
 }
 
 // Probability matrix
@@ -30,7 +32,7 @@ func NewPij(m DNAModel, l float64) (pij *Pij, err error) {
 }
 
 func (pij *Pij) SetLength(l float64) (err error) {
-	if pij.length != l {
+	if pij.length != l && !pij.model.analytical() {
 		var i, j, k int
 		var val []float64
 		var left, right *mat.Dense
@@ -62,10 +64,14 @@ func (pij *Pij) SetLength(l float64) (err error) {
 			}
 		}
 	}
+	pij.length = l
 
 	return
 }
 
 func (pij *Pij) Pij(i, j int) float64 {
+	if pij.model.analytical() {
+		return (pij.model.pij(i, j, pij.length))
+	}
 	return pij.pij.At(i, j)
 }

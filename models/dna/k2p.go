@@ -1,6 +1,8 @@
 package dna
 
 import (
+	"math"
+
 	"gonum.org/v1/gonum/mat"
 )
 
@@ -46,4 +48,25 @@ func (m *K2PModel) Eigens() (val []float64, leftvectors, rightvectors *mat.Dense
 	})
 
 	return
+}
+
+func (m *K2PModel) pij(i, j int, l float64) float64 {
+	k := 0.5 * m.kappa
+	pts := (0.25 - 0.5*math.Exp(-(2.0*k+1.0)/(k+1)*l) + 0.25*math.Exp(-2.0/(k+1.0)*l))
+	ptr := 0.5 * (0.5 - 0.5*math.Exp(-2.0/(k+1)*l))
+	if (i == 0 && j == 2) || (i == 1 && j == 3) ||
+		(i == 2 && j == 0) || (i == 3 && j == 1) {
+		// Transition
+		return pts
+	} else if i == j {
+		// Same i and j
+		return 1.0 - (pts + 2.0*ptr)
+	} else {
+		// Transversion
+		return ptr
+	}
+}
+
+func (m *K2PModel) analytical() bool {
+	return true
 }

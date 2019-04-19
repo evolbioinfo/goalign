@@ -78,3 +78,11 @@ func (m *F81Model) Eigens() (val []float64, leftvectors, rightvectors *mat.Dense
 
 	return
 }
+
+func (m *F81Model) pij(i, j int, l float64) float64 {
+	return -1
+}
+
+func (m *F81Model) analytical() bool {
+	return false
+}
