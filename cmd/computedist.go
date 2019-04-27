@@ -12,7 +12,7 @@ import (
 	"github.com/evolbioinfo/goalign/distance/dna"
 	"github.com/evolbioinfo/goalign/distance/protein"
 	"github.com/evolbioinfo/goalign/io"
-	pm "github.com/evolbioinfo/gotree/models/protein"
+	pm "github.com/evolbioinfo/goalign/models/protein"
 
 	"gonum.org/v1/gonum/mat"
 )
