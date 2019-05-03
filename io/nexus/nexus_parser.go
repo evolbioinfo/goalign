@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io"
 	"strconv"
+	"strings"
 
 	"github.com/evolbioinfo/goalign/align"
 	aio "github.com/evolbioinfo/goalign/io"
@@ -59,6 +60,7 @@ func (p *Parser) Parse() (al align.Alignment, err error) {
 	var nchar, ntax, taxantax int64
 	datatype := "dna"
 	missing := '*'
+	matchchar := '.'
 	gap := '-'
 	var taxlabels map[string]bool = nil
 	var names []string
@@ -112,7 +114,7 @@ func (p *Parser) Parse() (al align.Alignment, err error) {
 				err = p.parseUnsupportedBlock()
 			case DATA:
 				// DATA/CHARACTERS BLOCK
-				names, sequences, nchar, ntax, datatype, missing, gap, err = p.parseData()
+				names, sequences, nchar, ntax, datatype, missing, gap, matchchar, err = p.parseData()
 			default:
 				// If an unsupported block is seen, we just skip it
 				aio.PrintMessage(fmt.Sprintf("Unsupported block %q, skipping", lit2))
@@ -130,10 +132,10 @@ func (p *Parser) Parse() (al align.Alignment, err error) {
 		return
 	}
 
-	if gap != '-' || missing != '*' {
-		err = fmt.Errorf("We only accept - gaps (not %c) && * missing (not %c) so far", gap, missing)
-		return
-	}
+	// if gap != '-' || missing != '*' {
+	// 	err = fmt.Errorf("We only accept - gaps (have %c) && * missing (have %c) so far", gap, missing)
+	// 	return
+	// }
 
 	// We initialize alignment structure using goalign structure
 	if names != nil && sequences != nil {
@@ -152,6 +154,9 @@ func (p *Parser) Parse() (al align.Alignment, err error) {
 				err = fmt.Errorf("Number of character in sequence #%d (%d) does not correspond to definition %d", i, len(seq), nchar)
 				return
 			}
+			seq = strings.Replace(seq, string(gap), string(align.GAP), -1)
+			seq = strings.Replace(seq, string(missing), string(align.OTHER), -1)
+			seq = strings.Replace(seq, string(matchchar), string(align.POINT), -1)
 			if err = al.AddSequence(name, seq, ""); err != nil {
 				return
 			}
@@ -240,8 +245,10 @@ func (p *Parser) parseTaxa() (int64, map[string]bool, error) {
 					stoplabels = true
 				case IDENT:
 					taxlabels[lit2] = true
+				case ENDOFLINE:
+					continue
 				default:
-					err = fmt.Errorf("Unknown token %q in taxlabel list", lit2)
+					err = fmt.Errorf("Unknown token %q (%v) in taxlabel list", lit2, tok2)
 					stoplabels = true
 				}
 			}
@@ -265,9 +272,10 @@ func (p *Parser) parseTaxa() (int64, map[string]bool, error) {
 }
 
 // DATA / Characters BLOCK
-func (p *Parser) parseData() (names []string, sequences map[string]string, nchar, ntax int64, datatype string, missing, gap rune, err error) {
+func (p *Parser) parseData() (names []string, sequences map[string]string, nchar, ntax int64, datatype string, missing, gap, matchchar rune, err error) {
 	datatype = "dna"
 	missing = '*'
+	matchchar = '.'
 	gap = '-'
 	stopdata := false
 	sequences = make(map[string]string)
@@ -353,46 +361,72 @@ func (p *Parser) parseData() (names []string, sequences map[string]string, nchar
 					if tok3 != EQUAL {
 						err = fmt.Errorf("Expecting '=' after DATATYPE, got %q", lit3)
 						stopformat = true
-					}
-					tok4, lit4 := p.scanIgnoreWhitespace()
-					if tok4 == IDENT {
-						datatype = lit4
 					} else {
-						err = fmt.Errorf("Expecting identifier after 'DATATYPE=', got %q", lit4)
-						stopformat = true
+						tok4, lit4 := p.scanIgnoreWhitespace()
+						if tok4 == IDENT {
+							datatype = lit4
+						} else {
+							err = fmt.Errorf("Expecting identifier after 'DATATYPE=', got %q", lit4)
+							stopformat = true
+						}
 					}
 				case MISSING:
 					tok3, lit3 := p.scanIgnoreWhitespace()
 					if tok3 != EQUAL {
 						err = fmt.Errorf("Expecting '=' after MISSING, got %q", lit3)
 						stopformat = true
+					} else {
+						tok4, lit4 := p.scanIgnoreWhitespace()
+						if tok4 != IDENT {
+							err = fmt.Errorf("Expecting Integer value after 'MISSING=', got %q", lit4)
+							stopformat = true
+						} else {
+							if len(lit4) != 1 {
+								err = fmt.Errorf("Expecting a single character after MISSING=', got %q", lit4)
+								stopformat = true
+							} else {
+								missing = []rune(lit4)[0]
+							}
+						}
 					}
-					tok4, lit4 := p.scanIgnoreWhitespace()
-					if tok4 != IDENT {
-						err = fmt.Errorf("Expecting Integer value after 'MISSING=', got %q", lit4)
-						stopformat = true
-					}
-					if len(lit4) != 1 {
-						err = fmt.Errorf("Expecting a single character after MISSING=', got %q", lit4)
-						stopformat = true
-					}
-					missing = []rune(lit4)[0]
 				case GAP:
 					tok3, lit3 := p.scanIgnoreWhitespace()
 					if tok3 != EQUAL {
 						err = fmt.Errorf("Expecting '=' after GAP, got %q", lit3)
 						stopformat = true
+					} else {
+						tok4, lit4 := p.scanIgnoreWhitespace()
+						if tok4 != IDENT {
+							err = fmt.Errorf("Expecting an identifier after 'GAP=', got %q", lit4)
+							stopformat = true
+						} else {
+							if len(lit4) != 1 {
+								err = fmt.Errorf("Expecting a single character after GAP=', got %q", lit4)
+								stopformat = true
+							} else {
+								gap = []rune(lit4)[0]
+							}
+						}
 					}
-					tok4, lit4 := p.scanIgnoreWhitespace()
-					if tok4 != IDENT {
-						err = fmt.Errorf("Expecting an identifier after 'GAP=', got %q", lit4)
+				case MATCHCHAR:
+					tok3, lit3 := p.scanIgnoreWhitespace()
+					if tok3 != EQUAL {
+						err = fmt.Errorf("Expecting '=' after MATCHCHAR, got %q", lit3)
 						stopformat = true
+					} else {
+						tok4, lit4 := p.scanIgnoreWhitespace()
+						if tok4 != IDENT {
+							err = fmt.Errorf("Expecting character value after 'MATCHCHAR=', got %q", lit4)
+							stopformat = true
+						} else {
+							if len(lit4) != 1 {
+								err = fmt.Errorf("Expecting a single character after MATCHCHAR=', got %q", lit4)
+								stopformat = true
+							} else {
+								matchchar = []rune(lit4)[0]
+							}
+						}
 					}
-					if len(lit4) != 1 {
-						err = fmt.Errorf("Expecting a single character after GAP=', got %q", lit4)
-						stopformat = true
-					}
-					gap = []rune(lit4)[0]
 				default:
 					if err = p.parseUnsupportedKey(lit2); err != nil {
 						stopformat = true
@@ -410,6 +444,10 @@ func (p *Parser) parseData() (names []string, sequences map[string]string, nchar
 			for !stopmatrix {
 				tok2, lit2 := p.scanIgnoreWhitespace()
 				switch tok2 {
+				case OPENBRACK:
+					if tok2, lit2, err = p.consumeComment(tok2, lit2); err != nil {
+						stopmatrix = true
+					}
 				case IDENT, NUMERIC:
 					// We remove whitespaces in sequences if any
 					// and take into account possibly interleaved

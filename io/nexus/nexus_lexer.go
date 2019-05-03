@@ -147,6 +147,8 @@ func (s *Scanner) scanIdent() (tok Token, lit string) {
 			return DATATYPE, buf.String()
 		case "MISSING":
 			return MISSING, buf.String()
+		case "MATCHCHAR":
+			return MATCHCHAR, buf.String()
 		case "GAP":
 			return GAP, buf.String()
 		case "MATRIX":

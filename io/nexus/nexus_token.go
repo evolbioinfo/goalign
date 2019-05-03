@@ -29,10 +29,11 @@ const (
 	NTAX       // Dimensions : Number of taxa
 	NCHAR      // Dimensions : Length of alignment
 
-	FORMAT   // Format
-	DATATYPE // Format datatype=dna
-	MISSING  // Format missing=?  missing char
-	GAP      // Format gap=- gap character
+	FORMAT    // Format
+	DATATYPE  // Format datatype=dna
+	MISSING   // Format missing=?  missing char
+	GAP       // Format gap=- gap character
+	MATCHCHAR // Format matchchar=.  matching character compared to first seq
 
 	MATRIX // Matrix
 	END    // End
