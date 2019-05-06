@@ -176,6 +176,7 @@ func (p *Parser) Parse() (al align.Alignment, err error) {
 				return
 			}
 		}
+		al.ReplaceMatchChars()
 	}
 	return
 }

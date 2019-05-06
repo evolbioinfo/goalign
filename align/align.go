@@ -57,7 +57,9 @@ type Alignment interface {
 	Recombine(rate float64, lenprop float64)
 	RemoveGapSeqs(cutoff float64)             // Removes sequences having >= cutoff gaps
 	RemoveGapSites(cutoff float64, ends bool) // Removes sites having >= cutoff gaps
-	Sample(nb int) (Alignment, error)         // generate a sub sample of the sequences
+	// Replaces match characters (.) by their corresponding characters on the first sequence
+	ReplaceMatchChars()
+	Sample(nb int) (Alignment, error) // generate a sub sample of the sequences
 	ShuffleSites(rate float64, roguerate float64, randroguefirst bool) []string
 	SimulateRogue(prop float64, proplen float64) ([]string, []string) // add "rogue" sequences
 	SiteConservation(position int) (int, error)                       // If the site is conserved:
@@ -318,6 +320,23 @@ func (a *align) Swap(rate float64) {
 			seq1.sequence[pos] = seq2.sequence[pos]
 			seq2.sequence[pos] = tmpchar
 			pos++
+		}
+	}
+}
+
+// Replaces match characters (.) by their corresponding characters on the first sequence
+//
+// If the correspongind character in the first sequence is also a ".", then leaves it unchanged.
+func (a *align) ReplaceMatchChars() {
+	if a.NbSequences() <= 1 {
+		return
+	}
+	ref := a.seqs[0]
+	for seq := 1; seq < a.NbSequences(); seq++ {
+		for site := 0; site < a.Length(); site++ {
+			if ref.sequence[site] != POINT && a.seqs[seq].sequence[site] == POINT {
+				a.seqs[seq].sequence[site] = ref.sequence[site]
+			}
 		}
 	}
 }
