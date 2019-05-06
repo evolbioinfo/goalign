@@ -14,6 +14,7 @@ import (
 var diffOutput string
 var diffCount bool
 var diffNoGaps bool
+var reverse bool
 
 // statsCmd represents the stats command
 var diffCmd = &cobra.Command{
@@ -31,6 +32,8 @@ The format is tab separated, with following columns:
 1. Sequence name (reference sequence is not included)
 2,...,end: For each type of change, its number of occurence
 
+
+If option --reverse is given, then replaces . with the characters on the first sequence
 `,
 	RunE: func(cmd *cobra.Command, args []string) (err error) {
 		var aligns *align.AlignChannel
@@ -52,7 +55,11 @@ The format is tab separated, with following columns:
 				alldiffs, diffs := al.CountDifferences()
 				writeDiffCounts(al, alldiffs, diffs, f)
 			} else {
-				al.DiffWithFirst()
+				if reverse {
+					al.ReplaceMatchChars()
+				} else {
+					al.DiffWithFirst()
+				}
 				writeAlign(al, f)
 			}
 		}
@@ -90,5 +97,6 @@ func init() {
 	diffCmd.PersistentFlags().StringVarP(&diffOutput, "output", "o", "stdout", "Diff output file")
 	diffCmd.PersistentFlags().BoolVar(&diffCount, "counts", false, "Count differences instead of writting only identical characters")
 	diffCmd.PersistentFlags().BoolVar(&diffNoGaps, "no-gaps", false, "Do not count gaps (only with --counts)")
+	diffCmd.PersistentFlags().BoolVar(&reverse, "reverse", false, "Restore identical characters (.) using first sequence positions")
 	RootCmd.AddCommand(diffCmd)
 }

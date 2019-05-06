@@ -1336,6 +1336,45 @@ func TestDiffCount(t *testing.T) {
 
 }
 
+func TestDiffReverse(t *testing.T) {
+	in := NewAlign(UNKNOWN)
+	in.AddSequence("Seq0000", "GATTAATTTGCCGTAGGCCAGAATCTGAAGATCGAACACTTTAAGTTTTCACTTCTAATGGAGAGGACTAGTTCATACTTTTTAAACACTTTTACATCGA", "")
+	in.AddSequence("Seq0001", "TG.CGGACCTAA...TTGAGT.CAAC.GT.TATTCCAG.GG.GGAGAGGTCTA.T.TTCC.GTT.A.GG.C.CT.G.GC.G.A..GGGTA.GGC...GTG", "")
+	in.AddSequence("Seq0002", "CTAAGCGCG.G..G.TTG.T.TTGGA.C.AGGTT..ATAC.CGGCAA.G.C.CATG.TCCCCC.A.GAC.A.AAGAG.GAAG.T.GA..AAA.GA.C.CC", "")
+	in.AddSequence("Seq0003", "..G.GGAGGCTTTAT...ACA.GGTATT...GACTGAGGGGC.CCCCGG..TGGTA.GCA.GAGCC.TCGCGAAGGCT.CAGGT.T.TTCC.GTGT.ACC", "")
+	in.AutoAlphabet()
+
+	out, _ := in.Clone()
+	out.ReplaceMatchChars()
+
+	i := 0
+	var ref []rune
+	out.IterateChar(func(name string, seq []rune) {
+		orig, _ := in.GetSequenceCharById(i)
+		if i == 0 {
+			ref = seq
+			for site := 0; site < out.Length(); site++ {
+				if seq[site] != orig[site] {
+					t.Errorf("Original reference character has been changed (%c vs. %c)", orig[site], seq[site])
+				}
+			}
+		} else {
+			for site := 0; site < out.Length(); site++ {
+				if orig[site] == POINT {
+					if seq[site] != ref[site] {
+						t.Errorf(". has not been replaced by the right character (%c vs. %c)", ref[site], seq[site])
+					}
+				} else {
+					if seq[site] != orig[site] {
+						t.Errorf("Original character has been changed (%c vs. %c)", orig[site], seq[site])
+					}
+				}
+			}
+		}
+		i++
+	})
+}
+
 func TestCompress(t *testing.T) {
 	in := NewAlign(UNKNOWN)
 	in.AddSequence("Seq0000", "GGTTTTTTTT", "")
