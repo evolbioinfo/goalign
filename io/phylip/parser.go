@@ -171,11 +171,15 @@ func (p *Parser) Parse() (align.Alignment, error) {
 	} else if int(lenseq) != seqs[0].Len() {
 		return nil, errors.New("Bad Phylip Format : Should have a blank line here")
 	}
-	//  else if tok != EOF {
-	// 	alignio.ExitWithMessage(errors.New("Bad Phylip Format : Should not have a character here, all sequences have been red"))
-	// }
+	// All sequences are completely parsed
+	// If there are several alignments in the file, we should
+	// unscan the last token
+	if int(lenseq) == seqs[0].Len() {
+		p.unscan()
+	}
 
 	// Then other blocks with only sequences
+	// If the sequences have not been already complety parsed
 	b := 0
 	for tok != EOF && int(lenseq) != seqs[0].Len() {
 		for i := 0; i < int(nbseq); i++ {
@@ -209,8 +213,8 @@ func (p *Parser) Parse() (align.Alignment, error) {
 		}
 		b++
 	}
-	tok, lit = p.scanWithEOL()
-	p.unscan()
+	//tok, lit = p.scanWithEOL()
+	//p.unscan()
 
 	al = align.NewAlign(align.UNKNOWN)
 	for i, name := range names {
