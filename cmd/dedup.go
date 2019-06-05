@@ -9,6 +9,7 @@ import (
 )
 
 var dedupOutput string
+var dedupLogOutput string
 
 // dedupCmd represents the dedup command
 var dedupCmd = &cobra.Command{
@@ -31,10 +32,20 @@ goalign dedup -i ali.phy will produce:
 1 AAAAAA
 2 CCCCCC
 3 GGGGGG
+
+if -l is specified, then identical sequences are printed in the given file
+with the following format:
+
+seq1,seq2
+seq3,seq4
+
+This means that seq1 is identical to seq2 and seq3 is identical to seq4.
+
 `,
 	RunE: func(cmd *cobra.Command, args []string) (err error) {
 		var aligns *align.AlignChannel
-		var f *os.File
+		var f, l *os.File
+		var id [][]string
 
 		if aligns, err = readalign(infile); err != nil {
 			io.LogError(err)
@@ -46,12 +57,19 @@ goalign dedup -i ali.phy will produce:
 		}
 		defer closeWriteFile(f, dedupOutput)
 
+		if l, err = openWriteFile(dedupLogOutput); err != nil {
+			io.LogError(err)
+			return
+		}
+		defer closeWriteFile(l, dedupLogOutput)
+
 		for al := range aligns.Achan {
-			if err = al.Deduplicate(); err != nil {
+			if id, err = al.Deduplicate(); err != nil {
 				io.LogError(err)
 				return
 			} else {
 				writeAlign(al, f)
+				writeIdentical(id, l)
 			}
 		}
 
@@ -66,4 +84,17 @@ goalign dedup -i ali.phy will produce:
 func init() {
 	RootCmd.AddCommand(dedupCmd)
 	dedupCmd.PersistentFlags().StringVarP(&dedupOutput, "output", "o", "stdout", "Deduplicated output alignment file")
+	dedupCmd.PersistentFlags().StringVarP(&dedupLogOutput, "log", "l", "none", "Deduplicated output log file")
+}
+
+func writeIdentical(id [][]string, logfile *os.File) {
+	for _, s := range id {
+		for i, name := range s {
+			if i > 0 {
+				logfile.WriteString(",")
+			}
+			logfile.WriteString(name)
+		}
+		logfile.WriteString("\n")
+	}
 }

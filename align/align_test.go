@@ -780,11 +780,14 @@ func TestDedup(t *testing.T) {
 	a.AddSequence("C", "ACGT", "")
 	a.AddSequence("D", "ACGT", "")
 
+	var expectedIdentical [][]string = [][]string{[]string{"A", "C", "C_0001", "D"}, []string{"B"}}
+	var identical [][]string
+
 	if a.NbSequences() != 5 {
 		t.Error("There should be 5 sequences before deduplicaion")
 	}
 
-	if err = a.Deduplicate(); err != nil {
+	if identical, err = a.Deduplicate(); err != nil {
 		t.Error(err)
 	}
 
@@ -792,7 +795,23 @@ func TestDedup(t *testing.T) {
 		t.Error("There should be 2 sequences in the deduplicated alignment")
 	}
 
-	if err = a.Deduplicate(); err != nil {
+	if len(identical) != len(expectedIdentical) {
+		t.Errorf("After deduplicate, slice of identical sequences is different from expected: %d vs. %d", len(expectedIdentical), len(identical))
+		return
+	}
+	for i, id := range expectedIdentical {
+		if len(id) != len(identical[i]) {
+			t.Errorf("After deduplicate, slice of identical sequences is different from expected: %d vs. %d", len(id), len(identical[i]))
+			return
+		}
+		for j, name := range id {
+			if identical[i][j] != name {
+				t.Errorf("After deduplicate, slice of identical sequences is different from expected: %s vs. %s", name, identical[i][j])
+			}
+		}
+	}
+
+	if _, err = a.Deduplicate(); err != nil {
 		t.Error(err)
 	}
 	if a.NbSequences() != 2 {

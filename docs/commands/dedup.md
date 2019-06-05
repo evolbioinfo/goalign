@@ -3,7 +3,17 @@
 ## Commands
 
 ### dedup
-This command deduplicates sequences. It means that it removes identical sequences.
+This command deduplicates sequences. To do so it removes identical sequences.
+
+If -l is specified, then identical sequences are printed in the given file
+with the following format:
+
+```
+seq1,seq2
+seq3,seq4
+```
+
+This means that seq1 is identical to seq2 and seq3 is identical to seq4.
 
 #### Usage
 ```
@@ -12,6 +22,7 @@ Usage:
 
 Flags:
   -h, --help            help for dedup
+  -l, --log string      Deduplicated output log file (default "none")
   -o, --output string   Deduplicated output alignment file (default "stdout")
 
 Global Flags:

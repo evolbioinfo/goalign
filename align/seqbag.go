@@ -25,11 +25,11 @@ type SeqBag interface {
 	AlphabetCharToIndex(c rune) int // Returns index of the character (nt or aa) in the AlphabetCharacters() array
 	AutoAlphabet()                  // detects and sets alphabet automatically for all the sequences
 	CharStats() map[rune]int64
-	CleanNames(namemap map[string]string)   // Clean sequence names (newick special char)
-	Clear()                                 // Removes all sequences
-	CloneSeqBag() (seqs SeqBag, err error)  // Clones the seqqbag
-	Deduplicate() error                     // Remove duplicate sequences
-	GetSequence(name string) (string, bool) // Get a sequence by names
+	CleanNames(namemap map[string]string)           // Clean sequence names (newick special char)
+	Clear()                                         // Removes all sequences
+	CloneSeqBag() (seqs SeqBag, err error)          // Clones the seqqbag
+	Deduplicate() (identical [][]string, err error) // Remove duplicate sequences
+	GetSequence(name string) (string, bool)         // Get a sequence by names
 	GetSequenceById(ith int) (string, bool)
 	GetSequenceChar(name string) ([]rune, bool)
 	GetSequenceCharById(ith int) ([]rune, bool)
@@ -200,20 +200,29 @@ func (sb *seqbag) CloneSeqBag() (SeqBag, error) {
 // It keeps one copy of each sequence, with the name of the first
 // found.
 //
+// As output, identical contains a slice of identical sequence names
+// ex: identical[0] is a slice of identical sequence names
+//
 // It modifies input alignment.
-func (sb *seqbag) Deduplicate() (err error) {
+func (sb *seqbag) Deduplicate() (identical [][]string, err error) {
 	oldseqs := sb.seqs
 	sb.Clear()
+	identical = make([][]string, 0)
 
-	seqs := make(map[string]bool)
+	// Stores the index of the identical sequence group
+	// of a given sequence in the "identical" slice of slice
+	seqs := make(map[string]int)
 	for _, seq := range oldseqs {
 		s := string(seq.sequence)
-		_, ok := seqs[s]
-		if !ok {
+		// If the group does not exist
+		if i, ok := seqs[s]; !ok {
 			if err = sb.AddSequence(seq.name, s, seq.comment); err != nil {
 				return
 			}
-			seqs[s] = true
+			identical = append(identical, []string{seq.name})
+			seqs[s] = len(identical) - 1
+		} else {
+			identical[i] = append(identical[i], seq.name)
 		}
 	}
 	return
