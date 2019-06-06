@@ -137,6 +137,11 @@ func (p *Parser) Parse() (al align.Alignment, err error) {
 	// 	return
 	// }
 
+	if sequences == nil || len(sequences) == 0 {
+		err = fmt.Errorf("No sequence in this Nexus file")
+		return
+	}
+
 	// We initialize alignment structure using goalign structure
 	if names != nil && sequences != nil {
 		al = align.NewAlign(align.AlphabetFromString(datatype))
