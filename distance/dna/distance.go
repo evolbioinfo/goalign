@@ -11,7 +11,7 @@ import (
 )
 
 const (
-	NT_DIST_OVER = 10000000000
+	NT_DIST_OVER = 100000
 )
 
 type DistModel interface {
@@ -138,7 +138,7 @@ func DistMatrix(al align.Alignment, weights []float64, model DistModel, gamma bo
 					}
 					outmatrix[sp.j][sp.i] = outmatrix[sp.i][sp.j]
 					mux.Lock()
-					if outmatrix[sp.i][sp.j] < 0 || outmatrix[sp.i][sp.j] == math.Inf(1) {
+					if outmatrix[sp.i][sp.j] < 0 || outmatrix[sp.i][sp.j] == math.Inf(1) || outmatrix[sp.i][sp.j] > NT_DIST_OVER {
 						uncompute = append(uncompute, seqpairdist{sp.i, sp.j, nil, nil, nil, nil})
 					} else if outmatrix[sp.i][sp.j] > max {
 						max = outmatrix[sp.i][sp.j]
