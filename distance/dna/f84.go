@@ -41,11 +41,8 @@ func (m *F84Model) Distance(seq1 []rune, seq2 []rune, weights []float64) (float6
 	} else {
 		dist = -2.0*m.a*math.Log(1.0-trS/(2.0*m.a)-(m.a-m.b)*trV/(2.0*m.a*m.c)) + 2.0*(m.a-m.b-m.c)*math.Log(1-trV/(2.0*m.c))
 	}
-	if dist > 0 {
-		return dist, nil
-	} else {
-		return NT_DIST_MAX, nil
-	}
+
+	return dist, nil
 }
 
 func (m *F84Model) InitModel(al align.Alignment, weights []float64, gamma bool, alpha float64) (err error) {

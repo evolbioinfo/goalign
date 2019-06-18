@@ -37,11 +37,7 @@ func (m *K2PModel) Distance(seq1 []rune, seq2 []rune, weights []float64) (float6
 		dist = -.5*math.Log(1.-2.*trS-trV) - .25*math.Log(1.-2.*trV)
 	}
 
-	if dist > 0 {
-		return dist, nil
-	} else {
-		return NT_DIST_MAX, nil
-	}
+	return dist, nil
 }
 
 func (m *K2PModel) InitModel(al align.Alignment, weights []float64, gamma bool, alpha float64) (err error) {

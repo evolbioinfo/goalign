@@ -11,7 +11,7 @@ import (
 )
 
 const (
-	NT_DIST_MAX = 5.0
+	NT_DIST_OVER = 10000000000
 )
 
 type DistModel interface {
@@ -104,6 +104,10 @@ func DistMatrix(al align.Alignment, weights []float64, model DistModel, gamma bo
 	model.InitModel(al, weights, gamma, alpha)
 	distchan := make(chan seqpairdist, 100)
 
+	// Chan of comparisons that gives infty or <0 distance
+	uncompute := make([]seqpairdist, 0, 100)
+	var mux sync.Mutex
+
 	outmatrix = make([][]float64, al.NbSequences())
 	for i := 0; i < al.NbSequences(); i++ {
 		outmatrix[i] = make([]float64, al.NbSequences())
@@ -121,6 +125,7 @@ func DistMatrix(al align.Alignment, weights []float64, model DistModel, gamma bo
 	}()
 
 	var wg sync.WaitGroup
+	max := 0.0
 	for cpu := 0; cpu < cpus; cpu++ {
 		wg.Add(1)
 		go func() {
@@ -132,12 +137,24 @@ func DistMatrix(al align.Alignment, weights []float64, model DistModel, gamma bo
 						return
 					}
 					outmatrix[sp.j][sp.i] = outmatrix[sp.i][sp.j]
+					mux.Lock()
+					if outmatrix[sp.i][sp.j] < 0 || outmatrix[sp.i][sp.j] == math.Inf(1) {
+						uncompute = append(uncompute, seqpairdist{sp.i, sp.j, nil, nil, nil, nil})
+					} else if outmatrix[sp.i][sp.j] > max {
+						max = outmatrix[sp.i][sp.j]
+					}
+					mux.Unlock()
 				}
 			}
 			wg.Done()
 		}()
 	}
 	wg.Wait()
+
+	for _, sp := range uncompute {
+		outmatrix[sp.i][sp.j] = 2 * max
+		outmatrix[sp.j][sp.i] = 2 * max
+	}
 
 	return
 }
