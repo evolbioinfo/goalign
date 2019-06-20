@@ -42,7 +42,7 @@ func (m *JCModel) Eigens() (val []float64, leftvectors, rightvectors *mat.Dense,
 	return
 }
 
-func (m *JCModel) pij(i, j int, l float64) float64 {
+func (m *JCModel) Pij(i, j int, l float64) float64 {
 	p := 0.25 * (1.0 - math.Exp(-4.0/3.0*l))
 	if i != j {
 		return p
@@ -50,6 +50,10 @@ func (m *JCModel) pij(i, j int, l float64) float64 {
 	return p + math.Exp(-4.0/3.0*l)
 }
 
-func (m *JCModel) analytical() bool {
+func (m *JCModel) Analytical() bool {
 	return true
+}
+
+func (m *JCModel) NState() int {
+	return 4
 }

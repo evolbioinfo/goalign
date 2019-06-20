@@ -4,6 +4,7 @@ import (
 	"math"
 	"testing"
 
+	"github.com/evolbioinfo/goalign/models"
 	"gonum.org/v1/gonum/mat"
 )
 
@@ -270,7 +271,7 @@ func TestK2PPij(t *testing.T) {
 	}
 
 	m := NewK2PModel()
-	pijmat, _ := NewPij(m, 1.0)
+	pijmat, _ := models.NewPij(m, 1.0)
 
 	for _, kappa := range []float64{0.5, 0.6, 0.7, 0.8, 0.9, 1.0, 1.5, 2.0, 3.0, 4.0, 5.0} {
 		m.InitModel(kappa)
@@ -298,7 +299,7 @@ func TestJCPij(t *testing.T) {
 	}
 
 	m := NewJCModel()
-	pijmat, _ := NewPij(m, 1.0)
+	pijmat, _ := models.NewPij(m, 1.0)
 	m.InitModel()
 	for _, l := range []float64{0.01, 0.05, 0.1, 0.2, 0.3, 0.4} {
 		pijmat.SetLength(l)

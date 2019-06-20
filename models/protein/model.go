@@ -138,8 +138,8 @@ func (model *ProtModel) InitModel(aafreqs []float64) error {
 	return nil
 }
 
-func (model *ProtModel) Eigens() (val []float64, leftvectors, rightvectors []float64, err error) {
-	return model.eval, model.leigenvect.RawMatrix().Data, model.reigenvect.RawMatrix().Data, nil
+func (model *ProtModel) Eigens() (val []float64, leftvectors, rightvectors *mat.Dense, err error) {
+	return model.eval, model.leigenvect, model.reigenvect, nil
 }
 
 func (model *ProtModel) ReigenVects() (rightvectors *mat.Dense) {
@@ -164,4 +164,16 @@ func (model *ProtModel) UseGamma() bool {
 
 func (model *ProtModel) Pi(i int) float64 {
 	return model.pi[i]
+}
+
+func (model *ProtModel) Analytical() bool {
+	return false
+}
+
+func (model *ProtModel) Pij(i, j int, l float64) float64 {
+	return -1.0
+}
+
+func (model *ProtModel) NState() int {
+	return 20
 }

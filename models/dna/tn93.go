@@ -72,10 +72,14 @@ func (m *TN93Model) Eigens() (val []float64, leftvectors, rightvectors *mat.Dens
 	return
 }
 
-func (m *TN93Model) pij(i, j int, l float64) float64 {
+func (m *TN93Model) Pij(i, j int, l float64) float64 {
 	return -1.0
 }
 
-func (m *TN93Model) analytical() bool {
+func (m *TN93Model) Analytical() bool {
 	return false
+}
+
+func (m *TN93Model) NState() int {
+	return 4
 }

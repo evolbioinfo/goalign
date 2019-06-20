@@ -79,10 +79,14 @@ func (m *GTRModel) Eigens() (val []float64, leftvectors, rightvectors *mat.Dense
 	return
 }
 
-func (m *GTRModel) pij(i, j int, l float64) float64 {
+func (m *GTRModel) Pij(i, j int, l float64) float64 {
 	return -1
 }
 
-func (m *GTRModel) analytical() bool {
+func (m *GTRModel) Analytical() bool {
 	return false
+}
+
+func (m *GTRModel) NState() int {
+	return 4
 }
