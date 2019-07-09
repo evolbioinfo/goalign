@@ -177,3 +177,19 @@ func (model *ProtModel) Pij(i, j int, l float64) float64 {
 func (model *ProtModel) NState() int {
 	return 20
 }
+
+func (model *ProtModel) PrintMat() {
+	fa := mat.Formatted(model.mat, mat.Prefix("    "), mat.Squeeze())
+	fmt.Printf("m = %v\n\n", fa)
+}
+
+func (model *ProtModel) PrintFreqs() {
+	fmt.Printf("pi = [")
+	for i, v := range model.pi {
+		if i > 0 {
+			fmt.Printf(",")
+		}
+		fmt.Printf("%f", v)
+	}
+	fmt.Printf("]\n")
+}
