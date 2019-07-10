@@ -28,16 +28,17 @@ goalign stats char -i align.fasta
 			return
 		}
 
-		al, _ := <-aligns.Achan
-		if aligns.Err != nil {
-			err = aligns.Err
-			io.LogError(err)
-			return
-		}
-		if charstatpersites {
-			err = printSiteCharStats(al)
-		} else {
-			printCharStats(al)
+		for al := range aligns.Achan {
+			if aligns.Err != nil {
+				err = aligns.Err
+				io.LogError(err)
+				return
+			}
+			if charstatpersites {
+				err = printSiteCharStats(al)
+			} else {
+				printCharStats(al)
+			}
 		}
 		return
 	},
