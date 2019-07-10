@@ -13,6 +13,7 @@ const (
 	MODEL_MTREV
 	MODEL_LG
 	MODEL_WAG
+	MODEL_HIVB
 
 	BL_MIN  = 1.e-08
 	BL_MAX  = 100.0
@@ -34,7 +35,7 @@ type ProtModel struct {
 }
 
 // Initialize a new protein model, given the name of the model as const int:
-// MODEL_DAYHOFF, MODEL_JTT, MODEL_MTREV, MODEL_LG or MODEL_WAG
+// MODEL_DAYHOFF, MODEL_JTT, MODEL_MTREV, MODEL_LG, MODEL_WAG or MODEL_HIVB
 func NewProtModel(model int, usegamma bool, alpha float64) (*ProtModel, error) {
 	var m *mat.Dense
 	var pi []float64
@@ -49,6 +50,8 @@ func NewProtModel(model int, usegamma bool, alpha float64) (*ProtModel, error) {
 		m, pi = LGMats()
 	case MODEL_WAG:
 		m, pi = WAGMats()
+	case MODEL_HIVB:
+		m, pi = HIVBMats()
 	default:
 		return nil, fmt.Errorf("This protein model is not implemented")
 	}
@@ -79,6 +82,8 @@ func ModelStringToInt(model string) int {
 		return MODEL_LG
 	case "wag":
 		return MODEL_WAG
+	case "hivb":
+		return MODEL_HIVB
 	default:
 		return -1
 	}
