@@ -819,6 +819,106 @@ func TestDedup(t *testing.T) {
 	}
 }
 
+func TestDedup2(t *testing.T) {
+	var err error
+	var sb SeqBag
+
+	sb = NewSeqBag(NUCLEOTIDS)
+	sb.AddSequence("A", "ACGT", "")
+	sb.AddSequence("B", "ACGG", "")
+	sb.AddSequence("C", "ACGT", "")
+	sb.AddSequence("C", "ACGT", "")
+	sb.AddSequence("D", "ACGT", "")
+
+	var expectedIdentical [][]string = [][]string{[]string{"A", "C", "C_0001", "D"}, []string{"B"}}
+	var identical [][]string
+
+	if sb.NbSequences() != 5 {
+		t.Error("There should be 5 sequences before deduplicaion")
+	}
+
+	if identical, err = sb.Deduplicate(); err != nil {
+		t.Error(err)
+	}
+
+	if sb.NbSequences() != 2 {
+		t.Error("There should be 2 sequences in the deduplicated alignment")
+	}
+
+	if len(identical) != len(expectedIdentical) {
+		t.Errorf("After deduplicate, slice of identical sequences is different from expected: %d vs. %d", len(expectedIdentical), len(identical))
+		return
+	}
+	for i, id := range expectedIdentical {
+		if len(id) != len(identical[i]) {
+			t.Errorf("After deduplicate, slice of identical sequences is different from expected: %d vs. %d", len(id), len(identical[i]))
+			return
+		}
+		for j, name := range id {
+			if identical[i][j] != name {
+				t.Errorf("After deduplicate, slice of identical sequences is different from expected: %s vs. %s", name, identical[i][j])
+			}
+		}
+	}
+
+	if _, err = sb.Deduplicate(); err != nil {
+		t.Error(err)
+	}
+	if sb.NbSequences() != 2 {
+		t.Error("There should be 2 sequences in the de-deduplicated alignment")
+	}
+}
+
+func TestDedup3(t *testing.T) {
+	var err error
+	var sb SeqBag
+
+	sb = NewSeqBag(NUCLEOTIDS)
+	sb.AddSequence("A", "ACGT", "")
+	sb.AddSequence("B", "ACGG", "")
+	sb.AddSequence("C", "ACGT", "")
+	sb.AddSequence("C", "ACG", "")
+	sb.AddSequence("D", "A", "")
+
+	var expectedIdentical [][]string = [][]string{[]string{"A", "C"}, []string{"B"}, []string{"C_0001"}, []string{"D"}}
+	var identical [][]string
+
+	if sb.NbSequences() != 5 {
+		t.Error("There should be 5 sequences before deduplicaion")
+	}
+
+	if identical, err = sb.Deduplicate(); err != nil {
+		t.Error(err)
+	}
+
+	if sb.NbSequences() != 4 {
+		t.Error("There should be 4 sequences in the deduplicated alignment")
+	}
+
+	if len(identical) != len(expectedIdentical) {
+		t.Errorf("After deduplicate, slice of identical sequences is different from expected: %d vs. %d", len(expectedIdentical), len(identical))
+		return
+	}
+	for i, id := range expectedIdentical {
+		if len(id) != len(identical[i]) {
+			t.Errorf("After deduplicate, slice of identical sequences is different from expected: %d vs. %d", len(id), len(identical[i]))
+			return
+		}
+		for j, name := range id {
+			if identical[i][j] != name {
+				t.Errorf("After deduplicate, slice of identical sequences is different from expected: %s vs. %s", name, identical[i][j])
+			}
+		}
+	}
+
+	if _, err = sb.Deduplicate(); err != nil {
+		t.Error(err)
+	}
+	if sb.NbSequences() != 4 {
+		t.Error("There should be 4 sequences in the de-deduplicated alignment")
+	}
+}
+
 func TestCodonAlign(t *testing.T) {
 	a := NewAlign(UNKNOWN)
 	a.AddSequence("Seq0000", "D*-AVGQNLK", "")

@@ -43,14 +43,9 @@ This means that seq1 is identical to seq2 and seq3 is identical to seq4.
 
 `,
 	RunE: func(cmd *cobra.Command, args []string) (err error) {
-		var aligns *align.AlignChannel
 		var f, l *os.File
 		var id [][]string
 
-		if aligns, err = readalign(infile); err != nil {
-			io.LogError(err)
-			return
-		}
 		if f, err = openWriteFile(dedupOutput); err != nil {
 			io.LogError(err)
 			return
@@ -63,19 +58,42 @@ This means that seq1 is identical to seq2 and seq3 is identical to seq4.
 		}
 		defer closeWriteFile(l, dedupLogOutput)
 
-		for al := range aligns.Achan {
-			if id, err = al.Deduplicate(); err != nil {
+		if unaligned {
+			var seqs align.SeqBag
+
+			if seqs, err = readsequences(infile); err != nil {
+				io.LogError(err)
+				return
+			}
+			if id, err = seqs.Deduplicate(); err != nil {
 				io.LogError(err)
 				return
 			} else {
-				writeAlign(al, f)
+				writeSequences(seqs, f)
 				writeIdentical(id, l)
 			}
-		}
+		} else {
+			var aligns *align.AlignChannel
 
-		if aligns.Err != nil {
-			err = aligns.Err
-			io.LogError(err)
+			if aligns, err = readalign(infile); err != nil {
+				io.LogError(err)
+				return
+			}
+
+			for al := range aligns.Achan {
+				if id, err = al.Deduplicate(); err != nil {
+					io.LogError(err)
+					return
+				} else {
+					writeAlign(al, f)
+					writeIdentical(id, l)
+				}
+			}
+
+			if aligns.Err != nil {
+				err = aligns.Err
+				io.LogError(err)
+			}
 		}
 		return
 	},
@@ -83,6 +101,7 @@ This means that seq1 is identical to seq2 and seq3 is identical to seq4.
 
 func init() {
 	RootCmd.AddCommand(dedupCmd)
+	dedupCmd.PersistentFlags().BoolVar(&unaligned, "unaligned", false, "Considers sequences as unaligned and format fasta (phylip, nexus,... options are ignored)")
 	dedupCmd.PersistentFlags().StringVarP(&dedupOutput, "output", "o", "stdout", "Deduplicated output alignment file")
 	dedupCmd.PersistentFlags().StringVarP(&dedupLogOutput, "log", "l", "none", "Deduplicated output log file")
 }

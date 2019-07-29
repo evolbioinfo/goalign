@@ -2160,6 +2160,65 @@ ${GOALIGN} dedup -i input -o result -p
 diff -q -b expected result
 rm -f input expected result
 
+echo "->goalign dedup --unaligned"
+cat > input <<EOF
+>1
+AAAAAA
+>2
+CCCCC
+>3
+GGGG
+>4
+GGGGGG
+>4
+GGGGGG
+EOF
+cat > expected <<EOF
+>1
+AAAAAA
+>2
+CCCCC
+>3
+GGGG
+>4
+GGGGGG
+EOF
+${GOALIGN} dedup -i input -o result --unaligned
+diff -q -b expected result
+rm -f input expected result
+
+echo "->goalign dedup --unaligned /2"
+cat > input <<EOF
+>3
+GGG
+>1
+AAAAAA
+>1
+AAAAA
+>2
+CC
+>4
+GGGGGG
+>4
+GGGGGG
+EOF
+cat > expected <<EOF
+>3
+GGG
+>1
+AAAAAA
+>1_0001
+AAAAA
+>2
+CC
+>4
+GGGGGG
+EOF
+${GOALIGN} dedup -i input -o result --unaligned
+diff -q -b expected result
+rm -f input expected result
+
+
 echo "->goalign build seqboot"
 cat > expected.1 <<EOF
 >Seq0000
