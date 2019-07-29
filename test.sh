@@ -3166,6 +3166,24 @@ diff -q -b result.len expected.len
 
 rm -f expected.len expected.nb result.len result.nb
 
+echo "->goalign nseq"
+cat > input <<EOF
+>1
+GGGGGGGGGGGGGGG
+>2
+TTTTTTTTTTTTTTTTTTTT
+>3
+GGGGGG
+>4
+AAAAAAAAAA
+EOF
+
+cat > expected <<EOF
+4
+EOF
+${GOALIGN} stats nseq -i input --unaligned > result
+diff -q -b  expected result
+rm -f input expected result
 
 echo "->goalign compress"
 

@@ -23,20 +23,31 @@ goalign stats nseq -i align.phylip -p
 goalign stats nseq -i align.fasta
 `,
 	RunE: func(cmd *cobra.Command, args []string) (err error) {
-		var aligns *align.AlignChannel
 
-		if aligns, err = readalign(infile); err != nil {
-			io.LogError(err)
-			return
-		}
+		if unaligned {
+			var seqs align.SeqBag
 
-		for al := range aligns.Achan {
-			fmt.Println(al.NbSequences())
-		}
+			if seqs, err = readsequences(infile); err != nil {
+				io.LogError(err)
+				return
+			}
+			fmt.Println(seqs.NbSequences())
+		} else {
+			var aligns *align.AlignChannel
 
-		if aligns.Err != nil {
-			err = aligns.Err
-			io.LogError(err)
+			if aligns, err = readalign(infile); err != nil {
+				io.LogError(err)
+				return
+			}
+
+			for al := range aligns.Achan {
+				fmt.Println(al.NbSequences())
+			}
+
+			if aligns.Err != nil {
+				err = aligns.Err
+				io.LogError(err)
+			}
 		}
 		return
 	},
