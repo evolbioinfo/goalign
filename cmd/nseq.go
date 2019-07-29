@@ -54,5 +54,6 @@ goalign stats nseq -i align.fasta
 }
 
 func init() {
+	nseqCmd.PersistentFlags().BoolVar(&unaligned, "unaligned", false, "Considers sequences as unaligned and format fasta (phylip, nexus,... options are ignored)")
 	statsCmd.AddCommand(nseqCmd)
 }

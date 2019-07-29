@@ -62,6 +62,6 @@ goalign stats taxa -i align.fasta
 }
 
 func init() {
-	statsCmd.PersistentFlags().BoolVar(&unaligned, "unaligned", false, "Considers sequences as unaligned and format fasta (phylip, nexus,... options are ignored)")
+	taxaCmd.PersistentFlags().BoolVar(&unaligned, "unaligned", false, "Considers sequences as unaligned and format fasta (phylip, nexus,... options are ignored)")
 	statsCmd.AddCommand(taxaCmd)
 }
