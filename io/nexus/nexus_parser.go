@@ -12,8 +12,9 @@ import (
 
 // Parser represents a parser.
 type Parser struct {
-	s   *Scanner
-	buf struct {
+	s               *Scanner
+	ignoreidentical bool
+	buf             struct {
 		tok Token  // last read token
 		lit string // last read literal
 		n   int    // buffer size (max=1)
@@ -22,7 +23,13 @@ type Parser struct {
 
 // NewParser returns a new instance of Parser.
 func NewParser(r io.Reader) *Parser {
-	return &Parser{s: NewScanner(r)}
+	return &Parser{s: NewScanner(r), ignoreidentical: false}
+}
+
+// If sets to true, then will ignore duplicate sequences that have the same name and the same sequence
+// Otherwise, it just renames them just as the sequences that have same name and different sequences
+func (p *Parser) IgnoreIdentical(ignore bool) {
+	p.ignoreidentical = ignore
 }
 
 // scan returns the next token from the underlying scanner.
@@ -145,6 +152,7 @@ func (p *Parser) Parse() (al align.Alignment, err error) {
 	// We initialize alignment structure using goalign structure
 	if names != nil && sequences != nil {
 		al = align.NewAlign(align.AlphabetFromString(datatype))
+		al.IgnoreIdentical(p.ignoreidentical)
 		if al.Alphabet() == align.UNKNOWN {
 			err = fmt.Errorf("Unknown datatype: %q", datatype)
 			return

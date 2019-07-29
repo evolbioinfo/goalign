@@ -13,6 +13,7 @@ import (
 type Sequence interface {
 	Sequence() string
 	SequenceChar() []rune
+	SameSequence([]rune) bool
 	CharAt(int) rune
 	Name() string
 	SetName(name string)
@@ -45,6 +46,23 @@ func (s *seq) Sequence() string {
 }
 func (s *seq) SequenceChar() []rune {
 	return s.sequence
+}
+
+/*
+Returns true iif :
+- slices have the same length and
+- slices have same rune at each position
+*/
+func (s *seq) SameSequence(runeseq []rune) bool {
+	if len(s.sequence) != len(runeseq) {
+		return false
+	}
+	for i, v := range s.sequence {
+		if runeseq[i] != v {
+			return false
+		}
+	}
+	return true
 }
 
 func (s *seq) CharAt(i int) rune {

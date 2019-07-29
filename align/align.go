@@ -91,6 +91,7 @@ func NewAlign(alphabet int) *align {
 		seqbag{
 			make(map[string]*seq),
 			make([]*seq, 0, 100),
+			false,
 			alphabet},
 		-1,
 	}
@@ -113,10 +114,20 @@ func (a *align) AddSequence(name string, sequence string, comment string) error 
 	return err
 }
 
+// If a.ignoreidentical is true, then it won't add the sequence if a sequence with the same name AND same sequence
+// already exists in the alignment
 func (a *align) AddSequenceChar(name string, sequence []rune, comment string) error {
-	_, ok := a.seqmap[name]
+	s, ok := a.seqmap[name]
 	idx := 0
 	tmpname := name
+
+	// If the sequence name already exists with the same sequence
+	// and ignoreidentical is true, then we ignore this sequence
+	if ok && a.ignoreidentical && s.SameSequence(sequence) {
+		log.Print(fmt.Sprintf("Warning: sequence \"%s\" already exists in alignment with the same sequence, ignoring", name))
+		return nil
+	}
+
 	/* If the sequence name already exists, we add a 4 digit index at the end and print a warning on stderr */
 	for ok {
 		idx++
@@ -706,6 +717,7 @@ func RandomAlignment(alphabet, length, nbseq int) (Alignment, error) {
 
 func (a *align) Clone() (c Alignment, err error) {
 	c = NewAlign(a.Alphabet())
+	c.IgnoreIdentical(a.ignoreidentical)
 	a.IterateAll(func(name string, sequence []rune, comment string) {
 		newseq := make([]rune, 0, len(sequence))
 		newseq = append(newseq, sequence...)

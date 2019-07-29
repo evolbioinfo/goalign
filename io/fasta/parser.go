@@ -12,8 +12,9 @@ import (
 
 // Parser represents a parser.
 type Parser struct {
-	s   *Scanner
-	buf struct {
+	s               *Scanner
+	ignoreidentical bool
+	buf             struct {
 		tok Token  // last read token
 		lit string // last read literal
 		n   int    // buffer size (max=1)
@@ -22,7 +23,13 @@ type Parser struct {
 
 // NewParser returns a new instance of Parser.
 func NewParser(r io.Reader) *Parser {
-	return &Parser{s: NewScanner(r)}
+	return &Parser{s: NewScanner(r), ignoreidentical: false}
+}
+
+// If sets to true, then will ignore duplicate sequences that have the same name and the same sequence
+// Otherwise, it just renames them just as the sequences that have same name and different sequences
+func (p *Parser) IgnoreIdentical(ignore bool) {
+	p.ignoreidentical = ignore
 }
 
 // scan returns the next token from the underlying scanner.
@@ -57,6 +64,7 @@ func (p *Parser) scanIgnoreEndOfLine() (tok Token, lit string) {
 // Parse parses a FASTA alignment
 func (p *Parser) Parse() (al align.Alignment, err error) {
 	al = align.NewAlign(align.UNKNOWN)
+	al.IgnoreIdentical(p.ignoreidentical)
 	err = p.parseGeneric(al)
 	return
 }
@@ -64,6 +72,7 @@ func (p *Parser) Parse() (al align.Alignment, err error) {
 // ParseUnalign parses an unaligned FASTA file
 func (p *Parser) ParseUnalign() (sb align.SeqBag, err error) {
 	sb = align.NewSeqBag(align.UNKNOWN)
+	sb.IgnoreIdentical(p.ignoreidentical)
 	err = p.parseGeneric(sb)
 	return
 }

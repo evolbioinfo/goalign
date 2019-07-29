@@ -12,7 +12,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/fredericlemoine/cobrashell"
 	"github.com/evolbioinfo/goalign/align"
 	"github.com/evolbioinfo/goalign/io/clustal"
 	"github.com/evolbioinfo/goalign/io/fasta"
@@ -21,6 +20,7 @@ import (
 	"github.com/evolbioinfo/goalign/io/phylip"
 	"github.com/evolbioinfo/goalign/io/utils"
 	"github.com/evolbioinfo/goalign/version"
+	"github.com/fredericlemoine/cobrashell"
 	"github.com/spf13/cobra"
 )
 
@@ -37,6 +37,7 @@ var rootoutputnoblock = false
 var rootAutoDetectInputFormat bool
 var seed int64 = -1
 var unaligned bool
+var ignoreidentical = false
 
 var helptemplate string = `{{with or .Long .Short }}{{. | trim}}
 
@@ -100,7 +101,9 @@ func readsequences(file string) (sequences align.SeqBag, err error) {
 	}
 	defer fi.Close()
 
-	if sequences, err = fasta.NewParser(r).ParseUnalign(); err != nil {
+	p := fasta.NewParser(r)
+	p.IgnoreIdentical(ignoreidentical)
+	if sequences, err = p.ParseUnalign(); err != nil {
 		return
 	}
 
@@ -133,12 +136,16 @@ func readalign(file string) (alchan *align.AlignChannel, err error) {
 		if rootphylip {
 			alchan.Achan = make(chan align.Alignment, 15)
 			go func() {
-				phylip.NewParser(r, rootinputstrict).ParseMultiple(alchan)
+				pp := phylip.NewParser(r, rootinputstrict)
+				pp.IgnoreIdentical(ignoreidentical)
+				pp.ParseMultiple(alchan)
 				fi.Close()
 			}()
 		} else if rootnexus {
 			var al align.Alignment
-			if al, err = nexus.NewParser(r).Parse(); err != nil {
+			np := nexus.NewParser(r)
+			np.IgnoreIdentical(ignoreidentical)
+			if al, err = np.Parse(); err != nil {
 				return
 			}
 			alchan.Achan = make(chan align.Alignment, 1)
@@ -147,7 +154,9 @@ func readalign(file string) (alchan *align.AlignChannel, err error) {
 			close(alchan.Achan)
 		} else if rootclustal {
 			var al align.Alignment
-			if al, err = clustal.NewParser(r).Parse(); err != nil {
+			cp := clustal.NewParser(r)
+			cp.IgnoreIdentical(ignoreidentical)
+			if al, err = cp.Parse(); err != nil {
 				return
 			}
 			alchan.Achan = make(chan align.Alignment, 1)
@@ -156,7 +165,9 @@ func readalign(file string) (alchan *align.AlignChannel, err error) {
 			close(alchan.Achan)
 		} else {
 			var al align.Alignment
-			if al, err = fasta.NewParser(r).Parse(); err != nil {
+			fp := fasta.NewParser(r)
+			fp.IgnoreIdentical(ignoreidentical)
+			if al, err = fp.Parse(); err != nil {
 				return
 			}
 			alchan.Achan = make(chan align.Alignment, 1)
@@ -185,6 +196,7 @@ func init() {
 	RootCmd.PersistentFlags().BoolVarP(&rootnexus, "nexus", "x", false, "Alignment is in nexus? default fasta")
 	RootCmd.PersistentFlags().BoolVarP(&rootclustal, "clustal", "u", false, "Alignment is in clustal? default fasta")
 	RootCmd.PersistentFlags().IntVarP(&rootcpus, "threads", "t", 1, "Number of threads")
+	RootCmd.PersistentFlags().BoolVar(&ignoreidentical, "ignore-identical", false, "Ignore duplicated sequences that have the same name and same sequences")
 
 	RootCmd.PersistentFlags().Int64Var(&seed, "seed", -1, "Random Seed: -1 = nano seconds since 1970/01/01 00:00:00")
 	RootCmd.PersistentFlags().BoolVar(&rootinputstrict, "input-strict", false, "Strict phylip input format (only used with -p)")

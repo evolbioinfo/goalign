@@ -35,6 +35,7 @@ type SeqBag interface {
 	GetSequenceCharById(ith int) ([]rune, bool)
 	GetSequenceNameById(ith int) (string, bool)
 	SetSequenceChar(ithAlign, ithSite int, char rune) error
+	IgnoreIdentical(bool) // if true, then it won't add the sequence if a sequence with the same name AND same sequence exists
 	Sequence(ith int) (Sequence, bool)
 	SequenceByName(name string) (Sequence, bool)
 	Identical(SeqBag) bool
@@ -59,9 +60,10 @@ type SeqBag interface {
 }
 
 type seqbag struct {
-	seqmap   map[string]*seq // Map of sequences
-	seqs     []*seq          // Set of sequences (to preserve order)
-	alphabet int             // AMINOACIDS , NUCLEOTIDS or UNKOWN
+	seqmap          map[string]*seq // Map of sequences
+	seqs            []*seq          // Set of sequences (to preserve order)
+	ignoreidentical bool            // if true, then it won't add the sequence if a sequence with the same name AND same sequence exists
+	alphabet        int             // AMINOACIDS , NUCLEOTIDS or UNKOWN
 }
 
 func NewSeqBag(alphabet int) *seqbag {
@@ -74,8 +76,13 @@ func NewSeqBag(alphabet int) *seqbag {
 	return &seqbag{
 		make(map[string]*seq),
 		make([]*seq, 0, 100),
+		false,
 		alphabet,
 	}
+}
+
+func (sb *seqbag) IgnoreIdentical(ignoreidentical bool) {
+	sb.ignoreidentical = ignoreidentical
 }
 
 // Adds a sequence to this alignment
@@ -84,11 +91,21 @@ func (sb *seqbag) AddSequence(name string, sequence string, comment string) erro
 	return err
 }
 
+// If sb.ignoreidentical is true, then it won't add the sequence if a sequence with the same name AND same sequence
+// already exists in the alignment
 func (sb *seqbag) AddSequenceChar(name string, sequence []rune, comment string) error {
-	_, ok := sb.seqmap[name]
+	s, ok := sb.seqmap[name]
 	idx := 0
 	tmpname := name
-	/* If the sequence name already exists, we add a 4 digit index at the end and print a warning on stderr */
+
+	// If the sequence name already exists with the same sequence
+	// and ignoreidentical is true, then we ignore this sequence
+	if ok && sb.ignoreidentical && s.SameSequence(sequence) {
+		log.Print(fmt.Sprintf("Warning: sequence \"%s\" already exists in alignment with the same sequence, ignoring", name))
+		return nil
+	}
+	// Other possibility: we rename the sequence
+	// If the sequence name already exists, we add a 4 digit index at the end and print a warning on stderr */
 	for ok {
 		idx++
 		log.Print(fmt.Sprintf("Warning: sequence \"%s\" already exists in alignment, renamed in \"%s_%04d\"", tmpname, name, idx))
@@ -184,6 +201,7 @@ func (sb *seqbag) Clear() {
 
 func (sb *seqbag) CloneSeqBag() (SeqBag, error) {
 	c := NewSeqBag(sb.Alphabet())
+	c.IgnoreIdentical(sb.ignoreidentical)
 	var err error
 	sb.IterateAll(func(name string, sequence []rune, comment string) {
 		newseq := make([]rune, 0, len(sequence))
