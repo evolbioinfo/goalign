@@ -10,8 +10,9 @@ import (
 
 // Parser represents a parser.
 type Parser struct {
-	s   *Scanner
-	buf struct {
+	s               *Scanner
+	ignoreidentical bool
+	buf             struct {
 		tok Token  // last read token
 		lit string // last read literal
 		n   int    // buffer size (max=1)
@@ -20,7 +21,13 @@ type Parser struct {
 
 // NewParser returns a new instance of Parser.
 func NewParser(r io.Reader) *Parser {
-	return &Parser{s: NewScanner(r)}
+	return &Parser{s: NewScanner(r), ignoreidentical: false}
+}
+
+// If sets to true, then will ignore duplicate sequences that have the same name and the same sequence
+// Otherwise, it just renames them just as the sequences that have same name and different sequences
+func (p *Parser) IgnoreIdentical(ignore bool) {
+	p.ignoreidentical = ignore
 }
 
 // scan returns the next token from the underlying scanner.
@@ -61,8 +68,8 @@ func (p *Parser) unscan() { p.buf.n = 1 }
 func (p *Parser) Parse() (align.Alignment, error) {
 	var nbseq int = 0
 	var al align.Alignment
-	var nameseqmap map[string]string = make(map[string]string)
-	var seqnames []string = make([]string, 0)
+	var names []string = make([]string, 0)
+	var seqs []string = make([]string, 0)
 	tok, lit := p.scan()
 	if tok != CLUSTAL {
 		return nil, errors.New("Clustal alignment file must start with 'CLUSTAL'")
@@ -73,7 +80,7 @@ func (p *Parser) Parse() (align.Alignment, error) {
 
 	var name, seq string
 	var currentnbseqs int = 0
-	var nblocks = 1
+	var nblocks = 0
 	for tok != EOF {
 		// Scan sequence name
 		tok, lit = p.scan()
@@ -128,7 +135,7 @@ func (p *Parser) Parse() (align.Alignment, error) {
 			return nil, errors.New("We expect a sequence here")
 		}
 		seq = lit
-		currentnbseqs++
+
 		tok, lit = p.scan()
 		if tok == WS {
 			tok, lit = p.scan()
@@ -143,36 +150,31 @@ func (p *Parser) Parse() (align.Alignment, error) {
 		if tok != ENDOFLINE {
 			return nil, errors.New("We expect ENDOFLINE after sequence in a block")
 		}
-		if tmpseq, ok := nameseqmap[name]; !ok {
-			if nblocks > 1 {
-				return nil, errors.New(
-					fmt.Sprintf(
-						"There should not be a new sequence name (%s) found in block nb %d",
-						name,
-						nblocks,
-					))
-			}
-			nameseqmap[name] = seq
-			seqnames = append(seqnames, name)
+
+		if nblocks == 0 {
+			names = append(names, name)
+			seqs = append(seqs, seq)
 		} else {
-			nameseqmap[name] = tmpseq + seq
+			if names[currentnbseqs] != name {
+				return nil, fmt.Errorf("Name at block %d line %d does not correspond to name in first block (%s vs. %s)", nblocks, currentnbseqs, names[currentnbseqs], name)
+			}
+			seqs[currentnbseqs] = seqs[currentnbseqs] + seq
 		}
+		currentnbseqs++
 	}
 
-	if len(nameseqmap) == 0 {
+	if len(names) == 0 {
 		return nil, errors.New("No sequences in the alignment")
 	}
 
-	for _, n := range seqnames {
-		if s, ok := nameseqmap[n]; !ok {
-			return nil, errors.New("Error in clustal alignment parsing: no sequence with name " + n)
-		} else {
-			if al == nil {
-				al = align.NewAlign(align.DetectAlphabet(s))
-			}
-			if err := al.AddSequence(n, s, ""); err != nil {
-				return nil, err
-			}
+	for i, n := range names {
+		s := seqs[i]
+		if al == nil {
+			al = align.NewAlign(align.DetectAlphabet(s))
+			al.IgnoreIdentical(p.ignoreidentical)
+		}
+		if err := al.AddSequence(n, s, ""); err != nil {
+			return nil, err
 		}
 	}
 
