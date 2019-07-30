@@ -11,9 +11,9 @@ There are two ways of specifying sequence names:
 1) Via `-f` option; file should be formated with one sequence name per line and or coma separated. If the file contains names that do not exist in the alignment, they won't be taken into account.
 2) Via arguments on command line (ex: `goalign subset -i align.fa Seq0001 Seq0002`).
 
-In both ways (`-f` or via command line arguments), if option `-e` is given, names are treated as regexps. For example, it is possible to keep only sequences whose name contains "human" with: `goalign subset -i align.fa -e "human"`, or with the case insensitive regexp : `goalign subset -i align.fa -e "(?i)human"`. 
+In both ways (`-f` or via command line arguments), if option `-e` is given, names are treated as regexps, and if option `--indices` is given they are treated as indices. For example, it is possible to keep only sequences whose name contains "human" with: `goalign subset -i align.fa -e "human"`, or with the case insensitive regexp : `goalign subset -i align.fa -e "(?i)human"`. In addition it is possible to keep only sequences with indices 2 and 349 with (3rd and 350th sequences) : `goalign subset --indices -i align.fa 2 349`
 
-If several names are given, it is considered a "OR", then to get all sequences whose name contains human OR mouse (case insensitive): `goalign subset -i align.fa -e "(?i)human" "(?i)mouse"`.
+If several names/indices are given, it is considered a "OR", then to get all sequences whose name contains human OR mouse (case insensitive): `goalign subset -i align.fa -e "(?i)human" "(?i)mouse"`.
 
 Finally, one can revert the matching with `-r` option. In that case, given sequences are removed instead.
 
