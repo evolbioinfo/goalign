@@ -1702,6 +1702,75 @@ ${GOALIGN} random -n 4000 --seed 10 -l 10 | ${GOALIGN} subset Seq0001 Seq3999 > 
 diff -q -b result expected
 rm -f expected result
 
+echo "->goalign subset file"
+cat > expected <<EOF
+>Seq0001
+CCGTAGGCCA
+>Seq3999
+CGGGGCCGAC
+EOF
+cat > namefile <<EOF
+Seq0001,Seq3999
+Seq3999,Seq0001
+InexistantSeqName
+EOF
+${GOALIGN} random -n 4000 --seed 10 -l 10 | ${GOALIGN} subset -f namefile > result
+diff -q -b result expected
+rm -f expected result
+
+echo "->goalign subset index"
+cat > expected <<EOF
+>Seq0001
+CCGTAGGCCA
+>Seq3999
+CGGGGCCGAC
+EOF
+${GOALIGN} random -n 4000 --seed 10 -l 10 | ${GOALIGN} subset --indices 1 3999 > result
+diff -q -b result expected
+rm -f expected result
+
+echo "->goalign subset index file"
+cat > expected <<EOF
+>Seq0001
+CCGTAGGCCA
+>Seq3999
+CGGGGCCGAC
+EOF
+cat > indexfile <<EOF
+1,3999
+1,3999
+100000
+EOF
+${GOALIGN} random -n 4000 --seed 10 -l 10 | ${GOALIGN} subset --indices -f indexfile > result
+diff -q -b result expected
+rm -f expected result indexfile
+
+echo "->goalign subset regexps"
+cat > expected <<EOF
+>Seq0001
+CCGTAGGCCA
+>Seq3999
+CGGGGCCGAC
+EOF
+${GOALIGN} random -n 4000 --seed 10 -l 10 | ${GOALIGN} subset --regexp '.*0001' '.*3999' > result
+diff -q -b result expected
+rm -f expected result
+
+echo "->goalign subset regexps file"
+cat > expected <<EOF
+>Seq0001
+CCGTAGGCCA
+>Seq3999
+CGGGGCCGAC
+EOF
+cat > regfile <<EOF
+.*0001
+.*3999
+EOF
+${GOALIGN} random -n 4000 --seed 10 -l 10 | ${GOALIGN} subset --regexp -f regfile > result
+diff -q -b result expected
+rm -f expected result regfile
+
 
 echo "->goalign trim name"
 cat > expected <<EOF
@@ -3370,3 +3439,5 @@ diff -q -b  expected result
 diff -q -b  wres wexp
 
 rm -f input expected result wexp wres
+
+

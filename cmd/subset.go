@@ -5,6 +5,7 @@ import (
 	"compress/gzip"
 	"os"
 	"regexp"
+	"strconv"
 	"strings"
 
 	"github.com/evolbioinfo/goalign/align"
@@ -15,6 +16,7 @@ import (
 var namefile string = "stdin"
 var nameout string = "stdout"
 var revert bool = false
+var indices bool = false
 var regexmatch = false
 
 // subsetCmd represents the subset command
@@ -23,18 +25,21 @@ var subsetCmd = &cobra.Command{
 	Short: "Take a subset of sequences from the input alignment",
 	Long: `Take a subset of sequences from the input alignment
 
-It take an alignment and a set of sequence names, and 
+It takes an alignment and a set of sequence names or indices, and 
 prints the alignments corresponding to sequence names.
 
 For example:
 
 goalign subset -p -i al.phy seq1 seq2 seq3
+goalign subset -p  --indices -i al.phy 0 1 2
 goalign subset -p -i al.phy -f seqnames_file.txt
+goalign subset -p --indices -i al.phy -f seqindices_file.txt
 
-seqnames_file should be formated with one sequence name 
-per line and or coma separated. If the file contains names
- that do not exist in the alignment, they won't be taken 
-into account.
+
+seqnames_file and seqindices_file should be formated with one 
+sequence name/index per line and or coma separated. If the file
+contains names that do not exist in the alignment, they won't be
+taken into account.
 
 The output format is the same than input format.
 
@@ -47,6 +52,8 @@ given in the comand line.
 		var seqs align.SeqBag
 		var f *os.File
 		var r *regexp.Regexp
+		var indexlist []int
+		var regexps []*regexp.Regexp
 
 		// If input file
 		if namefile != "stdin" {
@@ -62,13 +69,24 @@ given in the comand line.
 			}
 		}
 
+		if indices {
+			var i int
+			for indexstr, _ := range subset {
+				if i, err = strconv.Atoi(indexstr); err != nil {
+					io.LogError(err)
+					return
+				}
+				indexlist = append(indexlist, i)
+			}
+		}
+
 		if f, err = openWriteFile(nameout); err != nil {
 			io.LogError(err)
 			return
 		}
 		defer closeWriteFile(f, nameout)
 
-		regexps := make([]*regexp.Regexp, 0, 10)
+		//regexps := make([]*regexp.Regexp, 0, 10)
 		if regexmatch {
 			for k, _ := range subset {
 				if r, err = regexp.Compile(k); err == nil {
@@ -86,16 +104,18 @@ given in the comand line.
 				return
 			}
 			var filtered align.SeqBag = nil
+			var i int = 0
 			seqs.Iterate(func(name string, sequence string) {
 				if filtered == nil {
 					filtered = align.NewSeqBag(seqs.Alphabet())
 				}
-				ok := matchSeqName(name, subset, regexps, regexmatch)
+				ok := matchSeqName(name, i, subset, regexps, regexmatch, indexlist, indices)
 				if !revert && ok {
 					filtered.AddSequence(name, sequence, "")
 				} else if revert && !ok {
 					filtered.AddSequence(name, sequence, "")
 				}
+				i++
 			})
 			writeSequences(filtered, f)
 		} else {
@@ -105,16 +125,18 @@ given in the comand line.
 			}
 			for al := range aligns.Achan {
 				var filtered align.Alignment = nil
+				var i int = 0
 				al.Iterate(func(name string, sequence string) {
 					if filtered == nil {
 						filtered = align.NewAlign(al.Alphabet())
 					}
-					ok := matchSeqName(name, subset, regexps, regexmatch)
+					ok := matchSeqName(name, i, subset, regexps, regexmatch, indexlist, indices)
 					if !revert && ok {
 						filtered.AddSequence(name, sequence, "")
 					} else if revert && !ok {
 						filtered.AddSequence(name, sequence, "")
 					}
+					i++
 				})
 				writeAlign(filtered, f)
 			}
@@ -165,11 +187,17 @@ func parseNameFile(file string) (subset map[string]int, err error) {
 // Returns true if the name is in the map
 // if regexp is true then the mathc uses regexp
 // otherwise, it is an exact match
-func matchSeqName(name string, subset map[string]int, regexps []*regexp.Regexp, regexp bool) bool {
+func matchSeqName(name string, index int, subset map[string]int, regexps []*regexp.Regexp, regexp bool, indexlist []int, indices bool) bool {
 	ok := false
 	if regexp {
 		for _, r := range regexps {
 			if ok = r.MatchString(name); ok {
+				break
+			}
+		}
+	} else if indices {
+		for _, r := range indexlist {
+			if ok = (r == index); ok {
 				break
 			}
 		}
@@ -183,7 +211,8 @@ func init() {
 	RootCmd.AddCommand(subsetCmd)
 	subsetCmd.PersistentFlags().StringVarP(&namefile, "name-file", "f", "stdin", "File containing names of sequences to keep")
 	subsetCmd.PersistentFlags().StringVarP(&nameout, "output", "o", "stdout", "Alignment output file")
-	subsetCmd.PersistentFlags().BoolVarP(&regexmatch, "regexp", "e", false, "If sequence names are given as regexp patterns")
+	subsetCmd.PersistentFlags().BoolVarP(&regexmatch, "regexp", "e", false, "If sequence names are given as regexp patterns (has priority over --indices)")
 	subsetCmd.PersistentFlags().BoolVarP(&revert, "revert", "r", false, "If true, will remove given sequences instead of keeping only them")
+	subsetCmd.PersistentFlags().BoolVar(&indices, "indices", false, "If true, extracts given sequence indices instead of sequence names (0-based)")
 	subsetCmd.PersistentFlags().BoolVar(&unaligned, "unaligned", false, "Considers input sequences as unaligned and fasta format (phylip, nexus,... options are ignored)")
 }
