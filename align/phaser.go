@@ -182,7 +182,6 @@ func (p *phaser) Phase(orfs, seqs SeqBag) (phased chan PhasedSequence, err error
 
 	// All threads consuming sequences
 	var wg sync.WaitGroup
-	var goerr error
 	for cpu := 0; cpu < p.cpus; cpu++ {
 		wg.Add(1)
 		go func() {
@@ -196,10 +195,18 @@ func (p *phaser) Phase(orfs, seqs SeqBag) (phased chan PhasedSequence, err error
 				} else {
 					ph, inerr = p.alignAgainstRefsNT(seq, orfs.Sequences())
 				}
-				if inerr != nil {
-					goerr = inerr
+
+				if ph.Err != nil {
+					err = inerr
+					phased <- ph
+					return
+				} else if inerr != nil {
+					err = inerr
+					ph.Err = inerr
+					phased <- ph
+					return
 				}
-				if goerr != nil {
+				if err != nil {
 					return
 				}
 				phased <- ph
@@ -215,6 +222,7 @@ func (p *phaser) Phase(orfs, seqs SeqBag) (phased chan PhasedSequence, err error
 		for _ = range seqchan {
 		}
 	}()
+
 	return
 }
 

@@ -2,6 +2,7 @@ package align
 
 import (
 	"fmt"
+	"unicode"
 )
 
 type PairwiseAligner interface {
@@ -479,7 +480,7 @@ func (a *pwaligner) seqToindices(s Sequence) (indices []int, err error) {
 
 	indices = make([]int, s.Length())
 	for i = 0; i < len(s.SequenceChar()); i++ {
-		indices[i], ok = a.chartopos[s.CharAt(i)]
+		indices[i], ok = a.chartopos[unicode.ToUpper(s.CharAt(i))]
 		if !ok {
 			err = fmt.Errorf("Character not part of alphabet : %c", s.CharAt(i))
 			return
