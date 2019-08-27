@@ -143,26 +143,25 @@ func DiscreteGamma(alpha float64, ncat int) []float64 {
 
 func GenerateRates(nsites int, gamma bool, alpha float64, ncat int, discrete bool) (rates []float64, categories []int) {
 	rates = make([]float64, nsites)
+	categories = make([]int, nsites)
 
-	if !gamma {
+	if !discrete {
+		g := distuv.Gamma{Alpha: alpha, Beta: alpha}
+		for i := 0; i < nsites; i++ {
+			rates[i] = g.Rand()
+		}
+	} else if !gamma || ncat < 2 {
 		for i := range rates {
 			rates[i] = 1.0
+			categories[i] = 0
 		}
 		return
-	}
-
-	if discrete {
-		categories = make([]int, nsites)
+	} else {
 		discreteRates := DiscreteGamma(alpha, ncat)
 		for i := 0; i < nsites; i++ {
 			rcat := rand.Intn(ncat)
 			rates[i] = discreteRates[rcat]
 			categories[i] = rcat
-		}
-	} else {
-		g := distuv.Gamma{Alpha: alpha, Beta: alpha}
-		for i := 0; i < nsites; i++ {
-			rates[i] = g.Rand()
 		}
 	}
 	return
