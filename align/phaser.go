@@ -51,6 +51,8 @@ type Phaser interface {
 	SetCpus(cpus int)
 	SetTranslate(translate bool, geneticcode int) (err error)
 	SetAlignScores(match, mismatch float64)
+	SetGapOpen(float64)
+	SetGapExtend(float64)
 }
 
 type phaser struct {
@@ -74,6 +76,8 @@ type phaser struct {
 	changedscores bool
 	matchscore    float64
 	mismatchscore float64
+	gapopen       float64
+	gapextend     float64
 }
 
 type PhasedSequence struct {
@@ -106,6 +110,8 @@ func NewPhaser() Phaser {
 		changedscores: false,
 		matchscore:    -1,
 		mismatchscore: -1,
+		gapopen:       -10,
+		gapextend:     -0.5,
 	}
 }
 
@@ -136,6 +142,14 @@ func (p *phaser) SetAlignScores(match, mismatch float64) {
 	p.matchscore = match
 	p.mismatchscore = mismatch
 	p.changedscores = true
+}
+
+func (p *phaser) SetGapOpen(gapopen float64) {
+	p.gapopen = gapopen
+}
+
+func (p *phaser) SetGapExtend(gapextend float64) {
+	p.gapextend = gapextend
 }
 
 // orfs: Reference sequences/ORFs to phase sequences with
@@ -266,8 +280,8 @@ func (p *phaser) alignAgainstRefsAA(seq Sequence, orfsaa []Sequence) (ph PhasedS
 				return
 			}
 			aligner = NewPwAligner(orfaa, seqaa, ALIGN_ALGO_ATG)
-			aligner.SetGapOpenScore(-10.0)
-			aligner.SetGapExtendScore(-.5)
+			aligner.SetGapOpenScore(p.gapopen)
+			aligner.SetGapExtendScore(p.gapextend)
 			if p.changedscores {
 				aligner.SetScore(p.matchscore, p.mismatchscore)
 			}
@@ -358,8 +372,8 @@ func (p *phaser) alignAgainstRefsNT(seq Sequence, orfs []Sequence) (ph PhasedSeq
 				tmpseq = revcomp
 			}
 			aligner = NewPwAligner(orf, tmpseq, ALIGN_ALGO_ATG)
-			aligner.SetGapOpenScore(-12.0)
-			aligner.SetGapExtendScore(-.5)
+			aligner.SetGapOpenScore(p.gapopen)
+			aligner.SetGapExtendScore(p.gapextend)
 			if p.changedscores {
 				aligner.SetScore(p.matchscore, p.mismatchscore)
 			}

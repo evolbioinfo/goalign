@@ -134,6 +134,8 @@ Output file is an unaligned set of sequences in fasta.
 		phaser.SetCutEnd(phasecutend)
 		phaser.SetCpus(rootcpus)
 		phaser.SetTranslate(false, geneticcode)
+		phaser.SetGapOpen(gapopen)
+		phaser.SetGapExtend(gapextend)
 
 		if cmd.Flags().Changed("mismatch") || cmd.Flags().Changed("match") {
 			phaser.SetAlignScores(match, mismatch)
@@ -205,8 +207,10 @@ func init() {
 	phasentCmd.PersistentFlags().Float64Var(&matchcutoff, "match-cutoff", .5, "Nb Matches cutoff, over alignment length, to consider sequence hits (-1==No cutoff)")
 	phasentCmd.PersistentFlags().Float64Var(&match, "match", 1.0, "Score for a match for pairwise alignment (if omitted, then take substitution matrix)")
 	phasentCmd.PersistentFlags().Float64Var(&mismatch, "mismatch", -1.0, "Score for a mismatch for pairwise alignment (if omitted, then take substitution matrix)")
+	phasentCmd.PersistentFlags().Float64Var(&gapopen, "gap-open", -12.0, "Score for opening a gap ")
+	phasentCmd.PersistentFlags().Float64Var(&gapextend, "gap-extend", -0.5, "Score for extending a gap ")
 	phasentCmd.PersistentFlags().BoolVar(&unaligned, "unaligned", false, "Considers sequences as unaligned and only format fasta is accepted (phylip, nexus,... options are ignored)")
 	phasentCmd.PersistentFlags().BoolVar(&phasereverse, "reverse", false, "Search ALSO in the reverse strand (in addition to the forward strand)")
-	phasentCmd.PersistentFlags().BoolVar(&phasecutend, "cut-end", false, "Iftrue, then also remove the end of sequences that do not align with orf")
+	phasentCmd.PersistentFlags().BoolVar(&phasecutend, "cut-end", false, "If true, then also remove the end of sequences that do not align with orf")
 	phasentCmd.PersistentFlags().StringVar(&orfsequence, "ref-orf", "none", "Reference ORF to phase against (if none is given, then will try to get the longest orf in the input data)")
 }
