@@ -95,6 +95,7 @@ func (model *ProtModel) InitModel(aafreqs []float64) error {
 	var i, j int
 	var sum float64
 	var ok bool
+	var u mat.CDense
 
 	ns := 20
 
@@ -132,7 +133,7 @@ func (model *ProtModel) InitModel(aafreqs []float64) error {
 	}
 	model.reigenvect = mat.NewDense(ns, ns, nil)
 	model.leigenvect = mat.NewDense(20, 20, nil)
-	u := model.eigen.VectorsTo(nil)
+	model.eigen.VectorsTo(&u)
 	model.eval = make([]float64, ns)
 	for i, b := range model.eigen.Values(nil) {
 		model.eval[i] = real(b)

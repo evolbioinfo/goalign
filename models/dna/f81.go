@@ -47,6 +47,7 @@ func (m *F81Model) InitModel(piA, piC, piG, piT float64) (err error) {
 }
 
 func (m *F81Model) computeEigens() (err error) {
+	var u mat.CDense
 	// Compute eigen values, left and right eigenvectors of Q
 	eigen := &mat.Eigen{}
 	if ok := eigen.Factorize(m.qmatrix, mat.EigenRight); !ok {
@@ -58,7 +59,7 @@ func (m *F81Model) computeEigens() (err error) {
 	for i, b := range eigen.Values(nil) {
 		val[i] = real(b)
 	}
-	u := eigen.VectorsTo(nil)
+	eigen.VectorsTo(&u)
 	reigenvect := mat.NewDense(4, 4, nil)
 	leigenvect := mat.NewDense(4, 4, nil)
 	reigenvect.Apply(func(i, j int, val float64) float64 { return real(u.At(i, j)) }, reigenvect)

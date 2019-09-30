@@ -42,6 +42,8 @@ func (m *TN93Model) InitModel(kappa1, kappa2, piA, piC, piG, piT float64) (err e
 }
 
 func (m *TN93Model) computeEigens() (err error) {
+	var u mat.CDense
+
 	// Compute eigen values, left and right eigenvectors of Q
 	eigen := &mat.Eigen{}
 	if ok := eigen.Factorize(m.qmatrix, mat.EigenRight); !ok {
@@ -53,7 +55,7 @@ func (m *TN93Model) computeEigens() (err error) {
 	for i, b := range eigen.Values(nil) {
 		val[i] = real(b)
 	}
-	u := eigen.VectorsTo(nil)
+	eigen.VectorsTo(&u)
 	reigenvect := mat.NewDense(4, 4, nil)
 	leigenvect := mat.NewDense(4, 4, nil)
 	reigenvect.Apply(func(i, j int, val float64) float64 { return real(u.At(i, j)) }, reigenvect)
