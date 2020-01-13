@@ -98,7 +98,6 @@ func (ps *PartitionSet) String() string {
 				} else if j == end+1 {
 					end = j
 				}
-				fmt.Println("COUAC: ", start, end, j, len(ps.partitions))
 				if j > end+1 || j == len(ps.partitions)-1 {
 					if !first {
 						buffer.WriteString(",")
