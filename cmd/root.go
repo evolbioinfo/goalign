@@ -17,6 +17,7 @@ import (
 	"github.com/evolbioinfo/goalign/io/fasta"
 	"github.com/evolbioinfo/goalign/io/nexus"
 	"github.com/evolbioinfo/goalign/io/paml"
+	"github.com/evolbioinfo/goalign/io/partition"
 	"github.com/evolbioinfo/goalign/io/phylip"
 	"github.com/evolbioinfo/goalign/io/utils"
 	"github.com/evolbioinfo/goalign/version"
@@ -226,6 +227,18 @@ func writeAlign(al align.Alignment, f *os.File) {
 	}
 }
 
+func extension() string {
+	if rootphylip {
+		return ".phy"
+	} else if rootnexus {
+		return ".nx"
+	} else if rootclustal {
+		return ".clustal"
+	} else {
+		return ".fasta"
+	}
+}
+
 func writeAlignString(al align.Alignment) (out string) {
 	if rootphylip {
 		out = phylip.WriteAlignment(al, rootoutputstrict, rootoutputoneline, rootoutputnoblock)
@@ -350,4 +363,17 @@ func closeWriteFile(f goio.Closer, filename string) {
 	if filename != "-" && filename != "stdout" && filename != "none" {
 		f.Close()
 	}
+}
+
+func parsePartition(partitionfile string, alilength int) (ps *align.PartitionSet, err error) {
+	var f goio.Closer
+	var r *bufio.Reader
+
+	if f, r, err = utils.GetReader(partitionfile); err != nil {
+		return
+	}
+	defer f.Close()
+	p := partition.NewParser(r)
+	ps, err = p.Parse(alilength)
+	return
 }

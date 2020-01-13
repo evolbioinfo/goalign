@@ -19,7 +19,7 @@ type Alignment interface {
 	SeqBag
 	AddGaps(rate, lenprop float64)
 	AvgAllelesPerSite() float64
-	BuildBootstrap() Alignment
+	BuildBootstrap() Alignment // Bootstrap alignment
 	CharStatsSite(site int) (map[rune]int, error)
 	Clone() (Alignment, error)
 	CodonAlign(ntseqs SeqBag) (codonAl *align, err error)
@@ -63,6 +63,7 @@ type Alignment interface {
 	ShuffleSites(rate float64, roguerate float64, randroguefirst bool) []string
 	SimulateRogue(prop float64, proplen float64) ([]string, []string) // add "rogue" sequences
 	SiteConservation(position int) (int, error)                       // If the site is conserved:
+	Split(part *PartitionSet) ([]Alignment, error)                    //Splits the alignment given the paritions in argument
 	SubAlign(start, length int) (Alignment, error)                    // Extract a subalignment from this alignment
 	Swap(rate float64)
 	TrimSequences(trimsize int, fromStart bool) error
@@ -616,9 +617,12 @@ func (a *align) Rarefy(nb int, counts map[string]int) (Alignment, error) {
 	return sample, nil
 }
 
-func (a *align) BuildBootstrap() Alignment {
+// This function builds a bootstrap alignment
+// and returns it with "indices", an array containing
+// the index (in the original alignment) of all bootstrap sites.
+func (a *align) BuildBootstrap() (boot Alignment) {
 	n := a.Length()
-	boot := NewAlign(a.alphabet)
+	boot = NewAlign(a.alphabet)
 	indices := make([]int, n)
 	var buf []rune
 
@@ -633,7 +637,7 @@ func (a *align) BuildBootstrap() Alignment {
 		}
 		boot.AddSequenceChar(seq.name, buf, seq.Comment())
 	}
-	return boot
+	return
 }
 
 // Returns the distribution of characters at a given site
@@ -1352,5 +1356,43 @@ func (a *align) SiteConservation(position int) (conservation int, err error) {
 		}
 	}
 
+	return
+}
+
+// Use the partition to generate one alignment per partition.
+//
+// If the partitionset has one partition or less, then returns an error
+func (a *align) Split(part *PartitionSet) (als []Alignment, err error) {
+	if part.NPartitions() <= 1 {
+		err = fmt.Errorf("The given partitionset contains less than 2 partitions")
+		return
+	}
+
+	if part.AliLength() != a.Length() {
+		err = fmt.Errorf("The given partitionset has a different alignment length")
+		return
+	}
+
+	als = make([]Alignment, part.NPartitions())
+	alsimpl := make([]*align, part.NPartitions())
+	for pi := 0; pi < part.NPartitions(); pi++ {
+		alsimpl[pi] = NewAlign(a.Alphabet())
+		als[pi] = alsimpl[pi]
+		firstpos := true
+		for pos := 0; pos < part.AliLength(); pos++ {
+			if part.Partition(pos) == pi {
+				for si := 0; si < a.NbSequences(); si++ {
+					seq := a.seqs[si]
+					if firstpos {
+						alsimpl[pi].AddSequenceChar(seq.Name(), []rune{seq.CharAt(pos)}, seq.Comment())
+					} else {
+						alsimpl[pi].seqs[si].sequence = append(alsimpl[pi].seqs[si].sequence, seq.sequence[pos])
+					}
+				}
+				alsimpl[pi].length++
+				firstpos = false
+			}
+		}
+	}
 	return
 }

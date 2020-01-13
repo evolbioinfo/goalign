@@ -3441,3 +3441,101 @@ diff -q -b  wres wexp
 rm -f input expected result wexp wres
 
 
+
+echo "->goalign split"
+cat > input <<EOF
+>s1
+AAAACCCCCGG
+>2
+AAAACCCCCGG
+>3
+AAAACCCCCGG
+>4
+AAAACCCCCGG
+>5
+AAAACCCCCGG
+EOF
+cat > partitions <<EOF
+M1,p1=1-4,10-11
+M2,p2=5-9
+EOF
+
+cat > exp_p1 <<EOF
+>s1
+AAAAGG
+>2
+AAAAGG
+>3
+AAAAGG
+>4
+AAAAGG
+>5
+AAAAGG
+EOF
+
+cat > exp_p2 <<EOF
+>s1
+CCCCC
+>2
+CCCCC
+>3
+CCCCC
+>4
+CCCCC
+>5
+CCCCC
+EOF
+
+${GOALIGN} split -i input --partition partitions --prefix ./
+diff -q -b exp_p1 p1.fasta
+diff -q -b exp_p2 p2.fasta
+rm -f input exp_p1 exp_p2 partitions
+
+echo "->goalign split codons/2"
+cat > input <<EOF
+>s1
+ACGACGACGACG
+>2
+ACGACGACGACG
+>3
+ACGACGACGACG
+>4
+ACGACGACGACG
+>5
+CGACGACGACGA
+EOF
+cat > partitions <<EOF
+M1,p1=1-12/3,2-12/3
+M2,p2=3-12/3
+EOF
+
+cat > exp_p1 <<EOF
+>s1
+ACACACAC
+>2
+ACACACAC
+>3
+ACACACAC
+>4
+ACACACAC
+>5
+CGCGCGCG
+EOF
+
+cat > exp_p2 <<EOF
+>s1
+GGGG
+>2
+GGGG
+>3
+GGGG
+>4
+GGGG
+>5
+AAAA
+EOF
+
+${GOALIGN} split -i input --partition partitions --prefix ./
+diff -q -b exp_p1 p1.fasta
+diff -q -b exp_p2 p2.fasta
+rm -f input exp_p1 exp_p2 partitions
