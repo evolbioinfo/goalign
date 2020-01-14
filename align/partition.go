@@ -77,10 +77,6 @@ func (ps *PartitionSet) CheckSites() (err error) {
 
 func (ps *PartitionSet) String() string {
 	var buffer bytes.Buffer
-	for j, p := range ps.partitions {
-		fmt.Println(j, p)
-	}
-
 	for i, pn := range ps.names {
 		buffer.WriteString(ps.models[i])
 		buffer.WriteString(",")
@@ -91,7 +87,6 @@ func (ps *PartitionSet) String() string {
 		for j, p := range ps.partitions {
 
 			if p == i {
-				fmt.Println(pn, i)
 				if start == -1 {
 					start = j
 					end = j
@@ -148,13 +143,22 @@ func (ps *PartitionSet) Partition(position int) int {
 	return ps.partitions[position]
 }
 
-// Returns the name of the partition associated to the given code
+// Returns the name of the partition associated to the given index
 // If the code does not exist, then returns ""
 func (ps *PartitionSet) PartitionName(code int) string {
 	if code < 0 || code > len(ps.names) {
 		return ""
 	}
 	return ps.names[code]
+}
+
+// Returns the name of the modele associated to the given index
+// If the code does not exist, then returns ""
+func (ps *PartitionSet) ModeleName(code int) string {
+	if code < 0 || code > len(ps.models) {
+		return ""
+	}
+	return ps.models[code]
 }
 
 // returns the length of the alignment

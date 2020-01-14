@@ -6,13 +6,12 @@ import (
 	"compress/gzip"
 	"errors"
 	"fmt"
-	"github.com/spf13/cobra"
 	"os"
-	"sync"
 	"time"
 
 	"github.com/evolbioinfo/goalign/align"
 	"github.com/evolbioinfo/goalign/io"
+	"github.com/spf13/cobra"
 )
 
 var bootstrapNb int
@@ -20,11 +19,8 @@ var bootstrapoutprefix string
 var bootstrapOrder bool
 var bootstraptar bool
 var bootstrapgz bool
-
-type outboot struct {
-	bootstr string
-	name    string
-}
+var bootstrappartitionstr string
+var bootstrapoutputpartitionstr string
 
 // seqbootCmd represents the bootstrap command
 var seqbootCmd = &cobra.Command{
@@ -44,8 +40,7 @@ The input may be a Phylip or Fasta file.
   files will be in fasta format as well.
 
 - It is possible to give a initial seed (--seed). In this case several runs of 
-  the tool will give the exact same results (if run on 1 thread, an thus 
-  computations are done on a single thread in this case).
+  the tool will give the exact same results.
 
 Example of usage:
 
@@ -53,9 +48,18 @@ goalign build seqboot -i align.phylip -p -n 500 -o boot --tar-gz
 goalign build seqboot -i align.phylip -p -n 500 -o boot_ 
 `,
 	RunE: func(cmd *cobra.Command, args []string) (err error) {
-		var aligns *align.AlignChannel
+		var alignChan *align.AlignChannel
+		var aligns []align.Alignment
+		var al align.Alignment
+		var f *os.File
+		var tw *tar.Writer
+		var gw *gzip.Writer
+		var inputpartition, outputpartition *align.PartitionSet
+		var bootstring string
+		var boot, tmpboot align.Alignment
 
-		if aligns, err = readalign(infile); err != nil {
+		// We read input alignment
+		if alignChan, err = readalign(infile); err != nil {
 			io.LogError(err)
 			return
 		}
@@ -66,69 +70,33 @@ goalign build seqboot -i align.phylip -p -n 500 -o boot_
 			return
 		}
 
-		var f *os.File
-		var tw *tar.Writer
-		var gw *gzip.Writer
-
-		align, _ := <-aligns.Achan
-		if aligns.Err != nil {
-			err = aligns.Err
+		// We take the first alignment of the channel
+		al, _ = <-alignChan.Achan
+		if alignChan.Err != nil {
+			err = alignChan.Err
 			io.LogError(err)
 			return
 		}
 
-		bootidx := make(chan int, 100)
-		outchan := make(chan outboot, 100)
-
-		cpus := rootcpus
-		if bootstraptar {
-			cpus = min_int(1, cpus-1)
-		}
-
-		go func() {
-			for i := 0; i < bootstrapNb; i++ {
-				bootidx <- i
+		// If a partition file is given, then we parse it
+		if bootstrappartitionstr != "none" {
+			if inputpartition, err = parsePartition(bootstrappartitionstr, al.Length()); err != nil {
+				io.LogError(err)
+				return
 			}
-			close(bootidx)
-		}()
-
-		var wg sync.WaitGroup // For waiting end of step computation
-		// Seed is set => 1 thread
-		if cmd.Flags().Changed("seed") {
-			cpus = 1
+			if err = inputpartition.CheckSites(); err != nil {
+				io.LogError(err)
+				return
+			}
+			if aligns, err = al.Split(inputpartition); err != nil {
+				io.LogError(err)
+				return
+			}
+			outputpartition = align.NewPartitionSet(al.Length())
+			//fmt.Println(bootstrappartition.String())
+		} else {
+			aligns = []align.Alignment{al}
 		}
-		for i := 0; i < cpus; i++ {
-			wg.Add(1)
-			go func() {
-				var bootstring string
-				for idx := range bootidx {
-					bootid := bootstrapoutprefix + fmt.Sprintf("%d", idx)
-					boot := align.BuildBootstrap()
-					if bootstrapOrder {
-						boot.ShuffleSequences()
-					}
-
-					bootstring = writeAlignString(boot)
-
-					// Output
-					if bootstraptar {
-						outchan <- outboot{bootstring, bootid}
-					} else {
-						if err2 := writenewfile(bootid, bootstrapgz, bootstring); err2 != nil {
-							io.LogError(err2)
-							err = err2
-							return
-						}
-					}
-				}
-				wg.Done()
-			}()
-		}
-
-		go func() {
-			wg.Wait()
-			close(outchan)
-		}()
 
 		// Create new tar(/gz) file
 		if bootstraptar {
@@ -152,16 +120,63 @@ goalign build seqboot -i align.phylip -p -n 500 -o boot_
 			defer tw.Close()
 		}
 
-		idx := 0
-		for oboot := range outchan {
+		for idx := 0; idx < bootstrapNb; idx++ {
+			boot = nil
+			bootid := bootstrapoutprefix + fmt.Sprintf("%d", idx)
+			// There may be several alignments to process if there are
+			// several partitions. We generate bootstrap replicates
+			// for each partition, and then concatenate them all.
+			for _, a := range aligns {
+				tmpboot = a.BuildBootstrap()
+				if boot == nil {
+					boot = tmpboot
+				} else {
+					if err = boot.Concat(tmpboot); err != nil {
+						io.LogError(err)
+						return
+					}
+				}
+			}
+			// We shuffle sequence order
+			if bootstrapOrder {
+				boot.ShuffleSequences()
+			}
+
+			bootstring = writeAlignString(boot)
+
+			// Output
 			if bootstraptar {
-				if err = addstringtotargz(tw, oboot.name, oboot.bootstr); err != nil {
+				if err = addstringtotargz(tw, bootid, bootstring); err != nil {
+					io.LogError(err)
+					return
+				}
+			} else {
+				if err = writenewfile(bootid+alignExtension(), bootstrapgz, bootstring); err != nil {
 					io.LogError(err)
 					return
 				}
 			}
-			idx++
 		}
+
+		var start, end int = 0, 0
+		if outputpartition != nil {
+			for i, a := range aligns {
+				start = end
+				end = start + a.Length()
+				// We initialize an outputpartition
+				// Which will have all the sites of each
+				// partition grouped together.
+				outputpartition.AddRange(
+					inputpartition.PartitionName(i),
+					inputpartition.ModeleName(i),
+					start, end-1, 1)
+			}
+			if bootstrapoutputpartitionstr == "" {
+				bootstrapoutputpartitionstr = bootstrappartitionstr + "_boot"
+			}
+			writenewfile(bootstrapoutputpartitionstr, false, outputpartition.String())
+		}
+
 		return
 	},
 }
@@ -169,10 +184,8 @@ goalign build seqboot -i align.phylip -p -n 500 -o boot_
 func writenewfile(name string, gz bool, bootstring string) (err error) {
 	var f *os.File
 
-	ext := alignExtension()
-
 	if gz {
-		if f, err = os.Create(name + ext + ".gz"); err != nil {
+		if f, err = os.Create(name + ".gz"); err != nil {
 			return
 		} else {
 			gw := gzip.NewWriter(f)
@@ -183,7 +196,7 @@ func writenewfile(name string, gz bool, bootstring string) (err error) {
 			f.Close()
 		}
 	} else {
-		if f, err = os.Create(name + ext); err != nil {
+		if f, err = os.Create(name); err != nil {
 			return
 		} else {
 			f.WriteString(bootstring)
@@ -228,5 +241,7 @@ func init() {
 	seqbootCmd.PersistentFlags().BoolVar(&bootstraptar, "tar", false, "Will create a single tar file with all bootstrap alignments (one thread for tar, but not a bottleneck)")
 	seqbootCmd.PersistentFlags().BoolVar(&bootstrapgz, "gz", false, "Will gzip output file(s). Maybe slow if combined with --tar (only one thread working for tar/gz)")
 	seqbootCmd.PersistentFlags().IntVarP(&bootstrapNb, "nboot", "n", 1, "Number of bootstrap replicates to build")
+	seqbootCmd.PersistentFlags().StringVar(&bootstrappartitionstr, "partition", "none", "File containing definition of the partitions")
+	seqbootCmd.PersistentFlags().StringVar(&bootstrapoutputpartitionstr, "out-partition", "", "File containing output partitions (default: same name as input partition with _boot suffix)")
 	seqbootCmd.PersistentFlags().StringVarP(&bootstrapoutprefix, "out-prefix", "o", "none", "Prefix of output bootstrap files")
 }

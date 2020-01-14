@@ -227,18 +227,6 @@ func writeAlign(al align.Alignment, f *os.File) {
 	}
 }
 
-func extension() string {
-	if rootphylip {
-		return ".phy"
-	} else if rootnexus {
-		return ".nx"
-	} else if rootclustal {
-		return ".clustal"
-	} else {
-		return ".fasta"
-	}
-}
-
 func writeAlignString(al align.Alignment) (out string) {
 	if rootphylip {
 		out = phylip.WriteAlignment(al, rootoutputstrict, rootoutputoneline, rootoutputnoblock)

@@ -2,8 +2,9 @@ package cmd
 
 import (
 	"fmt"
-	"github.com/spf13/cobra"
 	"os"
+
+	"github.com/spf13/cobra"
 
 	"github.com/evolbioinfo/goalign/align"
 	"github.com/evolbioinfo/goalign/io"
@@ -64,7 +65,7 @@ goalign split -i align.phylip --partition partition.txt
 		}
 
 		for i, a := range splitAligns {
-			name := splitprefix + splitpartition.PartitionName(i) + extension()
+			name := splitprefix + splitpartition.PartitionName(i) + alignExtension()
 			if f, err = openWriteFile(name); err != nil {
 				io.LogError(err)
 				return
@@ -80,7 +81,6 @@ goalign split -i align.phylip --partition partition.txt
 func init() {
 	RootCmd.AddCommand(splitCmd)
 
-	splitCmd.PersistentFlags().StringVar(&splitprefix, "prefix", "", "Prefix of output files")
+	splitCmd.PersistentFlags().StringVarP(&splitprefix, "out-prefix", "o", "", "Prefix of output files")
 	splitCmd.PersistentFlags().StringVar(&splitpartitionstr, "partition", "none", "File containing definition of the partitions")
-	splitCmd.PersistentFlags().StringVarP(&bootstrapoutprefix, "out-prefix", "o", "none", "Prefix of output bootstrap files")
 }

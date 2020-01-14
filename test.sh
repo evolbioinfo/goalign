@@ -1716,7 +1716,7 @@ InexistantSeqName
 EOF
 ${GOALIGN} random -n 4000 --seed 10 -l 10 | ${GOALIGN} subset -f namefile > result
 diff -q -b result expected
-rm -f expected result
+rm -f expected result namefile
 
 echo "->goalign subset index"
 cat > expected <<EOF
@@ -2530,6 +2530,48 @@ diff -q -b boot0.fa expected.1
 diff -q -b boot1.fa expected.2
 if [[ $(ls boot*.fa | wc -l) -ne 2 ]]; then echo "Wrong number of bootstrap alignments"; exit 1; fi
 rm -f boot0.fa boot1.fa boot.tar.gz  expected.2 expected.1 orig.fa
+
+
+echo "->goalign build seqboot partition"
+cat > partition <<EOF
+M1,part1=1-24/3
+M2,part2=2-24/3
+M3,part3=3-24/3
+EOF
+cat > input <<EOF
+>Seq0000
+ACGACGACGACGACGACGACGACG
+>Seq0001
+ACGACGACGACGACGACGACGACG
+>Seq0002
+ACGACGACGACGACGACGACGACG
+>Seq0003
+ACGACGACGACGACGACGACGACG
+EOF
+cat > expected <<EOF
+>Seq0000
+AAAAAAAACCCCCCCCGGGGGGGG
+>Seq0001
+AAAAAAAACCCCCCCCGGGGGGGG
+>Seq0002
+AAAAAAAACCCCCCCCGGGGGGGG
+>Seq0003
+AAAAAAAACCCCCCCCGGGGGGGG
+EOF
+cat > expected_outpartition <<EOF
+M1,part1=1-8
+M2,part2=9-16
+M3,part3=17-24
+EOF
+
+${GOALIGN} build seqboot --seed 10 --partition partition --out-partition out_partition -i input -n 4 -o boot
+diff -q -b boot0.fa expected
+diff -q -b boot1.fa expected
+diff -q -b boot2.fa expected
+diff -q -b boot3.fa expected
+if [[ $(ls boot*.fa| wc -l) -ne 4 ]]; then echo "Wrong number of bootstrap alignments"; exit 1; fi
+rm -f boot0.fa boot1.fa boot2.fa boot3.fa expected input partition out_partition expected_outpartition
+
 
 echo "->goalign codonalign"
 cat > input.aa <<EOF
@@ -3486,10 +3528,10 @@ CCCCC
 CCCCC
 EOF
 
-${GOALIGN} split -i input --partition partitions --prefix ./
-diff -q -b exp_p1 p1.fasta
-diff -q -b exp_p2 p2.fasta
-rm -f input exp_p1 exp_p2 partitions
+${GOALIGN} split -i input --partition partitions --out-prefix ./
+diff -q -b exp_p1 p1.fa
+diff -q -b exp_p2 p2.fa
+rm -f input exp_p1 exp_p2 partitions p1.fa p2.fa
 
 echo "->goalign split codons/2"
 cat > input <<EOF
@@ -3535,7 +3577,7 @@ GGGG
 AAAA
 EOF
 
-${GOALIGN} split -i input --partition partitions --prefix ./
-diff -q -b exp_p1 p1.fasta
-diff -q -b exp_p2 p2.fasta
-rm -f input exp_p1 exp_p2 partitions
+${GOALIGN} split -i input --partition partitions --out-prefix ./
+diff -q -b exp_p1 p1.fa
+diff -q -b exp_p2 p2.fa
+rm -f input exp_p1 exp_p2 partitions p1.fa p2.fa

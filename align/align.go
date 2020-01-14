@@ -1389,7 +1389,11 @@ func (a *align) Split(part *PartitionSet) (als []Alignment, err error) {
 						alsimpl[pi].seqs[si].sequence = append(alsimpl[pi].seqs[si].sequence, seq.sequence[pos])
 					}
 				}
-				alsimpl[pi].length++
+				if firstpos {
+					alsimpl[pi].length = 1
+				} else {
+					alsimpl[pi].length++
+				}
 				firstpos = false
 			}
 		}
