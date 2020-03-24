@@ -186,6 +186,24 @@ var dna_to_matrix_pos = map[rune]int{
 	'X': 14,
 }
 
+var iupacCode = map[rune][]rune{
+	'A': {'A'},
+	'C': {'C'},
+	'G': {'G'},
+	'T': {'T'},
+	'R': {'A', 'G'},
+	'Y': {'C', 'T'},
+	'S': {'G', 'C'},
+	'W': {'A', 'T'},
+	'K': {'G', 'T'},
+	'M': {'A', 'C'},
+	'B': {'C', 'G', 'T'},
+	'D': {'A', 'G', 'T'},
+	'H': {'A', 'C', 'T'},
+	'V': {'A', 'C', 'G'},
+	'N': {'A', 'C', 'G', 'T'},
+}
+
 // Taken from EMBOSS Water
 // This matrix was created by Todd Lowe   12/10/92
 //

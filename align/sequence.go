@@ -204,6 +204,16 @@ func (s *seq) Translate(phase int, geneticcode int) (tr Sequence, err error) {
 		return
 	}
 
+	if err = bufferTranslate(s, phase, code, &buffer); err != nil {
+		return
+	}
+
+	tr = NewSequence(s.name, []rune(buffer.String()), s.comment)
+	return
+}
+
+func bufferTranslate(s *seq, phase int, code map[string]rune, buffer *bytes.Buffer) (err error) {
+	buffer.Reset()
 	if s.DetectAlphabet() != NUCLEOTIDS && s.DetectAlphabet() != BOTH {
 		err = fmt.Errorf("Cannot translate this sequence, wrong alphabet")
 		return
@@ -213,16 +223,29 @@ func (s *seq) Translate(phase int, geneticcode int) (tr Sequence, err error) {
 		err = fmt.Errorf("Cannot translate a sequence with length < 3+phase (%s)", s.name)
 		return
 	}
-
 	for i := phase; i < len(s.sequence)-2; i += 3 {
-		codon := strings.Replace(strings.ToUpper(string(s.sequence[i:i+3])), "U", "T", -1)
-		aa, found := code[codon]
-		if !found {
-			aa = 'X'
+		var aa rune = ' '
+		var aatmp rune = ' '
+		var found bool = false
+		// We handle possible IUPAC characters
+		codons := GenAllPossibleCodons(s.sequence[i], s.sequence[i+1], s.sequence[i+2])
+		for _, codon := range codons {
+			// The codon i=s not found
+			// We return X
+			if aatmp, found = code[codon]; !found {
+				aa = 'X'
+				break
+			}
+			// Different codons give different AA
+			// We can not translate it uniquely
+			if aa != ' ' && aatmp != aa {
+				aa = 'X'
+				break
+			}
+			aa = aatmp
 		}
 		buffer.WriteRune(aa)
 	}
-	tr = NewSequence(s.name, []rune(buffer.String()), s.comment)
 	return
 }
 
@@ -230,4 +253,67 @@ func (s *seq) Clone() Sequence {
 	seq2 := make([]rune, len(s.sequence))
 	copy(seq2, s.sequence)
 	return NewSequence(s.name, seq2, s.comment)
+}
+
+// GenAllPossibleCodons generates all possible codons given the 3 nucleotides in arguments
+// Multiple codons may exist if IUPAC code is employed (R=A|G, etc.).
+// The 3 nucleotites in arguments are converted to upper case and U converted to T.
+// If one character does not correspond to a known nucleotide in IUPAC code, then
+// Returns an empty slice.
+//
+// For example GenAllPossibleCodons('A','G','N') should return
+// {"AGA","AGC","AGG","AGT"}.
+func GenAllPossibleCodons(nt1, nt2, nt3 rune) (codons []string) {
+	var nt rune
+	var codontmp string
+	var nts1, nts2, nts3 []rune // possible nts for each nt
+	var found bool
+
+	codons = make([]string, 0)
+	codonstmp := make([]string, 0)
+
+	nt1 = unicode.ToUpper(nt1)
+	nt2 = unicode.ToUpper(nt2)
+	nt3 = unicode.ToUpper(nt3)
+
+	if nt1 == 'U' {
+		nt1 = 'T'
+	}
+	if nt2 == 'U' {
+		nt2 = 'T'
+	}
+	if nt3 == 'U' {
+		nt3 = 'T'
+	}
+
+	if nts1, found = iupacCode[nt1]; !found {
+		return
+	}
+	if nts2, found = iupacCode[nt2]; !found {
+		return
+	}
+	if nts3, found = iupacCode[nt3]; !found {
+		return
+	}
+
+	for _, nt = range nts1 {
+		codons = append(codons, string(nt))
+	}
+	for _, nt = range nts2 {
+		for _, codontmp = range codons {
+			codontmp = codontmp + string(nt)
+			codonstmp = append(codonstmp, string(codontmp))
+		}
+	}
+	codons = codonstmp
+	codonstmp = make([]string, 0)
+
+	for _, nt = range nts3 {
+		for _, codontmp = range codons {
+			codontmp = codontmp + string(nt)
+			codonstmp = append(codonstmp, string(codontmp))
+		}
+	}
+	codons = codonstmp
+	return
 }

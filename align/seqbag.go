@@ -617,24 +617,15 @@ func (sb *seqbag) Translate(phase int, geneticcode int) (err error) {
 		name = seq.name
 		// We may translate in several phases (if phase==-1)
 		for phase = firststart; phase <= laststart; phase++ {
-			buffer.Reset()
 			if suffix {
 				name = fmt.Sprintf("%s_%d", seq.name, phase)
 			}
-			if len(seq.sequence) < 3+phase {
-				err = fmt.Errorf("Cannot translate a sequence with length < 3+phase (%s)", seq.name)
+
+			if err = bufferTranslate(seq, phase, code, &buffer); err != nil {
 				return
 			}
-			for i := phase; i < len(seq.sequence)-2; i += 3 {
-				codon := strings.Replace(strings.ToUpper(string(seq.sequence[i:i+3])), "U", "T", -1)
-				aa, found := code[codon]
-				if !found {
-					aa = 'X'
-				}
-				buffer.WriteRune(aa)
-			}
-			if err2 := sb.AddSequence(name, buffer.String(), seq.comment); err != nil {
-				err = err2
+
+			if err = sb.AddSequence(name, buffer.String(), seq.comment); err != nil {
 				return
 			}
 		}

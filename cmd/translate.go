@@ -29,8 +29,11 @@ from positions 0, 1 and 2. Sequence names will be added the suffix
 _<phase>. At the end, 3x times more sequences will be present in the
 file.
 
-It only translates using the standard genetic code so far.
+It is possible to specify alternative genetic code with --genetic-code 
+(mitoi, mitov, or standard).
 
+IUPAC codes are taken into account for the translation. If a codon containing 
+IUPAC code is ambiguous for translation, then a X is added in place of the aminoacid.
 `,
 	RunE: func(cmd *cobra.Command, args []string) (err error) {
 		var f *os.File

@@ -40,7 +40,7 @@ func main() {
 	fi.Close()
 
 	/* Translate */
-	if err = al.Translate(1); err != nil {
+	if err = al.Translate(1,align.GENETIC_CODE_STANDARD); err != nil {
 		panic(err)
 	} else {
 		fmt.Println(fasta.WriteAlignment(al))

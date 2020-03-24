@@ -2189,6 +2189,32 @@ ${GOALIGN} translate -i input --phase -1 --unaligned --genetic-code mitov -o res
 diff -q -b expected result
 rm -f input expected result
 
+echo "->goalign translate IUPAC"
+cat > input <<EOF
+>allcodons
+GAYAARUAYCAYAAYUAG
+EOF
+cat > expected <<EOF
+>allcodons
+DKYHN*
+EOF
+${GOALIGN} translate -i input --phase 0 -o result
+diff -q -b expected result
+rm -f input expected result
+
+echo "->goalign translate IUPAC unaligned"
+cat > input <<EOF
+>allcodons
+GAYAARUAYCAYAAYUAG
+EOF
+cat > expected <<EOF
+>allcodons
+DKYHN*
+EOF
+${GOALIGN} translate -i input --phase 0 --unaligned -o result
+diff -q -b expected result
+rm -f input expected result
+
 echo "->goalign reformat no ignore identical"
 cat > input <<EOF
   6   6
