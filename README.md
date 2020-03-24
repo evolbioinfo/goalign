@@ -172,7 +172,7 @@ You may go to the [doc](docs/index.md) for a more detailed documentation of the 
 * subseq:      Extract a subsequence from the alignment
 * subset:      Take a subset of sequences from the input alignment
 * sw:          Aligns 2 sequences using Smith & Waterman algorithm
-* translate:   Translate input sequences/alignment
+* translate:   Translate input sequences/alignment (supports IUPAC code)
 * trim:        This command trims names of sequences or sequences themselves
   * name
   * seq
