@@ -10,17 +10,22 @@ a start position (0-based inclusive) and a length.
 If the length is after the end of the alignment, will stop at the 
 end of the alignment.
 
+(start,length) can be specified on the alignment coordinate system (default) 
+or on a given sequence coordinate system without gaps (`--ref-seq`). It allows 
+to extract sub alignment by just knowing coordinates on a given unaligned sequence.
+
+
 For example:
 ```
 goalign subseq -p -i al.phy -s 9 -l 10
 ```
 
-This will extract a sub-alignment going from 10th position, with a length of 10.
+This will extract a sub-alignment going from 10th position of the alignemnt, with a length of 10.
 
 The output format is the same than input format.
 
-If `--ref-seq <name>` is specified, then the coordinates are considered according to the 
-given sequence without considering gaps.
+If `--ref-seq <name>` is specified, then the coordinates are specified on the given sequence
+coordinate system without considering gaps.
 
 For example:
 
