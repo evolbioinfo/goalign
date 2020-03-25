@@ -1561,3 +1561,45 @@ func TestCompress2(t *testing.T) {
 		t.Error(fmt.Errorf("Compressed alignment is different from expected \n %s \n vs. \n %s", in.String(), exp.String()))
 	}
 }
+
+func Test_align_RefCoordinates(t *testing.T) {
+	var err error
+	var alistart, alilen int
+
+	in := NewAlign(UNKNOWN)
+
+	in.AddSequence("Seq0000", "--ACG--AT---GC", "")
+	in.AddSequence("Seq0001", "GGACGTTATCGGGC", "")
+	in.AutoAlphabet()
+
+	expstart, explen := 2, 6
+	alistart, alilen, err = in.RefCoordinates("Seq0000", 0, 4)
+	if alistart != expstart || alilen != explen || err != nil {
+		t.Error(fmt.Errorf("alistart: %d!=%d | alilen: %d!=%d | err: %v", alistart, expstart, alilen, explen, err))
+	}
+
+	expstart, explen = 3, 6
+	alistart, alilen, err = in.RefCoordinates("Seq0000", 1, 4)
+	if alistart != expstart || alilen != explen || err != nil {
+		t.Error(fmt.Errorf("alistart: %d!=%d | alilen: %d!=%d | err: %v", alistart, expstart, alilen, explen, err))
+	}
+
+	expstart, explen = 3, 11
+	alistart, alilen, err = in.RefCoordinates("Seq0000", 1, 6)
+	if alistart != expstart || alilen != explen || err != nil {
+		t.Error(fmt.Errorf("alistart: %d!=%d | alilen: %d!=%d | err: %v", alistart, expstart, alilen, explen, err))
+	}
+
+	expstart, explen = 1, 6
+	alistart, alilen, err = in.RefCoordinates("Seq0001", 1, 6)
+	if alistart != expstart || alilen != explen || err != nil {
+		t.Error(fmt.Errorf("alistart: %d!=%d | alilen: %d!=%d | err: %v", alistart, expstart, alilen, explen, err))
+	}
+
+	expstart, explen = 12, 2
+	alistart, alilen, err = in.RefCoordinates("Seq0000", 5, 2)
+	if alistart != expstart || alilen != explen || err != nil {
+		t.Error(fmt.Errorf("alistart: %d!=%d | alilen: %d!=%d | err: %v", alistart, expstart, alilen, explen, err))
+	}
+
+}

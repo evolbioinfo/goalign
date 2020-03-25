@@ -14,6 +14,7 @@ var subseqout string = "stdout"
 var subseqstart int
 var subseqlength int
 var subseqstep int
+var subseqrefseq string
 
 // subseqCmd represents the subseq command
 var subseqCmd = &cobra.Command{
@@ -32,6 +33,27 @@ goalign subseq -p -i al.phy -s 9 -l 10
 This will extract a sub-alignment going from 10th position, with a length of 10.
 
 The output format is the same than input format.
+
+If --ref-seq <name> is specified, then the coordinates are considered according the 
+given sequence, and without considering gaps.
+
+For example:
+If al.fa is:
+>s1
+--ACG--AT-GC
+>s2
+GGACGTTATCGC
+
+goalign subseq -i al.fa -s 0 -l 4 --ref-seq s1
+
+will output:
+
+>s1
+ACG--A
+>s2
+ACGTTA
+
+Not compatible with --step
 
 Sliding window:
 ---------------
@@ -53,10 +75,12 @@ goalign subseq -i al.phy -s 0 -l 5 --step 1 will produce:
 Warning: If output is stdout, it works only if input format is Phylip, because 
 it is possible to split alignments afterwards (goalign divide for example).
 
+Not compatible with --ref-seq
+
 Several alignments:
 ------------------
 If several alignments are present in the input file and the output is a file 
-(not stdout or -) , then :
+(not stdout nor -) , then :
 * First alignment, first subalignment: results will be placed in the given file
   (ex out.fasta)
 * First alignment, other subalignments (sliding windows): results will be placed
@@ -85,8 +109,16 @@ If several alignments are present in the input file and the output is a file
 		extension := filepath.Ext(subseqout)
 		name := subseqout[0 : len(subseqout)-len(extension)]
 
+		refseq := cmd.Flags().Changed("ref-seq")
+		if refseq && subseqstep > 0 {
+			err = fmt.Errorf("--ref-seq and --step options are not compatible")
+			return
+		}
+
 		for al := range aligns.Achan {
 			start := subseqstart
+			len := subseqlength
+
 			if filenum > 0 && subseqout != "stdout" && subseqout != "-" {
 				fileid = fmt.Sprintf("_al%d", filenum)
 				f.Close()
@@ -95,15 +127,18 @@ If several alignments are present in the input file and the output is a file
 					return
 				}
 			}
+			if refseq {
+				start, len, err = al.RefCoordinates(subseqrefseq, start, len)
+			}
 			subalignnum := 0
 			for {
-				if subalign, err = al.SubAlign(start, subseqlength); err != nil {
+				if subalign, err = al.SubAlign(start, len); err != nil {
 					io.LogError(err)
 					return
 				}
 				writeAlign(subalign, f)
 				start += subseqstep
-				if subseqstep == 0 || (start+subseqlength) > al.Length() {
+				if subseqstep == 0 || (start+len) > al.Length() {
 					break
 				} else {
 					if subseqout != "stdout" && subseqout != "-" {
@@ -134,5 +169,6 @@ func init() {
 	subseqCmd.PersistentFlags().StringVarP(&subseqout, "output", "o", "stdout", "Alignment output file")
 	subseqCmd.PersistentFlags().IntVarP(&subseqstart, "start", "s", 0, "Start position (0-based inclusive)")
 	subseqCmd.PersistentFlags().IntVarP(&subseqlength, "length", "l", 10, "Length of the sub alignment")
+	subseqCmd.PersistentFlags().StringVar(&subseqrefseq, "ref-seq", "none", "Reference sequence on which coordinates are given")
 	subseqCmd.PersistentFlags().IntVar(&subseqstep, "step", 0, "Step: If > 0, then will generate several alignments, for each window of length l, with starts: [start,start+step, ..., end-l]* ")
 }

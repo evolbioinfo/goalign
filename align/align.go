@@ -55,6 +55,8 @@ type Alignment interface {
 	Rarefy(nb int, counts map[string]int) (Alignment, error)                                    // Take a new rarefied sample taking into accounts weights
 	RandSubAlign(length int) (Alignment, error)                                                 // Extract a random subalignment with given length from this alignment
 	Recombine(rate float64, lenprop float64)
+	// converts coordinates on the given sequence to coordinates on the alignment
+	RefCoordinates(name string, refstart, refend int) (alistart, aliend int, err error)
 	RemoveGapSeqs(cutoff float64)             // Removes sequences having >= cutoff gaps
 	RemoveGapSites(cutoff float64, ends bool) // Removes sites having >= cutoff gaps
 	// Replaces match characters (.) by their corresponding characters on the first sequence
@@ -271,6 +273,59 @@ func (a *align) RemoveGapSites(cutoff float64, ends bool) {
 		}
 	}
 	a.length -= nbremoved
+}
+
+// RefCoordinates converts coordinates on the given sequence to coordinates on the alignment.
+// Coordinates on the given sequence corresponds to the sequence without gaps. Output coordinates
+// on the alignent consider gaps.
+//
+// It returns an error if the sequence does not exist or if the coordinates are outside the ref
+// sequence (<0 or > sequence length without gaps)
+// Parameters:
+//    - name: The name of the sequence to take as reference
+//    - refstart: The start coordinate to convert (on the ref sequence, 0-based)
+//    - reflen: The length of the ref sequence to consider from refstart
+func (a *align) RefCoordinates(name string, refstart, reflen int) (alistart, alilen int, err error) {
+	var exists bool
+	var seq []rune
+	var tmpi int
+	var site rune
+	var ngaps int
+
+	if seq, exists = a.GetSequenceChar(name); !exists {
+		err = fmt.Errorf("Sequence %s does not exist in the alignment", name)
+		return
+	}
+	if refstart < 0 {
+		err = fmt.Errorf("Start on reference sequence must be > 0 : %d", refstart)
+		return
+	}
+	alistart = 0
+	alilen = 0
+	//look for start
+	tmpi = -1
+	for _, site = range seq {
+		if site != GAP {
+			tmpi++
+		} else {
+			ngaps++
+		}
+
+		if tmpi < refstart {
+			alistart++
+		} else {
+			alilen++
+			if tmpi >= refstart+reflen-1 {
+				break
+			}
+		}
+	}
+
+	if refstart+reflen > len(seq)-ngaps {
+		err = fmt.Errorf("Start + Length (%d + %d) on reference sequence falls outside the sequence", refstart, reflen)
+	}
+
+	return
 }
 
 // Removes sequences constituted of [cutoff*100%,100%] Gaps

@@ -19,6 +19,36 @@ This will extract a sub-alignment going from 10th position, with a length of 10.
 
 The output format is the same than input format.
 
+If `--ref-seq <name>` is specified, then the coordinates are considered according to the 
+given sequence without considering gaps.
+
+For example:
+
+If al.fa is:
+```
+>s1
+--ACG--AT-GC
+>s2
+GGACGTTATCGC
+```
+
+Then:
+```
+goalign subseq -i al.fa -s 0 -l 4 --ref-seq s1
+````
+
+will output:
+
+```
+>s1
+ACG--A
+>s2
+ACGTTA
+```
+
+`--ref-seq` is currently not not compatible with `--step`
+
+
 Sliding window:
 ---------------
 
@@ -44,6 +74,8 @@ will produce alignments with positions:
 
 Warning: If output is stdout, it works only if input format is Phylip, because 
 it is possible to split alignments afterwards (with `goalign divide` for example).
+
+`--step` is currently not compatible with `--ref-seq`.
 
 Several alignments:
 ------------------
