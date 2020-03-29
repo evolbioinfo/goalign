@@ -161,6 +161,7 @@ You may go to the [doc](docs/index.md) for a more detailed documentation of the 
   * seqs: Shuffle sequence order in the alignment
   * sites: Shuffle "vertically" some sites of the alignments
   * swap:  Swap portions of some sequences (cut/paste)
+* split: Split an input alignment according to partitions defined in a partition file
 * stats:       Prints different characteristics of the alignment
   * alleles
   * alphabet
