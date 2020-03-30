@@ -352,11 +352,6 @@ func (a *align) RemoveGapSeqs(cutoff float64) {
 			a.AddSequenceChar(seq.name, seq.sequence, seq.comment)
 		}
 	}
-	/* Now we remove gap sequences, starting at the end */
-	sort.Ints(toremove)
-	for i := (len(toremove) - 1); i >= 0; i-- {
-		a.seqs = append(a.seqs[:toremove[i]], a.seqs[toremove[i]+1:]...)
-}
 }
 
 // Swaps a rate of the sequences together
