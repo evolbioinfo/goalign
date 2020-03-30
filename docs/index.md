@@ -67,6 +67,7 @@ Command                                                     | Subcommand |      
 --                                                          | entropy    | Computes entropy of sites of a given alignment
 --                                                          | pssm       | Computes and prints a Position specific scoring matrix
 [concat](commands/concat.md) ([api](api/concat.md))         |            | Concatenates a set of alignment
+[consensus](commands/consensus.md) ([api](api/consensus.md))|            | Computes a basic majority consensus sequence
 [completion](commands/completion.md)                        |            | Generates auto-completion commands for bash or zsh
 [dedup](commands/dedup.md) ([api](api/dedup.md))            |            | Deduplicate/Remove identical sequences 
 [diff](commands/diff.md) ([api](api/diff.md))               |            | Compares all sequences of an alignment to the first one, and counts differences

@@ -3626,3 +3626,40 @@ ${GOALIGN} split -i input --partition partitions --out-prefix ./
 diff -q -b exp_p1 p1.fa
 diff -q -b exp_p2 p2.fa
 rm -f input exp_p1 exp_p2 partitions p1.fa p2.fa
+
+
+echo "->goalign consensus"
+cat > input <<EOF
+>s1
+ACGACGACGACG
+>2
+ACGACGACGACG
+>3
+TTTTTTTTTTTT
+EOF
+cat > expected <<EOF
+>consensus
+ACGACGACGACG
+EOF
+
+${GOALIGN} consensus -i input -o result
+diff -q -b expected result
+rm -f input expected result
+
+echo "->goalign consensus /2"
+cat > input <<EOF
+>s1
+ACGACGACGACC
+>2
+ATCTT-TTTTTC
+>3
+ATCTT-TTTTTT
+EOF
+cat > expected <<EOF
+>consensus
+ATCTT-TTTTTC
+EOF
+
+${GOALIGN} consensus -i input -o result
+diff -q -b expected result
+rm -f input expected result

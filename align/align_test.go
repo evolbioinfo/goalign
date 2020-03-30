@@ -1603,3 +1603,23 @@ func Test_align_RefCoordinates(t *testing.T) {
 	}
 
 }
+
+func TestConsensus(t *testing.T) {
+	var a Alignment
+	var c Alignment
+	var exp Alignment
+
+	a = NewAlign(NUCLEOTIDS)
+	a.AddSequence("A", "ACGACGACGACC", "")
+	a.AddSequence("B", "ATCTT-TTTTTC", "")
+	a.AddSequence("C", "ATCTT-TTTTTT", "")
+
+	exp = NewAlign(NUCLEOTIDS)
+	exp.AddSequence("consensus", "ATCTT-TTTTTC", "")
+
+	c = a.Consensus()
+
+	if !exp.Identical(c) {
+		t.Error(fmt.Errorf("Consensus is not identical to expected alignment"))
+	}
+}
