@@ -243,7 +243,7 @@ func TestRemoveOneGapSequence(t *testing.T) {
 	a.RemoveGapSeqs(0.0)
 
 	if a.NbSequences() != 0 {
-		t.Error("We should have removed all sequences")
+		t.Error(fmt.Errorf("We should have removed all sequences %d", a.NbSequences()))
 	}
 }
 
@@ -388,7 +388,7 @@ func TestAvgAlleles(t *testing.T) {
 	}
 
 	a.IterateChar(func(name string, sequence []rune) {
-		for j, _ := range sequence {
+		for j := range sequence {
 			sequence[j] = 'A'
 		}
 	})
@@ -407,7 +407,7 @@ func TestAvgAlleles2(t *testing.T) {
 
 	i := 0
 	a.IterateChar(func(name string, sequence []rune) {
-		for j, _ := range sequence {
+		for j := range sequence {
 			/* One only gap sequence */
 			if i == 10 {
 				sequence[j] = GAP

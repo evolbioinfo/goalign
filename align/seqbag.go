@@ -29,6 +29,7 @@ type SeqBag interface {
 	Clear()                                         // Removes all sequences
 	CloneSeqBag() (seqs SeqBag, err error)          // Clones the seqqbag
 	Deduplicate() (identical [][]string, err error) // Remove duplicate sequences
+	FilterLength(minlength, maxlength int) error    // Remove sequences whose length is <minlength or >maxlength
 	GetSequence(name string) (string, bool)         // Get a sequence by names
 	GetSequenceById(ith int) (string, bool)
 	GetSequenceChar(name string) ([]rune, bool)
@@ -241,6 +242,25 @@ func (sb *seqbag) Deduplicate() (identical [][]string, err error) {
 			seqs[s] = len(identical) - 1
 		} else {
 			identical[i] = append(identical[i], seq.name)
+		}
+	}
+	return
+}
+
+// FilterLength removes sequences whose length is <minlength or >maxlength
+// If maxlength < 0 : only considers minlength
+// If minlength < 0 : only considers maxlength
+//
+// The original alignment is directly modified. To work on a copy of the original
+// alignment, think about SeqBag.CloneSeqBag()
+func (sb *seqbag) FilterLength(minlength, maxlength int) (err error) {
+	oldseqs := sb.seqs
+	sb.Clear()
+	for _, seq := range oldseqs {
+		if (minlength >= 0 && seq.Length() >= minlength) || (maxlength > 0 && seq.Length() <= maxlength) {
+			if err = sb.AddSequenceChar(seq.name, seq.sequence, seq.comment); err != nil {
+				return
+			}
 		}
 	}
 	return

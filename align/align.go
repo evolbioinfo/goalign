@@ -28,6 +28,9 @@ type Alignment interface {
 	Compress() []int
 	// concatenates the given alignment with this alignment
 	Concat(Alignment) error
+	// Computes the majority consensus of the given alignemnt
+	// To do so, it takes the majority character at each alignment site
+	Consensus() *align
 	// Compares all sequences to the first one and counts all differences per sequence
 	//
 	// - alldiffs: The set of all differences that have been seen at least once
@@ -1196,6 +1199,19 @@ func (a *align) Concat(c Alignment) (err error) {
 	a.length = leng
 
 	return err
+}
+
+// Computes the majority consensus of the given alignemnt
+// To do so, it takes the majority character at each alignment site
+func (a *align) Consensus() (cons *align) {
+	var consseq []rune
+	consseq, _ = a.MaxCharStats()
+
+	cons = NewAlign(a.Alphabet())
+
+	cons.AddSequenceChar("consensus", consseq, "")
+
+	return
 }
 
 // Compares all sequences to the first one and replaces identical characters with .
