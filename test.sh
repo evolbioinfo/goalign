@@ -1600,15 +1600,39 @@ AAACGACGA-GACC-
 --CTT-TTT--TCC-
 EOF
 
-cat > expected <<EOF
-A	10
-B	6
-C	5
+cat > refseq <<EOF
+>ref
+CCCCCCCCCCCCCCC
 EOF
 
-${GOALIGN} stats mutations -i input --unique > result
+cat > expected <<EOF
+A	11
+B	15
+C	12
+EOF
+
+${GOALIGN} stats mutations -i input --ref-sequence refseq > result
 diff -q -b result expected
-rm -f expected result
+rm -f expected result refseq
+
+cat > input <<EOF
+>A
+CCCCCCCCCCCCCCC
+>B
+--AT-TT-T-TTT--
+>C
+--CTT-TTT--TCC-
+EOF
+
+cat > expected <<EOF
+A	0
+B	15
+C	12
+EOF
+
+${GOALIGN} stats mutations -i input --ref-sequence A > result
+diff -q -b result expected
+rm -f input expected result refseq
 
 echo "->goalign stats gaps"
 cat > input <<EOF

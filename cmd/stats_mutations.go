@@ -19,7 +19,8 @@ var statMutationsCmd = &cobra.Command{
 
 	- If --unique is specified, then counts only mutations (characters) that are unique in their column
 	for the given sequence.
-
+	- If --ref-sequence is specified, it will try to extract a seqsuence having that name from the alignment. If none exist, 
+	it will try to open a fasta file with the given name to take the first sequence as a reference.
 `,
 	RunE: func(cmd *cobra.Command, args []string) (err error) {
 		var aligns *align.AlignChannel
@@ -36,14 +37,34 @@ var statMutationsCmd = &cobra.Command{
 			return
 		}
 
-		var nummutationsunique []int
-		if statMutationsUnique {
-			nummutationsunique = al.NumMutationsUniquePerSequence()
+		var nummutations []int
+		if statMutationsRef != "none" {
+			var s string
+			var sb align.SeqBag
+			var ok bool
+			// We try to get the sequence from its name in the alignment
+			if s, ok = al.GetSequence(statMutationsRef); !ok {
+				//Else we open the potential file
+				if sb, err = readsequences(statMutationsRef); err != nil {
+					io.LogError(err)
+					return
+				}
+				if sb.NbSequences() < 1 {
+					err = fmt.Errorf("The reference sequence file does not contain any sequence")
+					io.LogError(err)
+					return
+				}
+				s, _ = sb.GetSequenceById(0)
+			}
+			if nummutations, err = al.NumMutationsComparedToReferenceSequence(align.NewSequence("ref", []rune(s), "")); err != nil {
+				io.LogError(err)
+				return
+			}
+		} else if statMutationsUnique {
+			nummutations = al.NumMutationsUniquePerSequence()
 		}
 		for i, s := range al.Sequences() {
-			if statMutationsUnique {
-				fmt.Printf("%s\t%d\n", s.Name(), nummutationsunique[i])
-			}
+			fmt.Printf("%s\t%d\n", s.Name(), nummutations[i])
 		}
 
 		return
@@ -51,7 +72,7 @@ var statMutationsCmd = &cobra.Command{
 }
 
 func init() {
-	statMutationsCmd.PersistentFlags().StringVar(&statMutationsRef, "ref-sequence", "none", "Count gaps in each sequence from end of sequences (until a non gap character is encountered)")
+	statMutationsCmd.PersistentFlags().StringVar(&statMutationsRef, "ref-sequence", "none", "Reference sequence to compare each sequence with.")
 	statMutationsCmd.PersistentFlags().BoolVar(&statMutationsUnique, "unique", false, "Count, in each sequence, the number of mutations/characters that are unique in a site")
 
 	statsCmd.AddCommand(statMutationsCmd)

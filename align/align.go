@@ -58,7 +58,9 @@ type Alignment interface {
 	NumGapsUniquePerSequence() []int // Number of Gaps in each sequence that are unique in their alignment site
 	// returns the number of characters in each sequence that are unique in their alignment site (gaps or others)
 	NumMutationsUniquePerSequence() (numuniques []int)
-
+	// returns the number of differences between the reference sequence and each sequence of the alignment
+	// If lengths are different, returns an error
+	NumMutationsComparedToReferenceSequence(seq Sequence) (nummutations []int, err error)
 	Pssm(log bool, pseudocount float64, normalization int) (pssm map[rune][]float64, err error) // Normalization: PSSM_NORM_NONE, PSSM_NORM_UNIF, PSSM_NORM_DATA
 	Rarefy(nb int, counts map[string]int) (Alignment, error)                                    // Take a new rarefied sample taking into accounts weights
 	RandSubAlign(length int) (Alignment, error)                                                 // Extract a random subalignment with given length from this alignment
@@ -1357,6 +1359,24 @@ func (a *align) NumMutationsUniquePerSequence() (numuniques []int) {
 			if num == 1 {
 				ind := indices[c]
 				numuniques[ind]++
+			}
+		}
+	}
+	return
+}
+
+// returns the number of differences between the reference sequence and each sequence of the alignment
+// If lengths are different, returns an error
+func (a *align) NumMutationsComparedToReferenceSequence(seq Sequence) (nummutations []int, err error) {
+	nummutations = make([]int, a.NbSequences())
+	if seq.Length() != a.Length() {
+		err = fmt.Errorf("Reference sequence and alignment do not have same length (%d,%d), cannot compute a number of mutation", seq.Length(), a.Length())
+		return
+	}
+	for i := 0; i < a.Length(); i++ {
+		for j, s := range a.seqs {
+			if s.sequence[i] != seq.SequenceChar()[i] {
+				nummutations[j]++
 			}
 		}
 	}
