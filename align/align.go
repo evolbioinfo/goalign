@@ -338,24 +338,25 @@ func (a *align) RemoveGapSeqs(cutoff float64) {
 	if cutoff < 0 || cutoff > 1 {
 		cutoff = 0
 	}
-
-	toremove := make([]int, 0, 10)
-	for seq := 0; seq < a.NbSequences(); seq++ {
+	oldseqs := a.seqs
+	length := a.Length()
+	a.Clear()
+	for _, seq := range oldseqs {
 		nbgaps = 0
-		for site := 0; site < a.Length(); site++ {
-			if a.seqs[seq].sequence[site] == GAP {
+		for site := 0; site < length; site++ {
+			if seq.sequence[site] == GAP {
 				nbgaps++
 			}
 		}
-		if (cutoff > 0.0 && float64(nbgaps) >= cutoff*float64(a.Length())) || (cutoff == 0 && nbgaps > 0) {
-			toremove = append(toremove, seq)
+		if !((cutoff > 0.0 && float64(nbgaps) >= cutoff*float64(length)) || (cutoff == 0 && nbgaps > 0)) {
+			a.AddSequenceChar(seq.name, seq.sequence, seq.comment)
 		}
 	}
 	/* Now we remove gap sequences, starting at the end */
 	sort.Ints(toremove)
 	for i := (len(toremove) - 1); i >= 0; i-- {
 		a.seqs = append(a.seqs[:toremove[i]], a.seqs[toremove[i]+1:]...)
-	}
+}
 }
 
 // Swaps a rate of the sequences together
