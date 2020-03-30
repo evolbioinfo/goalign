@@ -756,7 +756,6 @@ func (a *align) MaxCharStats(excludeGaps bool) (out []rune, occur []int) {
 			// If we exclude gaps and it is a gap: we do nothing
 			// Otherwise, if v > max, we update max occurence char
 			if !(excludeGaps && k == GAP) && v > max {
-				fmt.Println(v)
 				out[site] = k
 				occur[site] = v
 				max = v
