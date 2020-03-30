@@ -1590,6 +1590,26 @@ diff -q -b result expected
 rm -f expected result
 
 
+echo "->goalign stats mutations"
+cat > input <<EOF
+>A
+AAACGACGA-GACC-
+>B
+--AT-TT-T-TTT--
+>C
+--CTT-TTT--TCC-
+EOF
+
+cat > expected <<EOF
+A	10
+B	6
+C	5
+EOF
+
+${GOALIGN} stats mutations -i input --unique > result
+diff -q -b result expected
+rm -f expected result
+
 echo "->goalign stats gaps"
 cat > input <<EOF
 >A

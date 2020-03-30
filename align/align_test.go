@@ -1665,3 +1665,22 @@ func Test_align_NumGapsUniquePerSequence(t *testing.T) {
 		t.Error(fmt.Errorf("Numgaps is not what is expected, have %v, want %v", ng, exp))
 	}
 }
+
+func Test_align_NumMutationsUniquePerSequence(t *testing.T) {
+	var a Alignment
+	var ng []int
+	var exp []int
+
+	a = NewAlign(NUCLEOTIDS)
+	a.AddSequence("A", "ACGACGA-GACC", "")
+	a.AddSequence("B", "AT-TT-T-TTTC", "")
+	a.AddSequence("C", "ATCTT-TTT--T", "")
+
+	exp = []int{9, 3, 5}
+
+	ng = a.NumMutationsUniquePerSequence()
+
+	if !reflect.DeepEqual(exp, ng) {
+		t.Error(fmt.Errorf("Numgaps is not what is expected, have %v, want %v", ng, exp))
+	}
+}
