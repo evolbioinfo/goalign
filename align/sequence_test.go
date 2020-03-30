@@ -72,3 +72,90 @@ func Test_seq_Translate(t *testing.T) {
 		})
 	}
 }
+
+func Test_seq_NumGapsFromEnd(t *testing.T) {
+	type fields struct {
+		name     string
+		sequence []rune
+		comment  string
+	}
+	tests := []struct {
+		name        string
+		fields      fields
+		wantNumgaps int
+	}{
+		{name: "num 0", fields: fields{name: "s1", sequence: []rune{'-', '-', '-', 'A', '-', 'C'}, comment: ""}, wantNumgaps: 0},
+		{name: "num 1", fields: fields{name: "s1", sequence: []rune{'G', '-', '-', '-', 'A', '-', '-'}, comment: ""}, wantNumgaps: 2},
+		{name: "num 2", fields: fields{name: "s1", sequence: []rune{'-', '-', '-', '-', '-', '-'}, comment: ""}, wantNumgaps: 6},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			s := &seq{
+				name:     tt.fields.name,
+				sequence: tt.fields.sequence,
+				comment:  tt.fields.comment,
+			}
+			if gotNumgaps := s.NumGapsFromEnd(); gotNumgaps != tt.wantNumgaps {
+				t.Errorf("seq.NumGapsFromEnd() = %v, want %v", gotNumgaps, tt.wantNumgaps)
+			}
+		})
+	}
+}
+
+func Test_seq_NumGapsFromStart(t *testing.T) {
+	type fields struct {
+		name     string
+		sequence []rune
+		comment  string
+	}
+	tests := []struct {
+		name        string
+		fields      fields
+		wantNumgaps int
+	}{
+		{name: "num 0", fields: fields{name: "s1", sequence: []rune{'-', '-', '-', 'A', '-', 'C'}, comment: ""}, wantNumgaps: 3},
+		{name: "num 1", fields: fields{name: "s1", sequence: []rune{'G', '-', '-', '-', 'A', '-', 'C'}, comment: ""}, wantNumgaps: 0},
+		{name: "num 2", fields: fields{name: "s1", sequence: []rune{'-', '-', '-', '-', '-', '-'}, comment: ""}, wantNumgaps: 6},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			s := &seq{
+				name:     tt.fields.name,
+				sequence: tt.fields.sequence,
+				comment:  tt.fields.comment,
+			}
+			if gotNumgaps := s.NumGapsFromStart(); gotNumgaps != tt.wantNumgaps {
+				t.Errorf("seq.NumGapsFromStart() = %v, want %v", gotNumgaps, tt.wantNumgaps)
+			}
+		})
+	}
+}
+
+func Test_seq_NumGaps(t *testing.T) {
+	type fields struct {
+		name     string
+		sequence []rune
+		comment  string
+	}
+	tests := []struct {
+		name        string
+		fields      fields
+		wantNumgaps int
+	}{
+		{name: "num 0", fields: fields{name: "s1", sequence: []rune{'-', '-', '-', 'A', '-', 'C'}, comment: ""}, wantNumgaps: 4},
+		{name: "num 1", fields: fields{name: "s1", sequence: []rune{'G', '-', '-', '-', 'A', '-', 'C'}, comment: ""}, wantNumgaps: 4},
+		{name: "num 2", fields: fields{name: "s1", sequence: []rune{'-', '-', '-', '-', '-', '-'}, comment: ""}, wantNumgaps: 6},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			s := &seq{
+				name:     tt.fields.name,
+				sequence: tt.fields.sequence,
+				comment:  tt.fields.comment,
+			}
+			if gotNumgaps := s.NumGaps(); gotNumgaps != tt.wantNumgaps {
+				t.Errorf("seq.NumGaps() = %v, want %v", gotNumgaps, tt.wantNumgaps)
+			}
+		})
+	}
+}

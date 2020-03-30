@@ -24,6 +24,9 @@ type Sequence interface {
 	Complement() error                                      // Returns an error if not nucleotide sequence
 	Translate(phase int, geneticcode int) (Sequence, error) // Translates the sequence using the given code
 	DetectAlphabet() int                                    // Try to detect alphabet (nt or aa)
+	NumGaps() int                                           // Number of Gaps
+	NumGapsFromStart() int                                  // Number of Gaps from Start (until a non gap is encountered)
+	NumGapsFromEnd() int                                    // Number of Gaps from End (until a non gap is encountered)
 	Clone() Sequence
 }
 
@@ -190,6 +193,46 @@ func (s *seq) DetectAlphabet() int {
 	} else {
 		return UNKNOWN
 	}
+}
+
+//NumGaps returns the number of Gaps on the given sequence
+func (s *seq) NumGaps() (numgaps int) {
+	numgaps = 0
+	for _, c := range s.sequence {
+		if c == GAP {
+			numgaps++
+		}
+	}
+	return
+}
+
+// NumGapsFromStart returns the number of Gaps on the given sequence
+// by counting only the first consecutive gaps
+// Ex: -----A-AAA--AA = 5
+func (s *seq) NumGapsFromStart() (numgaps int) {
+	numgaps = 0
+	for _, c := range s.sequence {
+		if c != GAP {
+			return
+		}
+		numgaps++
+	}
+	return
+}
+
+// NumGapsFromEnd returns the number of Gaps on the given sequence
+// by counting only the last consecutive gaps at the end
+// Ex: // -----A-AAA--AA---- = 4
+func (s *seq) NumGapsFromEnd() (numgaps int) {
+	numgaps = 0
+	for i := range s.sequence {
+		c := s.sequence[len(s.sequence)-i-1]
+		if c != GAP {
+			return
+		}
+		numgaps++
+	}
+	return
 }
 
 // Translates the given sequence start at nucleotide index "phase"

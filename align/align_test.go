@@ -3,6 +3,7 @@ package align
 import (
 	"fmt"
 	"math"
+	"reflect"
 	"sort"
 	"strings"
 	"testing"
@@ -1643,5 +1644,24 @@ func TestConsensusGaps(t *testing.T) {
 		fmt.Println(exp)
 		fmt.Println(c)
 		t.Error(fmt.Errorf("Consensus is not identical to expected alignment"))
+	}
+}
+
+func Test_align_NumGapsUniquePerSequence(t *testing.T) {
+	var a Alignment
+	var ng []int
+	var exp []int
+
+	a = NewAlign(NUCLEOTIDS)
+	a.AddSequence("A", "ACGACGA-GACC", "")
+	a.AddSequence("B", "AT-TT-T-TTTC", "")
+	a.AddSequence("C", "ATCTT-TTT--T", "")
+
+	exp = []int{0, 1, 2}
+
+	ng = a.NumGapsUniquePerSequence()
+
+	if !reflect.DeepEqual(exp, ng) {
+		t.Error(fmt.Errorf("Numgaps is not what is expected, have %v, want %v", ng, exp))
 	}
 }

@@ -55,6 +55,7 @@ type Alignment interface {
 	MaxCharStats(excludeGaps bool) ([]rune, []int)
 	Mutate(rate float64)                                                                        // Adds uniform substitutions in the alignment (~sequencing errors)
 	NbVariableSites() int                                                                       // Nb of variable sites
+	NumGapsUniquePerSequence() []int                                                            // Number of Gaps in each sequence that are unique in their alignment site
 	Pssm(log bool, pseudocount float64, normalization int) (pssm map[rune][]float64, err error) // Normalization: PSSM_NORM_NONE, PSSM_NORM_UNIF, PSSM_NORM_DATA
 	Rarefy(nb int, counts map[string]int) (Alignment, error)                                    // Take a new rarefied sample taking into accounts weights
 	RandSubAlign(length int) (Alignment, error)                                                 // Extract a random subalignment with given length from this alignment
@@ -1308,6 +1309,30 @@ func (a *align) NbVariableSites() int {
 		}
 	}
 	return nbinfo
+}
+
+// NumGapsUnique returns the number of Gaps in the sequence that are unique in their alignment site
+func (a *align) NumGapsUniquePerSequence() (numgaps []int) {
+	numgaps = make([]int, a.NbSequences())
+	uniqueIndex := -1
+	nbGapsColumn := 0
+
+	for i := 0; i < a.Length(); i++ {
+		uniqueIndex = -1
+		nbGapsColumn = 0
+
+		for j, s := range a.seqs {
+			if s.sequence[i] == GAP {
+				nbGapsColumn++
+				uniqueIndex = j
+			}
+		}
+
+		if nbGapsColumn == 1 {
+			numgaps[uniqueIndex]++
+		}
+	}
+	return
 }
 
 // Aligns given nt sequences (ntseqs) using a corresponding aa alignment (a).

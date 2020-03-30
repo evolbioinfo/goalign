@@ -1590,6 +1590,59 @@ diff -q -b result expected
 rm -f expected result
 
 
+echo "->goalign stats gaps"
+cat > input <<EOF
+>A
+AAACGACGA-GACC-
+>B
+--AT-TT-T-TTT--
+>C
+--CTT-TTT--TCC-
+EOF
+
+cat > expected <<EOF
+A	2
+B	7
+C	6
+EOF
+
+${GOALIGN} stats gaps -i input > result
+diff -q -b result expected
+rm -f expected result
+
+cat > expected <<EOF
+A	0
+B	2
+C	2
+EOF
+
+${GOALIGN} stats gaps -i input --from-start > result
+diff -q -b result expected
+rm -f expected result
+
+cat > expected <<EOF
+A	1
+B	2
+C	1
+EOF
+
+${GOALIGN} stats gaps -i input --from-end > result
+diff -q -b result expected
+rm -f expected result
+
+cat > expected <<EOF
+A	0
+B	3
+C	2
+EOF
+
+${GOALIGN} stats gaps -i input --unique > result
+diff -q -b result expected
+rm -f expected result
+
+
+
+
 echo "->goalign subseq"
 cat > expected <<EOF
 >Seq0000
