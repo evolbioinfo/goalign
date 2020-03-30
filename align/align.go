@@ -30,7 +30,8 @@ type Alignment interface {
 	Concat(Alignment) error
 	// Computes the majority consensus of the given alignemnt
 	// To do so, it takes the majority character at each alignment site
-	Consensus() *align
+	// if excludeGaps is true, then gaps are not taken into account for majority computation
+	Consensus(excludeGaps bool) *align
 	// Compares all sequences to the first one and counts all differences per sequence
 	//
 	// - alldiffs: The set of all differences that have been seen at least once
@@ -51,7 +52,7 @@ type Alignment interface {
 	Stops(startingGapsAsIncomplete bool, geneticode int) (stops []int, err error)
 	Length() int                  // Length of the alignment
 	Mask(start, length int) error // Masks given positions
-	MaxCharStats() ([]rune, []int)
+	MaxCharStats(excludeGaps bool) ([]rune, []int)
 	Mutate(rate float64)                                                                        // Adds uniform substitutions in the alignment (~sequencing errors)
 	NbVariableSites() int                                                                       // Nb of variable sites
 	Pssm(log bool, pseudocount float64, normalization int) (pssm map[rune][]float64, err error) // Normalization: PSSM_NORM_NONE, PSSM_NORM_UNIF, PSSM_NORM_DATA
@@ -739,7 +740,7 @@ func (a *align) Mask(start, length int) (err error) {
 
 // Returns the Character with the most occurences
 // for each site of the alignment
-func (a *align) MaxCharStats() (out []rune, occur []int) {
+func (a *align) MaxCharStats(excludeGaps bool) (out []rune, occur []int) {
 	out = make([]rune, a.Length())
 	occur = make([]int, a.Length())
 	for site := 0; site < a.Length(); site++ {
@@ -748,8 +749,14 @@ func (a *align) MaxCharStats() (out []rune, occur []int) {
 		for _, seq := range a.seqs {
 			mapstats[unicode.ToUpper(seq.sequence[site])]++
 		}
+
+		out[site] = GAP
+		occur[site] = len(a.seqs)
 		for k, v := range mapstats {
-			if v > max {
+			// If we exclude gaps and it is a gap: we do nothing
+			// Otherwise, if v > max, we update max occurence char
+			if !(excludeGaps && k == GAP) && v > max {
+				fmt.Println(v)
 				out[site] = k
 				occur[site] = v
 				max = v
@@ -1203,9 +1210,12 @@ func (a *align) Concat(c Alignment) (err error) {
 
 // Computes the majority consensus of the given alignemnt
 // To do so, it takes the majority character at each alignment site
-func (a *align) Consensus() (cons *align) {
+//
+// if excludeGaps is true, then gaps are not taken into account for
+// majority computation
+func (a *align) Consensus(excludeGaps bool) (cons *align) {
 	var consseq []rune
-	consseq, _ = a.MaxCharStats()
+	consseq, _ = a.MaxCharStats(excludeGaps)
 
 	cons = NewAlign(a.Alphabet())
 

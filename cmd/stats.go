@@ -71,7 +71,7 @@ func printSiteCharStats(align align.Alignment) (err error) {
 
 	charmap := align.CharStats()
 	keys := make([]string, 0, len(charmap))
-	for k, _ := range charmap {
+	for k := range charmap {
 		keys = append(keys, string(k))
 	}
 	sort.Strings(keys)
@@ -96,8 +96,8 @@ func printSiteCharStats(align align.Alignment) (err error) {
 
 // Prints the Character with the most frequency
 // for each site of the alignment
-func printMaxCharStats(align align.Alignment) {
-	maxchars, occur := align.MaxCharStats()
+func printMaxCharStats(align align.Alignment, excludeGaps bool) {
+	maxchars, occur := align.MaxCharStats(excludeGaps)
 
 	fmt.Fprintf(os.Stdout, "site\tchar\tnb\n")
 	for i, c := range maxchars {

@@ -30,18 +30,26 @@ goalign stats [flags]
 goalign stats [command]
   
 Available Commands:
-	alleles
-	alphabet
-	char
-	length
-	nalign
-	nseq
-	taxa
+  alleles     Prints the average number of alleles per sites of the alignment
+  alphabet    Prints the alphabet detected for the input alignment
+  char        Prints frequence of different characters (aa/nt) of the alignment
+  length      Prints the length of sequences in the alignment
+  maxchar     Prints the character with the highest occcurence for each site of the alignment
+  nalign      Prints the number of alignments in the input file
+  nseq        Prints the number of sequences in the alignment
+  taxa        Prints index (position) and name of taxa of the alignment file
 			  
 Global Flags:
-  -i, --align string   Alignment input file (default "stdin")
-  -p, --phylip         Alignment is in phylip? False=Fasta
-  --input-strict       Strict phylip input format (only used with -p)
+  -i, --align string       Alignment input file (default "stdin")
+      --auto-detect        Auto detects input format (overrides -p, -x and -u)
+  -u, --clustal            Alignment is in clustal? default fasta
+      --ignore-identical   Ignore duplicated sequences that have the same name and same sequences
+      --input-strict       Strict phylip input format (only used with -p)
+  -x, --nexus              Alignment is in nexus? default fasta
+      --no-block           Write Phylip sequences without space separated blocks (only used with -p)
+      --one-line           Write Phylip sequences on 1 line (only used with -p)
+      --output-strict      Strict phylip output format (only used with -p)
+  -p, --phylip             Alignment is in phylip? default fasta
 ```
 
 #### Examples
@@ -52,13 +60,14 @@ goalign random -l 20 --seed 10| goalign stats
 
 Should give:
 ```
-length 20
-nseqs 10
-avgalleles 3.7500
-char nb freq
-A 54 0.270000
-C 34 0.170000
-G 49 0.245000
-T 63 0.315000
-alphabet	nucleotides
+length	20
+nseqs	10
+avgalleles	3.7500
+variable sites	20
+char	nb	freq
+A	54	0.270000
+C	34	0.170000
+G	49	0.245000
+T	63	0.315000
+alphabet	nucleotide
 ```

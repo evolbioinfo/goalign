@@ -22,6 +22,7 @@ func main() {
 	var r *bufio.Reader
 	var err error
 	var al, cons align.Alignment
+	var excludeGaps bool = false
 
 	/* Get reader (plain text or gzip) */
 	fi, r, err = utils.GetReader("align.fa")
@@ -37,7 +38,7 @@ func main() {
 	fi.Close()
 
 	/* Consensus */
-	cons = al.Consensus()
+	cons = al.Consensus(excludeGaps)
 
 	fmt.Println(fasta.WriteAlignment(cons))
 }

@@ -3,7 +3,9 @@
 ## Commands
 
 ### consensus
-This command generates a basic "majority consensus" sequence, _i.e._ a single sequence whose sites correspond to the majority characters at each positions. If '-' is the majority character, then '-' will be in the consensus (may change in future releases, in particular, taking into account ambiguous characters, etc.).
+This command generates a basic "majority consensus" sequence, _i.e._ a single sequence whose sites correspond to the majority characters at each positions. 
+
+If '-' is the majority character, then '-' will be in the consensus, except if `--exclude-gaps` is specified (may change in future releases, in particular, taking into account ambiguous characters, etc.). If `--exclude-gaps`is specified, then the majority is computed on non gaps sites.
 
 #### Usage
 ```
@@ -11,6 +13,7 @@ Usage:
   goalign consensus [flags]
 
 Flags:
+  --exclude-gaps        Exclude gaps in the majority computation
   -h, --help            help for consensus
   -o, --output string   Alignment output file (default "stdout")
 

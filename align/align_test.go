@@ -1617,9 +1617,31 @@ func TestConsensus(t *testing.T) {
 	exp = NewAlign(NUCLEOTIDS)
 	exp.AddSequence("consensus", "ATCTT-TTTTTC", "")
 
-	c = a.Consensus()
+	c = a.Consensus(false)
 
 	if !exp.Identical(c) {
+		t.Error(fmt.Errorf("Consensus is not identical to expected alignment"))
+	}
+}
+
+func TestConsensusGaps(t *testing.T) {
+	var a Alignment
+	var c Alignment
+	var exp Alignment
+
+	a = NewAlign(NUCLEOTIDS)
+	a.AddSequence("A", "ACGACGACGACC", "")
+	a.AddSequence("B", "ATCTT-TTTTTC", "")
+	a.AddSequence("C", "ATCTT-TTTTTT", "")
+
+	exp = NewAlign(NUCLEOTIDS)
+	exp.AddSequence("consensus", "ATCTTGTTTTTC", "")
+
+	c = a.Consensus(true)
+
+	if !exp.Identical(c) {
+		fmt.Println(exp)
+		fmt.Println(c)
 		t.Error(fmt.Errorf("Consensus is not identical to expected alignment"))
 	}
 }

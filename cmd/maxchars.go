@@ -6,6 +6,8 @@ import (
 	"github.com/spf13/cobra"
 )
 
+var maxCharExcludeGaps bool
+
 // charCmd represents the char command
 var maxCharCmd = &cobra.Command{
 	Use:   "maxchar",
@@ -36,7 +38,7 @@ goalign stats maxchar -i align.fasta
 			io.LogError(err)
 			return
 		}
-		printMaxCharStats(al)
+		printMaxCharStats(al, maxCharExcludeGaps)
 
 		return
 	},
@@ -44,4 +46,7 @@ goalign stats maxchar -i align.fasta
 
 func init() {
 	statsCmd.AddCommand(maxCharCmd)
+
+	maxCharCmd.PersistentFlags().BoolVar(&maxCharExcludeGaps, "exclude-gaps", false, "Exclude gaps in the majority computation")
+
 }

@@ -9,6 +9,7 @@ import (
 )
 
 var consensusOutput string
+var consensusExcludeGaps bool
 
 // concatCmd represents the concat command
 var consensusCmd = &cobra.Command{
@@ -42,7 +43,7 @@ then will output several consensus sequences.
 		defer closeWriteFile(f, consensusOutput)
 
 		for al := range aligns.Achan {
-			cons := al.Consensus()
+			cons := al.Consensus(consensusExcludeGaps)
 			writeAlign(cons, f)
 		}
 
@@ -57,4 +58,5 @@ then will output several consensus sequences.
 func init() {
 	RootCmd.AddCommand(consensusCmd)
 	consensusCmd.PersistentFlags().StringVarP(&consensusOutput, "output", "o", "stdout", "Alignment output file")
+	consensusCmd.PersistentFlags().BoolVar(&consensusExcludeGaps, "exclude-gaps", false, "Exclude gaps in the majority computation")
 }
