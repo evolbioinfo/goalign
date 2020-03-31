@@ -310,6 +310,11 @@ func (a *align) RefCoordinates(name string, refstart, reflen int) (alistart, ali
 		err = fmt.Errorf("Start on reference sequence must be > 0 : %d", refstart)
 		return
 	}
+	if reflen <= 0 {
+		err = fmt.Errorf("Reference length must be > 0 : %d", reflen)
+		return
+	}
+
 	alistart = 0
 	alilen = 0
 	//look for start
@@ -1086,19 +1091,25 @@ func (a *align) Pssm(log bool, pseudocount float64, normalization int) (pssm map
 }
 
 // Extract a subalignment from this alignment
-func (a *align) SubAlign(start, length int) (Alignment, error) {
+func (a *align) SubAlign(start, length int) (subalign Alignment, err error) {
 	if start < 0 || start > a.Length() {
-		return nil, errors.New("Start is outside the alignment")
+		err = fmt.Errorf("Start is outside the alignment")
+		return
+	}
+	if length < 0 {
+		err = fmt.Errorf("Length is negative")
+		return
 	}
 	if start+length < 0 || start+length > a.Length() {
-		return nil, errors.New("Start+Length is outside the alignment")
+		err = fmt.Errorf("Start+Length is outside the alignment")
+		return
 	}
-	subalign := NewAlign(a.alphabet)
+	subalign = NewAlign(a.alphabet)
 	for i := 0; i < a.NbSequences(); i++ {
 		seq := a.seqs[i]
 		subalign.AddSequenceChar(seq.name, seq.SequenceChar()[start:start+length], seq.Comment())
 	}
-	return subalign, nil
+	return
 }
 
 // Extract a subalignment with given length and a random start position from this alignment
