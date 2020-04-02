@@ -34,42 +34,60 @@ divide the output file with 'goalign divide' for example.
 
 `,
 	RunE: func(cmd *cobra.Command, args []string) (err error) {
-		var aligns *align.AlignChannel
 		var f *os.File
-		var sample align.Alignment
 
-		if aligns, err = readalign(infile); err != nil {
-			io.LogError(err)
-			return
-		}
 		if f, err = openWriteFile(sampleseqOutput); err != nil {
 			io.LogError(err)
 			return
 		}
 		defer closeWriteFile(f, sampleseqOutput)
 
-		for al := range aligns.Achan {
+		if unaligned {
+			var seqs align.SeqBag
+			var sample align.SeqBag
+
+			if seqs, err = readsequences(infile); err != nil {
+				io.LogError(err)
+				return
+			}
 			for i := 0; i < sampleseqNbSamples; i++ {
-				if sample, err = al.Sample(sampleseqSize); err != nil {
+				if sample, err = seqs.SampleSeqBag(sampleseqSize); err != nil {
 					io.LogError(err)
 					return
-				} else {
+				}
+				writeSequences(sample, f)
+			}
+		} else {
+			var aligns *align.AlignChannel
+			var sample align.Alignment
+
+			if aligns, err = readalign(infile); err != nil {
+				io.LogError(err)
+				return
+			}
+
+			for al := range aligns.Achan {
+				for i := 0; i < sampleseqNbSamples; i++ {
+					if sample, err = al.Sample(sampleseqSize); err != nil {
+						io.LogError(err)
+						return
+					}
 					writeAlign(sample, f)
 				}
 			}
-		}
 
-		if aligns.Err != nil {
-			err = aligns.Err
-			io.LogError(err)
+			if aligns.Err != nil {
+				err = aligns.Err
+				io.LogError(err)
+			}
 		}
-
 		return
 	},
 }
 
 func init() {
 	sampleCmd.AddCommand(sampleseqCmd)
+	sampleseqCmd.PersistentFlags().BoolVar(&unaligned, "unaligned", false, "Considers sequences as unaligned and format fasta (phylip, nexus,... options are ignored)")
 	sampleseqCmd.PersistentFlags().IntVarP(&sampleseqSize, "nb-seq", "n", 1, "Number of sequences to sample from the alignment")
 	sampleseqCmd.PersistentFlags().IntVarP(&sampleseqNbSamples, "nb-samples", "s", 1, "Number of samples to generate")
 	sampleseqCmd.PersistentFlags().StringVarP(&sampleseqOutput, "output", "o", "stdout", "Sampled alignment output file")

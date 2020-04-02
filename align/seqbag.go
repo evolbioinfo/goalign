@@ -36,7 +36,8 @@ type SeqBag interface {
 	GetSequenceCharById(ith int) ([]rune, bool)
 	GetSequenceNameById(ith int) (string, bool)
 	SetSequenceChar(ithAlign, ithSite int, char rune) error
-	IgnoreIdentical(bool) // if true, then it won't add the sequence if a sequence with the same name AND same sequence exists
+	IgnoreIdentical(bool)                // if true, then it won't add the sequence if a sequence with the same name AND same sequence exists
+	SampleSeqBag(nb int) (SeqBag, error) // generate a sub sample of the sequences
 	Sequence(ith int) (Sequence, bool)
 	SequenceByName(name string) (Sequence, bool)
 	Identical(SeqBag) bool
@@ -48,6 +49,7 @@ type SeqBag interface {
 	LongestORF(reverse bool) (orf Sequence, err error)
 	MaxNameLength() int // maximum sequence name length
 	NbSequences() int
+	RarefySeqBag(nb int, counts map[string]int) (SeqBag, error) // Take a new rarefied sample taking into accounts weights
 	Rename(namemap map[string]string)
 	RenameRegexp(regex, replace string, namemap map[string]string) error
 	Replace(old, new string, regex bool) error        // Replaces old string with new string in sequences of the alignment
@@ -84,6 +86,31 @@ func NewSeqBag(alphabet int) *seqbag {
 
 func (sb *seqbag) IgnoreIdentical(ignoreidentical bool) {
 	sb.ignoreidentical = ignoreidentical
+}
+
+// Samples randomly a subset of the sequences
+// And returns this new alignment
+// If nb < 1 or nb > nbsequences returns nil and an error
+func (sb *seqbag) SampleSeqBag(nb int) (sample SeqBag, err error) {
+	sample, err = sb.sampleSeqBag(nb)
+	return
+}
+
+// sampleSeqBag is a private function to allow manipulation of the structure and not the interface
+func (sb *seqbag) sampleSeqBag(nb int) (*seqbag, error) {
+	if sb.NbSequences() < nb {
+		return nil, errors.New("Number of sequences to sample is greater than alignment size")
+	}
+	if nb < 1 {
+		return nil, errors.New("Cannot sample less than 1 sequence")
+	}
+	sample := NewSeqBag(sb.alphabet)
+	permutation := rand.Perm(sb.NbSequences())
+	for i := 0; i < nb; i++ {
+		seq := sb.seqs[permutation[i]]
+		sample.AddSequenceChar(seq.name, seq.SequenceChar(), seq.Comment())
+	}
+	return sample, nil
 }
 
 // Adds a sequence to this alignment
@@ -498,6 +525,93 @@ func DetectAlphabet(seq string) int {
 	} else {
 		return AMINOACIDS
 	}
+}
+
+/*
+Each sequence in the alignment has an associated number of occurence. The sum s of the counts
+represents the number of sequences in the underlying initial dataset.
+
+The goal is to downsample (rarefy) the initial dataset, by sampling n sequences
+from s (n<s), and taking the alignment corresponding to this new sample, i.e by
+taking only unique (different) sequences from it.
+
+Parameters are:
+* nb: the number of sequences to sample from the underlying full dataset (different
+from the number of sequences in the output alignment)
+* counts: counts associated to each sequence (if the count of a sequence is missing, it
+is considered as 0, if the count of an unkown sequence is present, it will return an error).
+ Sum of counts of all sequences must be > n.
+*/
+func (sb *seqbag) RarefySeqBag(nb int, counts map[string]int) (sample SeqBag, err error) {
+	sample, err = sb.rarefySeqBag(nb, counts)
+	return
+}
+
+// rarefySeqBag is a private function to allow manipulation of the structure and not the interface
+func (sb *seqbag) rarefySeqBag(nb int, counts map[string]int) (sample *seqbag, err error) {
+	// Sequences that will be selected
+	selected := make(map[string]bool)
+	total := 0
+	// We copy the count map to modify it
+	tmpcounts := make(map[string]int)
+	tmpcountskeys := make([]string, len(counts))
+	i := 0
+	for k, v := range counts {
+		tmpcountskeys[i] = k
+		if v <= 0 {
+			err = fmt.Errorf("Sequence counts must be positive")
+			return
+		}
+		if _, ok := sb.GetSequenceChar(k); !ok {
+			err = fmt.Errorf("Sequence %s does not exist in the alignment", k)
+			return
+		}
+		tmpcounts[k] = v
+		total += v
+		i++
+	}
+
+	sort.Strings(tmpcountskeys)
+
+	if nb >= total {
+		err = fmt.Errorf("Number of sequences to sample %d is >= sum of the counts %d", nb, total)
+		return
+	}
+
+	// We sample a new sequence nb times
+	for i := 0; i < nb; i++ {
+		proba := 0.0
+		// random num
+		unif := rand.Float64()
+		for idk, k := range tmpcountskeys {
+			v, ok := tmpcounts[k]
+			if !ok {
+				err = fmt.Errorf("No sequence named %s is present in the tmp count map", k)
+				return
+			}
+			proba += float64(v) / float64(total)
+			if unif < proba {
+				selected[k] = true
+				if v-1 == 0 {
+					delete(tmpcounts, k)
+					tmpcountskeys = append(tmpcountskeys[:idk], tmpcountskeys[idk+1:]...)
+				} else {
+					tmpcounts[k] = v - 1
+				}
+				break
+			}
+		}
+		total--
+	}
+
+	sample = NewSeqBag(sb.alphabet)
+	sb.IterateAll(func(name string, sequence []rune, comment string) {
+		if _, ok := selected[name]; ok {
+			sample.AddSequenceChar(name, sequence, comment)
+		}
+	})
+
+	return
 }
 
 // This function renames sequences of the alignment based on the map in argument

@@ -1408,6 +1408,43 @@ ${GOALIGN} random -l 10 --seed 10 | ${GOALIGN} sample seqs -n 3 --seed 10 > resu
 diff -q -b result expected
 rm -f expected result
 
+echo "->goalign sample seqs unaligned"
+
+cat > input <<EOF
+>Seq0000
+GATTAATTTG
+>Seq0001
+CCGTAGG
+>Seq0002
+GAATCTGAAG
+>Seq0003
+ATCGAACACT
+>Seq0004
+TTAAGTTTTC
+>Seq0005
+ACTTCTAATG
+>Seq0006
+GAGAGGACTA
+>Seq0007
+GTTCATACTT
+>Seq0008
+TTTAAACAC
+>Seq0009
+TTTACATCGA
+EOF
+
+cat > expected <<EOF
+>Seq0001
+CCGTAGG
+>Seq0002
+GAATCTGAAG
+>Seq0008
+TTTAAACAC
+EOF
+${GOALIGN} sample seqs --unaligned -i input -n 3 --seed 10 > result
+diff -q -b result expected 
+rm -f expected result input
+
 
 
 echo "->goalign sample sites"
@@ -1436,8 +1473,6 @@ EOF
 ${GOALIGN} random -l 10 --seed 10 | ${GOALIGN} sample sites -l 5 --seed 10 > result
 diff -q -b result expected
 rm -f expected result
-
-
 
 echo "->goalign shuffle recomb"
 cat > expected <<EOF

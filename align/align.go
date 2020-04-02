@@ -590,20 +590,21 @@ func (a *align) TrimSequences(trimsize int, fromStart bool) error {
 // Samples randomly a subset of the sequences
 // And returns this new alignment
 // If nb < 1 or nb > nbsequences returns nil and an error
-func (a *align) Sample(nb int) (Alignment, error) {
-	if a.NbSequences() < nb {
-		return nil, errors.New("Number of sequences to sample is greater than alignment size")
+func (a *align) Sample(nb int) (al Alignment, err error) {
+	var sampleSeqBag *seqbag
+	var ali *align
+
+	if sampleSeqBag, err = a.sampleSeqBag(nb); err != nil {
+		return
 	}
-	if nb < 1 {
-		return nil, errors.New("Cannot sample less than 1 sequence")
+
+	if ali, err = seqBagToAlignment(sampleSeqBag); err != nil {
+		return
 	}
-	sample := NewAlign(a.alphabet)
-	permutation := rand.Perm(a.NbSequences())
-	for i := 0; i < nb; i++ {
-		seq := a.seqs[permutation[i]]
-		sample.AddSequenceChar(seq.name, seq.SequenceChar(), seq.Comment())
-	}
-	return sample, nil
+
+	al = ali
+
+	return
 }
 
 /*
@@ -621,66 +622,21 @@ from the number of sequences in the output alignment)
 is considered as 0, if the count of an unkown sequence is present, it will return an error).
  Sum of counts of all sequences must be > n.
 */
-func (a *align) Rarefy(nb int, counts map[string]int) (Alignment, error) {
-	// Sequences that will be selected
-	selected := make(map[string]bool)
-	total := 0
-	// We copy the count map to modify it
-	tmpcounts := make(map[string]int)
-	tmpcountskeys := make([]string, len(counts))
-	i := 0
-	for k, v := range counts {
-		tmpcountskeys[i] = k
-		if v <= 0 {
-			return nil, errors.New("Sequence counts must be positive")
-		}
-		if _, ok := a.GetSequenceChar(k); !ok {
-			return nil, errors.New(fmt.Sprintf("Sequence %s does not exist in the alignment", k))
-		}
-		tmpcounts[k] = v
-		total += v
-		i++
+func (a *align) Rarefy(nb int, counts map[string]int) (al Alignment, err error) {
+	var rarefySeqBag *seqbag
+	var ali *align
+
+	if rarefySeqBag, err = a.rarefySeqBag(nb, counts); err != nil {
+		return
 	}
 
-	sort.Strings(tmpcountskeys)
-
-	if nb >= total {
-		return nil, errors.New(fmt.Sprintf("Number of sequences to sample %d is >= sum of the counts %d", nb, total))
+	if ali, err = seqBagToAlignment(rarefySeqBag); err != nil {
+		return
 	}
 
-	// We sample a new sequence nb times
-	for i := 0; i < nb; i++ {
-		proba := 0.0
-		// random num
-		unif := rand.Float64()
-		for idk, k := range tmpcountskeys {
-			v, ok := tmpcounts[k]
-			if !ok {
-				return nil, errors.New(fmt.Sprintf("No sequence named %s is present in the tmp count map", k))
-			}
-			proba += float64(v) / float64(total)
-			if unif < proba {
-				selected[k] = true
-				if v-1 == 0 {
-					delete(tmpcounts, k)
-					tmpcountskeys = append(tmpcountskeys[:idk], tmpcountskeys[idk+1:]...)
-				} else {
-					tmpcounts[k] = v - 1
-				}
-				break
-			}
-		}
-		total--
-	}
+	al = ali
 
-	sample := NewAlign(a.alphabet)
-	a.IterateAll(func(name string, sequence []rune, comment string) {
-		if _, ok := selected[name]; ok {
-			sample.AddSequenceChar(name, sequence, comment)
-		}
-	})
-
-	return sample, nil
+	return
 }
 
 // This function builds a bootstrap alignment
@@ -722,6 +678,10 @@ func (a *align) CharStatsSite(site int) (outmap map[rune]int, err error) {
 	return outmap, err
 }
 
+// Mask masks sites of the alignment, going from start,
+// with a given length.
+// - For aa sequences: It masks with X
+// - For nt sequences: It masks with N
 func (a *align) Mask(start, length int) (err error) {
 	if start < 0 {
 		err = errors.New("Mask: Start position cannot be < 0")
@@ -777,17 +737,20 @@ func (a *align) MaxCharStats(excludeGaps bool) (out []rune, occur []int) {
 	return out, occur
 }
 
-func RandomAlignment(alphabet, length, nbseq int) (Alignment, error) {
-	al := NewAlign(alphabet)
+// RandomAlignment generates a random alignment with a given alphabet
+// length and number of sequences. Each character is randomly choosen
+// in a uniform distribution.
+func RandomAlignment(alphabet, length, nbseq int) (al Alignment, err error) {
+	var seq []rune
+	al = NewAlign(alphabet)
 	for i := 0; i < nbseq; i++ {
 		name := fmt.Sprintf("Seq%04d", i)
-		if seq, err := RandomSequence(alphabet, length); err != nil {
-			return nil, err
-		} else {
-			al.AddSequenceChar(name, seq, "")
+		if seq, err = RandomSequence(alphabet, length); err != nil {
+			return
 		}
+		al.AddSequenceChar(name, seq, "")
 	}
-	return al, nil
+	return
 }
 
 func (a *align) Clone() (c Alignment, err error) {
@@ -1558,5 +1521,25 @@ func (a *align) Split(part *PartitionSet) (als []Alignment, err error) {
 			}
 		}
 	}
+	return
+}
+
+func seqBagToAlignment(sb *seqbag) (al *align, err error) {
+	al = NewAlign(sb.Alphabet())
+
+	// We just check that sequence lengths are all equal
+	al.length = -1
+	for _, s := range sb.Sequences() {
+		l := len(s.SequenceChar())
+		if al.length != -1 && al.length != l {
+			err = fmt.Errorf("Sequence %s does not have same length as other sequences", s.Name())
+			return
+		}
+		al.length = l
+	}
+
+	//If ok, we transfer the structures to the new alignment (same reference!)
+	al.seqbag = *sb
+
 	return
 }

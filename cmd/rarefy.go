@@ -41,15 +41,9 @@ is considered as 0). Sum of counts of all sequences must be > n.
 Output: An alignment (phylip or fasta).
 `,
 	RunE: func(cmd *cobra.Command, args []string) (err error) {
-		var aligns *align.AlignChannel
 		var f *os.File
 		var counts map[string]int
-		var sample align.Alignment
 
-		if aligns, err = readalign(infile); err != nil {
-			io.LogError(err)
-			return
-		}
 		if f, err = openWriteFile(rarefyOutput); err != nil {
 			io.LogError(err)
 			return
@@ -61,30 +55,59 @@ Output: An alignment (phylip or fasta).
 			return
 		}
 
-		for al := range aligns.Achan {
+		if unaligned {
+			var seqs align.SeqBag
+			var sample align.SeqBag
+
+			if seqs, err = readsequences(infile); err != nil {
+				io.LogError(err)
+				return
+			}
 			if rarefyReplicates > 1 {
 				rootphylip = true
 			}
 			for i := 0; i < rarefyReplicates; i++ {
-				if sample, err = al.Rarefy(rarefyNb, counts); err != nil {
+				if sample, err = seqs.RarefySeqBag(rarefyNb, counts); err != nil {
 					io.LogError(err)
 					return
-				} else {
+				}
+				writeSequences(sample, f)
+			}
+		} else {
+			var aligns *align.AlignChannel
+			var sample align.Alignment
+
+			if aligns, err = readalign(infile); err != nil {
+				io.LogError(err)
+				return
+			}
+
+			for al := range aligns.Achan {
+				if rarefyReplicates > 1 {
+					rootphylip = true
+				}
+				for i := 0; i < rarefyReplicates; i++ {
+					if sample, err = al.Rarefy(rarefyNb, counts); err != nil {
+						io.LogError(err)
+						return
+					}
 					writeAlign(sample, f)
 				}
 			}
+
+			if aligns.Err != nil {
+				err = aligns.Err
+				io.LogError(err)
+			}
 		}
 
-		if aligns.Err != nil {
-			err = aligns.Err
-			io.LogError(err)
-		}
 		return
 	},
 }
 
 func init() {
 	sampleCmd.AddCommand(rarefyCmd)
+	rarefyCmd.PersistentFlags().BoolVar(&unaligned, "unaligned", false, "Considers sequences as unaligned and format fasta (phylip, nexus,... options are ignored)")
 	rarefyCmd.PersistentFlags().IntVarP(&rarefyNb, "nb-seq", "n", 1, "Number of sequences to sample from the repeated dataset (from counts)")
 	rarefyCmd.PersistentFlags().StringVarP(&rarefyOutput, "output", "o", "stdout", "Rarefied alignment output file")
 	rarefyCmd.PersistentFlags().StringVarP(&rarefyCounts, "counts", "c", "stdin", "Count file (tab separated), one line per sequence: seqname\\tcount")
@@ -110,9 +133,8 @@ func parseCountFile(file string) (counts map[string]int, err error) {
 	if strings.HasSuffix(file, ".gz") {
 		if gr, err = gzip.NewReader(f); err != nil {
 			return
-		} else {
-			r = bufio.NewReader(gr)
 		}
+		r = bufio.NewReader(gr)
 	} else {
 		r = bufio.NewReader(f)
 	}
