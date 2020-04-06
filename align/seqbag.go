@@ -15,6 +15,7 @@ import (
 	"github.com/evolbioinfo/goalign/io"
 )
 
+// SeqBag represents a set of unaligned sequences
 type SeqBag interface {
 	AddSequence(name string, sequence string, comment string) error
 	AddSequenceChar(name string, sequence []rune, comment string) error
@@ -660,10 +661,10 @@ func (sb *seqbag) RenameRegexp(regex, replace string, namemap map[string]string)
 // Replace an old string in sequences by a new string
 // It may be a regexp
 //
-// - If it changes the length of the sequences, then returns an error
 // - If the regex is malformed, returns an error
 func (sb *seqbag) Replace(old, new string, regex bool) (err error) {
 	var r *regexp.Regexp
+
 	if regex {
 		r, err = regexp.Compile(old)
 		if err != nil {
@@ -671,19 +672,11 @@ func (sb *seqbag) Replace(old, new string, regex bool) (err error) {
 		}
 		for seq := 0; seq < sb.NbSequences(); seq++ {
 			newseq := []rune(r.ReplaceAllString(string(sb.seqs[seq].sequence), new))
-			if len(newseq) != len(sb.seqs[seq].sequence) {
-				err = fmt.Errorf("replace should not change the length of sequences")
-				return err
-			}
 			sb.seqs[seq].sequence = newseq
 		}
 	} else {
 		for seq := 0; seq < sb.NbSequences(); seq++ {
 			newseq := strings.Replace(string(sb.seqs[seq].sequence), old, new, -1)
-			if len(newseq) != len(sb.seqs[seq].sequence) {
-				err = fmt.Errorf("replace should not change the length of sequences")
-				return err
-			}
 			sb.seqs[seq].sequence = []rune(newseq)
 		}
 	}

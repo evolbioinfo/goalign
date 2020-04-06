@@ -15,6 +15,7 @@ import (
 	"github.com/evolbioinfo/goalign/io"
 )
 
+// Alignment represents a set of aligned sequences (multiple Sequence Alignment)
 type Alignment interface {
 	SeqBag
 	AddGaps(rate, lenprop float64)
@@ -86,11 +87,13 @@ type align struct {
 	length int // Length of alignment
 }
 
+// AlignChannel is used for iterating over alignments
 type AlignChannel struct {
 	Achan chan Alignment
 	Err   error
 }
 
+// NewAlign initializes a new alignment
 func NewAlign(alphabet int) *align {
 	switch alphabet {
 	case AMINOACIDS, NUCLEOTIDS, UNKNOWN:
@@ -110,6 +113,8 @@ func NewAlign(alphabet int) *align {
 	}
 }
 
+// AlphabetFromString converts the alphabet name to its code
+// If the alphabet name is not known, returns align.UNKNOWN
 func AlphabetFromString(alphabet string) int {
 	switch strings.ToLower(alphabet) {
 	case "dna", "rna", "nucleotide":
@@ -121,13 +126,15 @@ func AlphabetFromString(alphabet string) int {
 	}
 }
 
-// Adds a sequence to this alignment
+// AddSequence Adds a sequence to this alignment
 func (a *align) AddSequence(name string, sequence string, comment string) error {
 	err := a.AddSequenceChar(name, []rune(sequence), comment)
 	return err
 }
 
-// If a.ignoreidentical is true, then it won't add the sequence if a sequence with the same name AND same sequence
+// AddSequenceChar adds a sequence from its rune representation.
+// If a.ignoreidentical is true, then it won't add the sequence if
+// a sequence with the same name AND same sequence
 // already exists in the alignment
 func (a *align) AddSequenceChar(name string, sequence []rune, comment string) error {
 	s, ok := a.seqmap[name]
@@ -160,11 +167,13 @@ func (a *align) AddSequenceChar(name string, sequence []rune, comment string) er
 	return nil
 }
 
+// Clear removes all the sequences from the alignment
 func (a *align) Clear() {
 	a.seqbag.Clear()
 	a.length = -1
 }
 
+// Length returns the current length of the alignment
 func (a *align) Length() int {
 	return a.length
 }
@@ -188,9 +197,9 @@ func (a *align) ShuffleSites(rate float64, roguerate float64, randroguefirst boo
 		io.ExitWithMessage(errors.New("Shuffle rogue rate must be >=0 and <=1"))
 	}
 
-	nb_sites_to_shuffle := int(rate * float64(a.Length()))
-	nb_rogue_sites_to_shuffle := int(rate * (1.0 - rate) * (float64(a.Length())))
-	nb_rogue_seq_to_shuffle := int(roguerate * float64(a.NbSequences()))
+	nbSitesToShuffle := int(rate * float64(a.Length()))
+	nbRogueSitesToShuffle := int(rate * (1.0 - rate) * (float64(a.Length())))
+	nbRogueSeqToShuffle := int(roguerate * float64(a.NbSequences()))
 	if randroguefirst {
 		taxpermutation = rand.Perm(a.NbSequences())
 		sitepermutation = rand.Perm(a.Length())
@@ -199,15 +208,15 @@ func (a *align) ShuffleSites(rate float64, roguerate float64, randroguefirst boo
 		taxpermutation = rand.Perm(a.NbSequences())
 	}
 
-	rogues := make([]string, nb_rogue_seq_to_shuffle)
+	rogues := make([]string, nbRogueSeqToShuffle)
 
-	if (nb_rogue_sites_to_shuffle + nb_sites_to_shuffle) > a.Length() {
-		io.ExitWithMessage(errors.New(fmt.Sprintf("Too many sites to shuffle (%d+%d>%d)",
-			nb_rogue_sites_to_shuffle, nb_sites_to_shuffle, a.Length())))
+	if (nbRogueSitesToShuffle + nbSitesToShuffle) > a.Length() {
+		io.ExitWithMessage(fmt.Errorf("Too many sites to shuffle (%d+%d>%d)",
+			nbRogueSitesToShuffle, nbSitesToShuffle, a.Length()))
 	}
 
 	var temp rune
-	for i := 0; i < nb_sites_to_shuffle; i++ {
+	for i := 0; i < nbSitesToShuffle; i++ {
 		site := sitepermutation[i]
 		var n int = a.NbSequences()
 		for n > 1 {
@@ -219,9 +228,9 @@ func (a *align) ShuffleSites(rate float64, roguerate float64, randroguefirst boo
 		}
 	}
 	// We shuffle more sites for "rogue" taxa
-	for i := 0; i < nb_rogue_sites_to_shuffle; i++ {
-		site := sitepermutation[i+nb_sites_to_shuffle]
-		for r := 0; r < nb_rogue_seq_to_shuffle; r++ {
+	for i := 0; i < nbRogueSitesToShuffle; i++ {
+		site := sitepermutation[i+nbSitesToShuffle]
+		for r := 0; r < nbRogueSeqToShuffle; r++ {
 			j := rand.Intn(r + 1)
 			seq1 := a.seqs[taxpermutation[r]]
 			seq2 := a.seqs[taxpermutation[j]]
@@ -400,6 +409,27 @@ func (a *align) Swap(rate float64) {
 			pos++
 		}
 	}
+}
+
+// Replace an old string in sequences by a new string
+// It may be a regexp
+//
+// - If it changes the length of the sequences, then returns an error and the returned alignment
+// is changed anyway
+// - If the regex is malformed, returns an error
+func (a *align) Replace(old, new string, regex bool) (err error) {
+
+	if err = a.seqbag.Replace(old, new, regex); err != nil {
+		return
+	}
+	// Verify that sequences still have same length
+	for _, seq := range a.Sequences() {
+		if seq.Length() != a.Length() {
+			err = fmt.Errorf("replace should not change the length of aligned sequences")
+			return err
+		}
+	}
+	return nil
 }
 
 // Replaces match characters (.) by their corresponding characters on the first sequence
