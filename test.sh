@@ -3864,9 +3864,6 @@ cat > input.2 <<EOF
 s4  ACGACGACGA CC
 5  ATCTT-TTTT TC
 6  ATCTT-TTTT TT
-EOF
-
-cat > input.3 <<EOF
    3   12
 s7  ACGACGACGA CC
 8  ATCTT-TTTT TC
@@ -3886,6 +3883,6 @@ s7  ACGACGACGA CC
 9  ATCTT-TTTT TT
 EOF
 
-${GOALIGN} append -i input.1 input.2 input.3  -p -o result
+${GOALIGN} append -i input.1 input.2 -p -o result
 diff -q -b expected result
 rm -f input.1 input.2 input.3 expected result 
