@@ -33,6 +33,7 @@ goalign append -i align.fasta others*.fasta
 		var compAligns *align.AlignChannel
 		var refAligns *align.AlignChannel = nil
 		var refAlign align.Alignment = nil
+
 		var f *os.File
 
 		if infile != "none" {
@@ -40,11 +41,20 @@ goalign append -i align.fasta others*.fasta
 				io.LogError(err)
 				return
 			}
-			refAlign = <-refAligns.Achan
-			if refAligns.Err != nil {
-				err = refAligns.Err
-				io.LogError(err)
-				return
+			for al := range refAligns.Achan {
+				if refAlign == nil {
+					refAlign = al
+				} else {
+					if err = refAlign.Append(al); err != nil {
+						io.LogError(err)
+						return
+					}
+				}
+				if refAligns.Err != nil {
+					err = refAligns.Err
+					io.LogError(err)
+					return
+				}
 			}
 		}
 

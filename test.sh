@@ -3886,3 +3886,37 @@ EOF
 ${GOALIGN} append -i input.1 input.2 -p -o result
 diff -q -b expected result
 rm -f input.1 input.2 input.3 expected result 
+
+
+echo "->goalign append phylip /2"
+cat > input.1 <<EOF
+   3   12
+s1  ACGACGACGA CC
+2  ATCTT-TTTT TC
+3  ATCTT-TTTT TT
+   3   12
+s4  ACGACGACGA CC
+5  ATCTT-TTTT TC
+6  ATCTT-TTTT TT
+   3   12
+s7  ACGACGACGA CC
+8  ATCTT-TTTT TC
+9  ATCTT-TTTT TT
+EOF
+
+cat > expected <<EOF
+   9   12
+s1  ACGACGACGA CC
+2  ATCTT-TTTT TC
+3  ATCTT-TTTT TT
+s4  ACGACGACGA CC
+5  ATCTT-TTTT TC
+6  ATCTT-TTTT TT
+s7  ACGACGACGA CC
+8  ATCTT-TTTT TC
+9  ATCTT-TTTT TT
+EOF
+
+${GOALIGN} append -i input.1 -p -o result
+diff -q -b expected result
+rm -f input.1 input.2 input.3 expected result 
