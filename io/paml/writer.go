@@ -3,6 +3,7 @@ package paml
 import (
 	"bytes"
 	"fmt"
+
 	"github.com/evolbioinfo/goalign/align"
 )
 
@@ -22,8 +23,9 @@ func WriteAlignment(al align.Alignment) string {
 	var buf bytes.Buffer
 
 	buf.WriteString(fmt.Sprintf("  %d %d  I\n", al.NbSequences(), al.Length()))
-	al.Iterate(func(name string, seq string) {
+	al.Iterate(func(name string, seq string) bool {
 		buf.WriteString(name + "\n")
+		return false
 	})
 	buf.WriteRune('\n')
 	cursize := 0
@@ -31,7 +33,7 @@ func WriteAlignment(al align.Alignment) string {
 		if cursize > 0 {
 			buf.WriteString(fmt.Sprintf("%d\n", cursize+1))
 		}
-		al.IterateChar(func(name string, seq []rune) {
+		al.IterateChar(func(name string, seq []rune) bool {
 			for i := cursize; i < cursize+PAML_LINE && i < len(seq); i += PAML_BLOCK {
 				if i > cursize {
 					buf.WriteString(" ")
@@ -42,6 +44,7 @@ func WriteAlignment(al align.Alignment) string {
 				}
 			}
 			buf.WriteString("\n")
+			return false
 		})
 		cursize += PAML_LINE
 	}

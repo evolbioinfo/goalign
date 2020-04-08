@@ -176,10 +176,11 @@ func (p *Parser) Parse() (al align.Alignment, err error) {
 		}
 		// We check that tax labels are the same as alignment sequence names
 		if taxlabels != nil {
-			al.Iterate(func(name string, sequence string) {
+			al.Iterate(func(name string, sequence string) bool {
 				if _, ok := taxlabels[name]; !ok {
 					err = fmt.Errorf("Sequence name %s in the alignment is not defined in the TAXLABELS block", name)
 				}
+				return false
 			})
 			if err != nil {
 				return nil, err

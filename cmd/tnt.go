@@ -50,8 +50,9 @@ goalign reformat tnt -i align.fasta
 		f.WriteString("xread\n\n")
 		f.WriteString("'Tnt input file'\n\n")
 		f.WriteString(fmt.Sprintf("%d %d\n", al.Length(), al.NbSequences()))
-		al.Iterate(func(name string, sequence string) {
+		al.Iterate(func(name string, sequence string) bool {
 			f.WriteString(fmt.Sprintf("%s %s\n", name, sequence))
+			return false
 		})
 		f.WriteString(";\n")
 

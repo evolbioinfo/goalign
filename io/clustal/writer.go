@@ -25,10 +25,11 @@ func WriteAlignment(al align.Alignment) string {
 
 	// Get length of the longest name
 	maxnamelength := 0
-	al.IterateChar(func(name string, seq []rune) {
+	al.IterateChar(func(name string, seq []rune) bool {
 		if len(name) > maxnamelength {
 			maxnamelength = len(name)
 		}
+		return false
 	})
 
 	buf.WriteString(fmt.Sprintf("CLUSTAL W (goalign version %s)\n\n", version.Version))
@@ -37,7 +38,7 @@ func WriteAlignment(al align.Alignment) string {
 			buf.WriteRune('\n')
 		}
 		end := 0
-		al.IterateChar(func(name string, seq []rune) {
+		al.IterateChar(func(name string, seq []rune) bool {
 			buf.WriteString(name)
 			for i := len(name); i < maxnamelength+3; i++ {
 				buf.WriteRune(' ')
@@ -50,6 +51,7 @@ func WriteAlignment(al align.Alignment) string {
 			buf.WriteRune(' ')
 			buf.WriteString(fmt.Sprintf("%d", end))
 			buf.WriteRune('\n')
+			return false
 		})
 		// Conservation line
 		// White spaces

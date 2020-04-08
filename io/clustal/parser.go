@@ -90,9 +90,8 @@ func (p *Parser) Parse() (align.Alignment, error) {
 				return nil, errors.New("There should not be a white space here, only at last line of blocks")
 			}
 			if nbseq != 0 && currentnbseqs != nbseq {
-				return nil, errors.New(
-					fmt.Sprintf("Conservation line: Sequence block nb %d has different number of sequence (%d)",
-						nblocks, currentnbseqs))
+				return nil, fmt.Errorf("Conservation line: Sequence block nb %d has different number of sequence (%d)",
+					nblocks, currentnbseqs)
 			}
 			for tok != ENDOFLINE && tok != EOF {
 				tok, lit = p.scan()
@@ -112,9 +111,8 @@ func (p *Parser) Parse() (align.Alignment, error) {
 				break
 			}
 			if nbseq != 0 && currentnbseqs != nbseq {
-				return nil, errors.New(
-					fmt.Sprintf("Sequence block nb %d has different number of sequence (%d)",
-						nblocks, currentnbseqs))
+				return nil, fmt.Errorf("Sequence block nb %d has different number of sequence (%d)",
+					nblocks, currentnbseqs)
 			}
 			nbseq = currentnbseqs
 			nblocks++

@@ -4,9 +4,10 @@ import (
 	"bufio"
 	"bytes"
 	"errors"
-	alignio "github.com/evolbioinfo/goalign/io"
 	"io"
 	"strconv"
+
+	alignio "github.com/evolbioinfo/goalign/io"
 )
 
 // Scanner represents a lexical scanner.
@@ -66,9 +67,8 @@ func (s *Scanner) Scan() (tok Token, lit string) {
 			ch := s.read()
 			if isNL(ch) {
 				return ENDOFLINE, ""
-			} else {
-				alignio.ExitWithMessage(errors.New("\\r without \\n detected..."))
 			}
+			alignio.ExitWithMessage(errors.New("\\r without \\n detected"))
 		} else {
 			return ENDOFLINE, ""
 		}
@@ -85,11 +85,8 @@ func (s *Scanner) Scan() (tok Token, lit string) {
 	_, err := strconv.ParseInt(ident, 10, 64)
 	if err != nil {
 		return tok, ident
-	} else {
-		return NUMERIC, ident
 	}
-
-	return IDENTIFIER, ident
+	return NUMERIC, ident
 }
 
 // scanEndOfLine consumes the current rune and all contiguous \n\r.

@@ -42,9 +42,9 @@ type SeqBag interface {
 	Sequence(ith int) (Sequence, bool)
 	SequenceByName(name string) (Sequence, bool)
 	Identical(SeqBag) bool
-	Iterate(it func(name string, sequence string))
-	IterateChar(it func(name string, sequence []rune))
-	IterateAll(it func(name string, sequence []rune, comment string))
+	Iterate(it func(name string, sequence string) bool)
+	IterateChar(it func(name string, sequence []rune) bool)
+	IterateAll(it func(name string, sequence []rune, comment string) bool)
 	Sequences() []Sequence
 	SequencesChan() chan Sequence
 	LongestORF(reverse bool) (orf Sequence, err error)
@@ -232,13 +232,11 @@ func (sb *seqbag) CloneSeqBag() (SeqBag, error) {
 	c := NewSeqBag(sb.Alphabet())
 	c.IgnoreIdentical(sb.ignoreidentical)
 	var err error
-	sb.IterateAll(func(name string, sequence []rune, comment string) {
+	sb.IterateAll(func(name string, sequence []rune, comment string) bool {
 		newseq := make([]rune, 0, len(sequence))
 		newseq = append(newseq, sequence...)
 		err = c.AddSequenceChar(name, newseq, comment)
-		if err != nil {
-			return
-		}
+		return err != nil
 	})
 	return c, err
 }
@@ -403,21 +401,30 @@ func (sb *seqbag) Identical(comp SeqBag) bool {
 	return true
 }
 
-func (sb *seqbag) Iterate(it func(name string, sequence string)) {
+func (sb *seqbag) Iterate(it func(name string, sequence string) bool) {
+	var stop bool = false
 	for _, seq := range sb.seqs {
-		it(seq.name, string(seq.sequence))
+		if stop = it(seq.name, string(seq.sequence)); stop {
+			return
+		}
 	}
 }
 
-func (sb *seqbag) IterateChar(it func(name string, sequence []rune)) {
+func (sb *seqbag) IterateChar(it func(name string, sequence []rune) bool) {
+	var stop bool = false
 	for _, seq := range sb.seqs {
-		it(seq.name, seq.sequence)
+		if stop = it(seq.name, seq.sequence); stop {
+			return
+		}
 	}
 }
 
-func (sb *seqbag) IterateAll(it func(name string, sequence []rune, comment string)) {
+func (sb *seqbag) IterateAll(it func(name string, sequence []rune, comment string) bool) {
+	var stop bool = false
 	for _, seq := range sb.seqs {
-		it(seq.name, seq.sequence, seq.comment)
+		if stop = it(seq.name, seq.sequence, seq.comment); stop {
+			return
+		}
 	}
 }
 
@@ -444,7 +451,7 @@ func (sb *seqbag) SequencesChan() (seqs chan Sequence) {
 func (sb *seqbag) appendToSequence(name string, sequence []rune) error {
 	seq, ok := sb.seqmap[name]
 	if !ok {
-		return errors.New(fmt.Sprintf("Sequence with name %s does not exist in alignment", name))
+		return fmt.Errorf("Sequence with name %s does not exist in alignment", name)
 	}
 	seq.sequence = append(seq.sequence, sequence...)
 	return nil
@@ -454,7 +461,7 @@ func (sb *seqbag) AutoAlphabet() {
 	isaa := true
 	isnt := true
 
-	sb.IterateChar(func(name string, seq []rune) {
+	sb.IterateChar(func(name string, seq []rune) bool {
 		for _, nt := range seq {
 			nt = unicode.ToUpper(nt)
 			couldbent := false
@@ -471,6 +478,7 @@ func (sb *seqbag) AutoAlphabet() {
 			isaa = isaa && couldbeaa
 			isnt = isnt && couldbent
 		}
+		return false
 	})
 
 	if isnt {
@@ -606,10 +614,11 @@ func (sb *seqbag) rarefySeqBag(nb int, counts map[string]int) (sample *seqbag, e
 	}
 
 	sample = NewSeqBag(sb.alphabet)
-	sb.IterateAll(func(name string, sequence []rune, comment string) {
+	sb.IterateAll(func(name string, sequence []rune, comment string) bool {
 		if _, ok := selected[name]; ok {
 			sample.AddSequenceChar(name, sequence, comment)
 		}
+		return false
 	})
 
 	return

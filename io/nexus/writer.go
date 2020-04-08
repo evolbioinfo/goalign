@@ -3,6 +3,7 @@ package nexus
 import (
 	"bytes"
 	"fmt"
+
 	"github.com/evolbioinfo/goalign/align"
 )
 
@@ -27,11 +28,12 @@ func WriteAlignment(al align.Alignment) string {
 	buf.WriteString(fmt.Sprintf("dimensions ntax=%d nchar=%d;\n", al.NbSequences(), al.Length()))
 	buf.WriteString(fmt.Sprintf("format datatype=%s;\n", seqtype))
 	buf.WriteString(fmt.Sprintf("matrix\n"))
-	al.Iterate(func(name string, seq string) {
+	al.Iterate(func(name string, seq string) bool {
 		buf.WriteString(name)
 		buf.WriteString(" ")
 		buf.WriteString(seq)
 		buf.WriteRune('\n')
+		return false
 	})
 	buf.WriteString(";\n")
 	buf.WriteString("end;\n")

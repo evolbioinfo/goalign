@@ -53,7 +53,7 @@ func aaFrequency(a align.Alignment, weights []float64, selected []bool) ([]float
 	}
 
 	// Count occurences of different amino acids
-	a.IterateChar(func(name string, sequence []rune) {
+	a.IterateChar(func(name string, sequence []rune) bool {
 		for j = 0; j < len(sequence); j++ {
 			if selected[j] {
 				w = weights[j]
@@ -67,6 +67,7 @@ func aaFrequency(a align.Alignment, weights []float64, selected []bool) ([]float
 				}
 			}
 		}
+		return false
 	})
 
 	// if at least one frequency equals 0 then add a pseudo-count

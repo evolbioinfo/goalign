@@ -36,8 +36,9 @@ goalign stats length -i align.fasta
 				return
 			}
 
-			seqs.IterateChar(func(name string, sequence []rune) {
+			seqs.IterateChar(func(name string, sequence []rune) bool {
 				fmt.Println(name, "\t", len(sequence))
+				return false
 			})
 		} else {
 			var aligns *align.AlignChannel

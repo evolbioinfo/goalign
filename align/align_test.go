@@ -33,17 +33,21 @@ func TestAppendIdentifier(t *testing.T) {
 	}
 	a.AppendSeqIdentifier("IDENT", false)
 
-	a.IterateChar(func(name string, sequence []rune) {
+	a.IterateChar(func(name string, sequence []rune) bool {
 		if !strings.HasPrefix(name, "IDENT") {
 			t.Error("Sequence name does not start with expected id: IDENT")
+			return true
 		}
+		return false
 	})
 
 	a.AppendSeqIdentifier("IDENT", true)
-	a.IterateChar(func(name string, sequence []rune) {
+	a.IterateChar(func(name string, sequence []rune) bool {
 		if !strings.HasSuffix(name, "IDENT") {
 			t.Error("Sequence name does not end with expected id: IDENT")
+			return true
 		}
+		return false
 	})
 }
 
@@ -59,15 +63,18 @@ func TestCleanNames(t *testing.T) {
 
 	a.CleanNames(nil)
 	i := 0
-	a.IterateChar(func(name string, sequence []rune) {
+	a.IterateChar(func(name string, sequence []rune) bool {
 		expected, found := a2.GetSequenceNameById(i)
 		if !found {
 			t.Error("Unknown sequence name after clean")
+			return true
 		}
 		if name != expected {
 			t.Error("Unexpected sequence name after clean")
+			return true
 		}
 		i++
+		return false
 	})
 }
 
@@ -80,9 +87,10 @@ func TestRemoveOneGapSite(t *testing.T) {
 
 	/* We add 1 gap per site */
 	pos := 0
-	a.IterateChar(func(name string, sequence []rune) {
+	a.IterateChar(func(name string, sequence []rune) bool {
 		sequence[pos] = GAP
 		pos++
+		return false
 	})
 
 	a.RemoveGapSites(0.0, false)
@@ -90,10 +98,12 @@ func TestRemoveOneGapSite(t *testing.T) {
 	if a.Length() != 0 {
 		t.Error("We should have removed all positions")
 	}
-	a.IterateChar(func(name string, sequence []rune) {
+	a.IterateChar(func(name string, sequence []rune) bool {
 		if len(sequence) != 0 {
 			t.Error(fmt.Sprintf("Sequence length after removing gaps should be 0 and is : %d", len(sequence)))
+			return true
 		}
+		return false
 	})
 }
 
@@ -114,10 +124,11 @@ func TestRemoveAllGapSites(t *testing.T) {
 	/* And one gap at all sites */
 	pos1 := 20
 	pos2 := 0
-	a.IterateChar(func(name string, sequence []rune) {
+	a.IterateChar(func(name string, sequence []rune) bool {
 		sequence[pos1] = GAP
 		sequence[pos2] = GAP
 		pos2++
+		return false
 	})
 	backupseq = append(backupseq, seq0...)
 	/* Remove position 20 */
@@ -129,10 +140,12 @@ func TestRemoveAllGapSites(t *testing.T) {
 		t.Error("We should have removed only one position")
 	}
 
-	a.IterateChar(func(name string, sequence []rune) {
+	a.IterateChar(func(name string, sequence []rune) bool {
 		if len(sequence) != 299 {
 			t.Error(fmt.Sprintf("Sequence length after removing gaps should be 299 and is : %d", len(sequence)))
+			return true
 		}
+		return false
 	})
 
 	newseq, found2 := a.GetSequenceCharById(0)
@@ -156,9 +169,10 @@ func TestRemoveOneGapSiteEnds(t *testing.T) {
 
 	/* We add 1 gap per site */
 	pos := 0
-	a.IterateChar(func(name string, sequence []rune) {
+	a.IterateChar(func(name string, sequence []rune) bool {
 		sequence[pos] = GAP
 		pos++
+		return false
 	})
 
 	a.RemoveGapSites(0.0, true)
@@ -166,10 +180,11 @@ func TestRemoveOneGapSiteEnds(t *testing.T) {
 	if a.Length() != 0 {
 		t.Error("We should have removed all positions")
 	}
-	a.IterateChar(func(name string, sequence []rune) {
+	a.IterateChar(func(name string, sequence []rune) bool {
 		if len(sequence) != 0 {
 			t.Error(fmt.Sprintf("Sequence length after removing gaps should be 0 and is : %d", len(sequence)))
 		}
+		return false
 	})
 }
 
@@ -184,10 +199,11 @@ func TestRemoveAllGapSitesEnds(t *testing.T) {
 	/* And one gap at all sites */
 	pos1 := 20
 	pos2 := 0
-	a.IterateChar(func(name string, sequence []rune) {
+	a.IterateChar(func(name string, sequence []rune) bool {
 		sequence[pos1] = GAP
 		sequence[pos2] = GAP
 		pos2++
+		return false
 	})
 
 	a.RemoveGapSites(1.0, true)
@@ -196,10 +212,12 @@ func TestRemoveAllGapSitesEnds(t *testing.T) {
 		t.Error(fmt.Sprintf("We should not have removed any positions: %d", a.Length()))
 	}
 
-	a.IterateChar(func(name string, sequence []rune) {
+	a.IterateChar(func(name string, sequence []rune) bool {
 		if len(sequence) != 300 {
 			t.Error(fmt.Sprintf("Sequence length after removing gaps should be 299 and is : %d", len(sequence)))
+			return true
 		}
+		return false
 	})
 }
 
@@ -236,9 +254,10 @@ func TestRemoveOneGapSequence(t *testing.T) {
 
 	/* We add 1 gap per site on all sequences*/
 	pos := 0
-	a.IterateChar(func(name string, sequence []rune) {
+	a.IterateChar(func(name string, sequence []rune) bool {
 		sequence[pos] = GAP
 		pos++
+		return false
 	})
 
 	a.RemoveGapSeqs(0.0)
@@ -257,11 +276,12 @@ func TestRemoveOneGapSequence2(t *testing.T) {
 
 	/* We add 1 gap per site on half of the sequences*/
 	pos := 0
-	a.IterateChar(func(name string, sequence []rune) {
+	a.IterateChar(func(name string, sequence []rune) bool {
 		if pos%2 == 0 {
 			sequence[pos] = GAP
 		}
 		pos++
+		return false
 	})
 
 	a.RemoveGapSeqs(0.0)
@@ -326,9 +346,10 @@ func TestClone(t *testing.T) {
 
 	/* We add 1 gap per site */
 	pos := 0
-	a.IterateChar(func(name string, sequence []rune) {
+	a.IterateChar(func(name string, sequence []rune) bool {
 		sequence[pos] = GAP
 		pos++
+		return false
 	})
 
 	a2, err2 := a.Clone()
@@ -338,10 +359,12 @@ func TestClone(t *testing.T) {
 
 	a.RemoveGapSites(0.0, false)
 
-	a2.IterateChar(func(name string, sequence []rune) {
+	a2.IterateChar(func(name string, sequence []rune) bool {
 		if len(sequence) != 300 {
 			t.Error(fmt.Sprintf("Clone lenght should be 300 and is : %d", len(sequence)))
+			return true
 		}
+		return false
 	})
 }
 
@@ -358,26 +381,31 @@ func TestClone2(t *testing.T) {
 	}
 
 	i := 0
-	a2.IterateChar(func(name string, sequence []rune) {
+	a2.IterateChar(func(name string, sequence []rune) bool {
 		s2, ok := a.GetSequenceCharById(i)
 		n2, ok2 := a.GetSequenceNameById(i)
 
 		if !ok || !ok2 {
 			t.Error(fmt.Sprintf("Sequence not found in clone alignment: %s", name))
+			return true
 		}
 
 		if len(sequence) != len(s2) {
 			t.Error(fmt.Sprintf("Clone length is different from original length : %d != %d", len(sequence), len(s2)))
+			return true
 		}
 		if name != n2 {
 			t.Error(fmt.Sprintf("Clone and original sequences at position %d have different names : %s != %s", i, name, n2))
+			return true
 		}
 		for j, c := range sequence {
 			if c != s2[j] {
 				t.Error(fmt.Sprintf("Clone sequence is different from original at position %d : %c != %c", j, c, s2[j]))
+				return true
 			}
 		}
 		i++
+		return false
 	})
 }
 
@@ -388,10 +416,11 @@ func TestAvgAlleles(t *testing.T) {
 
 	}
 
-	a.IterateChar(func(name string, sequence []rune) {
+	a.IterateChar(func(name string, sequence []rune) bool {
 		for j := range sequence {
 			sequence[j] = 'A'
 		}
+		return false
 	})
 
 	if a.AvgAllelesPerSite() != 1 {
@@ -407,7 +436,7 @@ func TestAvgAlleles2(t *testing.T) {
 	}
 
 	i := 0
-	a.IterateChar(func(name string, sequence []rune) {
+	a.IterateChar(func(name string, sequence []rune) bool {
 		for j := range sequence {
 			/* One only gap sequence */
 			if i == 10 {
@@ -425,6 +454,7 @@ func TestAvgAlleles2(t *testing.T) {
 		// Add a gap at a whole position
 		sequence[50] = GAP
 		i++
+		return false
 	})
 	fmt.Println(a.AvgAllelesPerSite())
 	if a.AvgAllelesPerSite() != 4 {
@@ -451,22 +481,26 @@ func TestRename(t *testing.T) {
 
 	a.Rename(namemap1)
 	i := 0
-	a.IterateChar(func(name string, sequence []rune) {
+	a.IterateChar(func(name string, sequence []rune) bool {
 		expected := fmt.Sprintf("New%04d", i)
 		if name != expected {
 			t.Error(fmt.Sprintf("Sequence name should be %s and is %s", expected, name))
+			return true
 		}
 		i++
+		return false
 	})
 
 	a.Rename(namemap2)
 	i = 0
-	a.IterateChar(func(name string, sequence []rune) {
+	a.IterateChar(func(name string, sequence []rune) bool {
 		expected := fmt.Sprintf("Seq%04d", i)
 		if name != expected {
 			t.Error(fmt.Sprintf("Sequence name should be %s and is %s", expected, name))
+			return true
 		}
 		i++
+		return false
 	})
 }
 
@@ -480,25 +514,28 @@ func TestReplace(t *testing.T) {
 	}
 
 	acount := 0
-	a.IterateChar(func(name string, sequence []rune) {
+	a.IterateChar(func(name string, sequence []rune) bool {
 		for _, c := range sequence {
 			if c == 'A' {
 				acount++
 			}
 		}
+		return false
 	})
 
 	gapcount := 0
 	a.Replace("A", "-", false)
-	a.IterateChar(func(name string, sequence []rune) {
+	a.IterateChar(func(name string, sequence []rune) bool {
 		for _, c := range sequence {
 			if c == 'A' {
 				t.Error(fmt.Sprintf("There should not remains A after replace"))
+				return true
 			}
 			if c == '-' {
 				gapcount++
 			}
 		}
+		return false
 	})
 	if gapcount != acount {
 		t.Error(fmt.Sprintf("Each A should have been replaced by a -"))
@@ -515,7 +552,7 @@ func TestReplaceRegEx(t *testing.T) {
 	}
 
 	regcount := 0
-	a.IterateChar(func(name string, sequence []rune) {
+	a.IterateChar(func(name string, sequence []rune) bool {
 		prev := '0'
 		for _, c := range sequence {
 			if (c == 'A' && prev == 'A') ||
@@ -528,11 +565,12 @@ func TestReplaceRegEx(t *testing.T) {
 				prev = c
 			}
 		}
+		return false
 	})
 
 	gapcount := 0
 	a.Replace("A.", "--", true)
-	a.IterateChar(func(name string, sequence []rune) {
+	a.IterateChar(func(name string, sequence []rune) bool {
 		prev := '0'
 		for _, c := range sequence {
 			if (c == 'A' && prev == 'A') ||
@@ -540,12 +578,14 @@ func TestReplaceRegEx(t *testing.T) {
 				(c == 'G' && prev == 'A') ||
 				(c == 'T' && prev == 'A') {
 				t.Error(fmt.Sprintf("There should not remains %c%c after replace", prev, c))
+				return true
 			}
 			if c == '-' {
 				gapcount++
 			}
 			prev = c
 		}
+		return false
 	})
 
 	if gapcount != regcount {
@@ -719,15 +759,18 @@ func TestSubAlign(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-	subalign.IterateChar(func(name string, sequence []rune) {
+	subalign.IterateChar(func(name string, sequence []rune) bool {
 		if len(sequence) != 90 {
 			t.Error(fmt.Sprintf("Length of subsequence must be %d and is %d", 90, len(sequence)))
+			return true
 		}
 		for i, a := range sequence {
 			if a != 'A' {
 				t.Error(fmt.Sprintf("Character at position %d must be %c and is %c", i, 'A', a))
+				return true
 			}
 		}
+		return false
 	})
 }
 
@@ -761,15 +804,55 @@ func TestConcat(t *testing.T) {
 		t.Error(fmt.Sprintf("Concatenated alignment should have a length of %d and not %d", length*3, a.Length()))
 	}
 
-	a.IterateChar(func(name string, sequence []rune) {
+	a.IterateChar(func(name string, sequence []rune) bool {
 		s, _ := acopy.GetSequence(name)
 		s2, _ := a2.GetSequence(name)
 		if string(sequence) != s+s2 {
 			t.Error(fmt.Sprintf("Concatenated sequence is not correct"))
+			return true
 		}
+		return false
 	})
 }
 
+func TestAppend(t *testing.T) {
+	var err error
+	var a, a2, a3 Alignment
+
+	a = NewAlign(NUCLEOTIDS)
+	a.AddSequence("A", "ACGT", "")
+	a.AddSequence("B", "ACGG", "")
+	a.AddSequence("C", "ACGT", "")
+	a.AddSequence("C", "ACGT", "")
+	a.AddSequence("D", "ACGT", "")
+
+	a2 = NewAlign(NUCLEOTIDS)
+	a2.AddSequence("E", "ACGT", "")
+	a2.AddSequence("F", "ACGG", "")
+	a2.AddSequence("G", "ACGT", "")
+	a2.AddSequence("H", "ACGT", "")
+	a2.AddSequence("I", "ACGT", "")
+
+	a3 = NewAlign(NUCLEOTIDS)
+	a3.AddSequence("A", "ACGT", "")
+	a3.AddSequence("B", "ACGG", "")
+	a3.AddSequence("C", "ACGT", "")
+	a3.AddSequence("C", "ACGT", "")
+	a3.AddSequence("D", "ACGT", "")
+	a3.AddSequence("E", "ACGT", "")
+	a3.AddSequence("F", "ACGG", "")
+	a3.AddSequence("G", "ACGT", "")
+	a3.AddSequence("H", "ACGT", "")
+	a3.AddSequence("I", "ACGT", "")
+
+	if err = a.Append(a2); err != nil {
+		t.Error(err)
+	}
+
+	if !a.Identical(a3) {
+		t.Errorf("After append, alignment is not expected")
+	}
+}
 func TestDedup(t *testing.T) {
 	var err error
 	var a Alignment
@@ -1469,13 +1552,14 @@ func TestDiffReverse(t *testing.T) {
 
 	i := 0
 	var ref []rune
-	out.IterateChar(func(name string, seq []rune) {
+	out.IterateChar(func(name string, seq []rune) bool {
 		orig, _ := in.GetSequenceCharById(i)
 		if i == 0 {
 			ref = seq
 			for site := 0; site < out.Length(); site++ {
 				if seq[site] != orig[site] {
 					t.Errorf("Original reference character has been changed (%c vs. %c)", orig[site], seq[site])
+					return true
 				}
 			}
 		} else {
@@ -1483,15 +1567,18 @@ func TestDiffReverse(t *testing.T) {
 				if orig[site] == POINT {
 					if seq[site] != ref[site] {
 						t.Errorf(". has not been replaced by the right character (%c vs. %c)", ref[site], seq[site])
+						return true
 					}
 				} else {
 					if seq[site] != orig[site] {
 						t.Errorf("Original character has been changed (%c vs. %c)", orig[site], seq[site])
+						return true
 					}
 				}
 			}
 		}
 		i++
+		return false
 	})
 }
 

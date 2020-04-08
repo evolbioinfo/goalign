@@ -3,6 +3,7 @@ package phylip
 import (
 	"bytes"
 	"fmt"
+
 	"github.com/evolbioinfo/goalign/align"
 )
 
@@ -38,7 +39,7 @@ func WriteAlignment(al align.Alignment, strict, oneline, noblock bool) string {
 		if cursize > 0 {
 			buf.WriteString("\n")
 		}
-		al.IterateChar(func(name string, seq []rune) {
+		al.IterateChar(func(name string, seq []rune) bool {
 			if header {
 				if strict {
 					buf.WriteString(fmt.Sprintf("%-10s", name[:min_int(10, len(name))]))
@@ -64,6 +65,7 @@ func WriteAlignment(al align.Alignment, strict, oneline, noblock bool) string {
 				}
 			}
 			buf.WriteString("\n")
+			return false
 		})
 		cursize += line_length
 		header = false

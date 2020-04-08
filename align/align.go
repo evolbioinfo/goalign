@@ -19,6 +19,7 @@ import (
 type Alignment interface {
 	SeqBag
 	AddGaps(rate, lenprop float64)
+	Append(Alignment) error // Appends alignment sequences to this alignment
 	AvgAllelesPerSite() float64
 	BuildBootstrap() Alignment // Bootstrap alignment
 	CharStatsSite(site int) (map[rune]int, error)
@@ -423,13 +424,15 @@ func (a *align) Replace(old, new string, regex bool) (err error) {
 		return
 	}
 	// Verify that sequences still have same length
-	for _, seq := range a.Sequences() {
-		if seq.Length() != a.Length() {
+	a.IterateChar(func(name string, s []rune) bool {
+		if len(s) != a.Length() {
 			err = fmt.Errorf("replace should not change the length of aligned sequences")
-			return err
+			return true
 		}
-	}
-	return nil
+		return false
+	})
+
+	return
 }
 
 // Replaces match characters (.) by their corresponding characters on the first sequence
@@ -515,6 +518,24 @@ func (a *align) AddGaps(lenprop float64, prop float64) {
 			seq.sequence[permsites[j]] = GAP
 		}
 	}
+}
+
+func (a *align) Append(al Alignment) (err error) {
+	al.IterateAll(func(name string, sequence []rune, comment string) bool {
+		err = a.AddSequenceChar(name, sequence, comment)
+		return err != nil
+
+	})
+	return
+}
+
+func (a *align) append(al *align) (err error) {
+	for _, s := range al.seqs {
+		if err = a.AddSequenceChar(s.name, s.sequence, s.comment); err != nil {
+			return
+		}
+	}
+	return
 }
 
 // Add substitutions uniformly to the alignment
@@ -786,13 +807,11 @@ func RandomAlignment(alphabet, length, nbseq int) (al Alignment, err error) {
 func (a *align) Clone() (c Alignment, err error) {
 	c = NewAlign(a.Alphabet())
 	c.IgnoreIdentical(a.ignoreidentical)
-	a.IterateAll(func(name string, sequence []rune, comment string) {
+	a.IterateAll(func(name string, sequence []rune, comment string) bool {
 		newseq := make([]rune, 0, len(sequence))
 		newseq = append(newseq, sequence...)
 		err = c.AddSequenceChar(name, newseq, comment)
-		if err != nil {
-			return
-		}
+		return err != nil
 	})
 	return
 }
@@ -1177,40 +1196,43 @@ func (a *align) Concat(c Alignment) (err error) {
 	if a.Alphabet() != c.Alphabet() {
 		return errors.New("Alignments do not have the same alphabet")
 	}
-	a.IterateAll(func(name string, sequence []rune, comment string) {
+	a.IterateAll(func(name string, sequence []rune, comment string) bool {
 		_, ok := c.GetSequenceChar(name)
 		if !ok {
 			// This sequence is present in a but not in c
 			// So we append full gap sequence to a
-			a.appendToSequence(name, []rune(strings.Repeat(string(GAP), c.Length())))
+			err = a.appendToSequence(name, []rune(strings.Repeat(string(GAP), c.Length())))
 		}
+		return err != nil
 	})
 	if err != nil {
 		return err
 	}
-	c.IterateAll(func(name string, sequence []rune, comment string) {
+	c.IterateAll(func(name string, sequence []rune, comment string) bool {
 		_, ok := a.GetSequenceChar(name)
 		if !ok {
 			// This sequence is present in c but not in a
 			// So we add it to a, with gaps only
-			a.AddSequence(name, strings.Repeat(string(GAP), a.Length()), comment)
+			err = a.AddSequence(name, strings.Repeat(string(GAP), a.Length()), comment)
 		}
 		// Then we append the c sequence to a
 		err = a.appendToSequence(name, sequence)
+		return err != nil
 	})
 	if err != nil {
 		return err
 	}
 
 	leng := -1
-	a.IterateChar(func(name string, sequence []rune) {
+	a.IterateChar(func(name string, sequence []rune) bool {
 		if leng == -1 {
 			leng = len(sequence)
 		} else {
 			if leng != len(sequence) {
-				err = errors.New("Sequences of the new alignment do not have the same length...")
+				err = errors.New("Sequences of the new alignment do not have the same length")
 			}
 		}
+		return err != nil
 	})
 	a.length = leng
 
@@ -1235,22 +1257,26 @@ func (a *align) Consensus(excludeGaps bool) (cons *align) {
 
 // Compares all sequences to the first one and replaces identical characters with .
 func (a *align) DiffWithFirst() {
-	var seqs []Sequence
-	var first, other []rune
+	var first []rune
 	var i, l int
 	if a.NbSequences() < 2 {
 		return
 	}
-	seqs = a.Sequences()
-	first = seqs[0].SequenceChar()
-	for i = 1; i < a.NbSequences(); i++ {
-		other = seqs[i].SequenceChar()
-		for l = 0; l < len(first); l++ {
-			if first[l] == other[l] {
-				other[l] = '.'
+
+	i = 0
+	a.IterateChar(func(name string, other []rune) bool {
+		if i == 0 {
+			first = other
+		} else {
+			for l = 0; l < len(first); l++ {
+				if first[l] == other[l] {
+					other[l] = '.'
+				}
 			}
 		}
-	}
+		i++
+		return false
+	})
 }
 
 // Compares all sequences to the first one and counts all differences per sequence
@@ -1262,36 +1288,41 @@ func (a *align) DiffWithFirst() {
 func (a *align) CountDifferences() (alldiffs []string, diffs []map[string]int) {
 	var alldiffsmap map[string]bool
 	var diffmap map[string]int
-	var first, other []rune
+	var first []rune
 	var key string
 	var ok bool
 	var i, l, count int
-	var seqs []Sequence
 
 	alldiffs = make([]string, 0)
 	diffs = make([]map[string]int, a.NbSequences()-1)
 	if a.NbSequences() < 2 {
 		return
 	}
-	seqs = a.Sequences()
+
 	alldiffsmap = make(map[string]bool, 0)
-	first = seqs[0].SequenceChar()
-	for i = 1; i < a.NbSequences(); i++ {
-		diffmap = make(map[string]int)
-		other = seqs[i].SequenceChar()
-		for l = 0; l < len(first); l++ {
-			if first[l] != other[l] {
-				key = fmt.Sprintf("%c%c", first[l], other[l])
-				count = diffmap[key]
-				diffmap[key] = count + 1
-				if _, ok = alldiffsmap[key]; !ok {
-					alldiffs = append(alldiffs, key)
-					alldiffsmap[key] = true
+	i = 0
+	a.IterateChar(func(name string, other []rune) bool {
+		if i == 0 {
+			first = other
+		} else {
+			diffmap = make(map[string]int)
+			for l = 0; l < len(first); l++ {
+				if first[l] != other[l] {
+					key = fmt.Sprintf("%c%c", first[l], other[l])
+					count = diffmap[key]
+					diffmap[key] = count + 1
+					if _, ok = alldiffsmap[key]; !ok {
+						alldiffs = append(alldiffs, key)
+						alldiffsmap[key] = true
+					}
 				}
 			}
+			diffs[i-1] = diffmap
 		}
-		diffs[i-1] = diffmap
-	}
+		i++
+		return false
+	})
+
 	return
 }
 
@@ -1411,12 +1442,12 @@ func (a *align) CodonAlign(ntseqs SeqBag) (rtAl *align, err error) {
 
 	rtAl = NewAlign(ntseqs.Alphabet())
 	// outputting aligned codons
-	a.IterateAll(func(name string, sequence []rune, comment string) {
+	a.IterateAll(func(name string, sequence []rune, comment string) bool {
 		buffer.Reset()
 		ntseq, ok := ntseqs.GetSequenceChar(name)
 		if !ok {
 			err = fmt.Errorf("Sequence %s is not present in the nucleotidic sequence, cannot reverse translate", name)
-			return // return from this iteration of iterator
+			return true
 		}
 
 		ntseqindex := 0
@@ -1426,7 +1457,7 @@ func (a *align) CodonAlign(ntseqs SeqBag) (rtAl *align, err error) {
 			} else {
 				if ntseqindex+3 > len(ntseq) {
 					err = fmt.Errorf("Nucleotidic sequence %s is shorter than its aa counterpart", name)
-					return // return from this iteration of iterator
+					return true
 				}
 				buffer.WriteString(string(ntseq[ntseqindex : ntseqindex+3]))
 				ntseqindex += 3
@@ -1439,10 +1470,11 @@ func (a *align) CodonAlign(ntseqs SeqBag) (rtAl *align, err error) {
 			} else {
 				// A problem with the sequences
 				err = fmt.Errorf("Nucleotidic sequence %s is longer than its aa counterpart (%d = more than 2 nucleotides remaining)", name, len(ntseq)-ntseqindex)
-				return
+				return true
 			}
 		}
 		rtAl.AddSequence(name, buffer.String(), comment)
+		return false
 	})
 	return
 }
@@ -1469,7 +1501,7 @@ func (a *align) SiteConservation(position int) (conservation int, err error) {
 	tmpweakgroups := make([]int, len(weakGroups))
 	same := true
 	prevchar := ';'
-	a.IterateChar(func(name string, sequence []rune) {
+	a.IterateChar(func(name string, sequence []rune) bool {
 		if a.Alphabet() == AMINOACIDS {
 			for i, g := range strongGroups {
 				for _, aa := range g {
@@ -1490,6 +1522,7 @@ func (a *align) SiteConservation(position int) (conservation int, err error) {
 			same = false
 		}
 		prevchar = sequence[position]
+		return false
 	})
 
 	if same {
@@ -1559,14 +1592,15 @@ func seqBagToAlignment(sb *seqbag) (al *align, err error) {
 
 	// We just check that sequence lengths are all equal
 	al.length = -1
-	for _, s := range sb.Sequences() {
-		l := len(s.SequenceChar())
+	sb.IterateChar(func(name string, s []rune) bool {
+		l := len(s)
 		if al.length != -1 && al.length != l {
-			err = fmt.Errorf("Sequence %s does not have same length as other sequences", s.Name())
-			return
+			err = fmt.Errorf("Sequence %s does not have same length as other sequences", name)
+			return true
 		}
 		al.length = l
-	}
+		return false
+	})
 
 	//If ok, we transfer the structures to the new alignment (same reference!)
 	al.seqbag = *sb

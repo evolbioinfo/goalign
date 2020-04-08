@@ -32,9 +32,10 @@ goalign stats taxa -i align.fasta
 				return
 			}
 			i := 0
-			seqs.Iterate(func(name string, sequence string) {
+			seqs.Iterate(func(name string, sequence string) bool {
 				fmt.Print(fmt.Sprintf("%d\t%s\n", i, name))
 				i++
+				return false
 			})
 		} else {
 			var aligns *align.AlignChannel
@@ -52,9 +53,10 @@ goalign stats taxa -i align.fasta
 			}
 
 			i := 0
-			al.Iterate(func(name string, sequence string) {
+			al.Iterate(func(name string, sequence string) bool {
 				fmt.Print(fmt.Sprintf("%d\t%s\n", i, name))
 				i++
+				return false
 			})
 		}
 		return

@@ -2,6 +2,7 @@ package fasta
 
 import (
 	"bytes"
+
 	"github.com/evolbioinfo/goalign/align"
 )
 
@@ -18,7 +19,7 @@ func min_int(a int, b int) int {
 
 func WriteAlignment(sb align.SeqBag) string {
 	var buf bytes.Buffer
-	sb.IterateChar(func(name string, seq []rune) {
+	sb.IterateChar(func(name string, seq []rune) bool {
 		buf.WriteString(">")
 		buf.WriteString(name)
 		buf.WriteString("\n")
@@ -29,6 +30,7 @@ func WriteAlignment(sb align.SeqBag) string {
 			buf.WriteRune(seq[i])
 		}
 		buf.WriteRune('\n')
+		return false
 	})
 	return buf.String()
 }
@@ -38,7 +40,7 @@ func WriteAlignment(sb align.SeqBag) string {
 func WriteSequences(sb align.SeqBag) string {
 	var buf bytes.Buffer
 
-	sb.IterateChar(func(name string, seq []rune) {
+	sb.IterateChar(func(name string, seq []rune) bool {
 		buf.WriteString(">")
 		buf.WriteString(name)
 		buf.WriteString("\n")
@@ -56,6 +58,7 @@ func WriteSequences(sb align.SeqBag) string {
 		if nbchar != 0 {
 			buf.WriteString("\n")
 		}
+		return false
 	})
 	return buf.String()
 }

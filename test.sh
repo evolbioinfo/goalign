@@ -3795,3 +3795,97 @@ EOF
 ${GOALIGN} consensus -i input -o result
 diff -q -b expected result
 rm -f input expected result
+
+
+echo "->goalign append"
+cat > input.1 <<EOF
+>s1
+ACGACGACGACC
+>2
+ATCTT-TTTTTC
+>3
+ATCTT-TTTTTT
+EOF
+
+cat > input.2 <<EOF
+>s4
+ACGACGACGACC
+>5
+ATCTT-TTTTTC
+>6
+ATCTT-TTTTTT
+EOF
+
+cat > input.3 <<EOF
+>s7
+ACGACGACGACC
+>8
+ATCTT-TTTTTC
+>9
+ATCTT-TTTTTT
+EOF
+
+cat > expected <<EOF
+>s1
+ACGACGACGACC
+>2
+ATCTT-TTTTTC
+>3
+ATCTT-TTTTTT
+>s4
+ACGACGACGACC
+>5
+ATCTT-TTTTTC
+>6
+ATCTT-TTTTTT
+>s7
+ACGACGACGACC
+>8
+ATCTT-TTTTTC
+>9
+ATCTT-TTTTTT
+EOF
+
+${GOALIGN} append -i input.1 input.2 input.3 -o result
+diff -q -b expected result
+rm -f input.1 input.2 input.3 expected result 
+
+
+echo "->goalign append phylip"
+cat > input.1 <<EOF
+   3   12
+s1  ACGACGACGA CC
+2  ATCTT-TTTT TC
+3  ATCTT-TTTT TT
+EOF
+
+cat > input.2 <<EOF
+   3   12
+s4  ACGACGACGA CC
+5  ATCTT-TTTT TC
+6  ATCTT-TTTT TT
+EOF
+
+cat > input.3 <<EOF
+   3   12
+s7  ACGACGACGA CC
+8  ATCTT-TTTT TC
+9  ATCTT-TTTT TT
+EOF
+
+cat > expected <<EOF
+   9   12
+s1  ACGACGACGA CC
+2  ATCTT-TTTT TC
+3  ATCTT-TTTT TT
+s4  ACGACGACGA CC
+5  ATCTT-TTTT TC
+6  ATCTT-TTTT TT
+s7  ACGACGACGA CC
+8  ATCTT-TTTT TC
+9  ATCTT-TTTT TT
+EOF
+
+${GOALIGN} append -i input.1 input.2 input.3  -p -o result
+diff -q -b expected result
+rm -f input.1 input.2 input.3 expected result 

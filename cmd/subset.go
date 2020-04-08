@@ -105,7 +105,7 @@ given in the comand line.
 			}
 			var filtered align.SeqBag = nil
 			var i int = 0
-			seqs.Iterate(func(name string, sequence string) {
+			seqs.Iterate(func(name string, sequence string) bool {
 				if filtered == nil {
 					filtered = align.NewSeqBag(seqs.Alphabet())
 				}
@@ -116,6 +116,7 @@ given in the comand line.
 					filtered.AddSequence(name, sequence, "")
 				}
 				i++
+				return false
 			})
 			writeSequences(filtered, f)
 		} else {
@@ -126,7 +127,7 @@ given in the comand line.
 			for al := range aligns.Achan {
 				var filtered align.Alignment = nil
 				var i int = 0
-				al.Iterate(func(name string, sequence string) {
+				al.Iterate(func(name string, sequence string) bool {
 					if filtered == nil {
 						filtered = align.NewAlign(al.Alphabet())
 					}
@@ -137,6 +138,7 @@ given in the comand line.
 						filtered.AddSequence(name, sequence, "")
 					}
 					i++
+					return false
 				})
 				writeAlign(filtered, f)
 			}
