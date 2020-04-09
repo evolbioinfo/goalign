@@ -1641,9 +1641,9 @@ CCCCCCCCCCCCCCC
 EOF
 
 cat > expected <<EOF
-A	11
-B	15
-C	12
+A	9
+B	8
+C	6
 EOF
 
 ${GOALIGN} stats mutations -i input --ref-sequence refseq > result
@@ -1661,8 +1661,8 @@ EOF
 
 cat > expected <<EOF
 A	0
-B	15
-C	12
+B	8
+C	6
 EOF
 
 ${GOALIGN} stats mutations -i input --ref-sequence A > result
