@@ -59,9 +59,12 @@ type Alignment interface {
 	NbVariableSites() int            // Nb of variable sites
 	NumGapsUniquePerSequence() []int // Number of Gaps in each sequence that are unique in their alignment site
 	// returns the number of characters in each sequence that are unique in their alignment site (gaps or others)
+	// It does not take into account 'N' and '-' as unique mutations
 	NumMutationsUniquePerSequence() (numuniques []int)
 	// returns the number of differences between the reference sequence and each sequence of the alignment
 	// If lengths are different, returns an error
+	// It does not take into account 'N' and '-' in sequences as mutations compared to ref
+	/// sequence (ref sequence can have a '-' or a 'N')
 	NumMutationsComparedToReferenceSequence(seq Sequence) (nummutations []int, err error)
 	Pssm(log bool, pseudocount float64, normalization int) (pssm map[rune][]float64, err error) // Normalization: PSSM_NORM_NONE, PSSM_NORM_UNIF, PSSM_NORM_DATA
 	Rarefy(nb int, counts map[string]int) (Alignment, error)                                    // Take a new rarefied sample taking into accounts weights
@@ -1378,7 +1381,8 @@ func (a *align) NumGapsUniquePerSequence() (numgaps []int) {
 	return
 }
 
-// NumMutationsUniquePerSequence returns the number of characters in each sequence that are unique in their alignment site (gaps or others)
+// NumMutationsUniquePerSequence returns the number of characters in each sequence that are unique in their alignment site.
+// It does not take into account 'N' and '-' as unique mutations
 func (a *align) NumMutationsUniquePerSequence() (numuniques []int) {
 	numuniques = make([]int, a.NbSequences())
 	for i := 0; i < a.Length(); i++ {
@@ -1391,7 +1395,7 @@ func (a *align) NumMutationsUniquePerSequence() (numuniques []int) {
 		}
 
 		for c, num := range occurences {
-			if num == 1 {
+			if num == 1 && c != '-' && c != GAP {
 				ind := indices[c]
 				numuniques[ind]++
 			}
@@ -1401,16 +1405,18 @@ func (a *align) NumMutationsUniquePerSequence() (numuniques []int) {
 }
 
 // returns the number of differences between the reference sequence and each sequence of the alignment
+// Counts only non GAPS and non N sites in each sequences (may be a gap or a N in the reference sequence though)
+//
 // If lengths are different, returns an error
-func (a *align) NumMutationsComparedToReferenceSequence(seq Sequence) (nummutations []int, err error) {
+func (a *align) NumMutationsComparedToReferenceSequence(refseq Sequence) (nummutations []int, err error) {
 	nummutations = make([]int, a.NbSequences())
-	if seq.Length() != a.Length() {
-		err = fmt.Errorf("Reference sequence and alignment do not have same length (%d,%d), cannot compute a number of mutation", seq.Length(), a.Length())
+	if refseq.Length() != a.Length() {
+		err = fmt.Errorf("Reference sequence and alignment do not have same length (%d,%d), cannot compute a number of mutation", refseq.Length(), a.Length())
 		return
 	}
 	for i := 0; i < a.Length(); i++ {
 		for j, s := range a.seqs {
-			if s.sequence[i] != seq.SequenceChar()[i] {
+			if s.SequenceChar()[i] != GAP && s.SequenceChar()[i] != '-' && s.sequence[i] != refseq.SequenceChar()[i] {
 				nummutations[j]++
 			}
 		}

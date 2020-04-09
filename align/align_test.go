@@ -1763,7 +1763,7 @@ func Test_align_NumMutationsUniquePerSequence(t *testing.T) {
 	a.AddSequence("B", "AT-TT-T-TTTC", "")
 	a.AddSequence("C", "ATCTT-TTT--T", "")
 
-	exp = []int{9, 3, 5}
+	exp = []int{9, 2, 3}
 
 	ng = a.NumMutationsUniquePerSequence()
 
@@ -1784,7 +1784,7 @@ func Test_align_NumMutationsComparedToReferenceSequence(t *testing.T) {
 
 	s := NewSequence("ref", []rune("CCCCCCCCCCCC"), "")
 
-	exp = []int{8, 11, 11}
+	exp = []int{7, 8, 8}
 
 	ng, _ = a.NumMutationsComparedToReferenceSequence(s)
 

@@ -19,7 +19,7 @@ Different sub-commands:
 * `goalign stats gaps`: Prints the number of gaps in each sequences (and possibly the number of gaps from start, and from end);
 * `goalign stats length`: Prints alignment length;
 * `goalign stats maxchar`: Prints max occurence char for each alignment site;
-* `goalign stats mutations`: Prints the number of mutations on each alignment sequence, compared to a reference sequence;
+* `goalign stats mutations`: Prints the number of mutations on each alignment sequence, compared to a reference sequence or unique compared to all sequences. It does not take into account '-' and 'N' as unique mutations, and does not take into account '-' and 'N' as mutations compared to a reference sequence;
 * `goalign stats nalign`: Prints the number of alignments in the input file (Phylip);
 * `goalign stats nseq`: Prints the number of sequences in the input alignment;
 * `goalign stats taxa`: Lists taxa in the input alignment.

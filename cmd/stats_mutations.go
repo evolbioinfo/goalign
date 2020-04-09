@@ -21,6 +21,9 @@ var statMutationsCmd = &cobra.Command{
 	for the given sequence.
 	- If --ref-sequence is specified, it will try to extract a seqsuence having that name from the alignment. If none exist, 
 	it will try to open a fasta file with the given name to take the first sequence as a reference.
+
+	It does not take into account '-' and 'N' as unique mutations, and does not take into account '-' and 'N' as mutations compared 
+	to a reference sequence.
 `,
 	RunE: func(cmd *cobra.Command, args []string) (err error) {
 		var aligns *align.AlignChannel
