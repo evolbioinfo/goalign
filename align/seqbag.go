@@ -26,6 +26,7 @@ type SeqBag interface {
 	AlphabetCharToIndex(c rune) int // Returns index of the character (nt or aa) in the AlphabetCharacters() array
 	AutoAlphabet()                  // detects and sets alphabet automatically for all the sequences
 	CharStats() map[rune]int64
+	CharStatsSeq(idx int) (map[rune]int, error)     // Computes frequency of characters for the given sequence
 	CleanNames(namemap map[string]string)           // Clean sequence names (newick special char)
 	Clear()                                         // Removes all sequences
 	CloneSeqBag() (seqs SeqBag, err error)          // Clones the seqqbag
@@ -501,6 +502,26 @@ func (sb *seqbag) CharStats() map[rune]int64 {
 	}
 
 	return outmap
+}
+
+// CharStatsSeq Returns the frequency of all characters in the sequence
+// identified by the given index.
+// If the sequence with the given index does not exist, then returns an error
+func (sb *seqbag) CharStatsSeq(idx int) (outmap map[rune]int, err error) {
+	var seq []rune
+	var ok bool
+
+	outmap = make(map[rune]int)
+
+	if seq, ok = sb.GetSequenceCharById(idx); !ok {
+		err = fmt.Errorf("Sequence with id %d does not exist", idx)
+	} else {
+		for _, r := range seq {
+			outmap[unicode.ToUpper(r)]++
+		}
+	}
+
+	return
 }
 
 func DetectAlphabet(seq string) int {

@@ -15,9 +15,11 @@ Without any subcommand, it prints the following information:
 Different sub-commands:
 * `goalign stats alleles`: Prints the average number of alleles per site of the alignment;
 * `goalign stats alphabet`: Prints the alphabet of the alignemnts (aminoacids, nucleotides, unknown);
-* `goalign stats char`: Prints the character frequencies;
+* `goalign stats char`: Prints the character occurences;
+* `goalign stats gaps`: Prints the number of gaps in each sequences (and possibly the number of gaps from start, and from end);
 * `goalign stats length`: Prints alignment length;
-* `goalign stats maxchar`: Prints max occurence char for each alignment site
+* `goalign stats maxchar`: Prints max occurence char for each alignment site;
+* `goalign stats mutations`: Prints the number of mutations on each alignment sequence, compared to a reference sequence;
 * `goalign stats nalign`: Prints the number of alignments in the input file (Phylip);
 * `goalign stats nseq`: Prints the number of sequences in the input alignment;
 * `goalign stats taxa`: Lists taxa in the input alignment.
@@ -33,8 +35,10 @@ Available Commands:
   alleles     Prints the average number of alleles per sites of the alignment
   alphabet    Prints the alphabet detected for the input alignment
   char        Prints frequence of different characters (aa/nt) of the alignment
+  gaps        Print gap stats on each alignment sequence
   length      Prints the length of sequences in the alignment
   maxchar     Prints the character with the highest occcurence for each site of the alignment
+  mutations   Print mutations stats on each alignment sequence compared to a reference sequence
   nalign      Prints the number of alignments in the input file
   nseq        Prints the number of sequences in the alignment
   taxa        Prints index (position) and name of taxa of the alignment file

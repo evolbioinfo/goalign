@@ -3920,3 +3920,61 @@ EOF
 ${GOALIGN} append -i input.1 -p -o result
 diff -q -b expected result
 rm -f input.1 input.2 input.3 expected result 
+
+echo "->goalign stats char --per-sites"
+cat > input <<EOF
+>s1
+ACGTACGT
+>s2
+ACGTACGT
+>s3
+ACGTACGT
+>s4
+ACGTTCGA
+>s5
+ACGTTCGA
+EOF
+
+cat > expected <<EOF
+site	A	C	G	T
+0	5	0	0	0
+1	0	5	0	0
+2	0	0	5	0
+3	0	0	0	5
+4	3	0	0	2
+5	0	5	0	0
+6	0	0	5	0
+7	2	0	0	3
+EOF
+
+${GOALIGN} stats char --per-sites -i input > result
+diff -q -b expected result
+rm -f input expected result 
+
+echo "->goalign stats char --per-sequences"
+cat > input <<EOF
+>s1
+ACGTACGT
+>s2
+ACGTACGT
+>s3
+ACGTACGT
+>s4
+ACGTTCGA
+>s5
+ACGTTCGA
+EOF
+
+cat > expected <<EOF
+seq	A	C	G	T
+s1	2	2	2	2
+s2	2	2	2	2
+s3	2	2	2	2
+s4	2	2	2	2
+s5	2	2	2	2
+EOF
+
+${GOALIGN} stats char --per-sequences -i input > result
+diff -q -b expected result
+rm -f input expected result 
+

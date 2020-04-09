@@ -94,6 +94,35 @@ func printSiteCharStats(align align.Alignment) (err error) {
 	return
 }
 
+func printSequenceCharStats(sb align.SeqBag) (err error) {
+	var sequencemap map[rune]int
+
+	charmap := sb.CharStats()
+	keys := make([]string, 0, len(charmap))
+	for k := range charmap {
+		keys = append(keys, string(k))
+	}
+	sort.Strings(keys)
+	fmt.Fprintf(os.Stdout, "seq")
+	for _, v := range keys {
+		fmt.Fprintf(os.Stdout, "\t%s", v)
+	}
+	fmt.Fprintf(os.Stdout, "\n")
+	for i := 0; i < sb.NbSequences(); i++ {
+		if sequencemap, err = sb.CharStatsSeq(i); err != nil {
+			return
+		}
+		name, _ := sb.GetSequenceNameById(i)
+		fmt.Fprintf(os.Stdout, "%s", name)
+		for _, k := range keys {
+			nb := sequencemap[rune(k[0])]
+			fmt.Fprintf(os.Stdout, "\t%d", nb)
+		}
+		fmt.Fprintf(os.Stdout, "\n")
+	}
+	return
+}
+
 // Prints the Character with the most frequency
 // for each site of the alignment
 func printMaxCharStats(align align.Alignment, excludeGaps bool) {

@@ -7,6 +7,7 @@ import (
 )
 
 var charstatpersites bool
+var charstatpersequences bool
 
 // charCmd represents the char command
 var charCmd = &cobra.Command{
@@ -36,6 +37,8 @@ goalign stats char -i align.fasta
 			}
 			if charstatpersites {
 				err = printSiteCharStats(al)
+			} else if charstatpersequences {
+				err = printSequenceCharStats(al)
 			} else {
 				printCharStats(al)
 			}
@@ -46,5 +49,6 @@ goalign stats char -i align.fasta
 
 func init() {
 	statsCmd.AddCommand(charCmd)
-	charCmd.PersistentFlags().BoolVar(&charstatpersites, "per-sites", false, "Prints char statistics per alignment site")
+	charCmd.PersistentFlags().BoolVar(&charstatpersites, "per-sites", false, "Prints char statistics per alignment site (priority over --per-sequences)")
+	charCmd.PersistentFlags().BoolVar(&charstatpersequences, "per-sequences", false, "Prints char statistics per alignment sequences")
 }
