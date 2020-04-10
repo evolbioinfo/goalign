@@ -1441,7 +1441,6 @@ func (a *align) NumMutationsComparedToReferenceSequence(refseq Sequence) (nummut
 			} else {
 				eq = (s.sequence[i] == refseq.SequenceChar()[i])
 			}
-			fmt.Printf("%c %v - %c|%c\n", all, eq, s.sequence[i], refseq.SequenceChar()[i])
 			if s.SequenceChar()[i] != GAP && s.SequenceChar()[i] != all && !eq {
 				nummutations[j]++
 			}
