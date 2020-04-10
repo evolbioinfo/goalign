@@ -159,3 +159,34 @@ func Test_seq_NumGaps(t *testing.T) {
 		})
 	}
 }
+
+func TestEqualOrCompatible(t *testing.T) {
+	type args struct {
+		nt1 rune
+		nt2 rune
+	}
+	tests := []struct {
+		name    string
+		args    args
+		wantOk  bool
+		wantErr bool
+	}{
+		{name: "t1", args: args{nt1: 'S', nt2: 'Y'}, wantOk: true, wantErr: false},
+		{name: "t2", args: args{nt1: 'R', nt2: 'Y'}, wantOk: false, wantErr: false},
+		{name: "t3", args: args{nt1: 'W', nt2: 'K'}, wantOk: true, wantErr: false},
+		{name: "t4", args: args{nt1: 'N', nt2: 'A'}, wantOk: true, wantErr: false},
+		{name: "t5", args: args{nt1: 'A', nt2: 'C'}, wantOk: false, wantErr: false},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			gotOk, err := EqualOrCompatible(tt.args.nt1, tt.args.nt2)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("EqualOrCompatible() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if gotOk != tt.wantOk {
+				t.Errorf("EqualOrCompatible() = %v, want %v", gotOk, tt.wantOk)
+			}
+		})
+	}
+}

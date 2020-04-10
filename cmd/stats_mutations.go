@@ -20,7 +20,9 @@ var statMutationsCmd = &cobra.Command{
 	- If --unique is specified, then counts only mutations (characters) that are unique in their column
 	for the given sequence.
 	- If --ref-sequence is specified, it will try to extract a seqsuence having that name from the alignment. If none exist, 
-	it will try to open a fasta file with the given name to take the first sequence as a reference.
+	it will try to open a fasta file with the given name to take the first sequence as a reference. If a character is ambigous 
+	(IUPAC notation) in an nucleotide sequence, then it is counted as a mutation only if it is incompatible with the reference character.
+	
 
 	It does not take into account '-' and 'N' as unique mutations, and does not take into account '-' and 'N' as mutations compared 
 	to a reference sequence.

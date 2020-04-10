@@ -1776,19 +1776,23 @@ func Test_align_NumMutationsComparedToReferenceSequence(t *testing.T) {
 	var a Alignment
 	var ng []int
 	var exp []int
+	var err error
 
 	a = NewAlign(NUCLEOTIDS)
 	a.AddSequence("A", "ACGACGA-GACC", "")
 	a.AddSequence("B", "AT-TT-T-TTTC", "")
 	a.AddSequence("C", "ATCTT-TTT--T", "")
+	a.AddSequence("D", "CCCCCCCCCCCC", "")
 
 	s := NewSequence("ref", []rune("CCCCCCCCCCCC"), "")
 
-	exp = []int{7, 8, 8}
+	exp = []int{7, 8, 8, 0}
 
-	ng, _ = a.NumMutationsComparedToReferenceSequence(s)
+	if ng, err = a.NumMutationsComparedToReferenceSequence(s); err != nil {
+		t.Error(err)
+	}
 
 	if !reflect.DeepEqual(exp, ng) {
-		t.Error(fmt.Errorf("Numgaps is not what is expected, have %v, want %v", ng, exp))
+		t.Error(fmt.Errorf("Nummutations is not what is expected, have %v, want %v", ng, exp))
 	}
 }

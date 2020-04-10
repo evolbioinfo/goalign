@@ -1394,8 +1394,15 @@ func (a *align) NumMutationsUniquePerSequence() (numuniques []int) {
 			indices[s.sequence[i]] = j
 		}
 
+		all := '.'
+		if a.Alphabet() == AMINOACIDS {
+			all = ALL_AMINO
+		} else if a.Alphabet() == NUCLEOTIDS {
+			all = ALL_NUCLE
+		}
+
 		for c, num := range occurences {
-			if num == 1 && c != '-' && c != GAP {
+			if num == 1 && c != all && c != GAP {
 				ind := indices[c]
 				numuniques[ind]++
 			}
@@ -1406,6 +1413,8 @@ func (a *align) NumMutationsUniquePerSequence() (numuniques []int) {
 
 // returns the number of differences between the reference sequence and each sequence of the alignment
 // Counts only non GAPS and non N sites in each sequences (may be a gap or a N in the reference sequence though)
+// If a character is ambigous (IUPAC notation), then it is counted as a mutation only if it is incompatible with
+// the reference character.
 //
 // If lengths are different, returns an error
 func (a *align) NumMutationsComparedToReferenceSequence(refseq Sequence) (nummutations []int, err error) {
@@ -1414,9 +1423,26 @@ func (a *align) NumMutationsComparedToReferenceSequence(refseq Sequence) (nummut
 		err = fmt.Errorf("Reference sequence and alignment do not have same length (%d,%d), cannot compute a number of mutation", refseq.Length(), a.Length())
 		return
 	}
+
+	all := '.'
+	if a.Alphabet() == AMINOACIDS {
+		all = ALL_AMINO
+	} else if a.Alphabet() == NUCLEOTIDS {
+		all = ALL_NUCLE
+	}
+
 	for i := 0; i < a.Length(); i++ {
 		for j, s := range a.seqs {
-			if s.SequenceChar()[i] != GAP && s.SequenceChar()[i] != '-' && s.sequence[i] != refseq.SequenceChar()[i] {
+			eq := true
+			if a.Alphabet() == NUCLEOTIDS {
+				if eq, err = EqualOrCompatible(s.sequence[i], refseq.SequenceChar()[i]); err != nil {
+					return
+				}
+			} else {
+				eq = (s.sequence[i] == refseq.SequenceChar()[i])
+			}
+			fmt.Printf("%c %v - %c|%c\n", all, eq, s.sequence[i], refseq.SequenceChar()[i])
+			if s.SequenceChar()[i] != GAP && s.SequenceChar()[i] != all && !eq {
 				nummutations[j]++
 			}
 		}

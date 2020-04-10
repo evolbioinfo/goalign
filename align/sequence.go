@@ -360,3 +360,44 @@ func GenAllPossibleCodons(nt1, nt2, nt3 rune) (codons []string) {
 	codons = codonstmp
 	return
 }
+
+// EqualOrCompatible returns true if the two nucleotides are identical or
+// if they are compatible in case they are ambigous.
+//
+// For example :
+// Y: {C | T} is compatible with S: {G | C} because there is one nt in common
+// If nt1 or nt2 are not nucleotides, then returns an error
+func EqualOrCompatible(nt1, nt2 rune) (ok bool, err error) {
+	var ok1, ok2 bool
+	var possibilities1, possibilities2 []rune
+
+	possibilities1, ok1 = iupacCode[nt1]
+	possibilities2, ok2 = iupacCode[nt2]
+
+	if !ok1 && nt1 != GAP {
+		err = fmt.Errorf("Given nucleotide 1 is not nucleotide")
+		return
+	}
+
+	if !ok2 && nt2 != GAP {
+		err = fmt.Errorf("Given nucleotide 2 is not nucleotide")
+		return
+	}
+
+	if nt1 == GAP || nt2 == GAP {
+		ok = (nt1 == nt2)
+		return
+	}
+
+	ok = false
+	for _, p1 := range possibilities1 {
+		for _, p2 := range possibilities2 {
+			if p1 == p2 {
+				ok = true
+				return
+			}
+		}
+	}
+
+	return
+}
