@@ -371,16 +371,19 @@ func EqualOrCompatible(nt1, nt2 rune) (ok bool, err error) {
 	var ok1, ok2 bool
 	var possibilities1, possibilities2 []rune
 
+	nt1 = unicode.ToUpper(nt1)
+	nt2 = unicode.ToUpper(nt2)
+
 	possibilities1, ok1 = iupacCode[nt1]
 	possibilities2, ok2 = iupacCode[nt2]
 
 	if !ok1 && nt1 != GAP {
-		err = fmt.Errorf("Given nucleotide 1 is not nucleotide")
+		err = fmt.Errorf("Given nucleotide 1 (%c) is not nucleotide", nt1)
 		return
 	}
 
 	if !ok2 && nt2 != GAP {
-		err = fmt.Errorf("Given nucleotide 2 is not nucleotide")
+		err = fmt.Errorf("Given nucleotide 2 (%c) is not nucleotide", nt2)
 		return
 	}
 
