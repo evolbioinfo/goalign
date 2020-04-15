@@ -67,6 +67,10 @@ var statMutationsCmd = &cobra.Command{
 			}
 		} else if statMutationsUnique {
 			nummutations = al.NumMutationsUniquePerSequence()
+		} else {
+			err = fmt.Errorf("Mutations should be counted by comparing to a reference sequnce with --ref-sequence")
+			io.LogError(err)
+			return
 		}
 		for i, s := range al.Sequences() {
 			fmt.Printf("%s\t%d\n", s.Name(), nummutations[i])
