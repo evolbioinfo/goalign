@@ -8,6 +8,7 @@ import (
 
 var charstatpersites bool
 var charstatpersequences bool
+var charstatonly string
 
 // charCmd represents the char command
 var charCmd = &cobra.Command{
@@ -36,11 +37,11 @@ goalign stats char -i align.fasta
 				return
 			}
 			if charstatpersites {
-				err = printSiteCharStats(al)
+				err = printSiteCharStats(al, charstatonly)
 			} else if charstatpersequences {
-				err = printSequenceCharStats(al)
+				err = printSequenceCharStats(al, charstatonly)
 			} else {
-				printCharStats(al)
+				printCharStats(al, charstatonly)
 			}
 		}
 		return
@@ -51,4 +52,5 @@ func init() {
 	statsCmd.AddCommand(charCmd)
 	charCmd.PersistentFlags().BoolVar(&charstatpersites, "per-sites", false, "Prints char statistics per alignment site (priority over --per-sequences)")
 	charCmd.PersistentFlags().BoolVar(&charstatpersequences, "per-sequences", false, "Prints char statistics per alignment sequences")
+	charCmd.PersistentFlags().StringVar(&charstatonly, "only", "*", "Prints only this character counts. * means all characters")
 }

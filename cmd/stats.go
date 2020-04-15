@@ -37,7 +37,7 @@ If the input alignment contains several alignments, will process all of them
 			fmt.Fprintf(os.Stdout, "nseqs\t%d\n", al.NbSequences())
 			fmt.Fprintf(os.Stdout, "avgalleles\t%.4f\n", al.AvgAllelesPerSite())
 			fmt.Fprintf(os.Stdout, "variable sites\t%d\n", al.NbVariableSites())
-			printCharStats(al)
+			printCharStats(al, "*")
 			fmt.Fprintf(os.Stdout, "alphabet\t%s\n", al.AlphabetStr())
 		}
 
@@ -49,12 +49,22 @@ If the input alignment contains several alignments, will process all of them
 	},
 }
 
-func printCharStats(align align.Alignment) {
+func printCharStats(align align.Alignment, only string) {
 	charmap := align.CharStats()
+
+	// We add the only character we want to output
+	// To write 0 if there are no occurences of it
+	// in the alignment
+	if _, ok := charmap[rune(only[0])]; !ok && only != "*" {
+		charmap[rune(only[0])] = 0
+	}
+
 	keys := make([]string, 0, len(charmap))
 	var total int64 = 0
 	for k, v := range charmap {
-		keys = append(keys, string(k))
+		if only == "*" || string(k) == only {
+			keys = append(keys, string(k))
+		}
 		total += v
 	}
 	sort.Strings(keys)
@@ -66,10 +76,18 @@ func printCharStats(align align.Alignment) {
 	}
 }
 
-func printSiteCharStats(align align.Alignment) (err error) {
+func printSiteCharStats(align align.Alignment, only string) (err error) {
 	var sitemap map[rune]int
 
 	charmap := align.CharStats()
+
+	// We add the only character we want to output
+	// To write 0 if there are no occurences of it
+	// in the alignment
+	if _, ok := charmap[rune(only[0])]; !ok && only != "*" {
+		charmap[rune(only[0])] = 0
+	}
+
 	keys := make([]string, 0, len(charmap))
 	for k := range charmap {
 		keys = append(keys, string(k))
@@ -77,7 +95,9 @@ func printSiteCharStats(align align.Alignment) (err error) {
 	sort.Strings(keys)
 	fmt.Fprintf(os.Stdout, "site")
 	for _, v := range keys {
-		fmt.Fprintf(os.Stdout, "\t%s", v)
+		if only == "*" || v == only {
+			fmt.Fprintf(os.Stdout, "\t%s", v)
+		}
 	}
 	fmt.Fprintf(os.Stdout, "\n")
 	for site := 0; site < align.Length(); site++ {
@@ -86,18 +106,28 @@ func printSiteCharStats(align align.Alignment) (err error) {
 		}
 		fmt.Fprintf(os.Stdout, "%d", site)
 		for _, k := range keys {
-			nb := sitemap[rune(k[0])]
-			fmt.Fprintf(os.Stdout, "\t%d", nb)
+			if only == "*" || k == only {
+				nb := sitemap[rune(k[0])]
+				fmt.Fprintf(os.Stdout, "\t%d", nb)
+			}
 		}
 		fmt.Fprintf(os.Stdout, "\n")
 	}
 	return
 }
 
-func printSequenceCharStats(sb align.SeqBag) (err error) {
+func printSequenceCharStats(sb align.SeqBag, only string) (err error) {
 	var sequencemap map[rune]int
 
 	charmap := sb.CharStats()
+
+	// We add the only character we want to output
+	// To write 0 if there are no occurences of it
+	// in the alignment
+	if _, ok := charmap[rune(only[0])]; !ok && only != "*" {
+		charmap[rune(only[0])] = 0
+	}
+
 	keys := make([]string, 0, len(charmap))
 	for k := range charmap {
 		keys = append(keys, string(k))
@@ -105,7 +135,9 @@ func printSequenceCharStats(sb align.SeqBag) (err error) {
 	sort.Strings(keys)
 	fmt.Fprintf(os.Stdout, "seq")
 	for _, v := range keys {
-		fmt.Fprintf(os.Stdout, "\t%s", v)
+		if only == "*" || v == only {
+			fmt.Fprintf(os.Stdout, "\t%s", v)
+		}
 	}
 	fmt.Fprintf(os.Stdout, "\n")
 	for i := 0; i < sb.NbSequences(); i++ {
@@ -115,8 +147,10 @@ func printSequenceCharStats(sb align.SeqBag) (err error) {
 		name, _ := sb.GetSequenceNameById(i)
 		fmt.Fprintf(os.Stdout, "%s", name)
 		for _, k := range keys {
-			nb := sequencemap[rune(k[0])]
-			fmt.Fprintf(os.Stdout, "\t%d", nb)
+			if only == "*" || k == only {
+				nb := sequencemap[rune(k[0])]
+				fmt.Fprintf(os.Stdout, "\t%d", nb)
+			}
 		}
 		fmt.Fprintf(os.Stdout, "\n")
 	}
