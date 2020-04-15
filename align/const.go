@@ -186,7 +186,7 @@ var dna_to_matrix_pos = map[rune]int{
 	'X': 14,
 }
 
-var iupacCode = map[rune][]rune{
+var IupacCode = map[rune][]rune{
 	'A': {'A'},
 	'C': {'C'},
 	'G': {'G'},
@@ -202,6 +202,24 @@ var iupacCode = map[rune][]rune{
 	'H': {'A', 'C', 'T'},
 	'V': {'A', 'C', 'G'},
 	'N': {'A', 'C', 'G', 'T'},
+}
+
+var iupacCodeByte = map[rune][]uint8{
+	'A': {0},
+	'C': {1},
+	'G': {2},
+	'T': {3},
+	'R': {0, 2},
+	'Y': {1, 3},
+	'S': {2, 1},
+	'W': {0, 3},
+	'K': {2, 3},
+	'M': {0, 1},
+	'B': {1, 2, 3},
+	'D': {0, 2, 3},
+	'H': {0, 1, 3},
+	'V': {0, 1, 2},
+	'N': {0, 1, 2, 3},
 }
 
 // Taken from EMBOSS Water

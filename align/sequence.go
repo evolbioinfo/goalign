@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
+	"math/bits"
 	"math/rand"
 	"regexp"
 	"strings"
@@ -329,13 +330,13 @@ func GenAllPossibleCodons(nt1, nt2, nt3 rune) (codons []string) {
 		nt3 = 'T'
 	}
 
-	if nts1, found = iupacCode[nt1]; !found {
+	if nts1, found = IupacCode[nt1]; !found {
 		return
 	}
-	if nts2, found = iupacCode[nt2]; !found {
+	if nts2, found = IupacCode[nt2]; !found {
 		return
 	}
-	if nts3, found = iupacCode[nt3]; !found {
+	if nts3, found = IupacCode[nt3]; !found {
 		return
 	}
 
@@ -374,8 +375,8 @@ func EqualOrCompatible(nt1, nt2 rune) (ok bool, err error) {
 	nt1 = unicode.ToUpper(nt1)
 	nt2 = unicode.ToUpper(nt2)
 
-	possibilities1, ok1 = iupacCode[nt1]
-	possibilities2, ok2 = iupacCode[nt2]
+	possibilities1, ok1 = IupacCode[nt1]
+	possibilities2, ok2 = IupacCode[nt2]
 
 	if !ok1 && nt1 != GAP {
 		err = fmt.Errorf("Given nucleotide 1 (%c) is not nucleotide", nt1)
@@ -402,5 +403,74 @@ func EqualOrCompatible(nt1, nt2 rune) (ok bool, err error) {
 		}
 	}
 
+	return
+}
+
+// NtIUPACDifference returns the cost of the difference between
+// the two potentially ambiguous nucleotides.
+//
+// - if the two nucleotides are identical : returns 0.0
+// - if the two nucleotides are different:
+//      1) If none are ambigous: returns 1.0
+//      2) Otherwise, returns 1-Card(I)/Card(U), I being the
+//         intersection of the sets of possible
+//         nucleotides of nt1 and nt2, and U being
+//         the union of the sets of possible nucleotides
+//         of nt1 and nt2.
+// For example, if we want to compare Y and S :
+// Y = {C | T} and S = {G | C}. Card(I)=1, Card(U)=3, so diff=2/3
+//
+// Precisions:
+// - For N vs. A for example: the difference will be 1-1/4 : 3/4
+// - For gaps: Returns diff=1.0
+//
+// If nt1 or nt2 are not nucleotides, then returns an error
+func NtIUPACDifference(nt1, nt2 rune) (diff float64, err error) {
+	var possibilities1, possibilities2 []uint8
+	var ok1, ok2 bool = true, true
+	diff = 0.0
+
+	if nt1 == nt2 {
+		return
+	}
+
+	diff = 1.0
+	nt1 = unicode.ToUpper(nt1)
+	nt2 = unicode.ToUpper(nt2)
+
+	possibilities1, ok1 = iupacCodeByte[nt1]
+
+	possibilities2, ok2 = iupacCodeByte[nt2]
+
+	if !ok1 && nt1 != GAP {
+		err = fmt.Errorf("Given nucleotide 1 (%c) is not nucleotide", nt1)
+		return
+	}
+
+	if !ok2 && nt2 != GAP {
+		err = fmt.Errorf("Given nucleotide 2 (%c) is not nucleotide", nt2)
+		return
+	}
+
+	if nt1 == GAP || nt2 == GAP {
+		if nt1 == nt2 {
+			diff = 0.0
+		}
+		diff = 1.0
+		return
+	}
+
+	var leftbyte, rightbyte uint8 = 0, 0
+	for _, p1 := range possibilities1 {
+		leftbyte |= 1 << p1
+	}
+
+	for _, p2 := range possibilities2 {
+		rightbyte |= 1 << p2
+	}
+
+	inter := bits.OnesCount8(leftbyte & rightbyte)
+	union := bits.OnesCount8(leftbyte | rightbyte)
+	diff = 1.0 - float64(inter)/float64(union)
 	return
 }

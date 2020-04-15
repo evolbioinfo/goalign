@@ -1,6 +1,7 @@
 package align
 
 import (
+	"math"
 	"reflect"
 	"testing"
 )
@@ -186,6 +187,41 @@ func TestEqualOrCompatible(t *testing.T) {
 			}
 			if gotOk != tt.wantOk {
 				t.Errorf("EqualOrCompatible() = %v, want %v", gotOk, tt.wantOk)
+			}
+		})
+	}
+}
+
+func TestNtIUPACDifference(t *testing.T) {
+	type args struct {
+		nt1 rune
+		nt2 rune
+	}
+	tests := []struct {
+		name     string
+		args     args
+		wantDiff float64
+		wantErr  bool
+	}{
+		{name: "t1", args: args{nt1: 'S', nt2: 'Y'}, wantDiff: 1.0 - 1.0/3.0, wantErr: false},
+		{name: "t2", args: args{nt1: 'R', nt2: 'Y'}, wantDiff: 1.0, wantErr: false},
+		{name: "t3", args: args{nt1: 'W', nt2: 'K'}, wantDiff: 1.0 - 1.0/3.0, wantErr: false},
+		{name: "t4", args: args{nt1: 'N', nt2: 'A'}, wantDiff: 3.0 / 4.0, wantErr: false},
+		{name: "t5", args: args{nt1: 'A', nt2: 'C'}, wantDiff: 1.0, wantErr: false},
+		{name: "t6", args: args{nt1: 'C', nt2: 'C'}, wantDiff: 0.0, wantErr: false},
+		{name: "t7", args: args{nt1: '-', nt2: 'C'}, wantDiff: 1.0, wantErr: false},
+		{name: "t8", args: args{nt1: 'C', nt2: '-'}, wantDiff: 1.0, wantErr: false},
+		{name: "t9", args: args{nt1: '-', nt2: '-'}, wantDiff: 0.0, wantErr: false},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			gotDiff, err := NtIUPACDifference(tt.args.nt1, tt.args.nt2)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("NtIUPACDifference() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if math.Abs(gotDiff-tt.wantDiff) > 0.000000000000001 {
+				t.Errorf("NtIUPACDifference() = %v, want %v", gotDiff, tt.wantDiff)
 			}
 		})
 	}

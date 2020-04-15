@@ -28,10 +28,10 @@ type RawDistModel struct {
 
 func NewRawDistModel(removegaps bool) *RawDistModel {
 	return &RawDistModel{
-		0,
-		nil,
-		removegaps,
-		0,
+		numSites:      0,
+		selectedSites: nil,
+		removegaps:    removegaps,
+		countgapmut:   0,
 	}
 }
 

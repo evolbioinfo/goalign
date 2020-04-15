@@ -184,7 +184,8 @@ func isTransversion(nt1 rune, nt2 rune) bool {
 	return ((n1 == 'A' && n2 == 'C') || (n1 == 'C' && n2 == 'A') ||
 		(n1 == 'G' && n2 == 'T') || (n1 == 'T' && n2 == 'G') ||
 		(n1 == 'T' && n2 == 'A') || (n1 == 'A' && n2 == 'T') ||
-		(n1 == 'C' && n2 == 'G') || (n1 == 'G' && n2 == 'C'))
+		(n1 == 'C' && n2 == 'G') || (n1 == 'G' && n2 == 'C') ||
+		(n1 == 'R' && n2 == 'Y') || (n1 == 'Y' && n2 == 'R'))
 }
 
 /* Count number of mutations and associate a weight to them */
@@ -228,7 +229,9 @@ func countDiffs(seq1 []rune, seq2 []rune, selectedSites []bool, weights []float6
 		}
 		if isNuc(seq1[i]) && isNuc(seq2[i]) && selectedSites[i] {
 			if seq1[i] != seq2[i] {
-				nbdiffs += float64(w)
+				diff, _ := align.NtIUPACDifference(seq1[i], seq2[i])
+				diff = diff * w
+				nbdiffs += diff
 			}
 			total += w
 		}
@@ -248,7 +251,9 @@ func countDiffsWithGaps(seq1 []rune, seq2 []rune, selectedSites []bool, weights 
 
 		if (isNuc(seq1[i]) || isNuc(seq2[i])) && selectedSites[i] {
 			if seq1[i] != seq2[i] {
-				nbdiffs += float64(w)
+				diff, _ := align.NtIUPACDifference(seq1[i], seq2[i])
+				diff = diff * w
+				nbdiffs += diff
 			}
 			total += w
 		}
@@ -275,9 +280,11 @@ func countDiffsWithInternalGaps(seq1 []rune, seq2 []rune, selectedSites []bool, 
 
 		if (isNuc(seq1[i]) || isNuc(seq2[i])) && selectedSites[i] && (!firstgaps1 && !firstgaps2) {
 			if seq1[i] != seq2[i] {
-				nbdiffs += float64(w)
-				tmpgapdiffs1 += w
-				tmpgapdiffs2 += w
+				diff, _ := align.NtIUPACDifference(seq1[i], seq2[i])
+				diff = diff * w
+				nbdiffs += diff
+				tmpgapdiffs1 += diff
+				tmpgapdiffs2 += diff
 			}
 			total += w
 
@@ -427,7 +434,12 @@ func countNtPairs2Seq(seq1, seq2 []rune, selectedSites []bool, weights []float64
 
 func isNuc(r rune) bool {
 	up := unicode.ToUpper(r)
-	return up == 'A' || up == 'C' || up == 'G' || up == 'T'
+	for k := range align.IupacCode {
+		if up == k {
+			return true
+		}
+	}
+	return false
 }
 
 /* Returns the sites of the alignments that contains only nucleotides and no gaps */
@@ -444,6 +456,7 @@ func selectedSites(al align.Alignment, weights []float64, removeGappedPositions 
 			seq, _ := al.GetSequenceCharById(i)
 			if al.AlphabetCharToIndex(seq[l]) == -1 || seq[l] == '*' || seq[l] == '?' || seq[l] == '-' {
 				selectedSites[l] = false
+				break
 			}
 		}
 		if selectedSites[l] {
