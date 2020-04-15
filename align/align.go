@@ -1055,6 +1055,7 @@ func (a *align) Pssm(log bool, pseudocount float64, normalization int) (pssm map
 	for site := 0; site < a.Length(); site++ {
 		for seq := 0; seq < a.NbSequences(); seq++ {
 			s := a.seqs[seq].sequence[site]
+			s = unicode.ToUpper(s)
 			if _, ok := normfactors[s]; ok {
 				if _, ok := pssm[s]; ok {
 					pssm[s][site] += 1.0
