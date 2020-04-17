@@ -15,7 +15,7 @@ type PDistModel struct {
 	// If 2, will count as 1 mutation '-' to 'A", but only the internal
 	// Default 0
 	countgapmut   int
-	sequenceCodes [][]int // Sequences converted into int codes
+	sequenceCodes [][]uint8 // Sequences converted into int codes
 }
 
 func NewPDistModel(removegaps bool) *PDistModel {
@@ -38,7 +38,7 @@ func (m *PDistModel) SetCountGapMutations(countgapmut int) (err error) {
 }
 
 /* computes p-distance between 2 sequences */
-func (m *PDistModel) Distance(seq1 []int, seq2 []int, weights []float64) (diff float64, err error) {
+func (m *PDistModel) Distance(seq1 []uint8, seq2 []uint8, weights []float64) (diff float64, err error) {
 	var total float64
 	switch m.countgapmut {
 	case GAP_COUNT_ALL:
@@ -60,7 +60,7 @@ func (m *PDistModel) InitModel(al align.Alignment, weights []float64, gamma bool
 
 // Sequence returns the ith sequence of the alignment
 // encoded in int
-func (m *PDistModel) Sequence(i int) (seq []int, err error) {
+func (m *PDistModel) Sequence(i int) (seq []uint8, err error) {
 	if i < 0 || i >= len(m.sequenceCodes) {
 		err = fmt.Errorf("This sequence does not exist: %d", i)
 		return

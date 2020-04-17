@@ -15,7 +15,7 @@ type TN93Model struct {
 	removegaps    bool      // If true, we will remove posision with >=1 gaps
 	gamma         bool
 	alpha         float64
-	sequenceCodes [][]int // Sequences converted into int codes
+	sequenceCodes [][]uint8 // Sequences converted into int codes
 }
 
 func NewTN93Model(removegaps bool) *TN93Model {
@@ -31,7 +31,7 @@ func NewTN93Model(removegaps bool) *TN93Model {
 }
 
 /* computes TN93 distance between 2 sequences */
-func (m *TN93Model) Distance(seq1 []int, seq2 []int, weights []float64) (float64, error) {
+func (m *TN93Model) Distance(seq1 []uint8, seq2 []uint8, weights []float64) (float64, error) {
 	var dist float64
 	var b1, b2, b3 float64
 
@@ -79,7 +79,7 @@ func (m *TN93Model) InitModel(al align.Alignment, weights []float64, gamma bool,
 
 // Sequence returns the ith sequence of the alignment
 // encoded in int
-func (m *TN93Model) Sequence(i int) (seq []int, err error) {
+func (m *TN93Model) Sequence(i int) (seq []uint8, err error) {
 	if i < 0 || i >= len(m.sequenceCodes) {
 		err = fmt.Errorf("This sequence does not exist: %d", i)
 		return

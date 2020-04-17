@@ -180,7 +180,7 @@ func TestEqualOrCompatible(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			var nt1, nt2 int
+			var nt1, nt2 uint8
 			var err error
 
 			if nt1, err = Nt2IndexIUPAC(tt.args.nt1); err != nil {
@@ -225,7 +225,7 @@ func TestNtIUPACDifference(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			var nt1, nt2 int
+			var nt1, nt2 uint8
 			var err error
 
 			if nt1, err = Nt2IndexIUPAC(tt.args.nt1); err != nil {

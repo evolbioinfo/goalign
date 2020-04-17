@@ -1419,8 +1419,8 @@ func (a *align) NumMutationsUniquePerSequence() (numuniques []int) {
 //
 // If lengths are different, returns an error
 func (a *align) NumMutationsComparedToReferenceSequence(refseq Sequence) (nummutations []int, err error) {
-	var refseqCode []int
-	var nt int
+	var refseqCode []uint8
+	var nt uint8
 
 	nummutations = make([]int, a.NbSequences())
 	if refseq.Length() != a.Length() {
@@ -1432,7 +1432,7 @@ func (a *align) NumMutationsComparedToReferenceSequence(refseq Sequence) (nummut
 	if a.Alphabet() == AMINOACIDS {
 		all = ALL_AMINO
 	} else if a.Alphabet() == NUCLEOTIDS {
-		refseqCode = make([]int, a.Length())
+		refseqCode = make([]uint8, a.Length())
 		for i := 0; i < a.Length(); i++ {
 			if refseqCode[i], err = Nt2IndexIUPAC(refseq.SequenceChar()[i]); err != nil {
 				return

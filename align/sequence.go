@@ -368,36 +368,22 @@ func GenAllPossibleCodons(nt1, nt2, nt3 rune) (codons []string) {
 // For example :
 // Y: {C | T} is compatible with S: {G | C} because there is one nt in common
 // If nt1 or nt2 are not nucleotides, then returns an error
-func EqualOrCompatible(nt1, nt2 int) (ok bool, err error) {
-	var possibilities1, possibilities2 []int
+// n1 and nt2 valures are from NT_... in const.go
+func EqualOrCompatible(nt1, nt2 uint8) (ok bool, err error) {
 
-	if nt1 < 0 || nt1 > len(iupacCodeByte) {
+	if nt1 < 0 || nt1 > NT_N {
 		err = fmt.Errorf("Given nucleotide 1 code (%d) does not exist", nt1)
 		return
 	}
-
-	if nt2 < 0 || nt2 > len(iupacCodeByte) {
-		err = fmt.Errorf("Given nucleotide 1 code (%d) does not exist", nt2)
+	if nt2 < 0 || nt2 > NT_N {
+		err = fmt.Errorf("Given nucleotide 1 code (%d) does not exist", nt1)
 		return
 	}
-
-	if nt1 == NT_OTHER || nt2 == NT_OTHER {
-		ok = (nt1 == nt2)
+	if nt1 == nt2 {
+		ok = true
 		return
 	}
-
-	possibilities1 = iupacCodeByte[nt1]
-	possibilities2 = iupacCodeByte[nt2]
-
-	ok = false
-	for _, p1 := range possibilities1 {
-		for _, p2 := range possibilities2 {
-			if p1 == p2 {
-				ok = true
-				return
-			}
-		}
-	}
+	ok = (nt1 & nt2) > 0
 
 	return
 }
@@ -420,54 +406,27 @@ func EqualOrCompatible(nt1, nt2 int) (ok bool, err error) {
 // - For N vs. A for example: the difference will be 1-1/4 : 3/4
 // - For gaps: Returns diff=1.0
 //
-// If nt1 or nt2 are not nucleotides, then returns an error
-func NtIUPACDifference(nt1, nt2 int) (diff float64, err error) {
-	var possibilities1, possibilities2 []int
+// nt1 and nt2 values are in NT_... of const.go
+func NtIUPACDifference(nt1, nt2 uint8) (diff float64, err error) {
 	diff = 0.0
 
-	if nt1 == nt2 {
+	if nt1 < 0 || nt1 > NT_N {
+		err = fmt.Errorf("Given nucleotide 1 code (%d) does not exist", nt1)
 		return
 	}
-
-	diff = 1.0
-
-	if nt1 < 0 || nt1 > len(iupacCodeByte) {
+	if nt2 < 0 || nt2 > NT_N {
 		err = fmt.Errorf("Given nucleotide 1 code (%d) does not exist", nt1)
 		return
 	}
 
-	if nt2 < 0 || nt2 > len(iupacCodeByte) {
-		err = fmt.Errorf("Given nucleotide 1 code (%d) does not exist", nt2)
+	if nt1 == nt2 {
 		return
 	}
-
-	if nt1 == NT_OTHER || nt2 == NT_OTHER {
-		if nt1 == nt2 {
-			diff = 0.0
-		}
-		diff = 1.0
-		return
-	}
-
-	possibilities1 = iupacCodeByte[nt1]
-	possibilities2 = iupacCodeByte[nt2]
-
-	if len(possibilities1) == 1 && len(possibilities2) == 1 {
-		diff = 1.0
-		return
-	}
-
-	var leftbyte, rightbyte uint8 = 0, 0
-	for _, p1 := range possibilities1 {
-		leftbyte |= 1 << p1
-	}
-
-	for _, p2 := range possibilities2 {
-		rightbyte |= 1 << p2
-	}
-
-	inter := bits.OnesCount8(leftbyte & rightbyte)
-	union := bits.OnesCount8(leftbyte | rightbyte)
+	inter := bits.OnesCount8(nt1 & nt2)
+	union := bits.OnesCount8(nt1 | nt2)
 	diff = 1.0 - float64(inter)/float64(union)
+	// if union == 0 {
+	// 	diff = 1.0
+	// }
 	return
 }

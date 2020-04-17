@@ -15,7 +15,7 @@ type F81Model struct {
 	removegaps    bool      // If true, we will remove posision with >=1 gaps
 	gamma         bool
 	alpha         float64
-	sequenceCodes [][]int // Sequences converted into int codes
+	sequenceCodes [][]uint8 // Sequences converted into int codes
 }
 
 func NewF81Model(removegaps bool) *F81Model {
@@ -32,7 +32,7 @@ func NewF81Model(removegaps bool) *F81Model {
 }
 
 /* computes F81 distance between 2 sequences */
-func (m *F81Model) Distance(seq1 []int, seq2 []int, weights []float64) (float64, error) {
+func (m *F81Model) Distance(seq1 []uint8, seq2 []uint8, weights []float64) (float64, error) {
 	var dist float64
 
 	diff, total := countDiffs(seq1, seq2, m.selectedSites, weights)
@@ -69,7 +69,7 @@ func (m *F81Model) InitModel(al align.Alignment, weights []float64, gamma bool, 
 
 // Sequence returns the ith sequence of the alignment
 // encoded in int
-func (m *F81Model) Sequence(i int) (seq []int, err error) {
+func (m *F81Model) Sequence(i int) (seq []uint8, err error) {
 	if i < 0 || i >= len(m.sequenceCodes) {
 		err = fmt.Errorf("This sequence does not exist: %d", i)
 		return

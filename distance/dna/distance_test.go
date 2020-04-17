@@ -31,16 +31,16 @@ func Test_countDiffs(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			var s1, s2 []int
+			var s1, s2 []uint8
 			var err error
 
-			s1 = make([]int, len(tt.args.seq1))
+			s1 = make([]uint8, len(tt.args.seq1))
 			for l, r := range tt.args.seq1 {
 				if s1[l], err = align.Nt2IndexIUPAC(r); err != nil {
 					t.Error(err)
 				}
 			}
-			s2 = make([]int, len(tt.args.seq2))
+			s2 = make([]uint8, len(tt.args.seq2))
 			for l, r := range tt.args.seq2 {
 				if s2[l], err = align.Nt2IndexIUPAC(r); err != nil {
 					t.Error(err)
@@ -83,16 +83,16 @@ func Test_countDiffsWithGaps(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			var s1, s2 []int
+			var s1, s2 []uint8
 			var err error
 
-			s1 = make([]int, len(tt.args.seq1))
+			s1 = make([]uint8, len(tt.args.seq1))
 			for l, r := range tt.args.seq1 {
 				if s1[l], err = align.Nt2IndexIUPAC(r); err != nil {
 					t.Error(err)
 				}
 			}
-			s2 = make([]int, len(tt.args.seq2))
+			s2 = make([]uint8, len(tt.args.seq2))
 			for l, r := range tt.args.seq2 {
 				if s2[l], err = align.Nt2IndexIUPAC(r); err != nil {
 					t.Error(err)
@@ -135,16 +135,16 @@ func Test_countDiffsWithInternalGaps(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			var s1, s2 []int
+			var s1, s2 []uint8
 			var err error
 
-			s1 = make([]int, len(tt.args.seq1))
+			s1 = make([]uint8, len(tt.args.seq1))
 			for l, r := range tt.args.seq1 {
 				if s1[l], err = align.Nt2IndexIUPAC(r); err != nil {
 					t.Error(err)
 				}
 			}
-			s2 = make([]int, len(tt.args.seq2))
+			s2 = make([]uint8, len(tt.args.seq2))
 			for l, r := range tt.args.seq2 {
 				if s2[l], err = align.Nt2IndexIUPAC(r); err != nil {
 					t.Error(err)
