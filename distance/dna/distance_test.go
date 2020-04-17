@@ -3,6 +3,8 @@ package dna
 import (
 	"math"
 	"testing"
+
+	"github.com/evolbioinfo/goalign/align"
 )
 
 func Test_countDiffs(t *testing.T) {
@@ -29,7 +31,23 @@ func Test_countDiffs(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			gotNbdiffs, gotTotal := countDiffs(tt.args.seq1, tt.args.seq2, tt.args.selectedSites, tt.args.weights)
+			var s1, s2 []int
+			var err error
+
+			s1 = make([]int, len(tt.args.seq1))
+			for l, r := range tt.args.seq1 {
+				if s1[l], err = align.Nt2IndexIUPAC(r); err != nil {
+					t.Error(err)
+				}
+			}
+			s2 = make([]int, len(tt.args.seq2))
+			for l, r := range tt.args.seq2 {
+				if s2[l], err = align.Nt2IndexIUPAC(r); err != nil {
+					t.Error(err)
+				}
+			}
+
+			gotNbdiffs, gotTotal := countDiffs(s1, s2, tt.args.selectedSites, tt.args.weights)
 			if math.Abs(gotNbdiffs-tt.wantNbdiffs) > 0.000000000000001 {
 				t.Errorf("countDiffs() gotNbdiffs = %v, want %v", gotNbdiffs, tt.wantNbdiffs)
 			}
@@ -65,7 +83,23 @@ func Test_countDiffsWithGaps(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			gotNbdiffs, gotTotal := countDiffsWithGaps(tt.args.seq1, tt.args.seq2, tt.args.selectedSites, tt.args.weights)
+			var s1, s2 []int
+			var err error
+
+			s1 = make([]int, len(tt.args.seq1))
+			for l, r := range tt.args.seq1 {
+				if s1[l], err = align.Nt2IndexIUPAC(r); err != nil {
+					t.Error(err)
+				}
+			}
+			s2 = make([]int, len(tt.args.seq2))
+			for l, r := range tt.args.seq2 {
+				if s2[l], err = align.Nt2IndexIUPAC(r); err != nil {
+					t.Error(err)
+				}
+			}
+
+			gotNbdiffs, gotTotal := countDiffsWithGaps(s1, s2, tt.args.selectedSites, tt.args.weights)
 			if math.Abs(gotNbdiffs-tt.wantNbdiffs) > 0.000000000000001 {
 				t.Errorf("countDiffs() gotNbdiffs = %v, want %v", gotNbdiffs, tt.wantNbdiffs)
 			}
@@ -101,7 +135,23 @@ func Test_countDiffsWithInternalGaps(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			gotNbdiffs, gotTotal := countDiffsWithInternalGaps(tt.args.seq1, tt.args.seq2, tt.args.selectedSites, tt.args.weights)
+			var s1, s2 []int
+			var err error
+
+			s1 = make([]int, len(tt.args.seq1))
+			for l, r := range tt.args.seq1 {
+				if s1[l], err = align.Nt2IndexIUPAC(r); err != nil {
+					t.Error(err)
+				}
+			}
+			s2 = make([]int, len(tt.args.seq2))
+			for l, r := range tt.args.seq2 {
+				if s2[l], err = align.Nt2IndexIUPAC(r); err != nil {
+					t.Error(err)
+				}
+			}
+
+			gotNbdiffs, gotTotal := countDiffsWithInternalGaps(s1, s2, tt.args.selectedSites, tt.args.weights)
 			if math.Abs(gotNbdiffs-tt.wantNbdiffs) > 0.000000000000001 {
 				t.Errorf("countDiffs() gotNbdiffs = %v, want %v", gotNbdiffs, tt.wantNbdiffs)
 			}

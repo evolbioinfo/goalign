@@ -180,7 +180,17 @@ func TestEqualOrCompatible(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			gotOk, err := EqualOrCompatible(tt.args.nt1, tt.args.nt2)
+			var nt1, nt2 int
+			var err error
+
+			if nt1, err = Nt2IndexIUPAC(tt.args.nt1); err != nil {
+				t.Error(err)
+			}
+			if nt2, err = Nt2IndexIUPAC(tt.args.nt2); err != nil {
+				t.Error(err)
+			}
+
+			gotOk, err := EqualOrCompatible(nt1, nt2)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("EqualOrCompatible() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -215,7 +225,17 @@ func TestNtIUPACDifference(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			gotDiff, err := NtIUPACDifference(tt.args.nt1, tt.args.nt2)
+			var nt1, nt2 int
+			var err error
+
+			if nt1, err = Nt2IndexIUPAC(tt.args.nt1); err != nil {
+				t.Error(err)
+			}
+			if nt2, err = Nt2IndexIUPAC(tt.args.nt2); err != nil {
+				t.Error(err)
+			}
+
+			gotDiff, err := NtIUPACDifference(nt1, nt2)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("NtIUPACDifference() error = %v, wantErr %v", err, tt.wantErr)
 				return

@@ -1419,6 +1419,9 @@ func (a *align) NumMutationsUniquePerSequence() (numuniques []int) {
 //
 // If lengths are different, returns an error
 func (a *align) NumMutationsComparedToReferenceSequence(refseq Sequence) (nummutations []int, err error) {
+	var refseqCode []int
+	var nt int
+
 	nummutations = make([]int, a.NbSequences())
 	if refseq.Length() != a.Length() {
 		err = fmt.Errorf("Reference sequence and alignment do not have same length (%d,%d), cannot compute a number of mutation", refseq.Length(), a.Length())
@@ -1429,6 +1432,12 @@ func (a *align) NumMutationsComparedToReferenceSequence(refseq Sequence) (nummut
 	if a.Alphabet() == AMINOACIDS {
 		all = ALL_AMINO
 	} else if a.Alphabet() == NUCLEOTIDS {
+		refseqCode = make([]int, a.Length())
+		for i := 0; i < a.Length(); i++ {
+			if refseqCode[i], err = Nt2IndexIUPAC(refseq.SequenceChar()[i]); err != nil {
+				return
+			}
+		}
 		all = ALL_NUCLE
 	}
 
@@ -1436,7 +1445,10 @@ func (a *align) NumMutationsComparedToReferenceSequence(refseq Sequence) (nummut
 		for j, s := range a.seqs {
 			eq := true
 			if a.Alphabet() == NUCLEOTIDS {
-				if eq, err = EqualOrCompatible(s.sequence[i], refseq.SequenceChar()[i]); err != nil {
+				if nt, err = Nt2IndexIUPAC(s.sequence[i]); err != nil {
+					return
+				}
+				if eq, err = EqualOrCompatible(nt, refseqCode[i]); err != nil {
 					return
 				}
 			} else {

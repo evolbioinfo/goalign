@@ -38,6 +38,24 @@ const (
 	GENETIC_CODE_STANDARD         = 0 // Standard genetic code
 	GENETIC_CODE_VETEBRATE_MITO   = 1 // Vertebrate mitochondrial genetic code
 	GENETIC_CODE_INVETEBRATE_MITO = 2 // Invertebrate mitochondrial genetic code
+
+	// IUPAC Nucleotide Code
+	NT_A     = 0
+	NT_C     = 1
+	NT_G     = 2
+	NT_T     = 3
+	NT_R     = 4
+	NT_Y     = 5
+	NT_S     = 6
+	NT_W     = 7
+	NT_K     = 8
+	NT_M     = 9
+	NT_B     = 10
+	NT_D     = 11
+	NT_H     = 12
+	NT_V     = 13
+	NT_N     = 14
+	NT_OTHER = 15 // GAP, *, etc;?
 )
 
 var stdaminoacid = []rune{'A', 'R', 'N', 'D', 'C', 'Q', 'E', 'G', 'H', 'I', 'L', 'K', 'M', 'F', 'P', 'S', 'T', 'W', 'Y', 'V'}
@@ -186,6 +204,29 @@ var dna_to_matrix_pos = map[rune]int{
 	'X': 14,
 }
 
+// Map between nt and its code
+var iupacToInt = map[rune]int{
+	'A': NT_A,
+	'C': NT_C,
+	'G': NT_G,
+	'T': NT_T,
+	'R': NT_R,
+	'Y': NT_Y,
+	'S': NT_S,
+	'W': NT_W,
+	'K': NT_K,
+	'M': NT_M,
+	'B': NT_B,
+	'D': NT_D,
+	'H': NT_H,
+	'V': NT_V,
+	'N': NT_N,
+	'-': NT_OTHER,
+	'*': NT_OTHER,
+	'X': NT_OTHER,
+	'.': NT_OTHER,
+}
+
 var IupacCode = map[rune][]rune{
 	'A': {'A'},
 	'C': {'C'},
@@ -204,22 +245,24 @@ var IupacCode = map[rune][]rune{
 	'N': {'A', 'C', 'G', 'T'},
 }
 
-var iupacCodeByte = map[rune][]uint8{
-	'A': {0},
-	'C': {1},
-	'G': {2},
-	'T': {3},
-	'R': {0, 2},
-	'Y': {1, 3},
-	'S': {2, 1},
-	'W': {0, 3},
-	'K': {2, 3},
-	'M': {0, 1},
-	'B': {1, 2, 3},
-	'D': {0, 2, 3},
-	'H': {0, 1, 3},
-	'V': {0, 1, 2},
-	'N': {0, 1, 2, 3},
+// Index: iupac nucleotide (A-N)
+// Value: all possible nucleotides
+var iupacCodeByte = [][]int{
+	{NT_A},                   // A
+	{NT_C},                   // C
+	{NT_G},                   // G
+	{NT_T},                   // T
+	{NT_A, NT_G},             // R
+	{NT_C, NT_T},             // Y
+	{NT_G, NT_C},             // S
+	{NT_A, NT_T},             // W
+	{NT_G, NT_T},             // K
+	{NT_A, NT_C},             // M
+	{NT_C, NT_G, NT_T},       // B
+	{NT_A, NT_G, NT_T},       // D
+	{NT_A, NT_C, NT_T},       // H
+	{NT_A, NT_C, NT_G},       // V
+	{NT_A, NT_C, NT_G, NT_T}, // N
 }
 
 // Taken from EMBOSS Water
@@ -341,15 +384,40 @@ T=3
 func Nt2Index(nt rune) (idx int, err error) {
 	switch unicode.ToUpper(nt) {
 	case 'A':
-		idx = 0
+		idx = NT_A
 	case 'C':
-		idx = 1
+		idx = NT_C
 	case 'G':
-		idx = 2
+		idx = NT_G
 	case 'T':
-		idx = 3
+		idx = NT_T
 	default:
-		err = errors.New(fmt.Sprintf("No index for character: %c", nt))
+		err = fmt.Errorf("No index for character: %c", nt)
+	}
+	return
+}
+
+/*
+PossibleNtIUPAC returns the possible meaning of the given iupac nucleotide
+Ex: NT_B : {NT_C, NT_G, NT_T}
+*/
+func PossibleNtIUPAC(nt int) (idx []int, err error) {
+	if nt < 0 || nt > len(iupacCodeByte) {
+		err = fmt.Errorf("No index for character: %d", nt)
+	}
+	idx = iupacCodeByte[nt]
+	return
+}
+
+/*
+Returns the int code of the given nucleotide.
+It takes the upper case of the given rune.
+Ex: 'B': NT_B
+*/
+func Nt2IndexIUPAC(nt rune) (idx int, err error) {
+	var ok bool
+	if idx, ok = iupacToInt[unicode.ToUpper(nt)]; !ok {
+		err = fmt.Errorf("No index for character: %c", nt)
 	}
 	return
 }
@@ -363,7 +431,7 @@ Returns the index of each nts
 */
 func Index2Nt(index int) (nt rune, err error) {
 	if index < 0 || index > len(stdnucleotides) {
-		err = errors.New(fmt.Sprintf("No nt for index %d", index))
+		err = fmt.Errorf("No nt for index %d", index)
 	}
 	nt = stdnucleotides[index]
 	return

@@ -4,7 +4,6 @@ import (
 	"errors"
 	"math"
 	"sync"
-	"unicode"
 
 	"github.com/evolbioinfo/goalign/align"
 	"github.com/evolbioinfo/goalign/stats"
@@ -16,12 +15,13 @@ const (
 
 type DistModel interface {
 	InitModel(al align.Alignment, weights []float64, gamma bool, alpha float64) error
-	Distance(seq1 []rune, seq2 []rune, weigths []float64) (float64, error)
+	Distance(seq1 []int, seq2 []int, weigths []float64) (float64, error)
+	Sequence(i int) ([]int, error)
 }
 
 type seqpairdist struct {
 	i, j       int
-	seq1, seq2 []rune
+	seq1, seq2 []int // Sequences encoded with align.Nt2IndexIUPAC
 	model      DistModel
 	weights    []float64
 }
@@ -101,7 +101,9 @@ func DistMatrix(al align.Alignment, weights []float64, model DistModel, gamma bo
 		err = errors.New("The alignment is not nucleotidic")
 		return
 	}
-	model.InitModel(al, weights, gamma, alpha)
+	if err = model.InitModel(al, weights, gamma, alpha); err != nil {
+		return
+	}
 	distchan := make(chan seqpairdist, 100)
 
 	// Chan of comparisons that gives infty or <0 distance
@@ -114,15 +116,23 @@ func DistMatrix(al align.Alignment, weights []float64, model DistModel, gamma bo
 	}
 
 	go func() {
+		defer close(distchan)
+		var seq1, seq2 []int
 		for i := 0; i < al.NbSequences(); i++ {
-			seq1, _ := al.GetSequenceCharById(i)
+			if seq1, err = model.Sequence(i); err != nil {
+				return
+			}
 			for j := i + 1; j < al.NbSequences(); j++ {
-				seq2, _ := al.GetSequenceCharById(j)
+				if seq2, err = model.Sequence(j); err != nil {
+					return
+				}
 				distchan <- seqpairdist{i, j, seq1, seq2, model, weights}
 			}
 		}
-		close(distchan)
 	}()
+	if err != nil {
+		return
+	}
 
 	var wg sync.WaitGroup
 	max := 0.0
@@ -160,36 +170,32 @@ func DistMatrix(al align.Alignment, weights []float64, model DistModel, gamma bo
 }
 
 /* Returns true if it is a transition, false otherwize */
-func isTransition(nt1 rune, nt2 rune) bool {
-	n1, n2 := unicode.ToUpper(nt1), unicode.ToUpper(nt2)
-	return ((n1 == 'A' && n2 == 'G') || (n1 == 'G' && n2 == 'A') ||
-		(n1 == 'T' && n2 == 'C') || (n1 == 'C' && n2 == 'T'))
+func isTransition(n1 int, n2 int) bool {
+	return ((n1 == align.NT_A && n2 == align.NT_G) || (n1 == align.NT_G && n2 == align.NT_A) ||
+		(n1 == align.NT_T && n2 == align.NT_C) || (n1 == align.NT_C && n2 == align.NT_T))
 }
 
 /* Returns true if it is a A<->G  */
-func isAG(nt1 rune, nt2 rune) bool {
-	n1, n2 := unicode.ToUpper(nt1), unicode.ToUpper(nt2)
-	return ((n1 == 'A' && n2 == 'G') || (n1 == 'G' && n2 == 'A'))
+func isAG(n1 int, n2 int) bool {
+	return ((n1 == align.NT_A && n2 == align.NT_G) || (n1 == align.NT_G && n2 == align.NT_A))
 }
 
-/* Returns true if it is a A<->G  */
-func isCT(nt1 rune, nt2 rune) bool {
-	n1, n2 := unicode.ToUpper(nt1), unicode.ToUpper(nt2)
-	return ((n1 == 'T' && n2 == 'C') || (n1 == 'C' && n2 == 'T'))
+/* Returns true if it is a C<->T  */
+func isCT(n1 int, n2 int) bool {
+	return ((n1 == align.NT_T && n2 == align.NT_C) || (n1 == align.NT_C && n2 == align.NT_T))
 }
 
 /* Returns true if it is a transversion, false otherwize */
-func isTransversion(nt1 rune, nt2 rune) bool {
-	n1, n2 := unicode.ToUpper(nt1), unicode.ToUpper(nt2)
-	return ((n1 == 'A' && n2 == 'C') || (n1 == 'C' && n2 == 'A') ||
-		(n1 == 'G' && n2 == 'T') || (n1 == 'T' && n2 == 'G') ||
-		(n1 == 'T' && n2 == 'A') || (n1 == 'A' && n2 == 'T') ||
-		(n1 == 'C' && n2 == 'G') || (n1 == 'G' && n2 == 'C') ||
-		(n1 == 'R' && n2 == 'Y') || (n1 == 'Y' && n2 == 'R'))
+func isTransversion(n1 int, n2 int) bool {
+	return ((n1 == align.NT_A && n2 == align.NT_C) || (n1 == align.NT_C && n2 == align.NT_A) ||
+		(n1 == align.NT_G && n2 == align.NT_T) || (n1 == align.NT_T && n2 == align.NT_G) ||
+		(n1 == align.NT_T && n2 == align.NT_A) || (n1 == align.NT_A && n2 == align.NT_T) ||
+		(n1 == align.NT_C && n2 == align.NT_G) || (n1 == align.NT_G && n2 == align.NT_C) ||
+		(n1 == align.NT_R && n2 == align.NT_Y) || (n1 == align.NT_Y && n2 == align.NT_R))
 }
 
 /* Count number of mutations and associate a weight to them */
-func countMutations(seq1 []rune, seq2 []rune, selectedSites []bool, weights []float64) (transitions, transversions, ag, ct float64, total float64) {
+func countMutations(seq1 []int, seq2 []int, selectedSites []bool, weights []float64) (transitions, transversions, ag, ct float64, total float64) {
 	transitions, transversions = 0.0, 0.0
 	total = 0.0
 	ag = 0.0
@@ -219,7 +225,7 @@ func countMutations(seq1 []rune, seq2 []rune, selectedSites []bool, weights []fl
 }
 
 /* Count number of mutations and associate a weight to them */
-func countDiffs(seq1 []rune, seq2 []rune, selectedSites []bool, weights []float64) (nbdiffs float64, total float64) {
+func countDiffs(seq1 []int, seq2 []int, selectedSites []bool, weights []float64) (nbdiffs float64, total float64) {
 	nbdiffs = 0.0
 	total = 0.0
 	for i := 0; i < len(seq1); i++ {
@@ -240,7 +246,7 @@ func countDiffs(seq1 []rune, seq2 []rune, selectedSites []bool, weights []float6
 }
 
 /* Count number of mutations (including gaps to nt) */
-func countDiffsWithGaps(seq1 []rune, seq2 []rune, selectedSites []bool, weights []float64) (nbdiffs float64, total float64) {
+func countDiffsWithGaps(seq1, seq2 []int, selectedSites []bool, weights []float64) (nbdiffs float64, total float64) {
 	nbdiffs = 0.0
 	total = 0.0
 	for i := 0; i < len(seq1); i++ {
@@ -262,7 +268,7 @@ func countDiffsWithGaps(seq1 []rune, seq2 []rune, selectedSites []bool, weights 
 }
 
 /* Count number of mutations (including gaps to nt when they are internal, not on the border) */
-func countDiffsWithInternalGaps(seq1 []rune, seq2 []rune, selectedSites []bool, weights []float64) (nbdiffs float64, total float64) {
+func countDiffsWithInternalGaps(seq1, seq2 []int, selectedSites []bool, weights []float64) (nbdiffs float64, total float64) {
 	nbdiffs = 0.0
 	total = 0.0
 	firstgaps1 := true
@@ -278,7 +284,7 @@ func countDiffsWithInternalGaps(seq1 []rune, seq2 []rune, selectedSites []bool, 
 		firstgaps1 = firstgaps1 && !isNuc(seq1[i])
 		firstgaps2 = firstgaps2 && !isNuc(seq2[i])
 
-		if (isNuc(seq1[i]) || isNuc(seq2[i])) && selectedSites[i] && (!firstgaps1 && !firstgaps2) {
+		if (isNuc(seq1[i]) || isNuc(seq2[i])) && (!firstgaps1 && !firstgaps2) {
 			if seq1[i] != seq2[i] {
 				diff, _ := align.NtIUPACDifference(seq1[i], seq2[i])
 				diff = diff * w
@@ -311,24 +317,33 @@ C=1
 G=2
 T=3
 */
-func probaNt(al align.Alignment, selectedSites []bool, weights []float64) ([]float64, error) {
+func probaNt(sequenceCodes [][]int, selectedSites []bool, weights []float64) ([]float64, error) {
+	var idx []int
+	var err error
+	var i, l, seqidx, pos int
+	var seq1 []int
+
 	pi := make([]float64, 4)
 	total := 0.0
 
+	if len(sequenceCodes) > 0 {
+		l = len(sequenceCodes[0])
+	}
+
 	w := 1.0
-	for pos := 0; pos < al.Length(); pos++ {
+	for pos = 0; pos < l; pos++ {
 		if weights != nil {
 			w = weights[pos]
 		}
-		for i := 0; i < al.NbSequences(); i++ {
-			seq1, _ := al.GetSequenceCharById(i)
-			char := seq1[pos]
+		for seqidx = 0; seqidx < len(sequenceCodes); seqidx++ {
+			seq1 = sequenceCodes[seqidx]
 			if selectedSites[pos] {
 				if isNuc(seq1[pos]) {
-					if idx, err := align.Nt2Index(char); err != nil {
+					if idx, err = align.PossibleNtIUPAC(seq1[pos]); err != nil {
 						return nil, err
-					} else {
-						pi[idx] += w
+					}
+					for _, i = range idx {
+						pi[i] += w / float64(len(idx))
 					}
 				}
 				total += w
@@ -336,7 +351,7 @@ func probaNt(al align.Alignment, selectedSites []bool, weights []float64) ([]flo
 		}
 	}
 
-	for i, _ := range pi {
+	for i = range pi {
 		pi[i] /= total
 	}
 	return pi, nil
@@ -348,7 +363,11 @@ C=1
 G=2
 T=3
 */
-func probaNt2Seqs(seq1 []rune, seq2 []rune, selectedSites []bool, weights []float64) ([]float64, error) {
+func probaNt2Seqs(seq1 []int, seq2 []int, selectedSites []bool, weights []float64) ([]float64, error) {
+	var idx []int
+	var i int
+	var err error
+
 	pi := make([]float64, 4)
 	total := 0.0
 
@@ -359,35 +378,42 @@ func probaNt2Seqs(seq1 []rune, seq2 []rune, selectedSites []bool, weights []floa
 		}
 		if selectedSites[pos] {
 			if isNuc(seq1[pos]) && isNuc(seq2[pos]) {
-				if idx, err := align.Nt2Index(seq1[pos]); err != nil {
+
+				if idx, err = align.PossibleNtIUPAC(seq1[pos]); err != nil {
 					return nil, err
-				} else {
-					pi[idx] += w
 				}
-				if idx, err := align.Nt2Index(seq2[pos]); err != nil {
+				for _, i = range idx {
+					pi[i] += w / float64(len(idx))
+				}
+
+				if idx, err = align.PossibleNtIUPAC(seq2[pos]); err != nil {
 					return nil, err
-				} else {
-					pi[idx] += w
+				}
+				for _, i = range idx {
+					pi[i] += w / float64(len(idx))
 				}
 			}
 			total += 2 * w
 		}
 	}
 
-	for i, _ := range pi {
+	for i = range pi {
 		pi[i] /= total
 	}
 	return pi, nil
 }
 
 /* Compute freq (weighted) of all pairs of nt in all pairs of sequences */
-func probaNtPairs(al align.Alignment, selectedSites []bool, weights []float64) ([][]float64, error) {
+func probaNtPairs(sequenceCodes [][]int, selectedSites []bool, weights []float64) ([][]float64, error) {
+	var seq1, seq2 []int
+
 	psi := init2DFloat(4, 4)
 	total := 0.0
-	for i := 0; i < al.NbSequences(); i++ {
-		seq1, _ := al.GetSequenceCharById(i)
-		for j := i + 1; j < al.NbSequences(); j++ {
-			seq2, _ := al.GetSequenceCharById(j)
+
+	for i := 0; i < len(sequenceCodes); i++ {
+		seq1 = sequenceCodes[i]
+		for j := i + 1; j < len(seq1); j++ {
+			seq2 = sequenceCodes[j]
 			if nb, err := countNtPairs2Seq(seq1, seq2, selectedSites, weights, psi); err == nil {
 				total += nb
 			} else {
@@ -396,8 +422,8 @@ func probaNtPairs(al align.Alignment, selectedSites []bool, weights []float64) (
 		}
 	}
 
-	for i, _ := range psi {
-		for j, _ := range psi[i] {
+	for i := range psi {
+		for j := range psi[i] {
 			psi[i][j] /= total
 		}
 	}
@@ -405,41 +431,45 @@ func probaNtPairs(al align.Alignment, selectedSites []bool, weights []float64) (
 }
 
 /* Compute freq (weighted) of all pairs of nt in this pair of sequences */
-func countNtPairs2Seq(seq1, seq2 []rune, selectedSites []bool, weights []float64, psi [][]float64) (float64, error) {
-	total := 0.0
+func countNtPairs2Seq(seq1, seq2 []int, selectedSites []bool, weights []float64, psi [][]float64) (total float64, err error) {
+	total = 0.0
 	w := 1.0
 	for pos, char1 := range seq1 {
 		if weights != nil {
 			w = weights[pos]
 		}
 		if selectedSites[pos] {
-			if isNuc(char1) && isNuc(seq2[pos]) {
-				var id1, id2 int
-				var err1, err2 error
+			if isNucStrict(char1) && isNucStrict(seq2[pos]) {
+				var id1, id2 []int
 
-				if id1, err1 = align.Nt2Index(char1); err1 != nil {
-					return 0.0, err1
+				if id1, err = align.PossibleNtIUPAC(char1); err != nil {
+					return
 				}
-				if id2, err2 = align.Nt2Index(seq2[pos]); err2 != nil {
-					return 0.0, err2
+				if id2, err = align.PossibleNtIUPAC(seq2[pos]); err != nil {
+					return
 				}
-				psi[id1][id2] += w
-				psi[id2][id1] += w
+				nb := float64(len(id1) * len(id2))
+				for _, i1 := range id1 {
+					for _, i2 := range id2 {
+						psi[i1][i2] += w / nb
+						if i1 != i2 {
+							psi[i2][i1] += w / nb
+						}
+					}
+				}
 			}
 			total += w
 		}
 	}
-	return total, nil
+	return
 }
 
-func isNuc(r rune) bool {
-	up := unicode.ToUpper(r)
-	for k := range align.IupacCode {
-		if up == k {
-			return true
-		}
-	}
-	return false
+func isNuc(r int) bool {
+	return r >= 0 && r < len(align.IupacCode)
+}
+
+func isNucStrict(r int) bool {
+	return r >= 0 && r < 4
 }
 
 /* Returns the sites of the alignments that contains only nucleotides and no gaps */
@@ -464,4 +494,22 @@ func selectedSites(al align.Alignment, weights []float64, removeGappedPositions 
 		}
 	}
 	return numSites, selectedSites
+}
+
+func alignmentToCodes(al align.Alignment) (sequencesInCode [][]int, err error) {
+	var i int
+	// Sequences coded in NT_A-NT_OTHER
+	sequencesInCode = make([][]int, al.NbSequences())
+	i = 0
+	al.IterateChar(func(name string, seq []rune) bool {
+		sequencesInCode[i] = make([]int, al.Length())
+		for l, r := range seq {
+			if sequencesInCode[i][l], err = align.Nt2IndexIUPAC(r); err != nil {
+				return true
+			}
+		}
+		i++
+		return false
+	})
+	return
 }

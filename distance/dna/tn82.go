@@ -3,8 +3,10 @@
 package dna
 
 import (
-	"github.com/evolbioinfo/goalign/align"
+	"fmt"
 	"math"
+
+	"github.com/evolbioinfo/goalign/align"
 )
 
 type TN82Model struct {
@@ -13,6 +15,7 @@ type TN82Model struct {
 	numSites      float64   // Number of selected sites (no gaps)
 	selectedSites []bool    // true for selected sites
 	removegaps    bool      // If true, we will remove posision with >=1 gaps
+	sequenceCodes [][]int   // Sequences converted into int codes
 }
 
 func NewTN82Model(removegaps bool) *TN82Model {
@@ -21,11 +24,12 @@ func NewTN82Model(removegaps bool) *TN82Model {
 		0,
 		nil,
 		removegaps,
+		nil,
 	}
 }
 
 /* computes TN82 distance between 2 sequences */
-func (m *TN82Model) Distance(seq1 []rune, seq2 []rune, weights []float64) (float64, error) {
+func (m *TN82Model) Distance(seq1 []int, seq2 []int, weights []float64) (float64, error) {
 	diff, total := countDiffs(seq1, seq2, m.selectedSites, weights)
 	diff = diff / total
 
@@ -56,6 +60,20 @@ func (m *TN82Model) Distance(seq1 []rune, seq2 []rune, weights []float64) (float
 
 func (m *TN82Model) InitModel(al align.Alignment, weights []float64, gamma bool, alpha float64) (err error) {
 	m.numSites, m.selectedSites = selectedSites(al, weights, m.removegaps)
-	m.pi, err = probaNt(al, m.selectedSites, weights)
+	if m.sequenceCodes, err = alignmentToCodes(al); err != nil {
+		return
+	}
+	m.pi, err = probaNt(m.sequenceCodes, m.selectedSites, weights)
+	return
+}
+
+// Sequence returns the ith sequence of the alignment
+// encoded in int
+func (m *TN82Model) Sequence(i int) (seq []int, err error) {
+	if i < 0 || i >= len(m.sequenceCodes) {
+		err = fmt.Errorf("This sequence does not exist: %d", i)
+		return
+	}
+	seq = m.sequenceCodes[i]
 	return
 }

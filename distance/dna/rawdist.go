@@ -23,7 +23,8 @@ type RawDistModel struct {
 	// If 1, will count as 1 mutation '-' to 'A"
 	// If 2, will count as 1 mutation '-' to 'A", but only the internal
 	// Default 0
-	countgapmut int
+	countgapmut   int
+	sequenceCodes [][]int // Sequences converted into int codes
 }
 
 func NewRawDistModel(removegaps bool) *RawDistModel {
@@ -32,6 +33,7 @@ func NewRawDistModel(removegaps bool) *RawDistModel {
 		selectedSites: nil,
 		removegaps:    removegaps,
 		countgapmut:   0,
+		sequenceCodes: nil,
 	}
 }
 
@@ -46,7 +48,7 @@ func (m *RawDistModel) SetCountGapMutations(countgapmut int) (err error) {
 
 // computes the number of differences  between 2 sequences
 // These differences include gaps vs. nt
-func (m *RawDistModel) Distance(seq1 []rune, seq2 []rune, weights []float64) (diff float64, err error) {
+func (m *RawDistModel) Distance(seq1 []int, seq2 []int, weights []float64) (diff float64, err error) {
 	switch m.countgapmut {
 	case GAP_COUNT_ALL:
 		diff, _ = countDiffsWithGaps(seq1, seq2, m.selectedSites, weights)
@@ -60,5 +62,17 @@ func (m *RawDistModel) Distance(seq1 []rune, seq2 []rune, weights []float64) (di
 
 func (m *RawDistModel) InitModel(al align.Alignment, weights []float64, gamma bool, alpha float64) (err error) {
 	m.numSites, m.selectedSites = selectedSites(al, weights, m.removegaps)
+	m.sequenceCodes, err = alignmentToCodes(al)
+	return
+}
+
+// Sequence returns the ith sequence of the alignment
+// encoded in int
+func (m *RawDistModel) Sequence(i int) (seq []int, err error) {
+	if i < 0 || i >= len(m.sequenceCodes) {
+		err = fmt.Errorf("This sequence does not exist: %d", i)
+		return
+	}
+	seq = m.sequenceCodes[i]
 	return
 }

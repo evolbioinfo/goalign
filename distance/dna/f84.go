@@ -1,6 +1,7 @@
 package dna
 
 import (
+	"fmt"
 	"math"
 
 	"github.com/evolbioinfo/goalign/align"
@@ -14,6 +15,7 @@ type F84Model struct {
 	removegaps    bool      // If true, we will remove posision with >=1 gaps
 	gamma         bool
 	alpha         float64
+	sequenceCodes [][]int // Sequences converted to codes
 }
 
 func NewF84Model(removegaps bool) *F84Model {
@@ -25,11 +27,12 @@ func NewF84Model(removegaps bool) *F84Model {
 		removegaps,
 		false,
 		0.,
+		nil,
 	}
 }
 
 /* computes F84 distance between 2 sequences */
-func (m *F84Model) Distance(seq1 []rune, seq2 []rune, weights []float64) (float64, error) {
+func (m *F84Model) Distance(seq1 []int, seq2 []int, weights []float64) (float64, error) {
 	var dist float64
 
 	trS, trV, _, _, total := countMutations(seq1, seq2, m.selectedSites, weights)
@@ -49,11 +52,25 @@ func (m *F84Model) InitModel(al align.Alignment, weights []float64, gamma bool, 
 	m.gamma = gamma
 	m.alpha = alpha
 	m.numSites, m.selectedSites = selectedSites(al, weights, m.removegaps)
-	m.pi, err = probaNt(al, m.selectedSites, weights)
+	if m.sequenceCodes, err = alignmentToCodes(al); err != nil {
+		return
+	}
+	m.pi, err = probaNt(m.sequenceCodes, m.selectedSites, weights)
 	if err == nil {
 		m.a = m.pi[0]*m.pi[2]/(m.pi[0]+m.pi[2]) + m.pi[1]*m.pi[3]/(m.pi[1]+m.pi[3])
 		m.b = m.pi[0]*m.pi[2] + m.pi[1]*m.pi[3]
 		m.c = (m.pi[0] + m.pi[2]) * (m.pi[1] + m.pi[3])
 	}
+	return
+}
+
+// Sequence returns the ith sequence of the alignment
+// encoded in int
+func (m *F84Model) Sequence(i int) (seq []int, err error) {
+	if i < 0 || i >= len(m.sequenceCodes) {
+		err = fmt.Errorf("This sequence does not exist: %d", i)
+		return
+	}
+	seq = m.sequenceCodes[i]
 	return
 }

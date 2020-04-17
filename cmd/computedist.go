@@ -3,10 +3,11 @@ package cmd
 import (
 	"errors"
 	"fmt"
-	"github.com/spf13/cobra"
 	"log"
 	"math"
 	"os"
+
+	"github.com/spf13/cobra"
 
 	"github.com/evolbioinfo/goalign/align"
 	"github.com/evolbioinfo/goalign/distance/dna"
@@ -131,6 +132,7 @@ if -a is given: display only the average distance
 					io.LogError(err)
 					return
 				}
+
 				if computedistAverage {
 					writeDistAverage(align, distMatrix, f)
 				} else {
