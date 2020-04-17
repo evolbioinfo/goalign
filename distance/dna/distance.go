@@ -485,7 +485,7 @@ func countNtPairs2Seq(seq1, seq2 []uint8, selectedSites []bool, weights []float6
 }
 
 func isNuc(r uint8) bool {
-	return r >= align.NT_A && r < align.NT_N
+	return r >= align.NT_A && r <= align.NT_N
 }
 
 func isNucStrict(r uint8) bool {
