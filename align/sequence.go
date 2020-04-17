@@ -423,10 +423,10 @@ func NtIUPACDifference(nt1, nt2 uint8) (diff float64, err error) {
 		return
 	}
 	inter := bits.OnesCount8(nt1 & nt2)
-	union := bits.OnesCount8(nt1 | nt2)
-	diff = 1.0 - float64(inter)/float64(union)
-	// if union == 0 {
-	// 	diff = 1.0
-	// }
+	//union := bits.OnesCount8(nt1 | nt2)
+	// diff = 1.0 - float64(inter)/float64(union)
+	if inter == 0 {
+		diff = 1.0
+	}
 	return
 }
