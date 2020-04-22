@@ -26,6 +26,7 @@ type Sequence interface {
 	Translate(phase int, geneticcode int) (Sequence, error) // Translates the sequence using the given code
 	DetectAlphabet() int                                    // Try to detect alphabet (nt or aa)
 	NumGaps() int                                           // Number of Gaps
+	NumGapsOpenning() int                                   // Number of Gaps opennin, it counts streches of gap only once
 	NumGapsFromStart() int                                  // Number of Gaps from Start (until a non gap is encountered)
 	NumGapsFromEnd() int                                    // Number of Gaps from End (until a non gap is encountered)
 	Clone() Sequence
@@ -203,6 +204,19 @@ func (s *seq) NumGaps() (numgaps int) {
 		if c == GAP {
 			numgaps++
 		}
+	}
+	return
+}
+
+//NumGapsOpenning returns the number of Gaps on the given sequence
+func (s *seq) NumGapsOpenning() (numgaps int) {
+	numgaps = 0
+	var prevChar rune = '>'
+	for _, c := range s.sequence {
+		if c == GAP && prevChar != GAP {
+			numgaps++
+		}
+		prevChar = c
 	}
 	return
 }

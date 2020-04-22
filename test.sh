@@ -1719,7 +1719,14 @@ ${GOALIGN} stats gaps -i input --unique > result
 diff -q -b result expected
 rm -f expected result
 
-
+cat > expected <<EOF
+A	2
+B	5
+C	4
+EOF
+${GOALIGN} stats gaps -i input --openning > result
+diff -q -b result expected
+rm -f expected result
 
 
 echo "->goalign subseq"

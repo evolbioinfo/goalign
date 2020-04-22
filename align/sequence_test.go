@@ -246,3 +246,34 @@ func TestNtIUPACDifference(t *testing.T) {
 		})
 	}
 }
+
+func Test_seq_NumGapsOpenning(t *testing.T) {
+	type fields struct {
+		name     string
+		sequence []rune
+		comment  string
+	}
+	tests := []struct {
+		name        string
+		fields      fields
+		wantNumgaps int
+	}{
+		{name: "t1", fields: fields{name: "s1", sequence: []rune("-CTGAT-CAGCTACTGATC------GATCGATC--ATCTACTG-"), comment: ""}, wantNumgaps: 5},
+		{name: "t2", fields: fields{name: "s1", sequence: []rune("-C-T-G-A-T-C-A-G-C-T-A-C-T-G-A-T-C-G-A-T-C-G-A-T-C-A-T-C-T-A-C-T-G-"), comment: ""}, wantNumgaps: 34},
+		{name: "t3", fields: fields{name: "s1", sequence: []rune("CTGATCAGCTACTGATCGATCGATCATCTACTG"), comment: ""}, wantNumgaps: 0},
+		{name: "t4", fields: fields{name: "s1", sequence: []rune("-CTGATCAGCTACTGATC-GATCGATC-ATCTACTG-"), comment: ""}, wantNumgaps: 4},
+		{name: "t5", fields: fields{name: "s1", sequence: []rune("CTGATCAGCTACTGATC------GATCGATCATCTACTG"), comment: ""}, wantNumgaps: 1},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			s := &seq{
+				name:     tt.fields.name,
+				sequence: tt.fields.sequence,
+				comment:  tt.fields.comment,
+			}
+			if gotNumgaps := s.NumGapsOpenning(); gotNumgaps != tt.wantNumgaps {
+				t.Errorf("seq.NumGapsOpenning() = %v, want %v", gotNumgaps, tt.wantNumgaps)
+			}
+		})
+	}
+}
