@@ -128,6 +128,7 @@ You may go to the [doc](docs/index.md) for a more detailed documentation of the 
   * entropy: compute entropy of alignment sites
   * pssm: compute position-specific scoring matrix
 * concat:      Concatenates several alignments
+* consensus: Compute a basic majority consensus of an input alignment
 * dedup:       Remove sequences that have the same sequence
 * diff : Compare all sequences to the first one of the alignment, and count the differences
 * divide:      Divide an input alignment in several output files (one per alignment)

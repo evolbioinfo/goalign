@@ -49,6 +49,7 @@ var statGapsCmd = &cobra.Command{
 		if statGapsUnique {
 			numgapsunique = al.NumGapsUniquePerSequence()
 		}
+
 		for i, s := range al.Sequences() {
 			if statGapsFromStart {
 				fmt.Printf("%s\t%d\n", s.Name(), s.NumGapsFromStart())
