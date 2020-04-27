@@ -12,14 +12,27 @@ Without any subcommand, it prints the following information:
 5. Character frequencies.
 6. Aphabet
 
+If `--per-sequences` option is given, then prints statistics for all sequences individually:
+1. sequence: Sequence ID;
+2. gaps: Total number of gaps;
+3. gapsstart: Number of consecutive gaps  at the beginning;
+4. gapsend: Number of consecutive gaps at the end;
+5. gapsuniques: Number of gaps unique to that sequence;
+6. gapsopenning: Number of streches of gaps;
+7. mutuniques: Number of unique mutations;
+7. (bis) mutref:  Number mutations compared to a reference sequence (only if `--ref-sequence`is given)
+8. length: Lenght of the unaligned sequence;
+9. A	C	G	T...: Number of occurence of each character.
+
+
 Different sub-commands:
 * `goalign stats alleles`: Prints the average number of alleles per site of the alignment;
 * `goalign stats alphabet`: Prints the alphabet of the alignemnts (aminoacids, nucleotides, unknown);
-* `goalign stats char`: Prints the character occurences;
-* `goalign stats gaps`: Prints the number of gaps in each sequences (and possibly the number of gaps from start, and from end);
+* `goalign stats char`: Prints the character number of occurences. If `--per-sequences` is given, then prints the number of occurences of each characters for each seqences. If `--per-sites` is given, then prints the number of occurences of each characters for each sites. Is is possible to give `--only` option, to count the number of occurences of a single character.
+* `goalign stats gaps`: Prints the number of gaps in each sequences (and possibly the number of gaps from start, and from end); By default, it prints, for each alignment sequence the number of gaps. Following options are exclusive, and given in order of priority: If `--from-start` is specified, then counts only gaps at sequence starts; If `--from-end` is specified, then counts only gaps at sequence ends; If `--unique` is specified, then counts only gaps that are unique in their column;	If` --openning` is specified, then counts only gap openning (streches of gaps are counted once); Otherwise, counts total number of gaps on each sequence.
 * `goalign stats length`: Prints alignment length;
 * `goalign stats maxchar`: Prints max occurence char for each alignment site;
-* `goalign stats mutations`: Prints the number of mutations on each alignment sequence, compared to a reference sequence or unique compared to all sequences. It does not take into account '-' and 'N' as unique mutations, and does not take into account '-' and 'N' as mutations compared to a reference sequence;
+* `goalign stats mutations`: Prints, for each sequence, the number of mutations on each alignment sequence, compared to a reference sequence or unique compared to all other sequences. It does not take into account '-' and 'N' as unique mutations, and does not take into account '-' and 'N' as mutations compared to a reference sequence; 	If `--unique` is specified, then counts only mutations (characters) that are unique in their column for the given sequence.	If `--ref-sequence` is specified, it will try to extract a sequence having that name from the alignment. If none exist, it will try to open a fasta file with the given name to take the first sequence as a reference. If a character is ambigous (IUPAC notation) in an nucleotide sequence, then it is counted as a mutation only if it is incompatible with the reference character.
 * `goalign stats nalign`: Prints the number of alignments in the input file (Phylip);
 * `goalign stats nseq`: Prints the number of sequences in the input alignment;
 * `goalign stats taxa`: Lists taxa in the input alignment.

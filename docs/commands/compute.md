@@ -4,9 +4,9 @@
 
 ### compute
 This command implements different computations:
-1. `goalign compute distance` : Computes a distance matrix from an input DNA alignment, with different evolutionary models:
+1. `goalign compute distance` : Computes a distance matrix from an input DNA alignment, with different evolutionary models. In the case of ambigous nucleotides (IUPAC), one mutation is counted if characters are not compatible (ex: R vs. Y). Possible models are:
     - pdist
-	- rawdist : Raw distance (like pdist, without normalization by length)
+	  - rawdist : Raw distance (like pdist, without normalization by length)
     - jc      : Juke-Cantor
     - k2p     : Kimura 2 Parameters
     - f81     : Felsenstein 81

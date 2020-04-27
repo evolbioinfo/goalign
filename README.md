@@ -116,6 +116,7 @@ You may go to the [doc](docs/index.md) for a more detailed documentation of the 
 
 ### List of commands
 * addid:      Adds a string to each sequence identifier of the input alignment
+* append:      Concatenates several alignments by adding new alignments as new sequences of the first alignment
 * build:       Command to build output files : bootstrap for example
   * seqboot : Generate bootstrap alignments
 * clean:       Removes gap sites/sequences
@@ -127,7 +128,7 @@ You may go to the [doc](docs/index.md) for a more detailed documentation of the 
   * distances: compute evolutionary distances for nucleotide alignment
   * entropy: compute entropy of alignment sites
   * pssm: compute position-specific scoring matrix
-* concat:      Concatenates several alignments
+* concat:      Concatenates several alignments by concatenating each sequences having the same name
 * consensus: Compute a basic majority consensus of an input alignment
 * dedup:       Remove sequences that have the same sequence
 * diff : Compare all sequences to the first one of the alignment, and count the differences
@@ -167,7 +168,9 @@ You may go to the [doc](docs/index.md) for a more detailed documentation of the 
   * alleles
   * alphabet
   * char
+  * gaps
   * length
+  * mutations
   * nalign
   * nseq
   * taxa
