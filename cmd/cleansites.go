@@ -30,6 +30,7 @@ If cutoff is <0 or >1, it will be considered as 0, which means that every site w
 will be removed.`,
 	RunE: func(cmd *cobra.Command, args []string) (err error) {
 		var aligns *align.AlignChannel
+		var nbstart, nbend int
 		var f *os.File
 
 		if aligns, err = readalign(infile); err != nil {
@@ -45,13 +46,15 @@ will be removed.`,
 		i := 0
 		for al := range aligns.Achan {
 			beforelength := al.Length()
-			al.RemoveGapSites(cleanCutoff, cleanEnds)
+			nbstart, nbend = al.RemoveGapSites(cleanCutoff, cleanEnds)
 			afterlength := al.Length()
 			writeAlign(al, f)
 			if !cleanQuiet {
-				io.PrintMessage(fmt.Sprintf("Alignment (%d) length before cleaning=%d", i, beforelength))
-				io.PrintMessage(fmt.Sprintf("Alignment (%d) length after cleaning=%d", i, afterlength))
-				io.PrintMessage(fmt.Sprintf("Alignment (%d) number of gaps=%d", i, beforelength-afterlength))
+				io.PrintSimpleMessage(fmt.Sprintf("Alignment (%d) length before cleaning=%d", i, beforelength))
+				io.PrintSimpleMessage(fmt.Sprintf("Alignment (%d) length after cleaning=%d", i, afterlength))
+				io.PrintSimpleMessage(fmt.Sprintf("Alignment (%d) number of gaps=%d", i, beforelength-afterlength))
+				io.PrintSimpleMessage(fmt.Sprintf("Alignment (%d) number of start gaps=%d", i, nbstart))
+				io.PrintSimpleMessage(fmt.Sprintf("Alignment (%d) number of end gaps=%d", i, nbend))
 			}
 		}
 
