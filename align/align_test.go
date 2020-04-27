@@ -79,12 +79,15 @@ func TestCleanNames(t *testing.T) {
 }
 
 func TestRemoveOneGapSite(t *testing.T) {
+	var start, end int
+	var l int
 	a, err := RandomAlignment(AMINOACIDS, 300, 300)
 	if err != nil {
 		t.Error(err)
 
 	}
 
+	l = a.Length()
 	/* We add 1 gap per site */
 	pos := 0
 	a.IterateChar(func(name string, sequence []rune) bool {
@@ -93,7 +96,15 @@ func TestRemoveOneGapSite(t *testing.T) {
 		return false
 	})
 
-	a.RemoveGapSites(0.0, false)
+	start, end = a.RemoveGapSites(0.0, false)
+
+	if start != l {
+		t.Errorf("We should have removed all positions from start: %d %d", start, l)
+	}
+
+	if end != l {
+		t.Errorf("We should have removed all positions from end: %d %d", end, l)
+	}
 
 	if a.Length() != 0 {
 		t.Error("We should have removed all positions")
@@ -108,6 +119,8 @@ func TestRemoveOneGapSite(t *testing.T) {
 }
 
 func TestRemoveAllGapSites(t *testing.T) {
+	var start, end int
+
 	a, err := RandomAlignment(AMINOACIDS, 300, 300)
 	if err != nil {
 		t.Error(err)
@@ -134,7 +147,15 @@ func TestRemoveAllGapSites(t *testing.T) {
 	/* Remove position 20 */
 	backupseq = append(backupseq[:20], backupseq[21:]...)
 
-	a.RemoveGapSites(1.0, false)
+	start, end = a.RemoveGapSites(1.0, false)
+
+	if start != 0 {
+		t.Errorf("We should have removed 0 positions from start: %d", start)
+	}
+
+	if end != 0 {
+		t.Errorf("We should have removed 0 positions from end: %d", end)
+	}
 
 	if a.Length() != 299 {
 		t.Error("We should have removed only one position")
@@ -161,12 +182,15 @@ func TestRemoveAllGapSites(t *testing.T) {
 }
 
 func TestRemoveOneGapSiteEnds(t *testing.T) {
+	var l, start, end int
+
 	a, err := RandomAlignment(AMINOACIDS, 300, 300)
 	if err != nil {
 		t.Error(err)
 
 	}
 
+	l = a.Length()
 	/* We add 1 gap per site */
 	pos := 0
 	a.IterateChar(func(name string, sequence []rune) bool {
@@ -175,7 +199,15 @@ func TestRemoveOneGapSiteEnds(t *testing.T) {
 		return false
 	})
 
-	a.RemoveGapSites(0.0, true)
+	start, end = a.RemoveGapSites(0.0, true)
+
+	if start != l {
+		t.Errorf("We should have removed all positions from start: %d %d", start, l)
+	}
+
+	if end != l {
+		t.Errorf("We should have removed all positions from end: %d %d", end, l)
+	}
 
 	if a.Length() != 0 {
 		t.Error("We should have removed all positions")
@@ -189,6 +221,8 @@ func TestRemoveOneGapSiteEnds(t *testing.T) {
 }
 
 func TestRemoveAllGapSitesEnds(t *testing.T) {
+	var start, end int
+
 	a, err := RandomAlignment(AMINOACIDS, 300, 300)
 	if err != nil {
 		t.Error(err)
@@ -206,7 +240,14 @@ func TestRemoveAllGapSitesEnds(t *testing.T) {
 		return false
 	})
 
-	a.RemoveGapSites(1.0, true)
+	start, end = a.RemoveGapSites(1.0, true)
+	if start != 0 {
+		t.Errorf("We should have removed 0 positions from start: %d", start)
+	}
+
+	if end != 0 {
+		t.Errorf("We should have removed 0 positions from end: %d", end)
+	}
 
 	if a.Length() != 300 {
 		t.Error(fmt.Sprintf("We should not have removed any positions: %d", a.Length()))
@@ -222,12 +263,14 @@ func TestRemoveAllGapSitesEnds(t *testing.T) {
 }
 
 func TestRemoveGapSitesEnds(t *testing.T) {
+	var start, end int
+
 	in := NewAlign(UNKNOWN)
-	in.AddSequence("Seq0000", "--GGTCCACTCTTTTGTCTT-TACCTA-G-", "")
-	in.AddSequence("Seq0001", "G---CACCGGC-CGTAATGACG-ACCC--T", "")
-	in.AddSequence("Seq0002", "-T-G-TTTCCTGC-AACAT-ACC-AAC-C-", "")
-	in.AddSequence("Seq0003", "A-ACCACAACAGTCA-GTACTCTT-TG--T", "")
-	in.AddSequence("Seq0004", "-----GAAGG-CCAAGGT-TCGCCGCCC--", "")
+	in.AddSequence("Seq0000", "--GGTCCACTCTTTTGTCTT-TACCTA-G--", "")
+	in.AddSequence("Seq0001", "G---CACCGGC-CGTAATGACG-ACCC--T-", "")
+	in.AddSequence("Seq0002", "-T-G-TTTCCTGC-AACAT-ACC-AAC-C--", "")
+	in.AddSequence("Seq0003", "A-ACCACAACAGTCA-GTACTCTT-TG--T-", "")
+	in.AddSequence("Seq0004", "-----GAAGG-CCAAGGT-TCGCCGCCC---", "")
 	in.AutoAlphabet()
 
 	exp := NewAlign(UNKNOWN)
@@ -238,7 +281,15 @@ func TestRemoveGapSitesEnds(t *testing.T) {
 	exp.AddSequence("Seq0004", "--GAAGG-CCAAGGT-TCGCCGCC", "")
 	exp.AutoAlphabet()
 
-	in.RemoveGapSites(0.5, true)
+	start, end = in.RemoveGapSites(0.5, true)
+
+	if start != 3 {
+		t.Errorf("We should have removed 3 positions from start: %d", start)
+	}
+
+	if end != 4 {
+		t.Errorf("We should have removed 4 positions from end: %d", end)
+	}
 
 	if !exp.Identical(in) {
 		t.Error(fmt.Errorf("Alignment after removing gap ends is different from expected \n %s \n vs. \n %s", in.String(), exp.String()))

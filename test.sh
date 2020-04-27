@@ -88,12 +88,15 @@ CTAAAACCCTAATCCCTTGCTTCTATCCGCCTGGAGCCT
 CTCGCACGACCAGAGAACTAGGCCGGTTCCGGATATCTA
 EOF
 cat > expectedlog <<EOF
-[Warning] in cmd/clean.go (line 55), message: Alignment (0) length before cleaning=100
-[Warning] in cmd/clean.go (line 56), message: Alignment (0) length after cleaning=39
-[Warning] in cmd/clean.go (line 57), message: Alignment (0) number of gaps=61
+Alignment (0) length before cleaning=100
+Alignment (0) length after cleaning=39
+Alignment (0) number of gaps=61
+Alignment (0) number of start gaps=1
+Alignment (0) number of end gaps=1
 EOF
 ${GOALIGN} random --seed 10 | ${GOALIGN} mutate gaps -n 1 -r 0.1 --seed 10 |  ${GOALIGN} clean sites > result 2>log
 diff -q -b result expected
+diff -q -b log expectedlog
 rm -f expected result mapfile log expectedlog
 
 
@@ -125,9 +128,11 @@ CCACAACAGTCA-GTACTCTT-TG
 EOF
 
 cat > expectedlog <<EOF
-[Warning] in cmd/cleansites.go (line 52), message: Alignment (0) length before cleaning=30
-[Warning] in cmd/cleansites.go (line 53), message: Alignment (0) length after cleaning=24
-[Warning] in cmd/cleansites.go (line 54), message: Alignment (0) number of gaps=6
+Alignment (0) length before cleaning=30
+Alignment (0) length after cleaning=24
+Alignment (0) number of gaps=6
+Alignment (0) number of start gaps=3
+Alignment (0) number of end gaps=3
 EOF
 ${GOALIGN} clean sites -i input -c 0.5 > result 2>log
 diff -q -b result expected

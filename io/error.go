@@ -27,6 +27,10 @@ func PrintMessage(message string) {
 	fmt.Fprintf(os.Stderr, "[Warning] in %s (line %d), message: %s\n", name, line, message)
 }
 
+func PrintSimpleMessage(message string) {
+	fmt.Fprintf(os.Stderr, "%s\n", message)
+}
+
 func LogError(err error) {
 	_, fn, line, _ := runtime.Caller(1)
 	name := strings.Split(fn, "/goalign/")[1]

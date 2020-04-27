@@ -72,8 +72,8 @@ type Alignment interface {
 	Recombine(rate float64, lenprop float64)
 	// converts coordinates on the given sequence to coordinates on the alignment
 	RefCoordinates(name string, refstart, refend int) (alistart, aliend int, err error)
-	RemoveGapSeqs(cutoff float64)             // Removes sequences having >= cutoff gaps
-	RemoveGapSites(cutoff float64, ends bool) // Removes sites having >= cutoff gaps
+	RemoveGapSeqs(cutoff float64)                               // Removes sequences having >= cutoff gaps
+	RemoveGapSites(cutoff float64, ends bool) (first, last int) // Removes sites having >= cutoff gaps, returns the number of consecutive removed sites at start and end of alignment
 	// Replaces match characters (.) by their corresponding characters on the first sequence
 	ReplaceMatchChars()
 	Sample(nb int) (Alignment, error) // generate a sub sample of the sequences
@@ -255,7 +255,9 @@ func (a *align) ShuffleSites(rate float64, roguerate float64, randroguefirst boo
 // from start or from end of alignment.
 // Example with a cutoff of 0.3 and ends and with the given proportion of gaps:
 // 0.4 0.5 0.1 0.5 0.6 0.1 0.8 will remove positions 0,1 and 6
-func (a *align) RemoveGapSites(cutoff float64, ends bool) {
+//
+// Returns the number of consecutive removed sites at start and end of alignment
+func (a *align) RemoveGapSites(cutoff float64, ends bool) (first, last int) {
 	var nbgaps int
 	if cutoff < 0 || cutoff > 1 {
 		cutoff = 0
@@ -280,6 +282,9 @@ func (a *align) RemoveGapSites(cutoff float64, ends bool) {
 			}
 		}
 	}
+
+	first = firstcontinuous + 1
+
 	/* Now we remove gap positions, starting at the end */
 	sort.Ints(toremove)
 	nbremoved := 0
@@ -295,7 +300,10 @@ func (a *align) RemoveGapSites(cutoff float64, ends bool) {
 			}
 		}
 	}
+	last = a.Length() - lastcontinuous
 	a.length -= nbremoved
+
+	return first, last
 }
 
 // RefCoordinates converts coordinates on the given sequence to coordinates on the alignment.
