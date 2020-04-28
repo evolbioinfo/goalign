@@ -18,8 +18,20 @@ If `--per-sequences` option is given, then prints statistics for all sequences i
 3. gapsstart: Number of consecutive gaps  at the beginning;
 4. gapsend: Number of consecutive gaps at the end;
 5. gapsuniques: Number of gaps unique to that sequence;
+
+	If --profile is given along, then the output will be : unique\tnew\tboth, with:
+	- 5a unique: # gaps that are unique in each sequence in the alignment
+	- 5b new: # gaps that are new in each sequence compared to the profile
+	- 5c both: # gaps that are unique in each sequence in the alignment and that are new compared the profile
+
 6. gapsopenning: Number of streches of gaps;
 7. mutuniques: Number of unique mutations;
+
+	If --profile is given along, then the output will be : unique\tnew\tboth, with:
+	- 7a unique: # mutations that are unique in each sequence in the alignment
+	- 7b new: # mutations that are new in each sequence compared to the profile
+	- 7c both: # mutations that are unique in each sequence in the alignment and that are new compared the profile
+
 7. (bis) mutref:  Number mutations compared to a reference sequence (only if `--ref-sequence`is given)
 8. length: Lenght of the unaligned sequence;
 9. A	C	G	T...: Number of occurence of each character.

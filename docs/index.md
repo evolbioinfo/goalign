@@ -55,7 +55,6 @@ Command                                                     | Subcommand |      
 ------------------------------------------------------------|------------|-----------------------------------------------------------------------
 [addid](commands/addid.md) ([api](api/addid.md))            |            | Adds a string to each sequence identifier of the input alignment
 [append](commands/append.md) ([api](api/append.md))         |            | Concatenates several alignments by adding new alignments as new sequences of the first alignment
-
 [build](commands/build.md) ([api](api/build.md))            |            | Command to build output files : bootstrap for example
 --                                                          | distboot   | Builds bootstrap distances matrices from input alignment (nt only)
 --                                                          | seqboot    | Builds bootstrap alignments from input alignment
