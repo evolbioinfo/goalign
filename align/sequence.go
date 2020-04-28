@@ -287,6 +287,9 @@ func bufferTranslate(s *seq, phase int, code map[string]rune, buffer *bytes.Buff
 		var found bool = false
 		// We handle possible IUPAC characters
 		codons := GenAllPossibleCodons(s.sequence[i], s.sequence[i+1], s.sequence[i+2])
+		if len(codons) == 0 {
+			aa = 'X'
+		}
 		for _, codon := range codons {
 			// The codon i=s not found
 			// We return X
