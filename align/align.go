@@ -55,17 +55,13 @@ type Alignment interface {
 	Length() int                  // Length of the alignment
 	Mask(start, length int) error // Masks given positions
 	MaxCharStats(excludeGaps bool) ([]rune, []int)
-	Mutate(rate float64)             // Adds uniform substitutions in the alignment (~sequencing errors)
-	NbVariableSites() int            // Nb of variable sites
-	NumGapsUniquePerSequence() []int // Number of Gaps in each sequence that are unique in their alignment site
+	Mutate(rate float64)  // Adds uniform substitutions in the alignment (~sequencing errors)
+	NbVariableSites() int // Nb of variable sites
+	// Number of Gaps in each sequence that are unique in their alignment site
+	NumGapsUniquePerSequence(countProfile *CountProfile) (numuniques []int, numnew []int, numboth []int, err error)
 	// returns the number of characters in each sequence that are unique in their alignment site (gaps or others)
 	// It does not take into account 'N' and '-' as unique mutations
-	NumMutationsUniquePerSequence() (numuniques []int)
-	// returns the number of differences between the reference sequence and each sequence of the alignment
-	// If lengths are different, returns an error
-	// It does not take into account 'N' and '-' in sequences as mutations compared to ref
-	/// sequence (ref sequence can have a '-' or a 'N')
-	NumMutationsComparedToReferenceSequence(seq Sequence) (nummutations []int, err error)
+	NumMutationsUniquePerSequence(profile *CountProfile) (numuniques []int, numnew []int, nummuts []int, err error)
 	Pssm(log bool, pseudocount float64, normalization int) (pssm map[rune][]float64, err error) // Normalization: PSSM_NORM_NONE, PSSM_NORM_UNIF, PSSM_NORM_DATA
 	Rarefy(nb int, counts map[string]int) (Alignment, error)                                    // Take a new rarefied sample taking into accounts weights
 	RandSubAlign(length int) (Alignment, error)                                                 // Extract a random subalignment with given length from this alignment
@@ -1075,7 +1071,7 @@ func (a *align) Pssm(log bool, pseudocount float64, normalization int) (pssm map
 	/* We add pseudo counts */
 	if pseudocount > 0 {
 		for _, v := range pssm {
-			for i, _ := range v {
+			for i := range v {
 				v[i] += pseudocount
 			}
 		}
@@ -1364,27 +1360,55 @@ func (a *align) NbVariableSites() int {
 }
 
 // NumGapsUniquePerSequence returns the number of Gaps in the sequence that are unique in their alignment site
-func (a *align) NumGapsUniquePerSequence() (numgaps []int) {
-	numgaps = make([]int, a.NbSequences())
+// This function counts, for each sequence of the given alignment, the number of :
+// - gaps that are unique to the sequence compared to the others of the alignment
+// - gaps that are new compared to the profile (not seen in the profile) : numnew
+// - gaps that are new compared to the profile and found only once in the given alignment: numboth
+// If the profile is nil, then does not compute numnewmuts neither nummutsboth (0 filled slices)
+func (a *align) NumGapsUniquePerSequence(countProfile *CountProfile) (numuniques []int, numnew []int, numboth []int, err error) {
+	numuniques = make([]int, a.NbSequences())
+	numnew = make([]int, a.NbSequences())
+	numboth = make([]int, a.NbSequences())
+
 	uniqueIndex := -1
 	nbGapsColumn := 0
 
+	// Check that profile has the right length
+	if countProfile != nil {
+		if !countProfile.CheckLength(a.Length()) {
+			err = fmt.Errorf("Profile does not have same length than alignment")
+			return
+		}
+	}
+
+	var c int
 	for i := 0; i < a.Length(); i++ {
 		uniqueIndex = -1
 		nbGapsColumn = 0
 
 		for j, s := range a.seqs {
-			if s.sequence[i] == GAP {
+			r := s.sequence[i]
+			if r == GAP {
 				nbGapsColumn++
 				uniqueIndex = j
-			}
-			if nbGapsColumn > 1 {
-				break
+				if countProfile != nil {
+					c, _ = countProfile.Count(r, i)
+					if c == 0 {
+						numnew[j]++
+					}
+				} else if nbGapsColumn > 1 {
+					break
+				}
 			}
 		}
 
 		if nbGapsColumn == 1 {
-			numgaps[uniqueIndex]++
+			numuniques[uniqueIndex]++
+			if countProfile != nil {
+				if c, _ = countProfile.Count(GAP, i); c == 0 {
+					numboth[uniqueIndex]++
+				}
+			}
 		}
 	}
 	return
@@ -1392,78 +1416,56 @@ func (a *align) NumGapsUniquePerSequence() (numgaps []int) {
 
 // NumMutationsUniquePerSequence returns the number of characters in each sequence that are unique in their alignment site.
 // It does not take into account 'N' and '-' as unique mutations
-func (a *align) NumMutationsUniquePerSequence() (numuniques []int) {
+// This function counts, for each sequence of the given alignment, the number of :
+// - mutations that are unique to the sequence compared to the others of the alignment
+// - mutations that are new compared to the profile (not seen in the profile) : numnew
+// - mutations that are new compared to the profile and found only once in the given alignment: numboth
+// If the profile is nil, then does not compute numnewmuts neither nummutsboth (0 filled slices)
+func (a *align) NumMutationsUniquePerSequence(countProfile *CountProfile) (numuniques []int, numnew []int, numboth []int, err error) {
 	numuniques = make([]int, a.NbSequences())
-	for i := 0; i < a.Length(); i++ {
-		occurences := make(map[rune]int)
-		indices := make(map[rune]int)
-
-		for j, s := range a.seqs {
-			occurences[s.sequence[i]]++
-			indices[s.sequence[i]] = j
-		}
-
-		all := '.'
-		if a.Alphabet() == AMINOACIDS {
-			all = ALL_AMINO
-		} else if a.Alphabet() == NUCLEOTIDS {
-			all = ALL_NUCLE
-		}
-
-		for c, num := range occurences {
-			if num == 1 && c != all && c != GAP {
-				ind := indices[c]
-				numuniques[ind]++
-			}
-		}
-	}
-	return
-}
-
-// returns the number of differences between the reference sequence and each sequence of the alignment
-// Counts only non GAPS and non N sites in each sequences (may be a gap or a N in the reference sequence though)
-// If a character is ambigous (IUPAC notation), then it is counted as a mutation only if it is incompatible with
-// the reference character.
-//
-// If lengths are different, returns an error
-func (a *align) NumMutationsComparedToReferenceSequence(refseq Sequence) (nummutations []int, err error) {
-	var refseqCode []uint8
-	var nt uint8
-
-	nummutations = make([]int, a.NbSequences())
-	if refseq.Length() != a.Length() {
-		err = fmt.Errorf("Reference sequence and alignment do not have same length (%d,%d), cannot compute a number of mutation", refseq.Length(), a.Length())
-		return
-	}
+	numnew = make([]int, a.NbSequences())
+	numboth = make([]int, a.NbSequences())
 
 	all := '.'
 	if a.Alphabet() == AMINOACIDS {
 		all = ALL_AMINO
 	} else if a.Alphabet() == NUCLEOTIDS {
-		refseqCode = make([]uint8, a.Length())
-		for i := 0; i < a.Length(); i++ {
-			if refseqCode[i], err = Nt2IndexIUPAC(refseq.SequenceChar()[i]); err != nil {
-				return
-			}
-		}
 		all = ALL_NUCLE
 	}
 
+	// Check that profile has the right length
+	if countProfile != nil {
+		if !countProfile.CheckLength(a.Length()) {
+			err = fmt.Errorf("Profile does not have same length than alignment")
+			return
+		}
+	}
+
+	var c int
 	for i := 0; i < a.Length(); i++ {
+		occurences := make([]int, 130)
+		indices := make([]int, 130)
+
 		for j, s := range a.seqs {
-			eq := true
-			if a.Alphabet() == NUCLEOTIDS {
-				if nt, err = Nt2IndexIUPAC(s.sequence[i]); err != nil {
-					return
+			r := s.sequence[i]
+			occurences[int(r)]++
+			indices[int(r)] = j
+			if countProfile != nil && r != all && r != GAP {
+				if c, _ = countProfile.Count(r, i); c == 0 {
+					numnew[j]++
 				}
-				if eq, err = EqualOrCompatible(nt, refseqCode[i]); err != nil {
-					return
-				}
-			} else {
-				eq = (s.sequence[i] == refseq.SequenceChar()[i])
 			}
-			if s.SequenceChar()[i] != GAP && s.SequenceChar()[i] != all && !eq {
-				nummutations[j]++
+		}
+
+		for c, num := range occurences {
+			if num == 1 && rune(c) != all && rune(c) != GAP {
+				ind := indices[c]
+				numuniques[ind]++
+				if countProfile != nil {
+					if c, _ = countProfile.Count(rune(c), i); c == 0 {
+						numboth[ind]++
+					}
+				}
 			}
 		}
 	}

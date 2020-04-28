@@ -5,6 +5,7 @@ import (
 
 	"github.com/evolbioinfo/goalign/align"
 	"github.com/evolbioinfo/goalign/io"
+	"github.com/evolbioinfo/goalign/io/countprofile"
 	"github.com/spf13/cobra"
 )
 
@@ -12,6 +13,7 @@ var statGapsFromStart bool
 var statGapsFromEnd bool
 var statGapsUnique bool
 var statGapsOpenning bool
+var statGapsProfile string
 
 // charCmd represents the char command
 var statGapsCmd = &cobra.Command{
@@ -24,7 +26,11 @@ var statGapsCmd = &cobra.Command{
 	Following options are exclusive, and given in order of priority:
 	- If --from-start is specified, then counts only gaps at sequence starts;
 	- If --from-end is specified, then counts only gaps at sequence ends;
-	- If --unique is specified, then counts only gaps that are unique in their column
+	- If --unique is specified, then counts only gaps that are unique in their column. 
+	  If --profile is given along --unique, then the output will be : unique\tnew\tboth, with:
+		- unique: # gaps that are unique in each sequence in the alignment
+		- new: # gaps that are new in each sequence compared to the profile
+		- both: # gaps that are unique in each sequence in the alignment and that are new compared the profile
 	- If --openning is specified, then counts only gap openning (streches of gaps are counted once)
 	- Otherwise, counts total number of gaps
 	for the given sequence.
@@ -32,6 +38,7 @@ var statGapsCmd = &cobra.Command{
 `,
 	RunE: func(cmd *cobra.Command, args []string) (err error) {
 		var aligns *align.AlignChannel
+		var profile *align.CountProfile
 
 		if aligns, err = readalign(infile); err != nil {
 			io.LogError(err)
@@ -45,9 +52,22 @@ var statGapsCmd = &cobra.Command{
 			return
 		}
 
-		var numgapsunique []int
+		if statGapsProfile != "none" {
+			if profile, err = countprofile.FromFile(statGapsProfile); err != nil {
+				io.LogError(err)
+				return
+			}
+		}
+
+		var numnewgaps []int     // new gaps that are not found in the profile
+		var numgapsuniques []int // gaps that are unique in the given alignment
+		var numgapsboth []int    // gaps that are unique in the given alignment and not found in the profile
+
 		if statGapsUnique {
-			numgapsunique = al.NumGapsUniquePerSequence()
+			if numgapsuniques, numnewgaps, numgapsboth, err = al.NumGapsUniquePerSequence(profile); err != nil {
+				io.LogError(err)
+				return
+			}
 		}
 
 		for i, s := range al.Sequences() {
@@ -56,7 +76,11 @@ var statGapsCmd = &cobra.Command{
 			} else if statGapsFromEnd {
 				fmt.Printf("%s\t%d\n", s.Name(), s.NumGapsFromEnd())
 			} else if statGapsUnique {
-				fmt.Printf("%s\t%d\n", s.Name(), numgapsunique[i])
+				fmt.Printf("%s\t%d", s.Name(), numgapsuniques[i])
+				if statGapsProfile != "none" {
+					fmt.Printf("\t%d\t%d", numnewgaps[i], numgapsboth[i])
+				}
+				fmt.Printf("\n")
 			} else if statGapsOpenning {
 				fmt.Printf("%s\t%d\n", s.Name(), s.NumGapsOpenning())
 			} else {
@@ -73,6 +97,7 @@ func init() {
 	statGapsCmd.PersistentFlags().BoolVar(&statGapsFromEnd, "from-end", false, "Count gaps in each sequence from end of sequences (until a non gap character is encountered)")
 	statGapsCmd.PersistentFlags().BoolVar(&statGapsUnique, "unique", false, "Count, in each sequence, the number of gaps that are unique in a site")
 	statGapsCmd.PersistentFlags().BoolVar(&statGapsOpenning, "openning", false, "Count, in each sequence, the number of gaps openning (a strech of gaps is counted once)")
+	statGapsCmd.PersistentFlags().StringVar(&statGapsProfile, "count-profile", "none", "A profile to compare the alignment with, and to compute statistics faster (only with --unique)")
 
 	statsCmd.AddCommand(statGapsCmd)
 }

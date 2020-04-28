@@ -3990,3 +3990,45 @@ ${GOALIGN} stats char --per-sequences -i input > result
 diff -q -b expected result
 rm -f input expected result 
 
+
+
+echo "->goalign stats char --per-sequences --count-profile"
+cat > input <<EOF
+>s1
+ACGTACGT
+>s2
+-CGTACGT
+>s3
+ACGTACGT
+>s4
+ACGTTCGA
+>s5
+ACGTTCGA
+EOF
+
+cat > prof <<EOF
+site	-	T	C	G	A
+0	1	10	9	0	0
+1	0	0	0	10	10
+2	0	10	10	0	0
+3	10	0	0	0	10
+4	0	10	0	10	0
+5	10	10	0	0	0
+6	0	0	0	10	10
+7	10	0	0	0	10
+EOF
+
+cat > expected <<EOF
+sequence	gaps	gapsstart	gapsend	gapsuniques	gapsnew	gapsboth	gapsopenning	mutuniques	mutsnew	mutsboth	length	-	A	C	G	T
+s1	0	0	0	0	0	0	0	0	7	0	8	0	2	2	2	2
+s2	1	1	0	1	0	0	1	0	6	0	7	1	1	2	2	2
+s3	0	0	0	0	0	0	0	0	7	0	8	0	2	2	2	2
+s4	0	0	0	0	0	0	0	0	5	0	8	0	2	2	2	2
+s5	0	0	0	0	0	0	0	0	5	0	8	0	2	2	2	2
+EOF
+
+${GOALIGN} stats --per-sequences -i input --count-profile prof  > result
+diff -q -b expected result
+rm -f input expected result 
+
+

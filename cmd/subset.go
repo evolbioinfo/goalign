@@ -10,6 +10,7 @@ import (
 
 	"github.com/evolbioinfo/goalign/align"
 	"github.com/evolbioinfo/goalign/io"
+	"github.com/evolbioinfo/goalign/io/utils"
 	"github.com/spf13/cobra"
 )
 
@@ -176,12 +177,12 @@ func parseNameFile(file string) (subset map[string]int, err error) {
 		r = bufio.NewReader(f)
 	}
 
-	l, e := Readln(r)
+	l, e := utils.Readln(r)
 	for e == nil {
 		for _, name := range strings.Split(l, ",") {
 			subset[name] = 1
 		}
-		l, e = Readln(r)
+		l, e = utils.Readln(r)
 	}
 	return
 }

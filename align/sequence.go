@@ -29,6 +29,12 @@ type Sequence interface {
 	NumGapsOpenning() int                                   // Number of Gaps opennin, it counts streches of gap only once
 	NumGapsFromStart() int                                  // Number of Gaps from Start (until a non gap is encountered)
 	NumGapsFromEnd() int                                    // Number of Gaps from End (until a non gap is encountered)
+	// returns the number of differences between the reference sequence and each sequence of the alignment
+	// If lengths are different, returns an error
+	// It does not take into account 'N' and '-' in sequences as mutations compared to ref
+	/// sequence (ref sequence can have a '-' or a 'N')
+	NumMutationsComparedToReferenceSequence(alphabet int, seq Sequence) (nummutations int, err error)
+
 	Clone() Sequence
 }
 
@@ -250,6 +256,53 @@ func (s *seq) NumGapsFromEnd() (numgaps int) {
 	return
 }
 
+// returns the number of differences between the reference sequence and each sequence of the alignment
+// Counts only non GAPS and non N sites in each sequences (may be a gap or a N in the reference sequence though)
+// If a character is ambigous (IUPAC notation), then it is counted as a mutation only if it is incompatible with
+// the reference character.
+//
+// If lengths are different, returns an error
+func (s *seq) NumMutationsComparedToReferenceSequence(alphabet int, refseq Sequence) (nummutations int, err error) {
+	var refseqCode []uint8
+	var nt uint8
+
+	if refseq.Length() != s.Length() {
+		err = fmt.Errorf("Reference sequence and sequence do not have same length (%d,%d), cannot compute a number of mutation", refseq.Length(), s.Length())
+		return
+	}
+
+	all := '.'
+	if alphabet == NUCLEOTIDS {
+		refseqCode = make([]uint8, s.Length())
+		for i := 0; i < s.Length(); i++ {
+			if refseqCode[i], err = Nt2IndexIUPAC(refseq.SequenceChar()[i]); err != nil {
+				return
+			}
+		}
+		all = ALL_NUCLE
+	} else {
+		all = ALL_AMINO
+	}
+
+	for i := 0; i < s.Length(); i++ {
+		eq := true
+		if alphabet == NUCLEOTIDS {
+			if nt, err = Nt2IndexIUPAC(s.sequence[i]); err != nil {
+				return
+			}
+			if eq, err = EqualOrCompatible(nt, refseqCode[i]); err != nil {
+				return
+			}
+		} else {
+			eq = (s.sequence[i] == refseq.SequenceChar()[i])
+		}
+		if s.SequenceChar()[i] != GAP && s.SequenceChar()[i] != all && !eq {
+			nummutations++
+		}
+	}
+	return
+}
+
 // Translates the given sequence start at nucleotide index "phase"
 //
 // If the sequence is not nucleotidic, then throws an error
@@ -321,6 +374,7 @@ func (s *seq) Clone() Sequence {
 // The 3 nucleotites in arguments are converted to upper case and U converted to T.
 // If one character does not correspond to a known nucleotide in IUPAC code, then
 // Returns an empty slice.
+// If one of the nucleotides is a GAP, then returns an empty slice.
 //
 // For example GenAllPossibleCodons('A','G','N') should return
 // {"AGA","AGC","AGG","AGT"}.

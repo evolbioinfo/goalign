@@ -288,23 +288,6 @@ func openWriteFile(file string) (f *os.File, err error) {
 	return
 }
 
-// Readln returns a single line (without the ending \n)
-// from the input buffered reader.
-// An error is returned iff there is an error with the
-// buffered reader.
-func Readln(r *bufio.Reader) (string, error) {
-	var (
-		isPrefix bool  = true
-		err      error = nil
-		line, ln []byte
-	)
-	for isPrefix && err == nil {
-		line, isPrefix, err = r.ReadLine()
-		ln = append(ln, line...)
-	}
-	return string(ln), err
-}
-
 func readMapFile(file string, revert bool) (map[string]string, error) {
 	outmap := make(map[string]string, 0)
 	var mapfile *os.File
@@ -324,7 +307,7 @@ func readMapFile(file string, revert bool) (map[string]string, error) {
 	} else {
 		reader = bufio.NewReader(mapfile)
 	}
-	line, e := Readln(reader)
+	line, e := utils.Readln(reader)
 	nl := 1
 	for e == nil {
 		cols := strings.Split(line, "\t")
@@ -336,7 +319,7 @@ func readMapFile(file string, revert bool) (map[string]string, error) {
 		} else {
 			outmap[cols[0]] = cols[1]
 		}
-		line, e = Readln(reader)
+		line, e = utils.Readln(reader)
 		nl++
 	}
 

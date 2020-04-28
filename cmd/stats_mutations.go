@@ -5,11 +5,13 @@ import (
 
 	"github.com/evolbioinfo/goalign/align"
 	"github.com/evolbioinfo/goalign/io"
+	"github.com/evolbioinfo/goalign/io/countprofile"
 	"github.com/spf13/cobra"
 )
 
 var statMutationsRef string
 var statMutationsUnique bool
+var statMutationsProfile string
 
 // charCmd represents the char command
 var statMutationsCmd = &cobra.Command{
@@ -19,6 +21,10 @@ var statMutationsCmd = &cobra.Command{
 
 	- If --unique is specified, then counts only mutations (characters) that are unique in their column
 	for the given sequence.
+	If --profile is given along --unique, then the output will be : unique\tnew\tboth, with:
+		- unique: # mutations that are unique in each sequence in the alignment
+		- new: # mutations that are new in each sequence compared to the profile
+		- both: # mutations that are unique in each sequence in the alignment and that are new compared the profile
 	- If --ref-sequence is specified, it will try to extract a seqsuence having that name from the alignment. If none exist, 
 	it will try to open a fasta file with the given name to take the first sequence as a reference. If a character is ambigous 
 	(IUPAC notation) in an nucleotide sequence, then it is counted as a mutation only if it is incompatible with the reference character.
@@ -29,6 +35,7 @@ var statMutationsCmd = &cobra.Command{
 `,
 	RunE: func(cmd *cobra.Command, args []string) (err error) {
 		var aligns *align.AlignChannel
+		var profile *align.CountProfile
 
 		if aligns, err = readalign(infile); err != nil {
 			io.LogError(err)
@@ -42,7 +49,18 @@ var statMutationsCmd = &cobra.Command{
 			return
 		}
 
+		if statMutationsProfile != "none" {
+			if profile, err = countprofile.FromFile(statMutationsProfile); err != nil {
+				io.LogError(err)
+				return
+			}
+		}
+
 		var nummutations []int
+		var numnewmuts []int  // new mutations that are not found in the profile
+		var nummutsboth []int // mutations that are unique in the given alignment and not found in the profile
+		var num int
+
 		if statMutationsRef != "none" {
 			var s string
 			var sb align.SeqBag
@@ -61,19 +79,28 @@ var statMutationsCmd = &cobra.Command{
 				}
 				s, _ = sb.GetSequenceById(0)
 			}
-			if nummutations, err = al.NumMutationsComparedToReferenceSequence(align.NewSequence("ref", []rune(s), "")); err != nil {
-				io.LogError(err)
-				return
+			for _, s2 := range al.Sequences() {
+				if num, err = s2.NumMutationsComparedToReferenceSequence(al.Alphabet(), align.NewSequence("ref", []rune(s), "")); err != nil {
+					io.LogError(err)
+					return
+				}
+				fmt.Printf("%s\t%d\n", s2.Name(), num)
 			}
+
 		} else if statMutationsUnique {
-			nummutations = al.NumMutationsUniquePerSequence()
+			nummutations, numnewmuts, nummutsboth, err = al.NumMutationsUniquePerSequence(profile)
+			for i, s := range al.Sequences() {
+				fmt.Printf("%s\t%d", s.Name(), nummutations[i])
+				if profile != nil {
+					fmt.Printf("\t%d", numnewmuts[i])
+					fmt.Printf("\t%d", nummutsboth[i])
+				}
+				fmt.Printf("\n")
+			}
 		} else {
 			err = fmt.Errorf("Mutations should be counted by comparing to a reference sequnce with --ref-sequence")
 			io.LogError(err)
 			return
-		}
-		for i, s := range al.Sequences() {
-			fmt.Printf("%s\t%d\n", s.Name(), nummutations[i])
 		}
 
 		return
@@ -83,6 +110,7 @@ var statMutationsCmd = &cobra.Command{
 func init() {
 	statMutationsCmd.PersistentFlags().StringVar(&statMutationsRef, "ref-sequence", "none", "Reference sequence to compare each sequence with.")
 	statMutationsCmd.PersistentFlags().BoolVar(&statMutationsUnique, "unique", false, "Count, in each sequence, the number of mutations/characters that are unique in a site")
+	statMutationsCmd.PersistentFlags().StringVar(&statMutationsProfile, "count-profile", "none", "A profile to compare the alignment with, and to compute statistics faster (only with --unique)")
 
 	statsCmd.AddCommand(statMutationsCmd)
 }

@@ -7,11 +7,13 @@ import (
 
 	"github.com/evolbioinfo/goalign/align"
 	"github.com/evolbioinfo/goalign/io"
+	"github.com/evolbioinfo/goalign/io/countprofile"
 	"github.com/spf13/cobra"
 )
 
 var statpersequences bool
 var statrefsequence string
+var statcountprofile string
 
 // statsCmd represents the stats command
 var statsCmd = &cobra.Command{
@@ -33,12 +35,19 @@ If --per-sequences is given, then it will print the following stats, for each se
 2. Number of consecutive gaps at the beginning of the sequence;
 3. Number of consecutive gaps at the end of the sequence;
 4. Number of gaps unique to the sequence (present in no other sequence);
+	If --profile is given along, then the output will be : unique\tnew\tboth, with:
+	- 4a unique: # gaps that are unique in each sequence in the alignment
+	- 4b new: # gaps that are new in each sequence compared to the profile
+	- 4c both: # gaps that are unique in each sequence in the alignment and that are new compared the profile
 5. Number of gap opennings (streches of gaps are counted once);
 6. Number of Unique mutations;
+	If --profile is given along, then the output will be : unique\tnew\tboth, with:
+	- 6a unique: # mutations that are unique in each sequence in the alignment
+	- 6b new: # mutations that are new in each sequence compared to the profile
+	- 6c both: # mutations that are unique in each sequence in the alignment and that are new compared the profile
 7. Number of mutations compared to a reference sequence (given with --ref-sequence, otherwise, no column);
 8. Length of the sequence without gaps;
 9..n Number of occurence of each character (A,C,G, etc.).
-
 `,
 	RunE: func(cmd *cobra.Command, args []string) (err error) {
 		var aligns *align.AlignChannel
@@ -57,9 +66,16 @@ If --per-sequences is given, then it will print the following stats, for each se
 				fmt.Fprintf(os.Stdout, "alphabet\t%s\n", al.AlphabetStr())
 			} else {
 				var refseq align.Sequence
+				var profile *align.CountProfile
 				var s string
 				var ok bool
 				var sb align.SeqBag
+				if statcountprofile != "none" {
+					if profile, err = countprofile.FromFile(statcountprofile); err != nil {
+						io.LogError(err)
+						return
+					}
+				}
 				if statrefsequence != "none" {
 					// We try to get the sequence from its name in the alignment
 					if s, ok = al.GetSequence(statrefsequence); !ok {
@@ -77,7 +93,7 @@ If --per-sequences is given, then it will print the following stats, for each se
 					}
 					refseq = align.NewSequence("ref", []rune(s), "")
 				}
-				err = printAllSequenceStats(al, refseq)
+				err = printAllSequenceStats(al, refseq, profile)
 			}
 		}
 
@@ -116,39 +132,42 @@ func printCharStats(align align.Alignment, only string) {
 	}
 }
 
-func printSiteCharStats(align align.Alignment, only string) (err error) {
-	var sitemap map[rune]int
+func printSiteCharStats(al align.Alignment, only string) (err error) {
+	var profile *align.CountProfile
+	var ok bool
+	var indexonly int
 
-	charmap := align.CharStats()
-
-	// We add the only character we want to output
-	// To write 0 if there are no occurences of it
-	// in the alignment
-	if _, ok := charmap[rune(only[0])]; !ok && only != "*" {
-		charmap[rune(only[0])] = 0
+	profile = align.NewCountProfileFromAlignment(al)
+	onlyr := []rune(only)
+	if len(onlyr) > 1 {
+		err = fmt.Errorf("Character should have length 1: %s", only)
 	}
 
-	keys := make([]string, 0, len(charmap))
-	for k := range charmap {
-		keys = append(keys, string(k))
-	}
-	sort.Strings(keys)
 	fmt.Fprintf(os.Stdout, "site")
-	for _, v := range keys {
-		if only == "*" || v == only {
-			fmt.Fprintf(os.Stdout, "\t%s", v)
+	if only == "*" {
+		indexonly = -1
+	} else {
+		if indexonly, ok = profile.NameIndex(onlyr[0]); !ok {
+			for site := 0; site < al.Length(); site++ {
+				fmt.Fprintf(os.Stdout, "%d0%d\n", site, 0)
+			}
+			return
+		}
+	}
+
+	for index := 0; index < profile.NbCharacters(); index++ {
+		r, _ := profile.NameAt(index)
+		if only == "*" || r == onlyr[0] {
+			fmt.Fprintf(os.Stdout, "\t%c", r)
 		}
 	}
 	fmt.Fprintf(os.Stdout, "\n")
-	for site := 0; site < align.Length(); site++ {
-		if sitemap, err = align.CharStatsSite(site); err != nil {
-			return
-		}
+	for site := 0; site < al.Length(); site++ {
 		fmt.Fprintf(os.Stdout, "%d", site)
-		for _, k := range keys {
-			if only == "*" || k == only {
-				nb := sitemap[rune(k[0])]
-				fmt.Fprintf(os.Stdout, "\t%d", nb)
+		for index := 0; index < profile.NbCharacters(); index++ {
+			if indexonly == -1 || index == indexonly {
+				count, _ := profile.CountAt(index, site)
+				fmt.Fprintf(os.Stdout, "\t%d", count)
 			}
 		}
 		fmt.Fprintf(os.Stdout, "\n")
@@ -197,39 +216,53 @@ func printSequenceCharStats(sb align.SeqBag, only string) (err error) {
 	return
 }
 
-func printAllSequenceStats(al align.Alignment, refSequence align.Sequence) (err error) {
+func printAllSequenceStats(al align.Alignment, refSequence align.Sequence, countProfile *align.CountProfile) (err error) {
 	var sequencemap map[rune]int
-	var numgapsunique, nummutuniques, nummutations []int
+
+	var numnewgaps []int // new gaps that are not found in the profile
+	var numnewmuts []int // new mutations that are not found in the profile
+
+	var nummutuniques []int  // mutations that are unique in the given alignment
+	var numgapsuniques []int // gaps that are unique in the given alignment
+
+	var nummutsboth []int // mutations that are unique in the given alignment and not found in the profile
+	var numgapsboth []int // gaps that are unique in the given alignment and not found in the profile
+
+	var nummutations int
 	var gaps int
 	var name string
+	var uniquechars []rune
 
-	charmap := al.CharStats()
-	numgapsunique = al.NumGapsUniquePerSequence()
-	nummutuniques = al.NumMutationsUniquePerSequence()
-	if refSequence != nil {
-		if nummutations, err = al.NumMutationsComparedToReferenceSequence(refSequence); err != nil {
-			io.LogError(err)
-			return
-		}
+	uniquechars = al.UniqueCharacters()
+
+	if numgapsuniques, numnewgaps, numgapsboth, err = al.NumGapsUniquePerSequence(countProfile); err != nil {
+		return
 	}
-	keys := make([]string, 0, len(charmap))
-	for k := range charmap {
-		keys = append(keys, string(k))
+	if nummutuniques, numnewmuts, nummutsboth, err = al.NumMutationsUniquePerSequence(countProfile); err != nil {
+		return
 	}
-	sort.Strings(keys)
+
 	fmt.Fprintf(os.Stdout, "sequence")
 	fmt.Fprintf(os.Stdout, "\tgaps")
 	fmt.Fprintf(os.Stdout, "\tgapsstart")
 	fmt.Fprintf(os.Stdout, "\tgapsend")
 	fmt.Fprintf(os.Stdout, "\tgapsuniques")
+	if countProfile != nil {
+		fmt.Fprintf(os.Stdout, "\tgapsnew")
+		fmt.Fprintf(os.Stdout, "\tgapsboth")
+	}
 	fmt.Fprintf(os.Stdout, "\tgapsopenning")
 	fmt.Fprintf(os.Stdout, "\tmutuniques")
+	if countProfile != nil {
+		fmt.Fprintf(os.Stdout, "\tmutsnew")
+		fmt.Fprintf(os.Stdout, "\tmutsboth")
+	}
 	if refSequence != nil {
 		fmt.Fprintf(os.Stdout, "\tmutref")
 	}
 	fmt.Fprintf(os.Stdout, "\tlength")
-	for _, v := range keys {
-		fmt.Fprintf(os.Stdout, "\t%s", v)
+	for _, v := range uniquechars {
+		fmt.Fprintf(os.Stdout, "\t%c", v)
 	}
 
 	fmt.Fprintf(os.Stdout, "\n")
@@ -243,15 +276,27 @@ func printAllSequenceStats(al align.Alignment, refSequence align.Sequence) (err 
 		fmt.Printf("\t%d", gaps)
 		fmt.Printf("\t%d", s.NumGapsFromStart())
 		fmt.Printf("\t%d", s.NumGapsFromEnd())
-		fmt.Printf("\t%d", numgapsunique[i])
+		fmt.Printf("\t%d", numgapsuniques[i])
+		if countProfile != nil {
+			fmt.Printf("\t%d", numnewgaps[i])
+			fmt.Printf("\t%d", numgapsboth[i])
+		}
 		fmt.Printf("\t%d", s.NumGapsOpenning())
 		fmt.Printf("\t%d", nummutuniques[i])
+		if countProfile != nil {
+			fmt.Printf("\t%d", numnewmuts[i])
+			fmt.Printf("\t%d", nummutsboth[i])
+		}
 		if refSequence != nil {
-			fmt.Printf("\t%d", nummutations[i])
+			if nummutations, err = s.NumMutationsComparedToReferenceSequence(al.Alphabet(), refSequence); err != nil {
+				io.LogError(err)
+				return
+			}
+			fmt.Printf("\t%d", nummutations)
 		}
 		fmt.Printf("\t%d", s.Length()-gaps)
-		for _, k := range keys {
-			nb := sequencemap[rune(k[0])]
+		for _, k := range uniquechars {
+			nb := sequencemap[k]
 			fmt.Printf("\t%d", nb)
 		}
 		fmt.Printf("\n")
@@ -275,4 +320,5 @@ func init() {
 	RootCmd.AddCommand(statsCmd)
 	statsCmd.PersistentFlags().BoolVar(&statpersequences, "per-sequences", false, "Prints  statistics per alignment sequences")
 	statsCmd.PersistentFlags().StringVar(&statrefsequence, "ref-sequence", "none", "Reference sequence to compare each sequence with (only with --per-sequences")
+	statsCmd.PersistentFlags().StringVar(&statcountprofile, "count-profile", "none", "A profile to compare the alignment with, and to compute statistics faster (only with --per-sequences)")
 }

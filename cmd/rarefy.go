@@ -10,6 +10,7 @@ import (
 
 	"github.com/evolbioinfo/goalign/align"
 	"github.com/evolbioinfo/goalign/io"
+	"github.com/evolbioinfo/goalign/io/utils"
 	"github.com/spf13/cobra"
 )
 
@@ -138,7 +139,7 @@ func parseCountFile(file string) (counts map[string]int, err error) {
 	} else {
 		r = bufio.NewReader(f)
 	}
-	l, e := Readln(r)
+	l, e := utils.Readln(r)
 	for e == nil {
 		cols := strings.Split(l, "\t")
 		if cols == nil || len(cols) != 2 {
@@ -149,7 +150,7 @@ func parseCountFile(file string) (counts map[string]int, err error) {
 			return
 		}
 		counts[cols[0]] = c
-		l, e = Readln(r)
+		l, e = utils.Readln(r)
 	}
 
 	return

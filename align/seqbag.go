@@ -26,6 +26,7 @@ type SeqBag interface {
 	AlphabetCharToIndex(c rune) int // Returns index of the character (nt or aa) in the AlphabetCharacters() array
 	AutoAlphabet()                  // detects and sets alphabet automatically for all the sequences
 	CharStats() map[rune]int64
+	UniqueCharacters() []rune
 	CharStatsSeq(idx int) (map[rune]int, error)     // Computes frequency of characters for the given sequence
 	CleanNames(namemap map[string]string)           // Clean sequence names (newick special char)
 	Clear()                                         // Removes all sequences
@@ -37,6 +38,7 @@ type SeqBag interface {
 	GetSequenceChar(name string) ([]rune, bool)
 	GetSequenceCharById(ith int) ([]rune, bool)
 	GetSequenceNameById(ith int) (string, bool)
+	GetSequenceByName(name string) (Sequence, bool)
 	SetSequenceChar(ithAlign, ithSite int, char rune) error
 	IgnoreIdentical(bool)                // if true, then it won't add the sequence if a sequence with the same name AND same sequence exists
 	SampleSeqBag(nb int) (SeqBag, error) // generate a sub sample of the sequences
@@ -303,6 +305,15 @@ func (sb *seqbag) GetSequence(name string) (string, bool) {
 	return "", ok
 }
 
+// If sequence exists in alignment, return true,sequence
+// Otherwise, return false,nil
+func (sb *seqbag) GetSequenceByName(name string) (Sequence, bool) {
+	if seq, ok := sb.seqmap[name]; ok {
+		return seq, true
+	}
+	return nil, false
+}
+
 // If sequence exists in alignment, return sequence,true
 // Otherwise, return "",false
 func (sb *seqbag) GetSequenceById(ith int) (string, bool) {
@@ -492,16 +503,43 @@ func (sb *seqbag) AutoAlphabet() {
 }
 
 // Returns the distribution of all characters
-func (sb *seqbag) CharStats() map[rune]int64 {
-	outmap := make(map[rune]int64)
+func (sb *seqbag) CharStats() (chars map[rune]int64) {
+	chars = make(map[rune]int64)
+	present := make([]int, 130)
 
 	for _, seq := range sb.seqs {
 		for _, r := range seq.sequence {
-			outmap[unicode.ToUpper(r)]++
+			present[unicode.ToUpper(r)]++
 		}
 	}
 
-	return outmap
+	for i, r := range present {
+		if r > 0 {
+			chars[rune(i)] = int64(r)
+		}
+	}
+
+	return
+}
+
+// Returns the distribution of all characters
+func (sb *seqbag) UniqueCharacters() (chars []rune) {
+	chars = make([]rune, 0, 40)
+	present := make([]bool, 130)
+
+	for _, seq := range sb.seqs {
+		for _, r := range seq.sequence {
+			present[unicode.ToUpper(r)] = true
+		}
+	}
+
+	for i, r := range present {
+		if r {
+			chars = append(chars, rune(i))
+		}
+	}
+
+	return
 }
 
 // CharStatsSeq Returns the frequency of all characters in the sequence

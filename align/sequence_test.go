@@ -53,7 +53,8 @@ func Test_seq_Translate(t *testing.T) {
 		wantErr bool
 	}{
 		{name: "Seq1", fields: fields{name: "seq1", sequence: []rune{'G', 'A', 'Y', 'A', 'A', 'R', 'U', 'A', 'Y', 'C', 'A', 'Y', 'R', 'A', 'Y', 'U', 'A', 'G'}}, args: args{phase: 0, geneticcode: 0}, wantTr: &seq{name: "seq1", sequence: []rune{'D', 'K', 'Y', 'H', 'X', '*'}}, wantErr: false},
-		{name: "Seq1", fields: fields{name: "seq1", sequence: []rune{'G', 'A', 'Y', 'A', 'A', 'R', 'U', 'A', 'Y', 'C', 'A', 'Y', 'A', 'A', 'Y', 'U', 'A', 'G'}}, args: args{phase: 0, geneticcode: 0}, wantTr: &seq{name: "seq1", sequence: []rune{'D', 'K', 'Y', 'H', 'N', '*'}}, wantErr: false},
+		{name: "Seq2", fields: fields{name: "seq1", sequence: []rune{'G', 'A', 'Y', 'A', 'A', 'R', 'U', 'A', 'Y', 'C', 'A', 'Y', 'A', 'A', 'Y', 'U', 'A', 'G'}}, args: args{phase: 0, geneticcode: 0}, wantTr: &seq{name: "seq1", sequence: []rune{'D', 'K', 'Y', 'H', 'N', '*'}}, wantErr: false},
+		{name: "Seq3", fields: fields{name: "seq1", sequence: []rune{'-', 'A', 'Y', 'A', 'A', 'R', 'U', 'A', 'Y', 'C', 'A', 'Y', 'A', 'A', 'Y', 'U', 'A', 'G'}}, args: args{phase: 0, geneticcode: 0}, wantTr: &seq{name: "seq1", sequence: []rune{'X', 'K', 'Y', 'H', 'N', '*'}}, wantErr: false},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

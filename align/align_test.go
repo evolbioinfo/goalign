@@ -1786,46 +1786,83 @@ func TestConsensusGaps(t *testing.T) {
 }
 
 func Test_align_NumGapsUniquePerSequence(t *testing.T) {
-	var a Alignment
-	var ng []int
-	var exp []int
+	var a, ref Alignment
+	var ng, nn, nb []int
+	var expng, expnn, expnb []int
+	var err error
+	var profile *CountProfile
 
 	a = NewAlign(NUCLEOTIDS)
 	a.AddSequence("A", "ACGACGA-GACC", "")
 	a.AddSequence("B", "AT-TT-T-TTTC", "")
 	a.AddSequence("C", "ATCTT-TTT--T", "")
 
-	exp = []int{0, 1, 2}
+	ref = NewAlign(NUCLEOTIDS)
+	ref.AddSequence("A", "AAAAAAAAAAAA", "")
+	ref.AddSequence("B", "AAAAAAAAAAAA", "")
+	ref.AddSequence("C", "AAAAAAAAAAAA", "")
 
-	ng = a.NumGapsUniquePerSequence()
+	expng = []int{0, 1, 2}
+	expnn = []int{1, 3, 3}
+	expnb = []int{0, 1, 2}
 
-	if !reflect.DeepEqual(exp, ng) {
-		t.Error(fmt.Errorf("Numgaps is not what is expected, have %v, want %v", ng, exp))
+	profile = NewCountProfileFromAlignment(ref)
+	if ng, nn, nb, err = a.NumGapsUniquePerSequence(profile); err != nil {
+		t.Error(err)
+	}
+
+	if !reflect.DeepEqual(expng, ng) {
+		t.Error(fmt.Errorf("Numgaps is not what is expected, have %v, want %v", ng, expng))
+	}
+	if !reflect.DeepEqual(expnn, nn) {
+		t.Error(fmt.Errorf("Numgaps is not what is expected, have %v, want %v", nn, expnn))
+	}
+	if !reflect.DeepEqual(expnb, nb) {
+		t.Error(fmt.Errorf("Numgaps is not what is expected, have %v, want %v", nb, expnb))
 	}
 }
 
 func Test_align_NumMutationsUniquePerSequence(t *testing.T) {
-	var a Alignment
-	var ng []int
-	var exp []int
+	var a, ref Alignment
+	var ng, nn, nb []int
+	var expng, expnn, expnb []int
+	var err error
+	var profile *CountProfile
 
 	a = NewAlign(NUCLEOTIDS)
 	a.AddSequence("A", "ACGACGA-GACC", "")
 	a.AddSequence("B", "AT-TT-T-TTTC", "")
 	a.AddSequence("C", "ATCTT-TTT--T", "")
 
-	exp = []int{9, 2, 3}
+	ref = NewAlign(NUCLEOTIDS)
+	ref.AddSequence("A", "AAAAAAAAAAAA", "")
+	ref.AddSequence("B", "AAAAAAAAAAAA", "")
+	ref.AddSequence("C", "AAAAAAAAAAAA", "")
 
-	ng = a.NumMutationsUniquePerSequence()
+	expng = []int{9, 2, 3}
+	expnn = []int{7, 8, 8}
+	expnb = []int{6, 2, 3}
 
-	if !reflect.DeepEqual(exp, ng) {
-		t.Error(fmt.Errorf("Numgaps is not what is expected, have %v, want %v", ng, exp))
+	profile = NewCountProfileFromAlignment(ref)
+	if ng, nn, nb, err = a.NumMutationsUniquePerSequence(profile); err != nil {
+		t.Error(err)
+	}
+
+	if !reflect.DeepEqual(expng, ng) {
+		t.Error(fmt.Errorf("Numgaps is not what is expected, have %v, want %v", ng, expng))
+	}
+	if !reflect.DeepEqual(expnn, nn) {
+		t.Error(fmt.Errorf("Numgaps is not what is expected, have %v, want %v", nn, expnn))
+	}
+
+	if !reflect.DeepEqual(expnb, nb) {
+		t.Error(fmt.Errorf("Numgaps is not what is expected, have %v, want %v", nb, expnb))
 	}
 }
 
 func Test_align_NumMutationsComparedToReferenceSequence(t *testing.T) {
 	var a Alignment
-	var ng []int
+	var ng int
 	var exp []int
 	var err error
 
@@ -1835,15 +1872,16 @@ func Test_align_NumMutationsComparedToReferenceSequence(t *testing.T) {
 	a.AddSequence("C", "ATCTT-TTT--T", "")
 	a.AddSequence("D", "CCCCCCCCCCCC", "")
 
-	s := NewSequence("ref", []rune("CCCCCCCCCCCC"), "")
+	ref := NewSequence("ref", []rune("CCCCCCCCCCCC"), "")
 
 	exp = []int{7, 8, 8, 0}
 
-	if ng, err = a.NumMutationsComparedToReferenceSequence(s); err != nil {
-		t.Error(err)
-	}
-
-	if !reflect.DeepEqual(exp, ng) {
-		t.Error(fmt.Errorf("Nummutations is not what is expected, have %v, want %v", ng, exp))
+	for i, s := range a.Sequences() {
+		if ng, err = s.NumMutationsComparedToReferenceSequence(a.Alphabet(), ref); err != nil {
+			t.Error(err)
+		}
+		if !reflect.DeepEqual(exp[i], ng) {
+			t.Error(fmt.Errorf("Nummutations is not what is expected, have %v, want %v", ng, exp))
+		}
 	}
 }
