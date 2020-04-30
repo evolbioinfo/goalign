@@ -21,7 +21,7 @@ var statMutationsCmd = &cobra.Command{
 
 	- If --unique is specified, then counts only mutations (characters) that are unique in their column
 	for the given sequence.
-	If --profile is given along --unique, then the output will be : unique\tnew\tboth, with:
+	If --count-profile is given along with --unique, then the output will be : unique\tnew\tboth, with:
 		- unique: # mutations that are unique in each sequence in the alignment
 		- new: # mutations that are new in each sequence compared to the profile
 		- both: # mutations that are unique in each sequence in the alignment and that are new compared the profile
@@ -32,6 +32,16 @@ var statMutationsCmd = &cobra.Command{
 
 	It does not take into account '-' and 'N' as unique mutations, and does not take into account '-' and 'N' as mutations compared 
 	to a reference sequence.
+
+	Note that --count-profile takes a tab separated file such as the one given by the command 
+	goalign stats char --per-sites
+
+	site  A C G T
+	0 nA  nC  nG  nT
+	1...
+	...
+	n...
+
 `,
 	RunE: func(cmd *cobra.Command, args []string) (err error) {
 		var aligns *align.AlignChannel

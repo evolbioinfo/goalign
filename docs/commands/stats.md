@@ -19,7 +19,7 @@ If `--per-sequences` option is given, then prints statistics for all sequences i
 4. gapsend: Number of consecutive gaps at the end;
 5. gapsuniques: Number of gaps unique to that sequence;
 
-	If --profile is given along, then the output will be : unique\tnew\tboth, with:
+	If --count-profile is given, then the output will be : unique\tnew\tboth, with:
 	- 5a unique: # gaps that are unique in each sequence in the alignment
 	- 5b new: # gaps that are new in each sequence compared to the profile
 	- 5c both: # gaps that are unique in each sequence in the alignment and that are new compared the profile
@@ -27,7 +27,7 @@ If `--per-sequences` option is given, then prints statistics for all sequences i
 6. gapsopenning: Number of streches of gaps;
 7. mutuniques: Number of unique mutations;
 
-	If --profile is given along, then the output will be : unique\tnew\tboth, with:
+	If --count-profile is given, then the output will be : unique\tnew\tboth, with:
 	- 7a unique: # mutations that are unique in each sequence in the alignment
 	- 7b new: # mutations that are new in each sequence compared to the profile
 	- 7c both: # mutations that are unique in each sequence in the alignment and that are new compared the profile
@@ -36,6 +36,15 @@ If `--per-sequences` option is given, then prints statistics for all sequences i
 8. length: Lenght of the unaligned sequence;
 9. A	C	G	T...: Number of occurence of each character.
 
+Note that `--count-profile`takes a tab separated file such as given by the command `goalign stats char --per-sites`:
+
+```
+site  A C G T
+0 nA  nC  nG  nT
+1...
+...
+n
+```
 
 Different sub-commands:
 * `goalign stats alleles`: Prints the average number of alleles per site of the alignment;

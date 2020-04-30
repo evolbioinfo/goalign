@@ -27,7 +27,7 @@ var statGapsCmd = &cobra.Command{
 	- If --from-start is specified, then counts only gaps at sequence starts;
 	- If --from-end is specified, then counts only gaps at sequence ends;
 	- If --unique is specified, then counts only gaps that are unique in their column. 
-	  If --profile is given along --unique, then the output will be : unique\tnew\tboth, with:
+	  If --count-profile is given along with --unique, then the output will be : unique\tnew\tboth, with:
 		- unique: # gaps that are unique in each sequence in the alignment
 		- new: # gaps that are new in each sequence compared to the profile
 		- both: # gaps that are unique in each sequence in the alignment and that are new compared the profile
@@ -35,6 +35,14 @@ var statGapsCmd = &cobra.Command{
 	- Otherwise, counts total number of gaps
 	for the given sequence.
 
+	Note that --count-profile takes a tab separated file such as the one given by the command 
+	goalign stats char --per-sites
+
+	site  A C G T
+	0 nA  nC  nG  nT
+	1...
+	...
+	n...
 `,
 	RunE: func(cmd *cobra.Command, args []string) (err error) {
 		var aligns *align.AlignChannel

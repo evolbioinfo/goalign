@@ -35,19 +35,29 @@ If --per-sequences is given, then it will print the following stats, for each se
 2. Number of consecutive gaps at the beginning of the sequence;
 3. Number of consecutive gaps at the end of the sequence;
 4. Number of gaps unique to the sequence (present in no other sequence);
-	If --profile is given along, then the output will be : unique\tnew\tboth, with:
+	If --count-profile is given along, then the output will be : unique\tnew\tboth, with:
 	- 4a unique: # gaps that are unique in each sequence in the alignment
 	- 4b new: # gaps that are new in each sequence compared to the profile
 	- 4c both: # gaps that are unique in each sequence in the alignment and that are new compared the profile
 5. Number of gap opennings (streches of gaps are counted once);
 6. Number of Unique mutations;
-	If --profile is given along, then the output will be : unique\tnew\tboth, with:
+	If --count-profile is given along, then the output will be : unique\tnew\tboth, with:
 	- 6a unique: # mutations that are unique in each sequence in the alignment
 	- 6b new: # mutations that are new in each sequence compared to the profile
 	- 6c both: # mutations that are unique in each sequence in the alignment and that are new compared the profile
 7. Number of mutations compared to a reference sequence (given with --ref-sequence, otherwise, no column);
 8. Length of the sequence without gaps;
 9..n Number of occurence of each character (A,C,G, etc.).
+
+Note that --count-profile takes a tab separated file such as given by the command 
+goalign stats char --per-sites
+
+site  A C G T
+0 nA  nC  nG  nT
+1...
+...
+n...
+
 `,
 	RunE: func(cmd *cobra.Command, args []string) (err error) {
 		var aligns *align.AlignChannel
