@@ -10,23 +10,28 @@ import (
 )
 
 var cleanEnds bool
+var cleanChar string
 
 // cleansitesCmd represents the cleansites command
 var cleansitesCmd = &cobra.Command{
 	Use:   "sites",
-	Short: "Removes sites with gaps",
-	Long: `Removes sites constituted of gaps
+	Short: "Removes sites with specific characters",
+	Long: `Removes sites constituted of specific characters
 
-Removes sites constitued of >= cutoff gap sites.
+Removes sites constitued of >= cutoff specific characters. This characters can be :
 
-Exception for a cutoff of 0: removes sites constitued of > 0 gap sites.
+1. Gap (--char=GAP or --char=-, default)
+2. Any other character X specified by --char=X (case sensitive)
+3. The most abundant character in the site --char=MAJ (including gaps)
+
+Exception for a cutoff of 0: removes sites constitued of > 0 specified character (with --char=MAJ, then will remove all columns).
 
 Examples:
-- With a cutoff of 0.5: a site with 5 gaps over 10 sequences will be removed;
-- With a cutoff of 0.5: a site with 4 gaps over 10 sequences will not be removed;
-- With a cutoff of 0.0 a site with 1 gap over 10 sequences will be removed.
+- With a cutoff of 0.5: a site with 5 specified characters over 10 sequences will be removed;
+- With a cutoff of 0.5: a site with 4 specified characters over 10 sequences will not be removed;
+- With a cutoff of 0.0 a site with 1 specified over 10 sequences will be removed.
 
-If cutoff is <0 or >1, it will be considered as 0, which means that every site with at least 1 gap
+If cutoff is <0 or >1, it will be considered as 0, which means that every site with at least 1 specified character
 will be removed.`,
 	RunE: func(cmd *cobra.Command, args []string) (err error) {
 		var aligns *align.AlignChannel
@@ -44,17 +49,36 @@ will be removed.`,
 		defer closeWriteFile(f, cleanOutput)
 
 		i := 0
+		char := ""
+
 		for al := range aligns.Achan {
 			beforelength := al.Length()
-			nbstart, nbend = al.RemoveGapSites(cleanCutoff, cleanEnds)
+
+			if cleanChar == string(align.GAP) || cleanChar == "GAP" {
+				char = "gaps"
+				nbstart, nbend = al.RemoveGapSites(cleanCutoff, cleanEnds)
+			} else if cleanChar == "MAJ" {
+				char = "maj"
+				nbstart, nbend = al.RemoveMajorityCharacterSites(cleanCutoff, cleanEnds)
+			} else {
+				//single character
+				c := []rune(cleanChar)
+				if len(c) != 1 {
+					err = fmt.Errorf("--char should be a single character")
+					io.LogError(err)
+					return
+				}
+				char = string(c[0])
+				nbstart, nbend = al.RemoveCharacterSites(c[0], cleanCutoff, cleanEnds)
+			}
 			afterlength := al.Length()
 			writeAlign(al, f)
 			if !cleanQuiet {
 				io.PrintSimpleMessage(fmt.Sprintf("Alignment (%d) length before cleaning=%d", i, beforelength))
 				io.PrintSimpleMessage(fmt.Sprintf("Alignment (%d) length after cleaning=%d", i, afterlength))
-				io.PrintSimpleMessage(fmt.Sprintf("Alignment (%d) number of gaps=%d", i, beforelength-afterlength))
-				io.PrintSimpleMessage(fmt.Sprintf("Alignment (%d) number of start gaps=%d", i, nbstart))
-				io.PrintSimpleMessage(fmt.Sprintf("Alignment (%d) number of end gaps=%d", i, nbend))
+				io.PrintSimpleMessage(fmt.Sprintf("Alignment (%d) number of %s=%d", i, char, beforelength-afterlength))
+				io.PrintSimpleMessage(fmt.Sprintf("Alignment (%d) number of start %s=%d", i, char, nbstart))
+				io.PrintSimpleMessage(fmt.Sprintf("Alignment (%d) number of end %s=%d", i, char, nbend))
 			}
 		}
 
@@ -68,5 +92,7 @@ will be removed.`,
 
 func init() {
 	cleansitesCmd.PersistentFlags().BoolVar(&cleanEnds, "ends", false, "If true, then only remove consecutive gap positions from alignment start and end")
+	cleansitesCmd.PersistentFlags().StringVar(&cleanChar, "char", "GAP", "The character the cutoff is applied to. May be GAP, MAJ, or any other character")
+
 	cleanCmd.AddCommand(cleansitesCmd)
 }

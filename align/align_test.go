@@ -1885,3 +1885,37 @@ func Test_align_NumMutationsComparedToReferenceSequence(t *testing.T) {
 		}
 	}
 }
+
+func Test_align_RemoveMajorityCharacterSites(t *testing.T) {
+	var a, a2, exp, exp2 Alignment
+
+	a = NewAlign(NUCLEOTIDS)
+	a.AddSequence("A", "N-ANGA-GACC", "")
+	a.AddSequence("B", "N-TN-T-TTTC", "")
+	a.AddSequence("C", "NCTN-TTT--T", "")
+	a.AddSequence("D", "C-ANCCCCCCC", "")
+
+	a2, _ = a.Clone()
+
+	exp = NewAlign(NUCLEOTIDS)
+	exp.AddSequence("A", "AGA-GAC", "")
+	exp.AddSequence("B", "T-T-TTT", "")
+	exp.AddSequence("C", "T-TTT--", "")
+	exp.AddSequence("D", "ACCCCCC", "")
+
+	exp2 = NewAlign(NUCLEOTIDS)
+	exp2.AddSequence("A", "ANGA-GAC", "")
+	exp2.AddSequence("B", "TN-T-TTT", "")
+	exp2.AddSequence("C", "TN-TTT--", "")
+	exp2.AddSequence("D", "ANCCCCCC", "")
+
+	a.RemoveMajorityCharacterSites(0.6, false)
+	a2.RemoveMajorityCharacterSites(0.6, true)
+
+	if !a.Identical(exp) {
+		t.Error(fmt.Errorf("Remove majority failed"))
+	}
+	if !a2.Identical(exp2) {
+		t.Error(fmt.Errorf("Remove majority failed with ends"))
+	}
+}

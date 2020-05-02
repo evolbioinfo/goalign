@@ -3,12 +3,25 @@
 ## Commands
 
 ### clean
-This command removes alignment sites or sequences constitued of >= than a given proportion of gaps. Exception for a cutoff of 0: removes sites /sequences constitued of > 0 gaps.
+This command removes alignment sites or sequences constitued of >= than a given proportion of gaps or other characters. Exception for a cutoff of 0: removes sites /sequences constitued of > 0 of this character.
 
 Two subcommands:
 
-* `goalign clean sites`: Removes sites with gaps
-* `goalign clean seqs`: Removes sequences with gaps
+* `goalign clean sites`: Removes sites constitued of >= cutoff specific characters. This characters can be :
+    1. Gap (--char=GAP or --char=-, default)
+    2. Any other character X specified by --char=X (case sensitive)
+    3. The most abundant character in the site --char=MAJ (including gaps)
+
+    Exception for a cutoff of 0: removes sites constitued of > 0 specified character (with --char=MAJ, then will remove all columns).
+
+    Examples:
+    - With a cutoff of 0.5: a site with 5 specified characters over 10 sequences will be removed;
+    - With a cutoff of 0.5: a site with 4 specified characters over 10 sequences will not be removed;
+    - With a cutoff of 0.0 a site with 1 specified over 10 sequences will be removed.
+
+    If cutoff is <0 or >1, it will be considered as 0, which means that every site with at least 1 specified character
+    will be removed.`,
+* `goalign clean seqs`: Removes sequences with gaps. So far only gap filter is implemented.
 
 Examples with sites:
 - With a cutoff of 0.5: a site with 5 gaps over 10 sequences will be removed;

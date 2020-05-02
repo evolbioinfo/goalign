@@ -68,8 +68,10 @@ type Alignment interface {
 	Recombine(rate float64, lenprop float64)
 	// converts coordinates on the given sequence to coordinates on the alignment
 	RefCoordinates(name string, refstart, refend int) (alistart, aliend int, err error)
-	RemoveGapSeqs(cutoff float64)                               // Removes sequences having >= cutoff gaps
-	RemoveGapSites(cutoff float64, ends bool) (first, last int) // Removes sites having >= cutoff gaps, returns the number of consecutive removed sites at start and end of alignment
+	RemoveGapSeqs(cutoff float64)                                             // Removes sequences having >= cutoff gaps
+	RemoveGapSites(cutoff float64, ends bool) (first, last int)               // Removes sites having >= cutoff gaps, returns the number of consecutive removed sites at start and end of alignment
+	RemoveCharacterSites(c rune, cutoff float64, ends bool) (first, last int) // Removes sites having >= cutoff character, returns the number of consecutive removed sites at start and end of alignment
+	RemoveMajorityCharacterSites(cutoff float64, ends bool) (first, last int) // Removes sites having >= cutoff of the main character at these sites, returns the number of consecutive removed sites at start and end of alignment
 	// Replaces match characters (.) by their corresponding characters on the first sequence
 	ReplaceMatchChars()
 	Sample(nb int) (Alignment, error) // generate a sub sample of the sequences
@@ -241,7 +243,7 @@ func (a *align) ShuffleSites(rate float64, roguerate float64, randroguefirst boo
 	return rogues
 }
 
-// Removes positions constituted of [cutoff*100%,100%] Gaps
+// RemoveGapSites Removes positions constituted of [cutoff*100%,100%] Gaps
 // Exception fo a cutoff of 0: does not remove positions with 0% gaps
 // Cutoff must be between 0 and 1, otherwise set to 0.
 // 0 means that positions with > 0 gaps will be removed
@@ -254,24 +256,41 @@ func (a *align) ShuffleSites(rate float64, roguerate float64, randroguefirst boo
 //
 // Returns the number of consecutive removed sites at start and end of alignment
 func (a *align) RemoveGapSites(cutoff float64, ends bool) (first, last int) {
-	var nbgaps int
+	return a.RemoveCharacterSites(GAP, cutoff, ends)
+}
+
+// RemoveCharacterSites Removes positions constituted of [cutoff*100%,100%] of the given character
+// Exception fo a cutoff of 0: does not remove positions with 0% of this character
+// Cutoff must be between 0 and 1, otherwise set to 0.
+// 0 means that positions with > 0 of the given character will be removed
+// other cutoffs : ]0,1] mean that positions with >= cutoff of this character will be removed
+//
+// If ends is true: then only removes consecutive positions that match the cutoff
+// from start or from end of alignment.
+// Example with a cutoff of 0.3 and ends and with the given proportion of this character:
+// 0.4 0.5 0.1 0.5 0.6 0.1 0.8 will remove positions 0,1 and 6
+//
+// Returns the number of consecutive removed sites at start and end of alignment
+func (a *align) RemoveCharacterSites(c rune, cutoff float64, ends bool) (first, last int) {
+	var nbchars int
 	if cutoff < 0 || cutoff > 1 {
 		cutoff = 0
 	}
 
 	toremove := make([]int, 0, 10)
-	// To remove only gap positions at start and ends positions
+	// To remove only positions with this character at start and ends positions
 	firstcontinuous := -1
 	lastcontinuous := a.Length()
 
 	for site := 0; site < a.Length(); site++ {
-		nbgaps = 0
+		nbchars = 0
+
 		for seq := 0; seq < a.NbSequences(); seq++ {
-			if a.seqs[seq].sequence[site] == GAP {
-				nbgaps++
+			if a.seqs[seq].sequence[site] == c {
+				nbchars++
 			}
 		}
-		if (cutoff > 0.0 && float64(nbgaps) >= cutoff*float64(a.NbSequences())) || (cutoff == 0 && nbgaps > 0) {
+		if (cutoff > 0.0 && float64(nbchars) >= cutoff*float64(a.NbSequences())) || (cutoff == 0 && nbchars > 0) {
 			toremove = append(toremove, site)
 			if site == firstcontinuous+1 {
 				firstcontinuous++
@@ -281,7 +300,63 @@ func (a *align) RemoveGapSites(cutoff float64, ends bool) (first, last int) {
 
 	first = firstcontinuous + 1
 
-	/* Now we remove gap positions, starting at the end */
+	/* Now we remove positions, starting at the end */
+	sort.Ints(toremove)
+	nbremoved := 0
+	for i := (len(toremove) - 1); i >= 0; i-- {
+		if toremove[i] == lastcontinuous-1 {
+			lastcontinuous--
+		}
+
+		if !ends || lastcontinuous == toremove[i] || toremove[i] <= firstcontinuous {
+			nbremoved++
+			for seq := 0; seq < a.NbSequences(); seq++ {
+				a.seqs[seq].sequence = append(a.seqs[seq].sequence[:toremove[i]], a.seqs[seq].sequence[toremove[i]+1:]...)
+			}
+		}
+	}
+	last = a.Length() - lastcontinuous
+	a.length -= nbremoved
+
+	return first, last
+}
+
+// RemoveMajorityCharacterSites Removes positions constituted of [cutoff*100%,100%] of the most
+// abundant character in these sites.
+// Exception fo a cutoff of 0: does not remove positions with 0% of the most abundant character
+// Cutoff must be between 0 and 1, otherwise set to 0.
+// 0 means that positions with > 0 of the given character will be removed
+// other cutoffs : ]0,1] mean that positions with >= cutoff of the most abundant character will be removed
+//
+// If ends is true: then only removes consecutive positions that match the cutoff
+// from start or from end of alignment.
+// Example with a cutoff of 0.3 and ends and with the given proportion of this character:
+// 0.4 0.5 0.1 0.5 0.6 0.1 0.8 will remove positions 0,1 and 6
+//
+// Returns the number of consecutive removed sites at start and end of alignment
+func (a *align) RemoveMajorityCharacterSites(cutoff float64, ends bool) (first, last int) {
+	_, occur := a.MaxCharStats(false)
+
+	length := a.Length()
+	nbsesq := a.NbSequences()
+
+	toremove := make([]int, 0, 10)
+	// To remove only positions with this character at start and ends positions
+	firstcontinuous := -1
+	lastcontinuous := a.Length()
+
+	for site := 0; site < length; site++ {
+		if (cutoff > 0.0 && float64(occur[site]) >= cutoff*float64(nbsesq)) || (cutoff == 0 && occur[site] > 0) {
+			toremove = append(toremove, site)
+			if site == firstcontinuous+1 {
+				firstcontinuous++
+			}
+		}
+	}
+
+	first = firstcontinuous + 1
+
+	/* Now we remove positions, starting at the end */
 	sort.Ints(toremove)
 	nbremoved := 0
 	for i := (len(toremove) - 1); i >= 0; i-- {

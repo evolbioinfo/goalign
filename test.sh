@@ -139,6 +139,65 @@ diff -q -b result expected
 diff -q -b log expectedlog
 rm -f expected result log expectedlog
 
+echo "->goalign clean sites --ends --char MAJ"
+cat > input <<EOF
+>A
+N-ANGA-GACC
+>B
+N-TN-T-TTTC
+>C
+NCTN-TTT--T
+>D
+C-ANCCCCCCC
+EOF
+
+cat > expected <<EOF
+>A
+AGA-GAC
+>B
+T-T-TTT
+>C
+T-TTT--
+>D
+ACCCCCC
+EOF
+
+cat > expected2 <<EOF
+>A
+ANGA-GAC
+>B
+TN-T-TTT
+>C
+TN-TTT--
+>D
+ANCCCCCC
+EOF
+
+cat > expectedlog <<EOF
+Alignment (0) length before cleaning=11
+Alignment (0) length after cleaning=7
+Alignment (0) number of maj=4
+Alignment (0) number of start maj=2
+Alignment (0) number of end maj=1
+EOF
+
+cat > expectedlog2 <<EOF
+Alignment (0) length before cleaning=11
+Alignment (0) length after cleaning=8
+Alignment (0) number of maj=3
+Alignment (0) number of start maj=2
+Alignment (0) number of end maj=1
+EOF
+
+${GOALIGN} clean sites -i input -c 0.6 --char MAJ > result 2>log
+diff -q -b result expected
+diff -q -b log expectedlog
+rm -f expected result log expectedlog
+
+${GOALIGN} clean sites -i input -c 0.6 --char MAJ --ends > result 2>log
+diff -q -b result expected2
+diff -q -b log expectedlog2
+rm -f expected2 result log expectedlog2
 
 echo "->goalign clean seqs"
 cat > expected <<EOF
