@@ -148,7 +148,7 @@ N-TN-T-TTTC
 >C
 NCTN-TTT--T
 >D
-C-ANCCCCCCC
+N-ANCCCCCCC
 EOF
 
 cat > expected <<EOF
@@ -173,6 +173,18 @@ TN-TTT--
 ANCCCCCC
 EOF
 
+cat > expected3 <<EOF
+>A
+-AGA-GACC
+>B
+-T-T-TTTC
+>C
+CT-TTT--T
+>D
+-ACCCCCCC
+EOF
+
+
 cat > expectedlog <<EOF
 Alignment (0) length before cleaning=11
 Alignment (0) length after cleaning=7
@@ -189,6 +201,14 @@ Alignment (0) number of start maj=2
 Alignment (0) number of end maj=1
 EOF
 
+cat > expectedlog3 <<EOF
+Alignment (0) length before cleaning=11
+Alignment (0) length after cleaning=9
+Alignment (0) number of maj=2
+Alignment (0) number of start maj=1
+Alignment (0) number of end maj=0
+EOF
+
 ${GOALIGN} clean sites -i input -c 0.6 --char MAJ > result 2>log
 diff -q -b result expected
 diff -q -b log expectedlog
@@ -198,6 +218,11 @@ ${GOALIGN} clean sites -i input -c 0.6 --char MAJ --ends > result 2>log
 diff -q -b result expected2
 diff -q -b log expectedlog2
 rm -f expected2 result log expectedlog2
+
+${GOALIGN} clean sites -i input -c 1 --char MAJ > result 2>log
+diff -q -b result expected3
+diff -q -b log expectedlog3
+rm -f expected3 result log expectedlog3
 
 echo "->goalign clean seqs"
 cat > expected <<EOF
