@@ -1919,3 +1919,25 @@ func Test_align_RemoveMajorityCharacterSites(t *testing.T) {
 		t.Error(fmt.Errorf("Remove majority failed with ends"))
 	}
 }
+
+func Test_align_MaskUnique(t *testing.T) {
+	var a, exp Alignment
+
+	a = NewAlign(NUCLEOTIDS)
+	a.AddSequence("A", "ACANGA-TACC", "")
+	a.AddSequence("B", "ACTN-T-TTTC", "")
+	a.AddSequence("C", "ACTN-TTT--T", "")
+	a.AddSequence("D", "C-ANCCCCCCC", "")
+
+	exp = NewAlign(NUCLEOTIDS)
+	exp.AddSequence("A", "ACANNN-TNCC", "")
+	exp.AddSequence("B", "ACTN-T-TNNC", "")
+	exp.AddSequence("C", "ACTN-TNT--N", "")
+	exp.AddSequence("D", "N-ANNNNNNCC", "")
+
+	a.MaskUnique()
+
+	if !a.Identical(exp) {
+		t.Error(fmt.Errorf("Remove majority failed"))
+	}
+}

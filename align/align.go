@@ -54,6 +54,7 @@ type Alignment interface {
 	Stops(startingGapsAsIncomplete bool, geneticode int) (stops []int, err error)
 	Length() int                  // Length of the alignment
 	Mask(start, length int) error // Masks given positions
+	MaskUnique() error            // Masks unique mutations in the given aligment (not the gaps)
 	MaxCharStats(excludeGaps bool) ([]rune, []int)
 	Mutate(rate float64)  // Adds uniform substitutions in the alignment (~sequencing errors)
 	NbVariableSites() int // Nb of variable sites
@@ -837,6 +838,39 @@ func (a *align) Mask(start, length int) (err error) {
 	for _, seq := range a.seqs {
 		for i := start; i < (start+length) && i < a.Length(); i++ {
 			seq.sequence[i] = rep
+		}
+	}
+	return
+}
+
+// MaskUnique masks nucleotides that are unique in their columns (unique mutations)
+// - For aa sequences: It masks with X
+// - For nt sequences: It masks with N
+func (a *align) MaskUnique() (err error) {
+	rep := '.'
+	if a.Alphabet() == AMINOACIDS {
+		rep = ALL_AMINO
+	} else if a.Alphabet() == NUCLEOTIDS {
+		rep = ALL_NUCLE
+	} else {
+		err = errors.New("Mask: Cannot mask alignment, wrong alphabet")
+	}
+
+	for i := 0; i < a.Length(); i++ {
+		occurences := make([]int, 130)
+		indices := make([]int, 130)
+
+		for j, s := range a.seqs {
+			r := s.sequence[i]
+			occurences[int(r)]++
+			indices[int(r)] = j
+		}
+
+		for c, num := range occurences {
+			if num == 1 && rune(c) != rep && rune(c) != GAP {
+				ind := indices[c]
+				a.seqs[ind].sequence[i] = rep
+			}
 		}
 	}
 	return

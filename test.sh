@@ -3371,6 +3371,33 @@ ${GOALIGN} mask -i input -o result -s 0 -l 2 -p
 diff -q -b expected result
 rm -f input expected result
 
+echo "->goalign mask --unique"
+cat > input <<EOF
+>A
+ACANGA-TACC
+>B
+ACTN-T-TTTC
+>C
+ACTN-TTT--T
+>D
+C-ANCCCCCCC
+EOF
+
+cat > expected << EOF
+>A
+ACANNN-TNCC
+>B
+ACTN-T-TNNC
+>C
+ACTN-TNT--N
+>D
+N-ANNNNNNCC
+EOF
+
+${GOALIGN} mask --unique -i input -o result
+diff -q -b expected result
+rm -f input expected result
+
 echo "->goalign replace"
 cat > input <<EOF
    10   20
