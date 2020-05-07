@@ -33,7 +33,8 @@ goalign mask -p -i al.phy -s 9 -l 10
 This will replace 10 positions with N|X from the 10th position.
 
 If --unique is specified, 'goalign mask --unique' will replace characters that
-are unique in their column with N or X. In this case, --length and --start are ignored.
+are unique in their column (except GAPS) with N or X.
+In this case, --length and --start are ignored.
 
 The output format is the same than input format.
 `,
