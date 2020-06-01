@@ -69,6 +69,8 @@ type Alignment interface {
 	Recombine(rate float64, lenprop float64)
 	// converts coordinates on the given sequence to coordinates on the alignment
 	RefCoordinates(name string, refstart, refend int) (alistart, aliend int, err error)
+	// converts sites on the given sequence to coordinates on the alignment
+	RefSites(name string, sites []int) (refsites []int, err error)
 	RemoveGapSeqs(cutoff float64)                                             // Removes sequences having >= cutoff gaps
 	RemoveGapSites(cutoff float64, ends bool) (first, last int)               // Removes sites having >= cutoff gaps, returns the number of consecutive removed sites at start and end of alignment
 	RemoveCharacterSites(c rune, cutoff float64, ends bool) (first, last int) // Removes sites having >= cutoff character, returns the number of consecutive removed sites at start and end of alignment
@@ -81,6 +83,10 @@ type Alignment interface {
 	SiteConservation(position int) (int, error)                       // If the site is conserved:
 	Split(part *PartitionSet) ([]Alignment, error)                    //Splits the alignment given the paritions in argument
 	SubAlign(start, length int) (Alignment, error)                    // Extract a subalignment from this alignment
+	SelectSites(sites []int) (Alignment, error)                       // Extract givens sites from the alignment
+	InverseCoordinates(start, length int) (invstarts, invlengths []int, err error)
+	InversePositions(sites []int) (invsites []int, err error)
+
 	Swap(rate float64)
 	TrimSequences(trimsize int, fromStart bool) error
 }
@@ -431,6 +437,57 @@ func (a *align) RefCoordinates(name string, refstart, reflen int) (alistart, ali
 
 	if refstart+reflen > len(seq)-ngaps {
 		err = fmt.Errorf("Start + Length (%d + %d) on reference sequence falls outside the sequence", refstart, reflen)
+	}
+
+	return
+}
+
+// RefSites converts coordinates on the given sequence to coordinates on the alignment.
+// Coordinates on the given sequence corresponds to the sequence without gaps. Output coordinates
+// on the alignent consider gaps.
+//
+// It returns an error if the sequence does not exist or if the coordinates are outside the ref
+// sequence (<0 or > sequence length without gaps)
+// Parameters:
+//    - name: The name of the sequence to take as reference
+//    - sites: The positions to convert (on the ref sequence, 0-based)
+func (a *align) RefSites(name string, sites []int) (refsites []int, err error) {
+	var exists bool
+	var seq []rune
+	var tmpi int
+	var site rune
+	var ngaps int
+	var isite int
+
+	if seq, exists = a.GetSequenceChar(name); !exists {
+		err = fmt.Errorf("Sequence %s does not exist in the alignment", name)
+		return
+	}
+
+	mappos := make(map[int]bool)
+	for _, s := range sites {
+		if s < 0 {
+			err = fmt.Errorf("Site on reference sequence must be > 0 : %d", s)
+			return
+		}
+		if s >= a.Length() {
+			err = fmt.Errorf("Site is outside alignment : %d", s)
+			return
+		}
+		mappos[s] = true
+	}
+
+	//look for start
+	tmpi = -1
+	for isite, site = range seq {
+		if site != GAP {
+			tmpi++
+			if _, ok := mappos[tmpi]; ok {
+				refsites = append(refsites, isite)
+			}
+		} else {
+			ngaps++
+		}
 	}
 
 	return
@@ -1238,6 +1295,85 @@ func (a *align) SubAlign(start, length int) (subalign Alignment, err error) {
 		seq := a.seqs[i]
 		subalign.AddSequenceChar(seq.name, seq.SequenceChar()[start:start+length], seq.Comment())
 	}
+	return
+}
+
+// SelectSites Extract a subalignment from this alignment, correponding to given positions
+// (0-based inclusive coordinates).
+func (a *align) SelectSites(sites []int) (subalign Alignment, err error) {
+	for _, site := range sites {
+		if site < 0 || site > a.Length() {
+			err = fmt.Errorf("Site is outside the alignment")
+			return
+		}
+	}
+
+	subalign = NewAlign(a.alphabet)
+	for i := 0; i < a.NbSequences(); i++ {
+		seq := make([]rune, len(sites))
+		alseq := a.seqs[i]
+		alseqchar := alseq.SequenceChar()
+		for j, site := range sites {
+			seq[j] = alseqchar[site]
+		}
+		subalign.AddSequenceChar(alseq.name, seq, alseq.Comment())
+	}
+	return
+}
+
+// InverseCoordinates takes a start and a length, and returns starts and lengths that are
+// outside this sequence.
+// starts are 0-based inclusive
+func (a *align) InverseCoordinates(start, length int) (invstarts, invlengths []int, err error) {
+	invstarts = make([]int, 0)
+	invlengths = make([]int, 0)
+	if start < 0 || start > a.Length() {
+		err = fmt.Errorf("Start is outside the alignment")
+		return
+	}
+	if length < 0 {
+		err = fmt.Errorf("Length is negative")
+		return
+	}
+	if start+length < 0 || start+length > a.Length() {
+		err = fmt.Errorf("Start+Length is outside the alignment")
+		return
+	}
+
+	if start > 0 {
+		invstarts = append(invstarts, 0)
+		invlengths = append(invlengths, start)
+	}
+
+	if (start + length) < a.Length() {
+		invstarts = append(invstarts, start+length)
+		invlengths = append(invlengths, a.Length()-(start+length))
+	}
+
+	return
+}
+
+func (a *align) InversePositions(sites []int) (invsites []int, err error) {
+	invsites = make([]int, 0)
+
+	for _, s := range sites {
+		if s < 0 || s > a.Length() {
+			err = fmt.Errorf("Site is outside the alignment")
+			return
+		}
+	}
+
+	posmap := make(map[int]bool)
+	for _, s := range sites {
+		posmap[s] = true
+	}
+
+	for i := 0; i < a.Length(); i++ {
+		if _, ok := posmap[i]; !ok {
+			invsites = append(invsites, i)
+		}
+	}
+
 	return
 }
 

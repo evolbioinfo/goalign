@@ -175,6 +175,7 @@ You may go to the [doc](docs/index.md) for a more detailed documentation of the 
   * nseq
   * taxa
 * subseq:      Extract a subsequence from the alignment (coordinates on alignment reference or on a given sequence reference)
+* subsites:      Extract sites from the input alignment (coordinates on alignment reference or on a given sequence reference)
 * subset:      Take a subset of sequences from the input alignment
 * sw:          Aligns 2 sequences using Smith & Waterman algorithm
 * translate:   Translate input sequences/alignment (supports IUPAC code)

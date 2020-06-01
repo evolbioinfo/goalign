@@ -96,6 +96,12 @@ If several alignments are present in the input file and the output is a file (no
 * Other alignments, other subalignments: results will be placed in the given file
   with `_al<i>` and `_sub<i>` suffixes (ex `out_al1_sub1.fasta`, `out_al1_sub2.fasta`, etc.)
 
+In any case:
+------------
+
+If `--reverse` is given, all positions but the given subsequence is output. In case of a sliding window, it will correspond to sliding subsequence "deletion". In case of reference sequence coordinates, the subsequence is first computed, then all positions of the alignment but this subsequence are given in output.
+
+
 #### Usage
 ```
 Usage:

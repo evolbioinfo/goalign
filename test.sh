@@ -1851,6 +1851,23 @@ ${GOALIGN} subseq -i input -l 4 -s 1 --ref-seq Seq0000 > result
 diff -q -b result expected
 rm -f input expected result
 
+echo "->goalign subseq / refseq / rev"
+cat > input <<EOF
+>Seq0000
+--ACG--AT-GC
+>Seq0001
+GGACGTTATCGC
+EOF
+cat > expected <<EOF
+>Seq0000
+--A-GC
+>Seq0001
+GGACGC
+EOF
+${GOALIGN} subseq -i input -l 4 -s 1 --ref-seq Seq0000 --reverse > result
+diff -q -b result expected
+rm -f input expected result
+
 
 echo "->goalign subseq window phylip"
 cat > input <<EOF
@@ -4143,3 +4160,136 @@ diff -q -b expected result
 rm -f input expected result 
 
 
+echo "->goalign subsites /1"
+cat > input <<EOF
+>s1
+ACGTACGT
+>s2
+-CGT-C-T
+>s3
+ACGTACGT
+>s4
+ACGTTCGA
+>s5
+ACGTTCGA
+EOF
+
+cat > exp <<EOF
+>s1
+CACGT
+>s2
+C-C-T
+>s3
+CACGT
+>s4
+CTCGA
+>s5
+CTCGA
+EOF
+
+
+${GOALIGN} subsites -i input 1 4 5 6 7 -o result
+diff -q -b exp result
+rm -f input exp result 
+
+echo "->goalign subsites --reverse /2"
+cat > input <<EOF
+>s1
+ACGTACGT
+>s2
+-CGT-C-T
+>s3
+ACGTACGT
+>s4
+ACGTTCGA
+>s5
+ACGTTCGA
+EOF
+
+cat > exp <<EOF
+>s1
+AGT
+>s2
+-GT
+>s3
+AGT
+>s4
+AGT
+>s5
+AGT
+EOF
+
+${GOALIGN} subsites -i input --reverse -o result 1 4 5 6 7 
+diff -q -b exp result
+rm -f input exp result 
+
+echo "->goalign subsites --reverse --ref-seq /2"
+cat > input <<EOF
+>s1
+ACGTACGT
+>s2
+-CGT-C-T
+>s3
+ACGTACGT
+>s4
+ACGTTCGA
+>s5
+ACGTTCGA
+EOF
+
+cat > exp <<EOF
+>s1
+ACTACG
+>s2
+-CT-C-
+>s3
+ACTACG
+>s4
+ACTTCG
+>s5
+ACTTCG
+EOF
+
+${GOALIGN} subsites -i input --reverse --ref-seq s2 -o result 1 4
+diff -q -b exp result
+rm -f input exp result 
+
+echo "->goalign subsites from file"
+cat > input <<EOF
+>s1
+ACGTACGT
+>s2
+-CGT-C-T
+>s3
+ACGTACGT
+>s4
+ACGTTCGA
+>s5
+ACGTTCGA
+EOF
+
+cat > posfile <<EOF
+1
+4
+5
+6
+7
+EOF
+
+
+cat > exp <<EOF
+>s1
+CACGT
+>s2
+C-C-T
+>s3
+CACGT
+>s4
+CTCGA
+>s5
+CTCGA
+EOF
+
+${GOALIGN} subsites -i input --sitefile posfile -o result
+diff -q -b exp result
+rm -f input exp result 

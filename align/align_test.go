@@ -1941,3 +1941,111 @@ func Test_align_MaskUnique(t *testing.T) {
 		t.Error(fmt.Errorf("Remove majority failed"))
 	}
 }
+
+func Test_align_InverseCoordinates(t *testing.T) {
+	var a Alignment
+
+	a = NewAlign(NUCLEOTIDS)
+	a.AddSequence("A", "ACANGA-TACC", "")
+	a.AddSequence("B", "ACTN-T-TTTC", "")
+	a.AddSequence("C", "ACTN-TTT--T", "")
+	a.AddSequence("D", "C-ANCCCCCCC", "")
+
+	expinvlengths := []int{2, 3}
+	expinvstarts := []int{0, 8}
+
+	invstarts, invlengths, err := a.InverseCoordinates(0, 11)
+	if err != nil {
+		t.Error(err)
+	}
+	if len(invstarts) != 0 {
+		t.Errorf("Invstarts should be 0 length")
+	}
+	if len(invlengths) != 0 {
+		t.Errorf("Invlengths should be 0 length")
+	}
+
+	invstarts, invlengths, err = a.InverseCoordinates(2, 6)
+	if err != nil {
+		t.Error(err)
+	}
+
+	if len(invstarts) != 2 {
+		t.Errorf("Invstarts should be 2 length")
+	}
+	if len(invlengths) != 2 {
+		t.Errorf("Invlengths should be 2 length")
+	}
+
+	if !reflect.DeepEqual(expinvlengths, invlengths) {
+		t.Error(fmt.Errorf("Invlengths is not expected, have %v, want %v", invlengths, expinvlengths))
+	}
+	if !reflect.DeepEqual(expinvstarts, invstarts) {
+		t.Error(fmt.Errorf("Invlengths is not expected, have %v, want %v", invlengths, expinvlengths))
+	}
+}
+
+func Test_align_InversePositions(t *testing.T) {
+	var a Alignment
+
+	a = NewAlign(NUCLEOTIDS)
+	a.AddSequence("A", "ACANGA-TACC", "")
+	a.AddSequence("B", "ACTN-T-TTTC", "")
+	a.AddSequence("C", "ACTN-TTT--T", "")
+	a.AddSequence("D", "C-ANCCCCCCC", "")
+
+	positions := []int{1, 2, 6, 10}
+	expinvpositions := []int{0, 3, 4, 5, 7, 8, 9}
+
+	invpositions, err := a.InversePositions(positions)
+	if err != nil {
+		t.Error(err)
+	}
+	if !reflect.DeepEqual(expinvpositions, invpositions) {
+		t.Error(fmt.Errorf("Invpositions is not expected, have %v, want %v", invpositions, expinvpositions))
+	}
+
+	positions = []int{}
+	expinvpositions = []int{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10}
+
+	invpositions, err = a.InversePositions(positions)
+	if err != nil {
+		t.Error(err)
+	}
+	if !reflect.DeepEqual(expinvpositions, invpositions) {
+		t.Error(fmt.Errorf("Invpositions is not expected, have %v, want %v", invpositions, expinvpositions))
+	}
+
+	positions = []int{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10}
+	expinvpositions = []int{}
+
+	invpositions, err = a.InversePositions(positions)
+	if err != nil {
+		t.Error(err)
+	}
+	if !reflect.DeepEqual(expinvpositions, invpositions) {
+		t.Error(fmt.Errorf("Invpositions is not expected, have %v, want %v", invpositions, expinvpositions))
+	}
+}
+
+func Test_align_RefSites(t *testing.T) {
+	var err error
+	var alisites []int
+
+	in := NewAlign(UNKNOWN)
+
+	in.AddSequence("Seq0000", "--ACG--AT---GC", "")
+	in.AddSequence("Seq0001", "GGACGTTATCGGGC", "")
+	in.AutoAlphabet()
+
+	expalisites := []int{2, 3, 4, 7}
+	sites := []int{0, 1, 2, 3}
+
+	alisites, err = in.RefSites("Seq0000", sites)
+	if err != nil {
+		t.Error(err)
+	}
+	if !reflect.DeepEqual(expalisites, alisites) {
+		t.Error(fmt.Errorf("alisites: expected: %v, have: %v", expalisites, alisites))
+	}
+}

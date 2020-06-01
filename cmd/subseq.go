@@ -15,6 +15,7 @@ var subseqstart int
 var subseqlength int
 var subseqstep int
 var subseqrefseq string
+var subseqreverse bool
 
 // subseqCmd represents the subseq command
 var subseqCmd = &cobra.Command{
@@ -93,7 +94,7 @@ If several alignments are present in the input file and the output is a file
 	RunE: func(cmd *cobra.Command, args []string) (err error) {
 		var aligns *align.AlignChannel
 		var f *os.File
-		var subalign align.Alignment
+		var subalign, subaligntmp align.Alignment
 
 		if aligns, err = readalign(infile); err != nil {
 			io.LogError(err)
@@ -132,9 +133,29 @@ If several alignments are present in the input file and the output is a file
 			}
 			subalignnum := 0
 			for {
-				if subalign, err = al.SubAlign(start, len); err != nil {
-					io.LogError(err)
-					return
+				starts := []int{start}
+				lens := []int{len}
+				if subseqreverse {
+					if starts, lens, err = al.InverseCoordinates(start, len); err != nil {
+						io.LogError(err)
+						return
+					}
+				}
+				subalign = nil
+				for i, s := range starts {
+					l := lens[i]
+					if subaligntmp, err = al.SubAlign(s, l); err != nil {
+						io.LogError(err)
+						return
+					}
+					if subalign == nil {
+						subalign = subaligntmp
+					} else {
+						if err = subalign.Concat(subaligntmp); err != nil {
+							io.LogError(err)
+							return
+						}
+					}
 				}
 				writeAlign(subalign, f)
 				start += subseqstep
@@ -170,5 +191,6 @@ func init() {
 	subseqCmd.PersistentFlags().IntVarP(&subseqstart, "start", "s", 0, "Start position (0-based inclusive)")
 	subseqCmd.PersistentFlags().IntVarP(&subseqlength, "length", "l", 10, "Length of the sub alignment")
 	subseqCmd.PersistentFlags().StringVar(&subseqrefseq, "ref-seq", "none", "Reference sequence on which coordinates are given")
+	subseqCmd.PersistentFlags().BoolVarP(&subseqreverse, "reverse", "r", false, "Take all but the given subsequence")
 	subseqCmd.PersistentFlags().IntVar(&subseqstep, "step", 0, "Step: If > 0, then will generate several alignments, for each window of length l, with starts: [start,start+step, ..., end-l]* ")
 }

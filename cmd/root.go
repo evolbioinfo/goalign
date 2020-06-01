@@ -9,6 +9,7 @@ import (
 	"math/rand"
 	"os"
 	"runtime"
+	"strconv"
 	"strings"
 	"time"
 
@@ -346,5 +347,41 @@ func parsePartition(partitionfile string, alilength int) (ps *align.PartitionSet
 	defer f.Close()
 	p := partition.NewParser(r)
 	ps, err = p.Parse(alilength)
+	return
+}
+
+func parseIntFile(file string) (ints []int, err error) {
+	var f *os.File
+	var r *bufio.Reader
+	var gr *gzip.Reader
+	var c int
+
+	ints = make([]int, 0)
+
+	if file == "stdin" || file == "-" {
+		f = os.Stdin
+	} else {
+		if f, err = os.Open(file); err != nil {
+			return
+		}
+	}
+
+	if strings.HasSuffix(file, ".gz") {
+		if gr, err = gzip.NewReader(f); err != nil {
+			return
+		}
+		r = bufio.NewReader(gr)
+	} else {
+		r = bufio.NewReader(f)
+	}
+	l, e := utils.Readln(r)
+	for e == nil {
+		if c, err = strconv.Atoi(l); err != nil {
+			return
+		}
+		ints = append(ints, c)
+		l, e = utils.Readln(r)
+	}
+
 	return
 }

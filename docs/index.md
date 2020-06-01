@@ -118,6 +118,7 @@ Command                                                     | Subcommand |      
 --                                                          | taxa       | Prints index (position) and name of taxa of the alignment file
 [subseq](commands/subseq.md) ([api](api/subseq.md))         |            | Take a sub-alignment from the input alignment
 [subset](commands/subset.md) ([api](api/subset.md))         |            | Take a subset of sequences from the input alignment
+[subsites](commands/subsites.md) (api)                      |            | Take a subset of the sites from the input alignment
 [sw](commands/sw.md) ([api](api/sw.md))                     |            | Aligns 2 sequences using Smith&Waterman algorithm
 [translate](commands/translate.md) ([api](api/translate.md))|            | Translates an input sequence into Amino-Acids
 [trim](commands/trim.md) ([api](api/trim.md))               |            | This command trims names of sequences or sequences themselves
