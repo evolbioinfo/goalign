@@ -21,6 +21,9 @@ This will replace 10 positions with N|X from the 10th position.
 If --unique is specified, 'goalign mask --unique' will replace characters that
 are unique in their column with N or X. In this case, --length and --start are ignored.
 
+If --ref-seq is specified, then coordinates are considered on the given reference sequence
+without considering gaps. So far, all insertions compared to the reference sequence are also masked).
+
 The output format is the same than input format.
 
 #### Usage

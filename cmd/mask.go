@@ -12,6 +12,7 @@ var maskout string = "stdout"
 var maskstart int
 var masklength int
 var maskunique bool
+var maskrefseq string
 
 // subseqCmd represents the subseq command
 var maskCmd = &cobra.Command{
@@ -32,6 +33,10 @@ goalign mask -p -i al.phy -s 9 -l 10
 
 This will replace 10 positions with N|X from the 10th position.
 
+If --ref-seq is specified, then coordinates are considered on the given reference sequence
+without considering gaps. So far, all insertions compared to the reference sequence are also masked).
+
+
 If --unique is specified, 'goalign mask --unique' will replace characters that
 are unique in their column (except GAPS) with N or X.
 In this case, --length and --start are ignored.
@@ -51,6 +56,8 @@ The output format is the same than input format.
 			return
 		}
 
+		refseq := cmd.Flags().Changed("ref-seq")
+
 		for al := range aligns.Achan {
 			if aligns.Err != nil {
 				err = aligns.Err
@@ -62,7 +69,12 @@ The output format is the same than input format.
 					return
 				}
 			} else {
-				if err = al.Mask(maskstart, masklength); err != nil {
+				start := maskstart
+				length := masklength
+				if refseq {
+					start, length, err = al.RefCoordinates(maskrefseq, start, length)
+				}
+				if err = al.Mask(start, length); err != nil {
 					io.LogError(err)
 					return
 				}
@@ -80,5 +92,6 @@ func init() {
 	maskCmd.PersistentFlags().StringVarP(&maskout, "output", "o", "stdout", "Alignment output file")
 	maskCmd.PersistentFlags().IntVarP(&maskstart, "start", "s", 0, "Start position (0-based inclusive)")
 	maskCmd.PersistentFlags().IntVarP(&masklength, "length", "l", 10, "Length of the sub alignment")
+	maskCmd.PersistentFlags().StringVar(&maskrefseq, "ref-seq", "none", "Coordinates are considered wrt. to the given reference sequence (no effect with --unique)")
 	maskCmd.PersistentFlags().BoolVar(&maskunique, "unique", false, "If given, then masks characters that are unique in their columns (start and length are ignored)")
 }
