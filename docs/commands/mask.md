@@ -22,7 +22,8 @@ If --unique is specified, 'goalign mask --unique' will replace characters that
 are unique in their column with N or X. In this case, --length and --start are ignored.
 
 If --ref-seq is specified, then coordinates are considered on the given reference sequence
-without considering gaps. So far, all insertions compared to the reference sequence are also masked).
+without considering gaps. In that case, if the range of masked sites incorporates gaps in
+the reference sequence, these gaps will also be masked in the output alignment.
 
 The output format is the same than input format.
 
