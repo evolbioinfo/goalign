@@ -65,6 +65,38 @@ rm -f expected result mapfile input
 
 
 echo "->goalign clean sites"
+cat > input <<EOF
+>Seq0000
+GATTAATTT-CCGTAGGCCAGAA-CTGAA---CGAA-ACTTTAAGTTTTCACTT-TAATGGAGAGGACTAGTTCATACTT
+-TT-A-CACTTTTACATCGA
+>Seq0001
+-GTCGGACCTAAG-ATTGAGTACAACGGTG-ATTCCAGCGG-GGAGAGGTCT-TTTTTCCGG-TGAAGGACTCTAG-GCT
+GTAAA-G-TATGGC-ATGTG
+>Seq0002
+CTAA-CGCGGGCGGATT-CTGT-GGA-CAAGGTTAAATAC-CGGCAATGC-CCATGATCCCCCA-GGAC-ATAAGAGCGA
+AGTT--AACAAATGAACCCC
+>Seq0003
+GAGT-GA-GCTTTATGGCA-AAGGTATTAG-GACTGA----CACCCCGGCATGGTAAGCAGGAGCCA-CGCGAAGGCTTC
+AGGTATCTTCCTGT-TTACC
+>Seq0004
+CATAGCCCC--ATG-CC-GACC-GTGTCGCGGCAACGTCTACA-TTCACGATAAA-ACTCCG-TGCTAGTCGGCTC-AGA
+TGCTTTTCTTCCA-ATCTGG
+>Seq0005
+-GTTTGA-TAT---CGCCGGCTTAGTGCTGACA-TGATGCTCCGTT-TAAGGGTCCTGATGTT-TTGTGCTC-CGCATAT
+TA-AGCTGAGTTTCCCAAAG
+>Seq0006
+TCGC-ACGG-GTGGAATGTACGTTAT-GCA-TAATCAGCG-CTTTC-CCGACATGCCCCCTCCGTGGCTCCTT-CG-CCA
+-CGGCGGACCTGCGGT-TCG
+>Seq0007
+CT-G-AAT-CCTGCGCTATTTCGTCAGTTCGTG-ACGGGTAAC-A--GCGGTTAATGCTT-TTCCGATCAGCTCA-ACCC
+ATGAAGGTGGCTCTGG-GCC
+>Seq0008
+TCGTTAACCCACTCTAACCACCTC-TG--GCGACATCGG-T-CTCGGCTTGGATACCTTC-TC-TATTGGACCCCAGG-C
+TCAA-CTCGTGAGCTCTCT-
+>Seq0009
+ACCT-CGGCTCTAGACAGCTGAA--CCGGTTCCGAGCACTGTA-GGAAACTTG-AAAGGCTCGACGGA-G-TTGTTCC-C
+AGAGTGGGA-TATAACATA-
+EOF
 cat > expected <<EOF
 >Seq0000
 ATATGGCGATCAAAGTTCCAATGAGATACTTCCTTTACG
@@ -94,10 +126,22 @@ Alignment (0) number of gaps=61
 Alignment (0) number of start gaps=1
 Alignment (0) number of end gaps=1
 EOF
-${GOALIGN} random --seed 10 | ${GOALIGN} mutate gaps -n 1 -r 0.1 --seed 10 |  ${GOALIGN} clean sites > result 2>log
+cat > expectedlog2 <<EOF
+Alignment (0) length before cleaning=100
+Alignment (0) length after cleaning=39
+Alignment (0) number of n=61
+Alignment (0) number of start n=1
+Alignment (0) number of end n=1
+EOF
+${GOALIGN} clean sites -i input > result 2>log
 diff -q -b result expected
 diff -q -b log expectedlog
-rm -f expected result mapfile log expectedlog
+rm -f result mapfile log expectedlog
+
+${GOALIGN} replace -s - -n N -i input | ${GOALIGN} clean sites --char n --ignore-case > result 2>log
+diff -q -b result expected
+diff -q -b log expectedlog2
+rm -f expected result mapfile log expectedlog2
 
 
 echo "->goalign clean sites --ends"
@@ -225,6 +269,38 @@ diff -q -b log expectedlog3
 rm -f expected3 result log expectedlog3
 
 echo "->goalign clean seqs"
+cat > input <<EOF
+>Seq0000
+GATTAATTTGCCGTAGGCCAGAATCTGAAGATCGAACACTTTAAGTTTTCACTTCTAATGGAGAGGACTAGTTCATACTT
+TTTAAACACTTTTACATCGA
+>Seq0001
+--T-------A------G---A-AA-G--------C---G------A-G--T-T---T-C-G--GA---AC----G---T
+-T-A-------G---ATGTG
+>Seq0002
+-T-----C-GG---A-T---G------CAAGG-T-A---------A--GC--C---A-C---C-----C-----G---G-
+AG-------A--TG----C-
+>Seq0003
+GAGTGGAGGCTTTATGGCACAAGGTATTAGAGACTGAGGGGCACCCCGGCATGGTAAGCAGGAGCCATCGCGAAGGCTTC
+AGGTATCTTCCTGTGTTACC
+>Seq0004
+--T--C-----AT--C-------G------G---A-G--TAC--T--AC-A-----AC---G--G--A--CG-CT-----
+T---T---T------T-T--
+>Seq0005
+AGTTTGACTATGAGCGCCGGCTTAGTGCTGACAGTGATGCTCCGTTGTAAGGGTCCTGATGTTCTTGTGCTCGCGCATAT
+TAGAGCTGAGTTTCCCAAAG
+>Seq0006
+T----A----G----A-GT-CG-------A--AA-CAG-G-----C--C---A-------T-------T-CT--C--C-A
+---G----C----G-T--C-
+>Seq0007
+CTGGTAATACCTGCGCTATTTCGTCAGTTCGTGTACGGGTAACGATAGCGGTTAATGCTTATTCCGATCAGCTCACACCC
+ATGAAGGTGGCTCTGGAGCC
+>Seq0008
+T---T--CCCA--------A-CT--------G--A---G---C-C----TGG-----T---T-------G-C-C--G---
+-C------GT-A-CT-T---
+>Seq0009
+ACCTACGGCTCTAGACAGCTGAAGTCCGGTTCCGAGCACTGTACGGAAACTTGAAAAGGCTCGACGGAGGCTTGTTCCGC
+AGAGTGGGACTATAACATAC
+EOF
 cat > expected <<EOF
 >Seq0000
 GATTAATTTGCCGTAGGCCAGAATCTGAAGATCGAACACTTTAAGTTTTCACTTCTAATGGAGAGGACTAGTTCATACTT
@@ -247,7 +323,15 @@ cat > expectedlog <<EOF
 [Warning] in cmd/cleanseqs.go (line 37), message: Alignment (0) #seqs after cleaning=5
 [Warning] in cmd/cleanseqs.go (line 38), message: Alignment (0) removed sequences=5
 EOF
-${GOALIGN} random --seed 10 | ${GOALIGN} mutate gaps -n 0.5 -r 0.7 --seed 10 |  ${GOALIGN} clean seqs > result 2>log
+${GOALIGN} clean seqs -i input > result 2>log
+diff -q -b result expected
+rm -f  result mapfile log expectedlog
+
+${GOALIGN} clean seqs --char GAP -i input > result 2>log
+diff -q -b result expected
+rm -f result mapfile log expectedlog
+
+${GOALIGN} replace -s "-" -n "N" -i input | ${GOALIGN} clean seqs --char n --ignore-case > result 2>log
 diff -q -b result expected
 rm -f expected result mapfile log expectedlog
 

@@ -10,7 +10,6 @@ import (
 )
 
 var cleanEnds bool
-var cleanChar string
 
 // cleansitesCmd represents the cleansites command
 var cleansitesCmd = &cobra.Command{
@@ -69,7 +68,7 @@ will be removed.`,
 					return
 				}
 				char = string(c[0])
-				nbstart, nbend = al.RemoveCharacterSites(c[0], cleanCutoff, cleanEnds)
+				nbstart, nbend = al.RemoveCharacterSites(c[0], cleanCutoff, cleanEnds, cleanIgnoreCase)
 			}
 			afterlength := al.Length()
 			writeAlign(al, f)
@@ -92,7 +91,5 @@ will be removed.`,
 
 func init() {
 	cleansitesCmd.PersistentFlags().BoolVar(&cleanEnds, "ends", false, "If true, then only remove consecutive gap positions from alignment start and end")
-	cleansitesCmd.PersistentFlags().StringVar(&cleanChar, "char", "GAP", "The character the cutoff is applied to. May be GAP, MAJ, or any other character")
-
 	cleanCmd.AddCommand(cleansitesCmd)
 }

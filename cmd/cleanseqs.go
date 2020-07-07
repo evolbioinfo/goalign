@@ -43,7 +43,18 @@ will be removed.`,
 		i := 0
 		for al := range aligns.Achan {
 			before := al.NbSequences()
-			al.RemoveGapSeqs(cleanCutoff)
+			if cleanChar == string(align.GAP) || cleanChar == "GAP" {
+				al.RemoveGapSeqs(cleanCutoff)
+			} else {
+				//single character
+				c := []rune(cleanChar)
+				if len(c) != 1 {
+					err = fmt.Errorf("--char should be a single character")
+					io.LogError(err)
+					return
+				}
+				al.RemoveCharacterSeqs(c[0], cleanCutoff, cleanIgnoreCase)
+			}
 			after := al.NbSequences()
 			writeAlign(al, f)
 			if !cleanQuiet {

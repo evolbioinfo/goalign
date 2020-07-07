@@ -71,10 +71,16 @@ type Alignment interface {
 	RefCoordinates(name string, refstart, refend int) (alistart, aliend int, err error)
 	// converts sites on the given sequence to coordinates on the alignment
 	RefSites(name string, sites []int) (refsites []int, err error)
-	RemoveGapSeqs(cutoff float64)                                             // Removes sequences having >= cutoff gaps
-	RemoveGapSites(cutoff float64, ends bool) (first, last int)               // Removes sites having >= cutoff gaps, returns the number of consecutive removed sites at start and end of alignment
-	RemoveCharacterSites(c rune, cutoff float64, ends bool) (first, last int) // Removes sites having >= cutoff character, returns the number of consecutive removed sites at start and end of alignment
-	RemoveMajorityCharacterSites(cutoff float64, ends bool) (first, last int) // Removes sites having >= cutoff of the main character at these sites, returns the number of consecutive removed sites at start and end of alignment
+	// Removes sequences having >= cutoff gaps, returns number of removed sequences
+	RemoveGapSeqs(cutoff float64) int
+	// Removes sequences having >= cutoff character, returns number of removed sequences
+	RemoveCharacterSeqs(c rune, cutoff float64, ignoreCase bool) int
+	// Removes sites having >= cutoff gaps, returns the number of consecutive removed sites at start and end of alignment
+	RemoveGapSites(cutoff float64, ends bool) (first, last int)
+	// Removes sites having >= cutoff character, returns the number of consecutive removed sites at start and end of alignment
+	RemoveCharacterSites(c rune, cutoff float64, ends bool, ignoreCase bool) (first, last int)
+	// Removes sites having >= cutoff of the main character at these sites, returns the number of consecutive removed sites at start and end of alignment
+	RemoveMajorityCharacterSites(cutoff float64, ends bool) (first, last int)
 	// Replaces match characters (.) by their corresponding characters on the first sequence
 	ReplaceMatchChars()
 	Sample(nb int) (Alignment, error) // generate a sub sample of the sequences
@@ -263,7 +269,7 @@ func (a *align) ShuffleSites(rate float64, roguerate float64, randroguefirst boo
 //
 // Returns the number of consecutive removed sites at start and end of alignment
 func (a *align) RemoveGapSites(cutoff float64, ends bool) (first, last int) {
-	return a.RemoveCharacterSites(GAP, cutoff, ends)
+	return a.RemoveCharacterSites(GAP, cutoff, ends, false)
 }
 
 // RemoveCharacterSites Removes positions constituted of [cutoff*100%,100%] of the given character
@@ -272,13 +278,15 @@ func (a *align) RemoveGapSites(cutoff float64, ends bool) (first, last int) {
 // 0 means that positions with > 0 of the given character will be removed
 // other cutoffs : ]0,1] mean that positions with >= cutoff of this character will be removed
 //
+// if ignoreCase then the search is case insensitive
+//
 // If ends is true: then only removes consecutive positions that match the cutoff
 // from start or from end of alignment.
 // Example with a cutoff of 0.3 and ends and with the given proportion of this character:
 // 0.4 0.5 0.1 0.5 0.6 0.1 0.8 will remove positions 0,1 and 6
 //
 // Returns the number of consecutive removed sites at start and end of alignment
-func (a *align) RemoveCharacterSites(c rune, cutoff float64, ends bool) (first, last int) {
+func (a *align) RemoveCharacterSites(c rune, cutoff float64, ends bool, ignoreCase bool) (first, last int) {
 	var nbchars int
 	if cutoff < 0 || cutoff > 1 {
 		cutoff = 0
@@ -293,7 +301,7 @@ func (a *align) RemoveCharacterSites(c rune, cutoff float64, ends bool) (first, 
 		nbchars = 0
 
 		for seq := 0; seq < a.NbSequences(); seq++ {
-			if a.seqs[seq].sequence[site] == c {
+			if (a.seqs[seq].sequence[site] == c) || (ignoreCase && unicode.ToLower(a.seqs[seq].sequence[site]) == unicode.ToLower(c)) {
 				nbchars++
 			}
 		}
@@ -498,25 +506,47 @@ func (a *align) RefSites(name string, sites []int) (refsites []int, err error) {
 // Cutoff must be between 0 and 1, otherwise set to 0.
 // 0 means that sequences with > 0 gaps will be removed
 // other cutoffs : ]0,1] mean that sequences with >= cutoff gaps will be removed
-func (a *align) RemoveGapSeqs(cutoff float64) {
-	var nbgaps int
+//
+// Returns the number of removed sequences
+func (a *align) RemoveGapSeqs(cutoff float64) int {
+	return a.RemoveCharacterSeqs(GAP, cutoff, false)
+}
+
+// RemoveCharacterSeqs Removes sequences constituted of [cutoff*100%,100%] of the given character
+// Exception fo a cutoff of 0: does not remove sequences with 0% of this character
+// Cutoff must be between 0 and 1, otherwise set to 0.
+// 0 means that sequences with > 0 of the given character will be removed
+// other cutoffs : ]0,1] mean that positions with >= cutoff of this character will be removed
+//
+// if ignoreCase then the search is case insensitive
+//
+// Returns the number of removed sequences
+func (a *align) RemoveCharacterSeqs(c rune, cutoff float64, ignoreCase bool) int {
+	var nbseqs int
 	if cutoff < 0 || cutoff > 1 {
 		cutoff = 0
 	}
 	oldseqs := a.seqs
 	length := a.Length()
 	a.Clear()
+	nbremoved := 0
+
 	for _, seq := range oldseqs {
-		nbgaps = 0
+		nbseqs = 0
+
 		for site := 0; site < length; site++ {
-			if seq.sequence[site] == GAP {
-				nbgaps++
+			if (seq.sequence[site] == c) || (ignoreCase && unicode.ToLower(seq.sequence[site]) == unicode.ToLower(c)) {
+				nbseqs++
 			}
 		}
-		if !((cutoff > 0.0 && float64(nbgaps) >= cutoff*float64(length)) || (cutoff == 0 && nbgaps > 0)) {
+		if (cutoff > 0.0 && float64(nbseqs) >= cutoff*float64(length)) || (cutoff == 0 && nbseqs > 0) {
+			nbremoved++
+		} else {
 			a.AddSequenceChar(seq.name, seq.sequence, seq.comment)
 		}
 	}
+
+	return nbremoved
 }
 
 // Swaps a rate of the sequences together
