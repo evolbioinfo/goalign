@@ -1323,7 +1323,9 @@ func (a *align) SubAlign(start, length int) (subalign Alignment, err error) {
 	subalign = NewAlign(a.alphabet)
 	for i := 0; i < a.NbSequences(); i++ {
 		seq := a.seqs[i]
-		subalign.AddSequenceChar(seq.name, seq.SequenceChar()[start:start+length], seq.Comment())
+		tmpseq := make([]rune, length)
+		copy(tmpseq, seq.SequenceChar()[start:start+length])
+		subalign.AddSequenceChar(seq.name, tmpseq, seq.Comment())
 	}
 	return
 }
