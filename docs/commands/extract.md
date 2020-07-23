@@ -6,7 +6,7 @@
 This command extracts several sub-alignments from an input alignment. It is similar to [subseq](subseq.md), with two main differences:
 
 1. As input, it takes an annotation file defining the coordinates of sub-alignments to extract, and can then extract several sub-alignments in one command;
-2. Each sub-alignment may be defined as several "blocks" (~bed format blocks), potentially overlapping (even in any order).
+2. Each sub-alignment may be defined as several "blocks" (~bed format blocks), potentially overlapping (even in any order). This may be useful if sequences are subject to ~frameshifts (see [this case](https://www.ncbi.nlm.nih.gov/protein/YP_009724389.1?from=4393&to=5324) for example).
 
 `extract` takes an alignment and extracts several sub-alignments from it. Subs-alignments are defined in an input tab separated file with the following mandatory columns:
 
@@ -47,12 +47,14 @@ If the input file contains several alignments, only the first one is considered.
 #### Usage
 ```
 Usage:
-  goalign consensus [flags]
+  goalign extract [flags]
 
 Flags:
-  --exclude-gaps        Exclude gaps in the majority computation
-  -h, --help            help for consensus
-  -o, --output string   Alignment output file (default "stdout")
+      --coordinates string   File with all coordinates of the sequences to extract (default "none")
+  -h, --help                 help for extract
+  -o, --output string        Output folder (default ".")
+      --ref-seq string       Reference sequence on which coordinates are given (default "none")
+      --translate int        Wether the extracted sequence will be translated (only if input alignment is nucleotide). <0: No translation, 0: Std code, 1: Vertebrate mito, 2: Invertebrate mito (default -1)
 
 Global Flags:
   -i, --align string       Alignment input file (default "stdin")
@@ -69,21 +71,66 @@ Global Flags:
 
 #### Examples
 
-* Consensus of 3 sequences:
+* Extract 2 sub sequences from an input alignment:
 
 Input alignment `al.fa`:
 ```
 >s1
-ACGACGACGACC
->2
-ATCTT-TTTTTC
->3
-ATCTT-TTTTTT
+ACGTACGT
+>s2
+-CGT-C-T
+>s3
+ACGTACGT
+>s4
+ACGTTCGA
+>s5
+ACGTTCGA
 ```
 
+Annotation file `coords.txt`:
 ```
-$ goalign consensus -i al.fa
+1,2	4,5	output.1
+3	6	output.2
+```
 
->consensus
-ATCTT-TTTTTC
+This annotation file defines two sub-alignments:
+
+1. A sub-alignment with two overlapping blocks: `[1,4[+[2,5[` (or `[1,3]+[2,4]`)
+2. A sub-alignment with 1 block: `[3,6[` (or `[3,5]`)
+
+
+Command:
+```
+> goalign extract -i al.fa --coordinates coords.txt -o out
+```
+
+Should produce 2 files in the `out` directory:
+
+`out/output.1.fa`:
+```
+>s1
+CGTGTA
+>s2
+CGTGT-
+>s3
+CGTGTA
+>s4
+CGTGTT
+>s5
+CGTGTT
+```
+
+`out/output.2.fa`:
+```
+>s1
+TAC
+>s2
+T-C
+>s3
+TAC
+>s4
+TTC
+>s5
+TTC
+EOF
 ```
