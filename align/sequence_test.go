@@ -8,9 +8,9 @@ import (
 
 func TestGenAllPossibleCodons(t *testing.T) {
 	type args struct {
-		nt1 rune
-		nt2 rune
-		nt3 rune
+		nt1 uint8
+		nt2 uint8
+		nt3 uint8
 	}
 	tests := []struct {
 		name       string
@@ -38,7 +38,7 @@ func TestGenAllPossibleCodons(t *testing.T) {
 func Test_seq_Translate(t *testing.T) {
 	type fields struct {
 		name     string
-		sequence []rune
+		sequence []uint8
 		comment  string
 	}
 	type args struct {
@@ -52,9 +52,9 @@ func Test_seq_Translate(t *testing.T) {
 		wantTr  Sequence
 		wantErr bool
 	}{
-		{name: "Seq1", fields: fields{name: "seq1", sequence: []rune{'G', 'A', 'Y', 'A', 'A', 'R', 'U', 'A', 'Y', 'C', 'A', 'Y', 'R', 'A', 'Y', 'U', 'A', 'G'}}, args: args{phase: 0, geneticcode: 0}, wantTr: &seq{name: "seq1", sequence: []rune{'D', 'K', 'Y', 'H', 'X', '*'}}, wantErr: false},
-		{name: "Seq2", fields: fields{name: "seq1", sequence: []rune{'G', 'A', 'Y', 'A', 'A', 'R', 'U', 'A', 'Y', 'C', 'A', 'Y', 'A', 'A', 'Y', 'U', 'A', 'G'}}, args: args{phase: 0, geneticcode: 0}, wantTr: &seq{name: "seq1", sequence: []rune{'D', 'K', 'Y', 'H', 'N', '*'}}, wantErr: false},
-		{name: "Seq3", fields: fields{name: "seq1", sequence: []rune{'-', 'A', 'Y', 'A', 'A', 'R', 'U', 'A', 'Y', 'C', 'A', 'Y', 'A', 'A', 'Y', 'U', 'A', 'G'}}, args: args{phase: 0, geneticcode: 0}, wantTr: &seq{name: "seq1", sequence: []rune{'X', 'K', 'Y', 'H', 'N', '*'}}, wantErr: false},
+		{name: "Seq1", fields: fields{name: "seq1", sequence: []uint8{'G', 'A', 'Y', 'A', 'A', 'R', 'U', 'A', 'Y', 'C', 'A', 'Y', 'R', 'A', 'Y', 'U', 'A', 'G'}}, args: args{phase: 0, geneticcode: 0}, wantTr: &seq{name: "seq1", sequence: []uint8{'D', 'K', 'Y', 'H', 'X', '*'}}, wantErr: false},
+		{name: "Seq2", fields: fields{name: "seq1", sequence: []uint8{'G', 'A', 'Y', 'A', 'A', 'R', 'U', 'A', 'Y', 'C', 'A', 'Y', 'A', 'A', 'Y', 'U', 'A', 'G'}}, args: args{phase: 0, geneticcode: 0}, wantTr: &seq{name: "seq1", sequence: []uint8{'D', 'K', 'Y', 'H', 'N', '*'}}, wantErr: false},
+		{name: "Seq3", fields: fields{name: "seq1", sequence: []uint8{'-', 'A', 'Y', 'A', 'A', 'R', 'U', 'A', 'Y', 'C', 'A', 'Y', 'A', 'A', 'Y', 'U', 'A', 'G'}}, args: args{phase: 0, geneticcode: 0}, wantTr: &seq{name: "seq1", sequence: []uint8{'X', 'K', 'Y', 'H', 'N', '*'}}, wantErr: false},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -78,7 +78,7 @@ func Test_seq_Translate(t *testing.T) {
 func Test_seq_NumGapsFromEnd(t *testing.T) {
 	type fields struct {
 		name     string
-		sequence []rune
+		sequence []uint8
 		comment  string
 	}
 	tests := []struct {
@@ -86,9 +86,9 @@ func Test_seq_NumGapsFromEnd(t *testing.T) {
 		fields      fields
 		wantNumgaps int
 	}{
-		{name: "num 0", fields: fields{name: "s1", sequence: []rune{'-', '-', '-', 'A', '-', 'C'}, comment: ""}, wantNumgaps: 0},
-		{name: "num 1", fields: fields{name: "s1", sequence: []rune{'G', '-', '-', '-', 'A', '-', '-'}, comment: ""}, wantNumgaps: 2},
-		{name: "num 2", fields: fields{name: "s1", sequence: []rune{'-', '-', '-', '-', '-', '-'}, comment: ""}, wantNumgaps: 6},
+		{name: "num 0", fields: fields{name: "s1", sequence: []uint8{'-', '-', '-', 'A', '-', 'C'}, comment: ""}, wantNumgaps: 0},
+		{name: "num 1", fields: fields{name: "s1", sequence: []uint8{'G', '-', '-', '-', 'A', '-', '-'}, comment: ""}, wantNumgaps: 2},
+		{name: "num 2", fields: fields{name: "s1", sequence: []uint8{'-', '-', '-', '-', '-', '-'}, comment: ""}, wantNumgaps: 6},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -107,7 +107,7 @@ func Test_seq_NumGapsFromEnd(t *testing.T) {
 func Test_seq_NumGapsFromStart(t *testing.T) {
 	type fields struct {
 		name     string
-		sequence []rune
+		sequence []uint8
 		comment  string
 	}
 	tests := []struct {
@@ -115,9 +115,9 @@ func Test_seq_NumGapsFromStart(t *testing.T) {
 		fields      fields
 		wantNumgaps int
 	}{
-		{name: "num 0", fields: fields{name: "s1", sequence: []rune{'-', '-', '-', 'A', '-', 'C'}, comment: ""}, wantNumgaps: 3},
-		{name: "num 1", fields: fields{name: "s1", sequence: []rune{'G', '-', '-', '-', 'A', '-', 'C'}, comment: ""}, wantNumgaps: 0},
-		{name: "num 2", fields: fields{name: "s1", sequence: []rune{'-', '-', '-', '-', '-', '-'}, comment: ""}, wantNumgaps: 6},
+		{name: "num 0", fields: fields{name: "s1", sequence: []uint8{'-', '-', '-', 'A', '-', 'C'}, comment: ""}, wantNumgaps: 3},
+		{name: "num 1", fields: fields{name: "s1", sequence: []uint8{'G', '-', '-', '-', 'A', '-', 'C'}, comment: ""}, wantNumgaps: 0},
+		{name: "num 2", fields: fields{name: "s1", sequence: []uint8{'-', '-', '-', '-', '-', '-'}, comment: ""}, wantNumgaps: 6},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -136,7 +136,7 @@ func Test_seq_NumGapsFromStart(t *testing.T) {
 func Test_seq_NumGaps(t *testing.T) {
 	type fields struct {
 		name     string
-		sequence []rune
+		sequence []uint8
 		comment  string
 	}
 	tests := []struct {
@@ -144,9 +144,9 @@ func Test_seq_NumGaps(t *testing.T) {
 		fields      fields
 		wantNumgaps int
 	}{
-		{name: "num 0", fields: fields{name: "s1", sequence: []rune{'-', '-', '-', 'A', '-', 'C'}, comment: ""}, wantNumgaps: 4},
-		{name: "num 1", fields: fields{name: "s1", sequence: []rune{'G', '-', '-', '-', 'A', '-', 'C'}, comment: ""}, wantNumgaps: 4},
-		{name: "num 2", fields: fields{name: "s1", sequence: []rune{'-', '-', '-', '-', '-', '-'}, comment: ""}, wantNumgaps: 6},
+		{name: "num 0", fields: fields{name: "s1", sequence: []uint8{'-', '-', '-', 'A', '-', 'C'}, comment: ""}, wantNumgaps: 4},
+		{name: "num 1", fields: fields{name: "s1", sequence: []uint8{'G', '-', '-', '-', 'A', '-', 'C'}, comment: ""}, wantNumgaps: 4},
+		{name: "num 2", fields: fields{name: "s1", sequence: []uint8{'-', '-', '-', '-', '-', '-'}, comment: ""}, wantNumgaps: 6},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -164,8 +164,8 @@ func Test_seq_NumGaps(t *testing.T) {
 
 func TestEqualOrCompatible(t *testing.T) {
 	type args struct {
-		nt1 rune
-		nt2 rune
+		nt1 uint8
+		nt2 uint8
 	}
 	tests := []struct {
 		name    string
@@ -205,8 +205,8 @@ func TestEqualOrCompatible(t *testing.T) {
 
 func TestNtIUPACDifference(t *testing.T) {
 	type args struct {
-		nt1 rune
-		nt2 rune
+		nt1 uint8
+		nt2 uint8
 	}
 	tests := []struct {
 		name     string
@@ -251,7 +251,7 @@ func TestNtIUPACDifference(t *testing.T) {
 func Test_seq_NumGapsOpenning(t *testing.T) {
 	type fields struct {
 		name     string
-		sequence []rune
+		sequence []uint8
 		comment  string
 	}
 	tests := []struct {
@@ -259,11 +259,11 @@ func Test_seq_NumGapsOpenning(t *testing.T) {
 		fields      fields
 		wantNumgaps int
 	}{
-		{name: "t1", fields: fields{name: "s1", sequence: []rune("-CTGAT-CAGCTACTGATC------GATCGATC--ATCTACTG-"), comment: ""}, wantNumgaps: 5},
-		{name: "t2", fields: fields{name: "s1", sequence: []rune("-C-T-G-A-T-C-A-G-C-T-A-C-T-G-A-T-C-G-A-T-C-G-A-T-C-A-T-C-T-A-C-T-G-"), comment: ""}, wantNumgaps: 34},
-		{name: "t3", fields: fields{name: "s1", sequence: []rune("CTGATCAGCTACTGATCGATCGATCATCTACTG"), comment: ""}, wantNumgaps: 0},
-		{name: "t4", fields: fields{name: "s1", sequence: []rune("-CTGATCAGCTACTGATC-GATCGATC-ATCTACTG-"), comment: ""}, wantNumgaps: 4},
-		{name: "t5", fields: fields{name: "s1", sequence: []rune("CTGATCAGCTACTGATC------GATCGATCATCTACTG"), comment: ""}, wantNumgaps: 1},
+		{name: "t1", fields: fields{name: "s1", sequence: []uint8("-CTGAT-CAGCTACTGATC------GATCGATC--ATCTACTG-"), comment: ""}, wantNumgaps: 5},
+		{name: "t2", fields: fields{name: "s1", sequence: []uint8("-C-T-G-A-T-C-A-G-C-T-A-C-T-G-A-T-C-G-A-T-C-G-A-T-C-A-T-C-T-A-C-T-G-"), comment: ""}, wantNumgaps: 34},
+		{name: "t3", fields: fields{name: "s1", sequence: []uint8("CTGATCAGCTACTGATCGATCGATCATCTACTG"), comment: ""}, wantNumgaps: 0},
+		{name: "t4", fields: fields{name: "s1", sequence: []uint8("-CTGATCAGCTACTGATC-GATCGATC-ATCTACTG-"), comment: ""}, wantNumgaps: 4},
+		{name: "t5", fields: fields{name: "s1", sequence: []uint8("CTGATCAGCTACTGATC------GATCGATCATCTACTG"), comment: ""}, wantNumgaps: 1},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

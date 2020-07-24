@@ -61,7 +61,7 @@ will be removed.`,
 				nbstart, nbend = al.RemoveMajorityCharacterSites(cleanCutoff, cleanEnds)
 			} else {
 				//single character
-				c := []rune(cleanChar)
+				c := []uint8(cleanChar)
 				if len(c) != 1 {
 					err = fmt.Errorf("--char should be a single character")
 					io.LogError(err)

@@ -101,7 +101,7 @@ n...
 						}
 						s, _ = sb.GetSequenceById(0)
 					}
-					refseq = align.NewSequence("ref", []rune(s), "")
+					refseq = align.NewSequence("ref", []uint8(s), "")
 				}
 				err = printAllSequenceStats(al, refseq, profile)
 			}
@@ -121,8 +121,8 @@ func printCharStats(align align.Alignment, only string) {
 	// We add the only character we want to output
 	// To write 0 if there are no occurences of it
 	// in the alignment
-	if _, ok := charmap[rune(only[0])]; !ok && only != "*" {
-		charmap[rune(only[0])] = 0
+	if _, ok := charmap[uint8(only[0])]; !ok && only != "*" {
+		charmap[uint8(only[0])] = 0
 	}
 
 	keys := make([]string, 0, len(charmap))
@@ -137,7 +137,7 @@ func printCharStats(align align.Alignment, only string) {
 
 	fmt.Fprintf(os.Stdout, "char\tnb\tfreq\n")
 	for _, k := range keys {
-		nb := charmap[rune(k[0])]
+		nb := charmap[uint8(k[0])]
 		fmt.Fprintf(os.Stdout, "%s\t%d\t%f\n", k, nb, float64(nb)/float64(total))
 	}
 }
@@ -148,7 +148,7 @@ func printSiteCharStats(al align.Alignment, only string) (err error) {
 	var indexonly int
 
 	profile = align.NewCountProfileFromAlignment(al)
-	onlyr := []rune(only)
+	onlyr := []uint8(only)
 	if len(onlyr) > 1 {
 		err = fmt.Errorf("Character should have length 1: %s", only)
 	}
@@ -186,15 +186,15 @@ func printSiteCharStats(al align.Alignment, only string) (err error) {
 }
 
 func printSequenceCharStats(sb align.SeqBag, only string) (err error) {
-	var sequencemap map[rune]int
+	var sequencemap map[uint8]int
 
 	charmap := sb.CharStats()
 
 	// We add the only character we want to output
 	// To write 0 if there are no occurences of it
 	// in the alignment
-	if _, ok := charmap[rune(only[0])]; !ok && only != "*" {
-		charmap[rune(only[0])] = 0
+	if _, ok := charmap[uint8(only[0])]; !ok && only != "*" {
+		charmap[uint8(only[0])] = 0
 	}
 
 	keys := make([]string, 0, len(charmap))
@@ -217,7 +217,7 @@ func printSequenceCharStats(sb align.SeqBag, only string) (err error) {
 		fmt.Fprintf(os.Stdout, "%s", name)
 		for _, k := range keys {
 			if only == "*" || k == only {
-				nb := sequencemap[rune(k[0])]
+				nb := sequencemap[uint8(k[0])]
 				fmt.Fprintf(os.Stdout, "\t%d", nb)
 			}
 		}
@@ -227,7 +227,7 @@ func printSequenceCharStats(sb align.SeqBag, only string) (err error) {
 }
 
 func printAllSequenceStats(al align.Alignment, refSequence align.Sequence, countProfile *align.CountProfile) (err error) {
-	var sequencemap map[rune]int
+	var sequencemap map[uint8]int
 
 	var numnewgaps []int // new gaps that are not found in the profile
 	var numnewmuts []int // new mutations that are not found in the profile
@@ -241,7 +241,7 @@ func printAllSequenceStats(al align.Alignment, refSequence align.Sequence, count
 	var nummutations int
 	var gaps int
 	var name string
-	var uniquechars []rune
+	var uniquechars []uint8
 
 	uniquechars = al.UniqueCharacters()
 

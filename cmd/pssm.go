@@ -35,7 +35,7 @@ Possible to log2 transform the (normalized) value with --log (-l). Not taken int
 `,
 	RunE: func(cmd *cobra.Command, args []string) (err error) {
 		var aligns *align.AlignChannel
-		var pssm map[rune][]float64
+		var pssm map[uint8][]float64
 		var pssmstring string
 
 		if aligns, err = readalign(infile); err != nil {
@@ -79,7 +79,7 @@ func init() {
 	pssmCmd.PersistentFlags().IntVarP(&pssmnorm, "normalization", "n", 0, "Counts normalization")
 }
 
-func printPSSM(a align.Alignment, pssm map[rune][]float64) (pssmstring string, err error) {
+func printPSSM(a align.Alignment, pssm map[uint8][]float64) (pssmstring string, err error) {
 	var buffer bytes.Buffer
 	size := -1
 	for _, c := range a.AlphabetCharacters() {

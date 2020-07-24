@@ -19,7 +19,7 @@ func min_int(a int, b int) int {
 
 func WriteAlignment(sb align.SeqBag) string {
 	var buf bytes.Buffer
-	sb.IterateChar(func(name string, seq []rune) bool {
+	sb.IterateChar(func(name string, seq []uint8) bool {
 		buf.WriteString(">")
 		buf.WriteString(name)
 		buf.WriteString("\n")
@@ -27,7 +27,7 @@ func WriteAlignment(sb align.SeqBag) string {
 			if i%FASTA_LINE == 0 && i > 0 {
 				buf.WriteString("\n")
 			}
-			buf.WriteRune(seq[i])
+			buf.WriteByte(seq[i])
 		}
 		buf.WriteRune('\n')
 		return false
@@ -40,14 +40,14 @@ func WriteAlignment(sb align.SeqBag) string {
 func WriteSequences(sb align.SeqBag) string {
 	var buf bytes.Buffer
 
-	sb.IterateChar(func(name string, seq []rune) bool {
+	sb.IterateChar(func(name string, seq []uint8) bool {
 		buf.WriteString(">")
 		buf.WriteString(name)
 		buf.WriteString("\n")
 		nbchar := 0
 		for i := 0; i < len(seq); i++ {
 			if seq[i] != '-' {
-				buf.WriteRune(seq[i])
+				buf.WriteByte(seq[i])
 				nbchar++
 				if nbchar == FASTA_LINE {
 					buf.WriteString("\n")

@@ -36,7 +36,7 @@ goalign stats length -i align.fasta
 				return
 			}
 
-			seqs.IterateChar(func(name string, sequence []rune) bool {
+			seqs.IterateChar(func(name string, sequence []uint8) bool {
 				fmt.Println(name, "\t", len(sequence))
 				return false
 			})

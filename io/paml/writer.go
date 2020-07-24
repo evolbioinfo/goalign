@@ -33,14 +33,14 @@ func WriteAlignment(al align.Alignment) string {
 		if cursize > 0 {
 			buf.WriteString(fmt.Sprintf("%d\n", cursize+1))
 		}
-		al.IterateChar(func(name string, seq []rune) bool {
+		al.IterateChar(func(name string, seq []uint8) bool {
 			for i := cursize; i < cursize+PAML_LINE && i < len(seq); i += PAML_BLOCK {
 				if i > cursize {
 					buf.WriteString(" ")
 				}
 				end := min_int(i+PAML_BLOCK, len(seq))
 				for j := i; j < end; j++ {
-					buf.WriteRune(seq[j])
+					buf.WriteByte(seq[j])
 				}
 			}
 			buf.WriteString("\n")

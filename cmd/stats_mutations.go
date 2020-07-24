@@ -90,7 +90,7 @@ var statMutationsCmd = &cobra.Command{
 				s, _ = sb.GetSequenceById(0)
 			}
 			for _, s2 := range al.Sequences() {
-				if num, err = s2.NumMutationsComparedToReferenceSequence(al.Alphabet(), align.NewSequence("ref", []rune(s), "")); err != nil {
+				if num, err = s2.NumMutationsComparedToReferenceSequence(al.Alphabet(), align.NewSequence("ref", []uint8(s), "")); err != nil {
 					io.LogError(err)
 					return
 				}

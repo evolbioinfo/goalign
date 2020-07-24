@@ -25,7 +25,7 @@ func WriteAlignment(al align.Alignment) string {
 
 	// Get length of the longest name
 	maxnamelength := 0
-	al.IterateChar(func(name string, seq []rune) bool {
+	al.IterateChar(func(name string, seq []uint8) bool {
 		if len(name) > maxnamelength {
 			maxnamelength = len(name)
 		}
@@ -38,7 +38,7 @@ func WriteAlignment(al align.Alignment) string {
 			buf.WriteRune('\n')
 		}
 		end := 0
-		al.IterateChar(func(name string, seq []rune) bool {
+		al.IterateChar(func(name string, seq []uint8) bool {
 			buf.WriteString(name)
 			for i := len(name); i < maxnamelength+3; i++ {
 				buf.WriteRune(' ')
@@ -46,7 +46,7 @@ func WriteAlignment(al align.Alignment) string {
 
 			end = min_int(cursize+CLUSTAL_LINE, len(seq))
 			for j := cursize; j < end; j++ {
-				buf.WriteRune(seq[j])
+				buf.WriteByte(seq[j])
 			}
 			buf.WriteRune(' ')
 			buf.WriteString(fmt.Sprintf("%d", end))

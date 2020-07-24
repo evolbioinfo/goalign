@@ -75,7 +75,7 @@ func (p *CountProfile) NameAt(i int) (name uint8, err error) {
 
 // NameIndex returns the index of the given character in the header
 // If the character does not exist, returns false
-func (p *CountProfile) NameIndex(r rune) (index int, ok bool) {
+func (p *CountProfile) NameIndex(r uint8) (index int, ok bool) {
 	index = p.names[int(r)]
 	ok = (index >= 0)
 	return

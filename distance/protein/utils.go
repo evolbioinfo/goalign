@@ -9,7 +9,7 @@ import (
 
 type seqpairdist struct {
 	i, j       int
-	seq1, seq2 []rune
+	seq1, seq2 []uint8
 	seq1Ambigu []bool
 	seq2Ambigu []bool
 }
@@ -53,7 +53,7 @@ func aaFrequency(a align.Alignment, weights []float64, selected []bool) ([]float
 	}
 
 	// Count occurences of different amino acids
-	a.IterateChar(func(name string, sequence []rune) bool {
+	a.IterateChar(func(name string, sequence []uint8) bool {
 		for j = 0; j < len(sequence); j++ {
 			if selected[j] {
 				w = weights[j]
@@ -93,7 +93,7 @@ func aaFrequency(a align.Alignment, weights []float64, selected []bool) ([]float
 	return freq, nil
 }
 
-func isAmbigu(c rune) bool {
+func isAmbigu(c uint8) bool {
 	return (c == align.GAP || c == align.POINT || c == align.OTHER || c == align.ALL_AMINO)
 }
 

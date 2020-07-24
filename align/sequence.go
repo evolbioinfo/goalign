@@ -358,7 +358,7 @@ func bufferTranslate(s *seq, phase int, code map[string]uint8, buffer *bytes.Buf
 			}
 			aa = aatmp
 		}
-		buffer.WriteRune(rune(aa))
+		buffer.WriteByte(aa)
 	}
 	return
 }

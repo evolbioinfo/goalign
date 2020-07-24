@@ -48,10 +48,10 @@ func FromFile(file string) (p *align.CountProfile, err error) {
 		return
 	}
 	headslice := strings.Split(l, "\t")
-	header := make([]rune, 0, len(headslice)-1)
+	header := make([]uint8, 0, len(headslice)-1)
 	for i, field = range headslice {
 		if i > 0 {
-			r := []rune(field)
+			r := []uint8(field)
 			if len(r) != 1 {
 				err = fmt.Errorf("Character name Should be One character")
 				return

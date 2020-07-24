@@ -47,7 +47,7 @@ will be removed.`,
 				al.RemoveGapSeqs(cleanCutoff)
 			} else {
 				//single character
-				c := []rune(cleanChar)
+				c := []uint8(cleanChar)
 				if len(c) != 1 {
 					err = fmt.Errorf("--char should be a single character")
 					io.LogError(err)

@@ -39,7 +39,7 @@ func WriteAlignment(al align.Alignment, strict, oneline, noblock bool) string {
 		if cursize > 0 {
 			buf.WriteString("\n")
 		}
-		al.IterateChar(func(name string, seq []rune) bool {
+		al.IterateChar(func(name string, seq []uint8) bool {
 			if header {
 				if strict {
 					buf.WriteString(fmt.Sprintf("%-10s", name[:min_int(10, len(name))]))
@@ -61,7 +61,7 @@ func WriteAlignment(al align.Alignment, strict, oneline, noblock bool) string {
 				}
 				end := min_int(i+block_length, len(seq))
 				for j := i; j < end; j++ {
-					buf.WriteRune(seq[j])
+					buf.WriteByte(seq[j])
 				}
 			}
 			buf.WriteString("\n")
