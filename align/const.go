@@ -383,7 +383,7 @@ G=2
 T=3
 */
 func Nt2Index(nt uint8) (idx int, err error) {
-	switch unicode.ToUpper(nt) {
+	switch unicode.ToUpper(rune(nt)) {
 	case 'A':
 		idx = NT_A
 	case 'C':
@@ -416,7 +416,7 @@ Ex: 'B': NT_B
 */
 func Nt2IndexIUPAC(nt uint8) (idx uint8, err error) {
 	var ok bool
-	if idx, ok = iupacToInt[unicode.ToUpper(nt)]; !ok {
+	if idx, ok = iupacToInt[uint8(unicode.ToUpper(rune(nt)))]; !ok {
 		err = fmt.Errorf("No index for character: %c", nt)
 	}
 	return
@@ -438,7 +438,7 @@ func Index2Nt(index int) (nt uint8, err error) {
 }
 
 func AA2Index(aa uint8) (idx int, err error) {
-	switch unicode.ToUpper(aa) {
+	switch unicode.ToUpper(rune(aa)) {
 	case 'A':
 		idx = 0
 	case 'R':

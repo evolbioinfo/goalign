@@ -17,10 +17,10 @@ type CountProfile struct {
 func NewCountProfileFromAlignment(al Alignment) (p *CountProfile) {
 	p = NewCountProfile()
 
-	p.header = make([]rune, 0, 100)
+	p.header = make([]uint8, 0, 100)
 	p.counts = make([][]int, 0, 100)
 
-	al.IterateChar(func(name string, seq []rune) bool {
+	al.IterateChar(func(name string, seq []uint8) bool {
 		for i, r := range seq {
 			idx := p.names[int(r)]
 			if idx < 0 {
@@ -64,7 +64,7 @@ func (p *CountProfile) CountsAt(i int) (counts []int, err error) {
 }
 
 // NameAt returns the name of ith character in the header
-func (p *CountProfile) NameAt(i int) (name rune, err error) {
+func (p *CountProfile) NameAt(i int) (name uint8, err error) {
 	if i >= len(p.header) || i < 0 {
 		err = fmt.Errorf("No character at index %d", i)
 		return

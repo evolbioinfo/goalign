@@ -8,8 +8,8 @@ import (
 type PairwiseAligner interface {
 	AlignEnds() (int, int)
 	AlignStarts() (int, int)
-	Seq1Ali() []rune
-	Seq2Ali() []rune
+	Seq1Ali() []uint8
+	Seq2Ali() []uint8
 	SetGapOpenScore(open float64)
 	SetGapExtendScore(extend float64)
 	SetScore(match, mismatch float64)
@@ -47,20 +47,20 @@ type pwaligner struct {
 	start1, start2   int
 	end1, end2       int
 	seq1, seq2       Sequence
-	seq1ali, seq2ali []rune // aligned sequences
-	alistr           []rune // comparison between sequences
+	seq1ali, seq2ali []uint8 // aligned sequences
+	alistr           []uint8 // comparison between sequences
 	gapopen          float64
 	gapextend        float64
 	match            float64
 	mismatch         float64
-	submatrix        [][]float64  // substitution matrix
-	chartopos        map[rune]int // char to position in subst matrix
+	submatrix        [][]float64   // substitution matrix
+	chartopos        map[uint8]int // char to position in subst matrix
 
 }
 
 func NewPwAligner(seq1, seq2 Sequence, algo int) *pwaligner {
 	var mat [][]float64
-	var chartopos map[rune]int
+	var chartopos map[uint8]int
 
 	a1 := seq1.DetectAlphabet()
 	a2 := seq2.DetectAlphabet()
@@ -163,7 +163,7 @@ func (a *pwaligner) fillMatrix() (err error) {
 // of EMBOSS suite
 func (a *pwaligner) fillMatrix_SW() (err error) {
 	var l1, l2 int
-	var c1, c2 rune
+	var c1, c2 uint8
 	var indexseq1, indexseq2 []int // convert characters to subst matrix positions
 
 	a.initMatrix(a.seq1.Length(), a.seq2.Length())
@@ -361,7 +361,7 @@ func (a *pwaligner) backTrack() {
 
 func (a *pwaligner) backTrack_SW() {
 	var i, j, ngaps int
-	var seq1, seq2, alistr []rune
+	var seq1, seq2, alistr []uint8
 	var gapscore float64
 
 	a.end1 = a.maxi
@@ -370,9 +370,9 @@ func (a *pwaligner) backTrack_SW() {
 	i = a.maxi
 	j = a.maxj
 
-	seq1 = make([]rune, 0, 20)
-	seq2 = make([]rune, 0, 20)
-	alistr = make([]rune, 0, 20)
+	seq1 = make([]uint8, 0, 20)
+	seq2 = make([]uint8, 0, 20)
+	alistr = make([]uint8, 0, 20)
 
 	for i >= 0 && j >= 0 {
 		switch a.trace[i][j] {
@@ -441,7 +441,7 @@ func (a *pwaligner) backTrack_SW() {
 }
 
 func (a *pwaligner) AlignmentStr() string {
-	alistr := make([]rune, 0, len(a.seq1ali)+len(a.alistr)+len(a.seq2ali)+3)
+	alistr := make([]uint8, 0, len(a.seq1ali)+len(a.alistr)+len(a.seq2ali)+3)
 	alistr = append(alistr, a.seq1ali...)
 	alistr = append(alistr, '\n')
 	alistr = append(alistr, a.alistr...)
@@ -451,11 +451,11 @@ func (a *pwaligner) AlignmentStr() string {
 	return string(alistr)
 }
 
-func (a *pwaligner) Seq1Ali() []rune {
+func (a *pwaligner) Seq1Ali() []uint8 {
 	return a.seq1ali
 }
 
-func (a *pwaligner) Seq2Ali() []rune {
+func (a *pwaligner) Seq2Ali() []uint8 {
 	return a.seq2ali
 }
 
@@ -480,7 +480,7 @@ func (a *pwaligner) seqToindices(s Sequence) (indices []int, err error) {
 
 	indices = make([]int, s.Length())
 	for i = 0; i < len(s.SequenceChar()); i++ {
-		indices[i], ok = a.chartopos[unicode.ToUpper(s.CharAt(i))]
+		indices[i], ok = a.chartopos[uint8(unicode.ToUpper(rune(s.CharAt(i))))]
 		if !ok {
 			err = fmt.Errorf("Character not part of alphabet : %c", s.CharAt(i))
 			return
@@ -489,7 +489,7 @@ func (a *pwaligner) seqToindices(s Sequence) (indices []int, err error) {
 	return
 }
 
-func (a *pwaligner) matchScore(c1, c2 rune, i1, i2 int) (score float64) {
+func (a *pwaligner) matchScore(c1, c2 uint8, i1, i2 int) (score float64) {
 	if a.submatrix != nil {
 		score = a.submatrix[i1][i2]
 	} else {

@@ -271,7 +271,7 @@ func (s *seq) NumMutationsComparedToReferenceSequence(alphabet int, refseq Seque
 		return
 	}
 
-	all := '.'
+	all := uint8('.')
 	if alphabet == NUCLEOTIDS {
 		refseqCode = make([]uint8, s.Length())
 		for i := 0; i < s.Length(); i++ {
@@ -358,7 +358,7 @@ func bufferTranslate(s *seq, phase int, code map[string]uint8, buffer *bytes.Buf
 			}
 			aa = aatmp
 		}
-		buffer.WriteRune(aa)
+		buffer.WriteRune(rune(aa))
 	}
 	return
 }

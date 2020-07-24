@@ -475,7 +475,7 @@ func (sb *seqbag) AutoAlphabet() {
 
 	sb.IterateChar(func(name string, seq []uint8) bool {
 		for _, nt := range seq {
-			nt = unicode.ToUpper(nt)
+			nt = uint8(unicode.ToUpper(rune(nt)))
 			couldbent := false
 			couldbeaa := false
 			switch nt {
@@ -509,13 +509,13 @@ func (sb *seqbag) CharStats() (chars map[uint8]int64) {
 
 	for _, seq := range sb.seqs {
 		for _, r := range seq.sequence {
-			present[unicode.ToUpper(r)]++
+			present[unicode.ToUpper(rune(r))]++
 		}
 	}
 
 	for i, r := range present {
 		if r > 0 {
-			chars[i] = int64(r)
+			chars[uint8(i)] = int64(r)
 		}
 	}
 
@@ -529,7 +529,7 @@ func (sb *seqbag) UniqueCharacters() (chars []uint8) {
 
 	for _, seq := range sb.seqs {
 		for _, r := range seq.sequence {
-			present[unicode.ToUpper(r)] = true
+			present[unicode.ToUpper(rune(r))] = true
 		}
 	}
 
@@ -555,7 +555,7 @@ func (sb *seqbag) CharStatsSeq(idx int) (outmap map[uint8]int, err error) {
 		err = fmt.Errorf("Sequence with id %d does not exist", idx)
 	} else {
 		for _, r := range seq {
-			outmap[unicode.ToUpper(r)]++
+			outmap[uint8(unicode.ToUpper(rune(r)))]++
 		}
 	}
 

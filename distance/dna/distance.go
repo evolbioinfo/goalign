@@ -521,7 +521,7 @@ func alignmentToCodes(al align.Alignment) (sequencesInCode [][]uint8, err error)
 	// Sequences coded in NT_A-NT_OTHER
 	sequencesInCode = make([][]uint8, al.NbSequences())
 	i = 0
-	al.IterateChar(func(name string, seq []rune) bool {
+	al.IterateChar(func(name string, seq []uint8) bool {
 		sequencesInCode[i] = make([]uint8, al.Length())
 		for l, r := range seq {
 			if sequencesInCode[i][l], err = align.Nt2IndexIUPAC(r); err != nil {
