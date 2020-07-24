@@ -1137,7 +1137,7 @@ func (a *align) InformativeSites() (sites []int) {
 	sites = make([]int, 0)
 	var count int
 	var nbinformative int
-	var mapstats map[rune]int
+	var mapstats []int
 
 	all := '.'
 	if a.Alphabet() == AMINOACIDS {
@@ -1148,16 +1148,17 @@ func (a *align) InformativeSites() (sites []int) {
 
 	for site := 0; site < a.Length(); site++ {
 		nbinformative = 0
-		mapstats = make(map[rune]int)
+		mapstats = make([]int, 130)
 		for _, seq := range a.seqs {
 			s := seq.sequence[site]
 			if s != GAP && s != POINT && s != all {
-				mapstats[unicode.ToUpper(seq.sequence[site])]++
-				if count, _ = mapstats[unicode.ToUpper(seq.sequence[site])]; count == 2 {
+				mapstats[int(unicode.ToUpper(seq.sequence[site]))]++
+				if count = mapstats[int(unicode.ToUpper(seq.sequence[site]))]; count == 2 {
 					nbinformative++
 				}
 				if nbinformative >= 2 {
 					sites = append(sites, site)
+					break
 				}
 			}
 		}

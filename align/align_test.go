@@ -2085,6 +2085,16 @@ func Test_align_InformativeSites(t *testing.T) {
 	a.AddSequence("E", "CCC-CCCCCCC", "")
 	atab = append(atab, a)
 
+	a = NewAlign(NUCLEOTIDS)
+	a.AddSequence("A", "AAAAA--AAAA", "")
+	a.AddSequence("B", "AAAAAAA--AA", "")
+	a.AddSequence("C", "AAAACCAAA--", "")
+	a.AddSequence("D", "CCC--CCCCCC", "")
+	a.AddSequence("E", "CCC-CCCCCCC", "")
+	a.AddSequence("D", "GCC--CCCCCC", "")
+	a.AddSequence("E", "GCC-CCCCCCC", "")
+	atab = append(atab, a)
+
 	tests := []struct {
 		name      string
 		fields    *align
@@ -2095,6 +2105,7 @@ func Test_align_InformativeSites(t *testing.T) {
 		{name: "2 informative", fields: atab[2], wantSites: []int{4, 5}},
 		{name: "Gaps no informative", fields: atab[3], wantSites: []int{}},
 		{name: "Gaps 9 informatives", fields: atab[4], wantSites: []int{0, 1, 2, 4, 6, 7, 8, 9, 10}},
+		{name: "Gaps 9 informatives /2", fields: atab[4], wantSites: []int{0, 1, 2, 4, 6, 7, 8, 9, 10}},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
