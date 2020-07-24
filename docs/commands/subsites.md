@@ -52,6 +52,8 @@ ACGA
 ACGA
 ```
 
+If `--informative` is given, only informative sites (parsimony definition) are selected. Informative sites are the positions that contain at least 2 different characters that occur at least twice each. This option has priority over the index based site selection above, `--ref-seq` is ignored and `--reverse` is still taken into account.
+
 In any case:
 ------------
 
@@ -65,6 +67,7 @@ Usage:
 
 Flags:
   -h, --help              help for subsites
+  --informative           Selects (~parsimony) informative sites
   -o, --output string     Alignment output file (default "stdout")
       --ref-seq string    Reference sequence on which coordinates are given (default "none")
   -r, --reverse           Take all but the given sites

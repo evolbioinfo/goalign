@@ -13,6 +13,7 @@ import (
 
 var subsitesout string = "stdout"
 var subsitesfile string
+var subsitesinformative bool
 var subsitesrefseq string
 var subsitesreverse bool
 
@@ -52,7 +53,13 @@ CGA
 >s2
 CGA
 
+If --informative is given, only informative sites (parsimony definition) are selected. 
+Informative sites are the positions that contain at least 2 different characters that occur
+at least twice each. This option has priority over the index based site selection above, 
+--ref-seq is ignored and --reverse is still taken into account.
+
 If --reverse is given, then will output all positions but the ones that should be output.
+
 `,
 	RunE: func(cmd *cobra.Command, args []string) (err error) {
 		var aligns *align.AlignChannel
@@ -69,30 +76,32 @@ If --reverse is given, then will output all positions but the ones that should b
 			return
 		}
 
-		refseq := cmd.Flags().Changed("ref-seq")
+		refseq := cmd.Flags().Changed("ref-seq") && !subsitesinformative
 
 		var sites []int
 
-		if subsitesfile != "none" {
-			if sites, err = parseIntFile(subsitesfile); err != nil {
-				io.LogError(err)
-				return
-			}
-		} else {
-			sites = make([]int, 0)
-			for _, s := range args {
-				if c, err = strconv.Atoi(s); err != nil {
+		if !subsitesinformative {
+			if subsitesfile != "none" {
+				if sites, err = parseIntFile(subsitesfile); err != nil {
 					io.LogError(err)
 					return
 				}
-				sites = append(sites, c)
+			} else {
+				sites = make([]int, 0)
+				for _, s := range args {
+					if c, err = strconv.Atoi(s); err != nil {
+						io.LogError(err)
+						return
+					}
+					sites = append(sites, c)
+				}
 			}
-		}
 
-		if len(sites) == 0 {
-			err = fmt.Errorf("No sites are provided")
-			io.LogError(err)
-			return
+			if len(sites) == 0 {
+				err = fmt.Errorf("No sites are provided")
+				io.LogError(err)
+				return
+			}
 		}
 
 		fileid := ""
@@ -101,7 +110,14 @@ If --reverse is given, then will output all positions but the ones that should b
 		name := subsitesout[0 : len(subsitesout)-len(extension)]
 
 		for al := range aligns.Achan {
-
+			if subsitesinformative {
+				sites = al.InformativeSites()
+				if len(sites) == 0 {
+					err = fmt.Errorf("No informative sites in the alignment")
+					io.LogError(err)
+					return
+				}
+			}
 			if filenum > 0 && subsitesout != "stdout" && subsitesout != "-" {
 				fileid = fmt.Sprintf("%s_al%d%s", name, filenum, extension)
 				f.Close()
@@ -144,6 +160,7 @@ func init() {
 	RootCmd.AddCommand(subsitesCmd)
 	subsitesCmd.PersistentFlags().StringVarP(&subsitesout, "output", "o", "stdout", "Alignment output file")
 	subsitesCmd.PersistentFlags().StringVar(&subsitesrefseq, "ref-seq", "none", "Reference sequence on which coordinates are given")
+	subsitesCmd.PersistentFlags().BoolVar(&subsitesinformative, "informative", false, "Selects (~parsimony) informative sites")
 	subsitesCmd.PersistentFlags().StringVar(&subsitesfile, "sitefile", "none", "File with positions of sites to select (one perline)")
 	subsitesCmd.PersistentFlags().BoolVarP(&subsitesreverse, "reverse", "r", false, "Take all but the given sites")
 }

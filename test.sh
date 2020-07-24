@@ -4412,6 +4412,38 @@ diff -q -b exp result
 rm -f input exp result 
 
 
+echo "->goalign subsite --informative"
+cat > input <<EOF
+>A
+AAAAA--AAAA
+>B
+AAAAAAA--AA
+>C
+AAAACCAAA--
+>D
+CCC--CCCCCC
+>E
+CCC-CCCCCCC
+EOF
+
+cat > expected <<EOF
+>A
+AAAA-AAAA
+>B
+AAAAA--AA
+>C
+AAACAAA--
+>D
+CCC-CCCCC
+>E
+CCCCCCCCC
+EOF
+
+${GOALIGN} subsites -i input --informative -o result
+diff -q -b expected result
+rm -f input expected result 
+
+
 echo "->goalign extract"
 cat > input.align <<EOF
 >s1

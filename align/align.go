@@ -48,6 +48,10 @@ type Alignment interface {
 	// if startinggapsasincomplete is true, then considers gaps as the beginning
 	// as incomplete sequence, then take the right phase
 	Frameshifts(startingGapsAsIncomplete bool) []struct{ Start, End int }
+	// Returns informative positions of the alignment. Informative positions
+	// are sites that contain at least two characters that occur at least twice each
+	// X, N and GAPS are not considered in this definition
+	InformativeSites() (sites []int)
 	// Positions of potential stop in frame
 	// if startinggapsasincomplete is true, then considers gaps as the beginning
 	// as incomplete sequence, then take the right phase
@@ -1122,6 +1126,43 @@ func (a *align) Frameshifts(startingGapsAsIncomplete bool) (fs []struct{ Start, 
 			}
 		}
 	}
+	return
+}
+
+// InformativeSites returns the indexes of informative positions of the alignment.
+// Informative positions are sites that contain at least two characters that
+// occur at least twice each.
+// X, N and GAPS are not considered in this definition
+func (a *align) InformativeSites() (sites []int) {
+	sites = make([]int, 0)
+	var count int
+	var nbinformative int
+	var mapstats map[rune]int
+
+	all := '.'
+	if a.Alphabet() == AMINOACIDS {
+		all = ALL_AMINO
+	} else if a.Alphabet() == NUCLEOTIDS {
+		all = ALL_NUCLE
+	}
+
+	for site := 0; site < a.Length(); site++ {
+		nbinformative = 0
+		mapstats = make(map[rune]int)
+		for _, seq := range a.seqs {
+			s := seq.sequence[site]
+			if s != GAP && s != POINT && s != all {
+				mapstats[unicode.ToUpper(seq.sequence[site])]++
+				if count, _ = mapstats[unicode.ToUpper(seq.sequence[site])]; count == 2 {
+					nbinformative++
+				}
+				if nbinformative >= 2 {
+					sites = append(sites, site)
+				}
+			}
+		}
+	}
+
 	return
 }
 
