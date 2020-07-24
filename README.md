@@ -379,7 +379,7 @@ func main() {
 ```
 * Iterating over alignment sequences
 ```go
-	align.IterateChar(func(name string, sequence []rune) {
+	align.IterateChar(func(name string, sequence []uint8) {
 		fmt.Printf("Sequence: %s\n", name)
 	})
 ```
