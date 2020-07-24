@@ -58,10 +58,10 @@ const (
 	NT_N     = NT_A | NT_C | NT_G | NT_T
 )
 
-var stdaminoacid = []rune{'A', 'R', 'N', 'D', 'C', 'Q', 'E', 'G', 'H', 'I', 'L', 'K', 'M', 'F', 'P', 'S', 'T', 'W', 'Y', 'V'}
-var stdnucleotides = []rune{'A', 'C', 'G', 'T'}
+var stdaminoacid = []uint8{'A', 'R', 'N', 'D', 'C', 'Q', 'E', 'G', 'H', 'I', 'L', 'K', 'M', 'F', 'P', 'S', 'T', 'W', 'Y', 'V'}
+var stdnucleotides = []uint8{'A', 'C', 'G', 'T'}
 
-var standardcode = map[string]rune{
+var standardcode = map[string]uint8{
 	"---": '-',
 	"GCT": 'A', "GCC": 'A', "GCA": 'A', "GCG": 'A',
 	"TTA": 'L', "TTG": 'L', "CTT": 'L', "CTC": 'L', "CTA": 'L', "CTG": 'L',
@@ -86,7 +86,7 @@ var standardcode = map[string]rune{
 	"TAA": '*', "TGA": '*', "TAG": '*',
 }
 
-var vertebratemitocode = map[string]rune{
+var vertebratemitocode = map[string]uint8{
 	"---": '-',
 	"GCT": 'A', "GCC": 'A', "GCA": 'A', "GCG": 'A',
 	"TTA": 'L', "TTG": 'L', "CTT": 'L', "CTC": 'L', "CTA": 'L', "CTG": 'L',
@@ -111,7 +111,7 @@ var vertebratemitocode = map[string]rune{
 	"AGA": '*', "AGG": '*', "TAA": '*', "TAG": '*',
 }
 
-var invertebratemitocode = map[string]rune{
+var invertebratemitocode = map[string]uint8{
 	"---": '-',
 	"GCT": 'A', "GCC": 'A', "GCA": 'A', "GCG": 'A',
 	"TTA": 'L', "TTG": 'L', "CTT": 'L', "CTC": 'L', "CTA": 'L', "CTG": 'L',
@@ -136,7 +136,7 @@ var invertebratemitocode = map[string]rune{
 	"TAA": '*', "TAG": '*',
 }
 
-func geneticCode(code int) (gencode map[string]rune, err error) {
+func geneticCode(code int) (gencode map[string]uint8, err error) {
 	switch code {
 	case GENETIC_CODE_STANDARD:
 		gencode = standardcode
@@ -154,7 +154,7 @@ func geneticCode(code int) (gencode map[string]rune, err error) {
 // conservation line
 //
 // Taken from Clustalw source code
-var strongGroups = [][]rune{
+var strongGroups = [][]uint8{
 	{'S', 'T', 'A'},
 	{'N', 'E', 'Q', 'K'},
 	{'N', 'H', 'Q', 'K'},
@@ -170,7 +170,7 @@ var strongGroups = [][]rune{
 // conservation line
 //
 // Taken from Clustalw source code
-var weakGroups = [][]rune{
+var weakGroups = [][]uint8{
 	{'C', 'S', 'A'},
 	{'A', 'T', 'V'},
 	{'S', 'A', 'G'},
@@ -184,7 +184,7 @@ var weakGroups = [][]rune{
 	{'H', 'F', 'Y'},
 }
 
-var dna_to_matrix_pos = map[rune]int{
+var dna_to_matrix_pos = map[uint8]int{
 	'A': 0,
 	'T': 1,
 	'G': 2,
@@ -205,7 +205,7 @@ var dna_to_matrix_pos = map[rune]int{
 }
 
 // Map between nt and its code
-var iupacToInt = map[rune]uint8{
+var iupacToInt = map[uint8]uint8{
 	'A': NT_A,
 	'C': NT_C,
 	'G': NT_G,
@@ -227,7 +227,7 @@ var iupacToInt = map[rune]uint8{
 	'.': NT_OTHER,
 }
 
-var IupacCode = map[rune][]rune{
+var IupacCode = map[uint8][]uint8{
 	'A': {'A'},
 	'C': {'C'},
 	'G': {'G'},
@@ -294,7 +294,7 @@ var dnafull_subst_matrix = [][]float64{
 	[]float64{-4, 5, -4, -4, -4, 1, -4, 1, 1, -4, -1, -4, -1, -1, -2, 5},
 }
 
-var prot_to_matrix_pos = map[rune]int{
+var prot_to_matrix_pos = map[uint8]int{
 	'A': 0,
 	'R': 1,
 	'N': 2,
@@ -356,7 +356,7 @@ var blosum62_subst_matrix = [][]float64{
 	[]float64{-4, -4, -4, -4, -4, -4, -4, -4, -4, -4, -4, -4, -4, -4, -4, -4, -4, -4, -4, -4, -4, -4, -4, 1},
 }
 
-var complement_nuc_mapping = map[rune]rune{
+var complement_nuc_mapping = map[uint8]uint8{
 	'A': 'T',
 	'T': 'A',
 	'U': 'A',
@@ -382,7 +382,7 @@ C=1
 G=2
 T=3
 */
-func Nt2Index(nt rune) (idx int, err error) {
+func Nt2Index(nt uint8) (idx int, err error) {
 	switch unicode.ToUpper(nt) {
 	case 'A':
 		idx = NT_A
@@ -411,10 +411,10 @@ func PossibleNtIUPAC(nt uint8) (idx []uint8, err error) {
 
 /*
 Returns the int code of the given nucleotide.
-It takes the upper case of the given rune.
+It takes the upper case of the given uint8.
 Ex: 'B': NT_B
 */
-func Nt2IndexIUPAC(nt rune) (idx uint8, err error) {
+func Nt2IndexIUPAC(nt uint8) (idx uint8, err error) {
 	var ok bool
 	if idx, ok = iupacToInt[unicode.ToUpper(nt)]; !ok {
 		err = fmt.Errorf("No index for character: %c", nt)
@@ -429,7 +429,7 @@ Returns the index of each nts
 2=G
 3=T
 */
-func Index2Nt(index int) (nt rune, err error) {
+func Index2Nt(index int) (nt uint8, err error) {
 	if index < 0 || index > len(stdnucleotides) {
 		err = fmt.Errorf("No nt for index %d", index)
 	}
@@ -437,7 +437,7 @@ func Index2Nt(index int) (nt rune, err error) {
 	return
 }
 
-func AA2Index(aa rune) (idx int, err error) {
+func AA2Index(aa uint8) (idx int, err error) {
 	switch unicode.ToUpper(aa) {
 	case 'A':
 		idx = 0
@@ -485,7 +485,7 @@ func AA2Index(aa rune) (idx int, err error) {
 	return
 }
 
-func Index2AA(index int) (aa rune, err error) {
+func Index2AA(index int) (aa uint8, err error) {
 	if index < 0 || index > len(stdaminoacid) {
 		err = errors.New(fmt.Sprintf("No aa for index %d", index))
 	}

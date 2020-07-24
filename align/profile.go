@@ -9,7 +9,7 @@ import (
 // each position of an alignment
 type CountProfile struct {
 	names  []int   // mapping between character and index. names uses utf8 int value to store indexes names[int(r)]=index
-	header []rune  // characters in the count table, similar to prev map
+	header []uint8 // characters in the count table, similar to prev map
 	counts [][]int // first dimension: len(head), second dimension; nb sites in the underlying alignment
 }
 
@@ -82,7 +82,7 @@ func (p *CountProfile) NameIndex(r rune) (index int, ok bool) {
 }
 
 // Count returns the number of occurences of the character r at the position site
-func (p *CountProfile) Count(r rune, site int) (count int, err error) {
+func (p *CountProfile) Count(r uint8, site int) (count int, err error) {
 	var index int
 	count = 0
 	if index = p.names[int(r)]; index < 0 {
@@ -128,7 +128,7 @@ func (p *CountProfile) CheckLength(length int) bool {
 }
 
 // SetHeader sets the Header and initializes the count structure
-func (p *CountProfile) SetHeader(header []rune) {
+func (p *CountProfile) SetHeader(header []uint8) {
 	p.header = header
 	p.counts = make([][]int, len(p.header))
 	for i, r := range header {

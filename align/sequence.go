@@ -13,9 +13,9 @@ import (
 
 type Sequence interface {
 	Sequence() string
-	SequenceChar() []rune
-	SameSequence([]rune) bool
-	CharAt(int) rune
+	SequenceChar() []uint8
+	SameSequence([]uint8) bool
+	CharAt(int) uint8
 	Name() string
 	SetName(name string)
 	Comment() string
@@ -39,12 +39,12 @@ type Sequence interface {
 }
 
 type seq struct {
-	name     string // Name of the sequence
-	sequence []rune // Sequence of nucleotides/aa
-	comment  string // Comment if any
+	name     string  // Name of the sequence
+	sequence []uint8 // Sequence of nucleotides/aa
+	comment  string  // Comment if any
 }
 
-func NewSequence(name string, sequence []rune, comment string) *seq {
+func NewSequence(name string, sequence []uint8, comment string) *seq {
 	return &seq{
 		name,
 		sequence,
@@ -55,16 +55,16 @@ func NewSequence(name string, sequence []rune, comment string) *seq {
 func (s *seq) Sequence() string {
 	return string(s.sequence)
 }
-func (s *seq) SequenceChar() []rune {
+func (s *seq) SequenceChar() []uint8 {
 	return s.sequence
 }
 
 /*
 Returns true iif :
 - slices have the same length and
-- slices have same rune at each position
+- slices have same uint8 at each position
 */
-func (s *seq) SameSequence(runeseq []rune) bool {
+func (s *seq) SameSequence(runeseq []uint8) bool {
 	if len(s.sequence) != len(runeseq) {
 		return false
 	}
@@ -76,7 +76,7 @@ func (s *seq) SameSequence(runeseq []rune) bool {
 	return true
 }
 
-func (s *seq) CharAt(i int) rune {
+func (s *seq) CharAt(i int) uint8 {
 	return s.sequence[i]
 }
 
@@ -121,8 +121,8 @@ func (s *seq) LongestORF() (start, end int) {
 	return start, end
 }
 
-func RandomSequence(alphabet, length int) ([]rune, error) {
-	seq := make([]rune, length)
+func RandomSequence(alphabet, length int) ([]uint8, error) {
+	seq := make([]uint8, length)
 	for i := 0; i < length; i++ {
 		switch alphabet {
 		case AMINOACIDS:
@@ -137,7 +137,7 @@ func RandomSequence(alphabet, length int) ([]rune, error) {
 }
 
 // Reverses a sequence
-func Reverse(seq []rune) {
+func Reverse(seq []uint8) {
 	for i, j := 0, len(seq)-1; i < j; i, j = i+1, j-1 {
 		seq[i], seq[j] = seq[j], seq[i]
 	}
@@ -149,7 +149,7 @@ func (s *seq) Reverse() {
 }
 
 // Complement sequence
-func Complement(seq []rune) (err error) {
+func Complement(seq []uint8) (err error) {
 
 	for i, n := range seq {
 		c, ok := complement_nuc_mapping[n]
@@ -176,7 +176,7 @@ func (s *seq) DetectAlphabet() int {
 	isnt := true
 
 	for _, nt := range s.sequence {
-		nt = unicode.ToUpper(nt)
+		nt = uint8(unicode.ToUpper(rune(nt)))
 		couldbent := false
 		couldbeaa := false
 		switch nt {
@@ -217,7 +217,7 @@ func (s *seq) NumGaps() (numgaps int) {
 //NumGapsOpenning returns the number of Gaps on the given sequence
 func (s *seq) NumGapsOpenning() (numgaps int) {
 	numgaps = 0
-	var prevChar rune = '>'
+	var prevChar uint8 = '>'
 	for _, c := range s.sequence {
 		if c == GAP && prevChar != GAP {
 			numgaps++
@@ -309,7 +309,7 @@ func (s *seq) NumMutationsComparedToReferenceSequence(alphabet int, refseq Seque
 // If sequence length is < 3+phase then thropws an error
 func (s *seq) Translate(phase int, geneticcode int) (tr Sequence, err error) {
 	var buffer bytes.Buffer
-	var code map[string]rune
+	var code map[string]uint8
 
 	if code, err = geneticCode(geneticcode); err != nil {
 		return
@@ -319,11 +319,11 @@ func (s *seq) Translate(phase int, geneticcode int) (tr Sequence, err error) {
 		return
 	}
 
-	tr = NewSequence(s.name, []rune(buffer.String()), s.comment)
+	tr = NewSequence(s.name, []uint8(buffer.String()), s.comment)
 	return
 }
 
-func bufferTranslate(s *seq, phase int, code map[string]rune, buffer *bytes.Buffer) (err error) {
+func bufferTranslate(s *seq, phase int, code map[string]uint8, buffer *bytes.Buffer) (err error) {
 	buffer.Reset()
 	if s.DetectAlphabet() != NUCLEOTIDS && s.DetectAlphabet() != BOTH {
 		err = fmt.Errorf("Cannot translate this sequence, wrong alphabet")
@@ -335,8 +335,8 @@ func bufferTranslate(s *seq, phase int, code map[string]rune, buffer *bytes.Buff
 		return
 	}
 	for i := phase; i < len(s.sequence)-2; i += 3 {
-		var aa rune = ' '
-		var aatmp rune = ' '
+		var aa uint8 = ' '
+		var aatmp uint8 = ' '
 		var found bool = false
 		// We handle possible IUPAC characters
 		codons := GenAllPossibleCodons(s.sequence[i], s.sequence[i+1], s.sequence[i+2])
@@ -364,7 +364,7 @@ func bufferTranslate(s *seq, phase int, code map[string]rune, buffer *bytes.Buff
 }
 
 func (s *seq) Clone() Sequence {
-	seq2 := make([]rune, len(s.sequence))
+	seq2 := make([]uint8, len(s.sequence))
 	copy(seq2, s.sequence)
 	return NewSequence(s.name, seq2, s.comment)
 }
@@ -378,18 +378,18 @@ func (s *seq) Clone() Sequence {
 //
 // For example GenAllPossibleCodons('A','G','N') should return
 // {"AGA","AGC","AGG","AGT"}.
-func GenAllPossibleCodons(nt1, nt2, nt3 rune) (codons []string) {
-	var nt rune
+func GenAllPossibleCodons(nt1, nt2, nt3 uint8) (codons []string) {
+	var nt uint8
 	var codontmp string
-	var nts1, nts2, nts3 []rune // possible nts for each nt
+	var nts1, nts2, nts3 []uint8 // possible nts for each nt
 	var found bool
 
 	codons = make([]string, 0)
 	codonstmp := make([]string, 0)
 
-	nt1 = unicode.ToUpper(nt1)
-	nt2 = unicode.ToUpper(nt2)
-	nt3 = unicode.ToUpper(nt3)
+	nt1 = uint8(unicode.ToUpper(rune(nt1)))
+	nt2 = uint8(unicode.ToUpper(rune(nt2)))
+	nt3 = uint8(unicode.ToUpper(rune(nt3)))
 
 	if nt1 == 'U' {
 		nt1 = 'T'

@@ -18,16 +18,16 @@ import (
 // SeqBag represents a set of unaligned sequences
 type SeqBag interface {
 	AddSequence(name string, sequence string, comment string) error
-	AddSequenceChar(name string, sequence []rune, comment string) error
+	AddSequenceChar(name string, sequence []uint8, comment string) error
 	AppendSeqIdentifier(identifier string, right bool)
 	Alphabet() int
 	AlphabetStr() string
-	AlphabetCharacters() []rune
-	AlphabetCharToIndex(c rune) int // Returns index of the character (nt or aa) in the AlphabetCharacters() array
-	AutoAlphabet()                  // detects and sets alphabet automatically for all the sequences
-	CharStats() map[rune]int64
-	UniqueCharacters() []rune
-	CharStatsSeq(idx int) (map[rune]int, error)     // Computes frequency of characters for the given sequence
+	AlphabetCharacters() []uint8
+	AlphabetCharToIndex(c uint8) int // Returns index of the character (nt or aa) in the AlphabetCharacters() array
+	AutoAlphabet()                   // detects and sets alphabet automatically for all the sequences
+	CharStats() map[uint8]int64
+	UniqueCharacters() []uint8
+	CharStatsSeq(idx int) (map[uint8]int, error)    // Computes frequency of characters for the given sequence
 	CleanNames(namemap map[string]string)           // Clean sequence names (newick special char)
 	Clear()                                         // Removes all sequences
 	CloneSeqBag() (seqs SeqBag, err error)          // Clones the seqqbag
@@ -35,19 +35,19 @@ type SeqBag interface {
 	FilterLength(minlength, maxlength int) error    // Remove sequences whose length is <minlength or >maxlength
 	GetSequence(name string) (string, bool)         // Get a sequence by names
 	GetSequenceById(ith int) (string, bool)
-	GetSequenceChar(name string) ([]rune, bool)
-	GetSequenceCharById(ith int) ([]rune, bool)
+	GetSequenceChar(name string) ([]uint8, bool)
+	GetSequenceCharById(ith int) ([]uint8, bool)
 	GetSequenceNameById(ith int) (string, bool)
 	GetSequenceByName(name string) (Sequence, bool)
-	SetSequenceChar(ithAlign, ithSite int, char rune) error
+	SetSequenceChar(ithAlign, ithSite int, char uint8) error
 	IgnoreIdentical(bool)                // if true, then it won't add the sequence if a sequence with the same name AND same sequence exists
 	SampleSeqBag(nb int) (SeqBag, error) // generate a sub sample of the sequences
 	Sequence(ith int) (Sequence, bool)
 	SequenceByName(name string) (Sequence, bool)
 	Identical(SeqBag) bool
 	Iterate(it func(name string, sequence string) bool)
-	IterateChar(it func(name string, sequence []rune) bool)
-	IterateAll(it func(name string, sequence []rune, comment string) bool)
+	IterateChar(it func(name string, sequence []uint8) bool)
+	IterateAll(it func(name string, sequence []uint8, comment string) bool)
 	Sequences() []Sequence
 	SequencesChan() chan Sequence
 	LongestORF(reverse bool) (orf Sequence, err error)
@@ -119,13 +119,13 @@ func (sb *seqbag) sampleSeqBag(nb int) (*seqbag, error) {
 
 // Adds a sequence to this alignment
 func (sb *seqbag) AddSequence(name string, sequence string, comment string) error {
-	err := sb.AddSequenceChar(name, []rune(sequence), comment)
+	err := sb.AddSequenceChar(name, []uint8(sequence), comment)
 	return err
 }
 
 // If sb.ignoreidentical is true, then it won't add the sequence if a sequence with the same name AND same sequence
 // already exists in the alignment
-func (sb *seqbag) AddSequenceChar(name string, sequence []rune, comment string) error {
+func (sb *seqbag) AddSequenceChar(name string, sequence []uint8, comment string) error {
 	s, ok := sb.seqmap[name]
 	idx := 0
 	tmpname := name
@@ -180,7 +180,7 @@ func (sb *seqbag) AlphabetStr() string {
 	}
 }
 
-func (sb *seqbag) AlphabetCharacters() (alphabet []rune) {
+func (sb *seqbag) AlphabetCharacters() (alphabet []uint8) {
 	if sb.Alphabet() == AMINOACIDS {
 		return stdaminoacid
 	} else {
@@ -190,7 +190,7 @@ func (sb *seqbag) AlphabetCharacters() (alphabet []rune) {
 
 // Returns index of the character (nt or aa) in the AlphabetCharacters() array
 // If character does not exist or alphabet is unkown, then returns -1
-func (sb *seqbag) AlphabetCharToIndex(c rune) int {
+func (sb *seqbag) AlphabetCharToIndex(c uint8) int {
 	switch sb.Alphabet() {
 	case AMINOACIDS:
 		if c, err := AA2Index(c); err != nil {
@@ -235,8 +235,8 @@ func (sb *seqbag) CloneSeqBag() (SeqBag, error) {
 	c := NewSeqBag(sb.Alphabet())
 	c.IgnoreIdentical(sb.ignoreidentical)
 	var err error
-	sb.IterateAll(func(name string, sequence []rune, comment string) bool {
-		newseq := make([]rune, 0, len(sequence))
+	sb.IterateAll(func(name string, sequence []uint8, comment string) bool {
+		newseq := make([]uint8, 0, len(sequence))
 		newseq = append(newseq, sequence...)
 		err = c.AddSequenceChar(name, newseq, comment)
 		return err != nil
@@ -325,7 +325,7 @@ func (sb *seqbag) GetSequenceById(ith int) (string, bool) {
 
 // If ith >=0 && i < nbSequences() return sequence,true
 // Otherwise, return nil, false
-func (sb *seqbag) GetSequenceCharById(ith int) ([]rune, bool) {
+func (sb *seqbag) GetSequenceCharById(ith int) ([]uint8, bool) {
 	if ith >= 0 && ith < sb.NbSequences() {
 		return sb.seqs[ith].SequenceChar(), true
 	}
@@ -334,7 +334,7 @@ func (sb *seqbag) GetSequenceCharById(ith int) ([]rune, bool) {
 
 // If sequence exists in alignment, return sequence, true
 // Otherwise, return nil,false
-func (sb *seqbag) GetSequenceChar(name string) ([]rune, bool) {
+func (sb *seqbag) GetSequenceChar(name string) ([]uint8, bool) {
 	seq, ok := sb.seqmap[name]
 	if ok {
 		return seq.SequenceChar(), ok
@@ -376,7 +376,7 @@ func (sb *seqbag) NbSequences() int {
 	return len(sb.seqs)
 }
 
-func (sb *seqbag) SetSequenceChar(ithAlign, ithSite int, char rune) error {
+func (sb *seqbag) SetSequenceChar(ithAlign, ithSite int, char uint8) error {
 	if ithAlign < 0 || ithAlign >= sb.NbSequences() {
 		return errors.New("Sequence index is > number of sequences")
 	}
@@ -422,7 +422,7 @@ func (sb *seqbag) Iterate(it func(name string, sequence string) bool) {
 	}
 }
 
-func (sb *seqbag) IterateChar(it func(name string, sequence []rune) bool) {
+func (sb *seqbag) IterateChar(it func(name string, sequence []uint8) bool) {
 	var stop bool = false
 	for _, seq := range sb.seqs {
 		if stop = it(seq.name, seq.sequence); stop {
@@ -431,7 +431,7 @@ func (sb *seqbag) IterateChar(it func(name string, sequence []rune) bool) {
 	}
 }
 
-func (sb *seqbag) IterateAll(it func(name string, sequence []rune, comment string) bool) {
+func (sb *seqbag) IterateAll(it func(name string, sequence []uint8, comment string) bool) {
 	var stop bool = false
 	for _, seq := range sb.seqs {
 		if stop = it(seq.name, seq.sequence, seq.comment); stop {
@@ -460,7 +460,7 @@ func (sb *seqbag) SequencesChan() (seqs chan Sequence) {
 }
 
 /* It appends the given sequence to the sequence having given name */
-func (sb *seqbag) appendToSequence(name string, sequence []rune) error {
+func (sb *seqbag) appendToSequence(name string, sequence []uint8) error {
 	seq, ok := sb.seqmap[name]
 	if !ok {
 		return fmt.Errorf("Sequence with name %s does not exist in alignment", name)
@@ -473,7 +473,7 @@ func (sb *seqbag) AutoAlphabet() {
 	isaa := true
 	isnt := true
 
-	sb.IterateChar(func(name string, seq []rune) bool {
+	sb.IterateChar(func(name string, seq []uint8) bool {
 		for _, nt := range seq {
 			nt = unicode.ToUpper(nt)
 			couldbent := false
@@ -503,8 +503,8 @@ func (sb *seqbag) AutoAlphabet() {
 }
 
 // Returns the distribution of all characters
-func (sb *seqbag) CharStats() (chars map[rune]int64) {
-	chars = make(map[rune]int64)
+func (sb *seqbag) CharStats() (chars map[uint8]int64) {
+	chars = make(map[uint8]int64)
 	present := make([]int, 130)
 
 	for _, seq := range sb.seqs {
@@ -515,7 +515,7 @@ func (sb *seqbag) CharStats() (chars map[rune]int64) {
 
 	for i, r := range present {
 		if r > 0 {
-			chars[rune(i)] = int64(r)
+			chars[i] = int64(r)
 		}
 	}
 
@@ -523,8 +523,8 @@ func (sb *seqbag) CharStats() (chars map[rune]int64) {
 }
 
 // Returns the distribution of all characters
-func (sb *seqbag) UniqueCharacters() (chars []rune) {
-	chars = make([]rune, 0, 40)
+func (sb *seqbag) UniqueCharacters() (chars []uint8) {
+	chars = make([]uint8, 0, 40)
 	present := make([]bool, 130)
 
 	for _, seq := range sb.seqs {
@@ -535,7 +535,7 @@ func (sb *seqbag) UniqueCharacters() (chars []rune) {
 
 	for i, r := range present {
 		if r {
-			chars = append(chars, rune(i))
+			chars = append(chars, uint8(i))
 		}
 	}
 
@@ -545,11 +545,11 @@ func (sb *seqbag) UniqueCharacters() (chars []rune) {
 // CharStatsSeq Returns the frequency of all characters in the sequence
 // identified by the given index.
 // If the sequence with the given index does not exist, then returns an error
-func (sb *seqbag) CharStatsSeq(idx int) (outmap map[rune]int, err error) {
-	var seq []rune
+func (sb *seqbag) CharStatsSeq(idx int) (outmap map[uint8]int, err error) {
+	var seq []uint8
 	var ok bool
 
-	outmap = make(map[rune]int)
+	outmap = make(map[uint8]int)
 
 	if seq, ok = sb.GetSequenceCharById(idx); !ok {
 		err = fmt.Errorf("Sequence with id %d does not exist", idx)
@@ -673,7 +673,7 @@ func (sb *seqbag) rarefySeqBag(nb int, counts map[string]int) (sample *seqbag, e
 	}
 
 	sample = NewSeqBag(sb.alphabet)
-	sb.IterateAll(func(name string, sequence []rune, comment string) bool {
+	sb.IterateAll(func(name string, sequence []uint8, comment string) bool {
 		if _, ok := selected[name]; ok {
 			sample.AddSequenceChar(name, sequence, comment)
 		}
@@ -739,13 +739,13 @@ func (sb *seqbag) Replace(old, new string, regex bool) (err error) {
 			return err
 		}
 		for seq := 0; seq < sb.NbSequences(); seq++ {
-			newseq := []rune(r.ReplaceAllString(string(sb.seqs[seq].sequence), new))
+			newseq := []uint8(r.ReplaceAllString(string(sb.seqs[seq].sequence), new))
 			sb.seqs[seq].sequence = newseq
 		}
 	} else {
 		for seq := 0; seq < sb.NbSequences(); seq++ {
 			newseq := strings.Replace(string(sb.seqs[seq].sequence), old, new, -1)
-			sb.seqs[seq].sequence = []rune(newseq)
+			sb.seqs[seq].sequence = []uint8(newseq)
 		}
 	}
 	return nil
@@ -785,7 +785,7 @@ func (sb *seqbag) Translate(phase int, geneticcode int) (err error) {
 	var firststart, laststart int
 	var name string
 	var suffix bool
-	var code map[string]rune
+	var code map[string]uint8
 
 	if code, err = geneticCode(geneticcode); err != nil {
 		return
