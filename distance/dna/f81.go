@@ -31,11 +31,11 @@ func NewF81Model(removegaps bool) *F81Model {
 	}
 }
 
-/* computes F81 distance between 2 sequences */
+// Distance computes F81 distance between 2 sequences
 func (m *F81Model) Distance(seq1 []uint8, seq2 []uint8, weights []float64) (float64, error) {
 	var dist float64
 
-	diff, total := countDiffs(seq1, seq2, m.selectedSites, weights)
+	diff, total := countDiffs(seq1, seq2, m.selectedSites, weights, false)
 	diff = diff / total
 
 	if m.gamma {

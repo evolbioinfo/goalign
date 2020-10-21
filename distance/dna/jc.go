@@ -27,10 +27,10 @@ func NewJCModel(removegaps bool) *JCModel {
 	}
 }
 
-/* computes JC69 distance between 2 sequences */
+// Distance computes JC69 distance between 2 sequences
 func (m *JCModel) Distance(seq1 []uint8, seq2 []uint8, weights []float64) (float64, error) {
 	var dist float64
-	diff, total := countDiffs(seq1, seq2, m.selectedSites, weights)
+	diff, total := countDiffs(seq1, seq2, m.selectedSites, weights, false)
 	diff = diff / total
 	b := 1. - 4.*diff/3.
 	if m.gamma {

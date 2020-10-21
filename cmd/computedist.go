@@ -24,6 +24,7 @@ var computedistRemoveGaps bool
 var computedistAverage bool
 var computedistAlpha float64
 var computedistCountGaps int
+var computedistRemoveAmbiguous bool
 
 // computedistCmd represents the computedist command
 var computedistCmd = &cobra.Command{
@@ -50,6 +51,15 @@ Proteins:
 - MtRev 
 - LG
 - WAG
+
+For nucleotides, differences are generally counted if nucleotides are incompatible.
+For example R and Y will give a difference; N and A will not give a difference.
+
+If distance is pdist (nucleotides), then giving the option --rm-ambiguous will not take into 
+account ambiguous positions that are compatible in length normalization.
+For example if --rm-ambiguous is given, then R vs. Y will be taken into account
+because there is a difference. And N vs. A won't be taken into account in total length
+because we are not sure whether they are identical.
 
 For example:
 
@@ -113,6 +123,7 @@ if -a is given: display only the average distance
 				model = m
 			case "pdist":
 				m := dna.NewPDistModel(computedistRemoveGaps)
+				m.SetRemoveAmbiguous(computedistRemoveAmbiguous)
 				if err = m.SetCountGapMutations(computedistCountGaps); err != nil {
 					io.LogError(err)
 					return
@@ -158,6 +169,7 @@ func init() {
 	computedistCmd.PersistentFlags().StringVarP(&computedistModel, "model", "m", "k2p", "Model for distance computation")
 	computedistCmd.PersistentFlags().BoolVarP(&computedistRemoveGaps, "rm-gaps", "r", false, "Do not take into account positions containing >=1 gaps")
 	computedistCmd.PersistentFlags().IntVar(&computedistCountGaps, "gap-mut", 0, "Count gaps to nt as mutations: 0: inactivated, 1: only internal gaps, 2: all gaps. Only available for rawdist and pdist (nt)")
+	computedistCmd.PersistentFlags().BoolVar(&computedistRemoveAmbiguous, "rm-ambiguous", false, "if true, ambiguous positions are removed for the normalisation by the length in case of non different positions. Only available for pdist (nt)")
 	computedistCmd.PersistentFlags().BoolVarP(&computedistAverage, "average", "a", false, "Compute only the average distance between all pairs of sequences")
 	computedistCmd.PersistentFlags().Float64Var(&computedistAlpha, "alpha", 0.0, "Gamma alpha parameter, if not given : no gamma")
 }

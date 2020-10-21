@@ -14,8 +14,14 @@ type PDistModel struct {
 	// If 1, will count as 1 mutation '-' to 'A"
 	// If 2, will count as 1 mutation '-' to 'A", but only the internal
 	// Default 0
-	countgapmut   int
-	sequenceCodes [][]uint8 // Sequences converted into int codes
+	countgapmut int
+	// if true, we remove ambiguous positions for the normalisation by the length
+	// default false
+	// for example:
+	// N vs. A : position not taken into account (can not decide wether there is a difference)
+	// R vs. Y : position taken into account (we know there is a difference)
+	removeAmbiguous bool
+	sequenceCodes   [][]uint8 // Sequences converted into int codes
 }
 
 func NewPDistModel(removegaps bool) *PDistModel {
@@ -24,6 +30,7 @@ func NewPDistModel(removegaps bool) *PDistModel {
 		nil,
 		removegaps,
 		0,
+		false,
 		nil,
 	}
 }
@@ -37,16 +44,26 @@ func (m *PDistModel) SetCountGapMutations(countgapmut int) (err error) {
 	return
 }
 
+// SetRemoveAmbiguous sets removeAmbiguous model variable
+// if true, ambiguous positions are removed for the normalisation by the length
+// for example:
+// N vs. A : position not taken into account in length (can not decide wether there is a difference)
+// R vs. Y : position taken into account in length (we know there is a difference)
+func (m *PDistModel) SetRemoveAmbiguous(removeAmbiguous bool) {
+	m.removeAmbiguous = removeAmbiguous
+	return
+}
+
 /* computes p-distance between 2 sequences */
 func (m *PDistModel) Distance(seq1 []uint8, seq2 []uint8, weights []float64) (diff float64, err error) {
 	var total float64
 	switch m.countgapmut {
 	case GAP_COUNT_ALL:
-		diff, total = countDiffsWithGaps(seq1, seq2, m.selectedSites, weights)
+		diff, total = countDiffsWithGaps(seq1, seq2, m.selectedSites, weights, m.removeAmbiguous)
 	case GAP_COUNT_INTERNAL:
-		diff, total = countDiffsWithInternalGaps(seq1, seq2, m.selectedSites, weights)
+		diff, total = countDiffsWithInternalGaps(seq1, seq2, m.selectedSites, weights, m.removeAmbiguous)
 	default:
-		diff, total = countDiffs(seq1, seq2, m.selectedSites, weights)
+		diff, total = countDiffs(seq1, seq2, m.selectedSites, weights, m.removeAmbiguous)
 	}
 	diff = diff / total
 	return

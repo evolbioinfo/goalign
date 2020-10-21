@@ -28,9 +28,9 @@ func NewTN82Model(removegaps bool) *TN82Model {
 	}
 }
 
-/* computes TN82 distance between 2 sequences */
+// Distance computes TN82 distance between 2 sequences
 func (m *TN82Model) Distance(seq1 []uint8, seq2 []uint8, weights []float64) (float64, error) {
-	diff, total := countDiffs(seq1, seq2, m.selectedSites, weights)
+	diff, total := countDiffs(seq1, seq2, m.selectedSites, weights, false)
 	diff = diff / total
 
 	psi := init2DFloat(4, 4)

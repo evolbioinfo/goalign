@@ -12,8 +12,13 @@ This command implements different computations:
     - f81     : Felsenstein 81
     - f84     : Felsenstein 84
     - tn93    : Tamura and Nei 1993
+  If distance is pdist (nucleotides), then giving the option --rm-ambiguous will not take into 
+  account ambiguous positions that compatible, for length normalization.
+  For example if --rm-ambiguous is given, then R vs. Y will be taken into account
+  because there is a difference. And N vs. A won't be taken into account in total length
+  because we are not sure whether they are identical.
 2. `goalign compute entropy`: Computes the entropy of each sites of the input alignment or the average entropy of all sites (`-a` option).
-2. `goalign compute pssm`: Computes and prints a Position specific scoring matrix. Different kind of matrices may be computed, depending on `-n` option:
+3. `goalign compute pssm`: Computes and prints a Position specific scoring matrix. Different kind of matrices may be computed, depending on `-n` option:
     - `-n 0` : None, means raw counts
     - `-n 1` : By column frequency, i.e. frequency of nt/aa per site/column
     - `-n 2` : By column frequency compared to alignment frequency: same as -n 1, but divides by frequency of the nt/aa in the whole alignment

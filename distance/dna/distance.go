@@ -242,60 +242,83 @@ func countMutations(seq1 []uint8, seq2 []uint8, selectedSites []bool, weights []
 	return
 }
 
-/* Count number of mutations and associate a weight to them */
-func countDiffs(seq1 []uint8, seq2 []uint8, selectedSites []bool, weights []float64) (nbdiffs float64, total float64) {
+// countDiffs Counts the number of mutations and associates a weight to them
+// if removeAmbiguous is true, ambiguous positions are removed for the normalisation by the length (only for pdist)
+// for example:
+// N vs. A : position not taken into account in length (can not decide wether there is a difference)
+// R vs. Y : position taken into account in length (we know there is a difference)
+func countDiffs(seq1 []uint8, seq2 []uint8, selectedSites []bool, weights []float64, removeAmbiguous bool) (nbdiffs float64, total float64) {
 	nbdiffs = 0.0
 	total = 0.0
+	diffweight := 0.0
+	diff := 0.0
+	w := 1.0
 	for i := 0; i < len(seq1); i++ {
-		w := 1.0
+		w = 1.0
+		diff = 0.0
 		if weights != nil {
 			w = weights[i]
 		}
 		if isNuc(seq1[i]) && isNuc(seq2[i]) && selectedSites[i] {
 			if seq1[i] != seq2[i] {
-				diff, _ := align.NtIUPACDifference(seq1[i], seq2[i])
-				diff = diff * w
-				nbdiffs += diff
+				diff, _ = align.NtIUPACDifference(seq1[i], seq2[i])
+				diffweight = diff * w
+				nbdiffs += diffweight
 			}
 			total += w
+			// If we remove ambiguous positions we cancel the current position in the total
+			if diff == 0 && removeAmbiguous && (isAmbiguous(seq1[i]) || isAmbiguous(seq2[i])) {
+				total -= w
+			}
 		}
 	}
 	return
 }
 
 /* Count number of mutations (including gaps to nt) */
-func countDiffsWithGaps(seq1, seq2 []uint8, selectedSites []bool, weights []float64) (nbdiffs float64, total float64) {
+func countDiffsWithGaps(seq1, seq2 []uint8, selectedSites []bool, weights []float64, removeAmbiguous bool) (nbdiffs float64, total float64) {
 	nbdiffs = 0.0
 	total = 0.0
+	diffweight := 0.0
+	diff := 0.0
+	w := 1.0
 	for i := 0; i < len(seq1); i++ {
-		w := 1.0
+		w = 1.0
+		diff = 0.0
 		if weights != nil {
 			w = weights[i]
 		}
 
 		if (isNuc(seq1[i]) || isNuc(seq2[i])) && selectedSites[i] {
 			if seq1[i] != seq2[i] {
-				diff, _ := align.NtIUPACDifference(seq1[i], seq2[i])
-				diff = diff * w
-				nbdiffs += diff
+				diff, _ = align.NtIUPACDifference(seq1[i], seq2[i])
+				diffweight = diff * w
+				nbdiffs += diffweight
 			}
 			total += w
+			// If we remove ambiguous positions we cancel the current position in the total
+			if diff == 0 && removeAmbiguous && (isAmbiguous(seq1[i]) || isAmbiguous(seq2[i])) {
+				total -= w
+			}
 		}
 	}
 	return
 }
 
 /* Count number of mutations (including gaps to nt when they are internal, not on the border) */
-func countDiffsWithInternalGaps(seq1, seq2 []uint8, selectedSites []bool, weights []float64) (nbdiffs float64, total float64) {
+func countDiffsWithInternalGaps(seq1, seq2 []uint8, selectedSites []bool, weights []float64, removeAmbiguous bool) (nbdiffs float64, total float64) {
 	nbdiffs = 0.0
 	total = 0.0
 	firstgaps1 := true
 	firstgaps2 := true
 	tmpgapdiffs1 := 0.0
 	tmpgapdiffs2 := 0.0
-
+	diff := 0.0
+	diffweight := 0.0
+	w := 1.0
 	for i := 0; i < len(seq1); i++ {
-		w := 1.0
+		w = 1.0
+		diff = 0.0
 		if weights != nil {
 			w = weights[i]
 		}
@@ -304,13 +327,17 @@ func countDiffsWithInternalGaps(seq1, seq2 []uint8, selectedSites []bool, weight
 
 		if (isNuc(seq1[i]) || isNuc(seq2[i])) && (!firstgaps1 && !firstgaps2) {
 			if seq1[i] != seq2[i] {
-				diff, _ := align.NtIUPACDifference(seq1[i], seq2[i])
-				diff = diff * w
-				nbdiffs += diff
-				tmpgapdiffs1 += diff
-				tmpgapdiffs2 += diff
+				diff, _ = align.NtIUPACDifference(seq1[i], seq2[i])
+				diffweight = diff * w
+				nbdiffs += diffweight
+				tmpgapdiffs1 += diffweight
+				tmpgapdiffs2 += diffweight
 			}
 			total += w
+			// If we remove ambiguous positions we cancel the current position in the total
+			if diff == 0 && removeAmbiguous && (isAmbiguous(seq1[i]) || isAmbiguous(seq2[i])) {
+				total -= w
+			}
 
 			if isNuc(seq1[i]) {
 				tmpgapdiffs1 = .0
@@ -489,7 +516,13 @@ func isNuc(r uint8) bool {
 }
 
 func isNucStrict(r uint8) bool {
-	return r >= align.NT_A && r <= align.NT_T
+	// Test whether r is a power of two (only one bit set and not 0)
+	return (r != 0) && ((r & (r - 1)) == 0)
+}
+
+func isAmbiguous(r uint8) bool {
+	// Test whether r is not a power of two (only one bit set) and not 0
+	return (r != 0) && ((r & (r - 1)) != 0)
 }
 
 /* Returns the sites of the alignments that contains only nucleotides and no gaps */

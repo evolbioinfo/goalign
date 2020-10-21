@@ -46,16 +46,16 @@ func (m *RawDistModel) SetCountGapMutations(countgapmut int) (err error) {
 	return
 }
 
-// computes the number of differences  between 2 sequences
+// Distance computes the number of differences  between 2 sequences
 // These differences include gaps vs. nt
 func (m *RawDistModel) Distance(seq1 []uint8, seq2 []uint8, weights []float64) (diff float64, err error) {
 	switch m.countgapmut {
 	case GAP_COUNT_ALL:
-		diff, _ = countDiffsWithGaps(seq1, seq2, m.selectedSites, weights)
+		diff, _ = countDiffsWithGaps(seq1, seq2, m.selectedSites, weights, false)
 	case GAP_COUNT_INTERNAL:
-		diff, _ = countDiffsWithInternalGaps(seq1, seq2, m.selectedSites, weights)
+		diff, _ = countDiffsWithInternalGaps(seq1, seq2, m.selectedSites, weights, false)
 	default:
-		diff, _ = countDiffs(seq1, seq2, m.selectedSites, weights)
+		diff, _ = countDiffs(seq1, seq2, m.selectedSites, weights, false)
 	}
 	return
 }
