@@ -910,6 +910,19 @@ diff -q -b result expected
 rm -f expected result mapfile
 
 
+echo "->goalign compute distance -m rawdist --range1 0:2 --range2 2:4"
+cat > expected <<EOF
+5
+Tip4	0.000000000000	0.000000000000	3.000000000000	3.000000000000	4.000000000000
+Tip0	0.000000000000	0.000000000000	1.000000000000	1.000000000000	2.000000000000
+Tip3	3.000000000000	1.000000000000	0.000000000000	0.000000000000	1.000000000000
+Tip2	3.000000000000	1.000000000000	0.000000000000	0.000000000000	0.000000000000
+Tip1	4.000000000000	2.000000000000	1.000000000000	0.000000000000	0.000000000000
+EOF
+${GOALIGN} compute distance -m rawdist -i ${TESTDATA}/test_rawdistance.phy.gz -p --range1 0:2 --range2 2:4 > result
+diff -q -b result expected
+rm -f expected result mapfile
+
 
 echo "->goalign compute distance -m rawdist2"
 cat > expected <<EOF

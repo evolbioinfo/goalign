@@ -2,8 +2,9 @@ package cmd
 
 import (
 	"fmt"
-	"github.com/spf13/cobra"
 	"os"
+
+	"github.com/spf13/cobra"
 
 	"github.com/evolbioinfo/goalign/align"
 	"github.com/evolbioinfo/goalign/distance/dna"
@@ -106,13 +107,13 @@ goalign build distboot -m k2p -i align.fa -o mats.txt
 				var distMatrix [][]float64
 				if distbootcontinuous {
 					weights = dna.BuildWeightsDirichlet(align)
-					if distMatrix, err = dna.DistMatrix(align, weights, dnamodel, cmd.Flags().Changed("alpha"), distbootAlpha, rootcpus); err != nil {
+					if distMatrix, err = dna.DistMatrix(align, weights, dnamodel, -1, -1, -1, -1, cmd.Flags().Changed("alpha"), distbootAlpha, rootcpus); err != nil {
 						io.LogError(err)
 						return
 					}
 				} else {
 					boot := align.BuildBootstrap()
-					if distMatrix, err = dna.DistMatrix(boot, nil, dnamodel, cmd.Flags().Changed("alpha"), distbootAlpha, rootcpus); err != nil {
+					if distMatrix, err = dna.DistMatrix(boot, nil, dnamodel, -1, -1, -1, -1, cmd.Flags().Changed("alpha"), distbootAlpha, rootcpus); err != nil {
 						io.LogError(err)
 						return
 					}

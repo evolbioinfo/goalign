@@ -2,6 +2,7 @@ package dna
 
 import (
 	"errors"
+	"fmt"
 	"math"
 	"sync"
 
@@ -115,9 +116,13 @@ func BuildWeightsDirichlet(al align.Alignment) []float64 {
 	return outweights
 }
 
-/* Compute a matrix distance, with weights associated to each alignment positions */
-/* If weights == nil, then all weights are considered 1 */
-func DistMatrix(al align.Alignment, weights []float64, model DistModel, gamma bool, alpha float64, cpus int) (outmatrix [][]float64, err error) {
+// DistMatrix computes a matrix distance, with weights associated to each alignment positions
+// If weights == nil, then all weights are considered 1
+// range1, range2: To restrict the computation to the distances between these ranges of sequence IDS, based [range1Min,range1Max] vs. [range2Min, range2Max]
+// If range1Min, range1Max, range2Min or range2Max are -1, then computes the usual half matrix
+func DistMatrix(al align.Alignment, weights []float64, model DistModel, range1Min, range1Max, range2Min, range2Max int,
+	gamma bool, alpha float64, cpus int) (outmatrix [][]float64, err error) {
+
 	if al.Alphabet() != align.NUCLEOTIDS {
 		err = errors.New("The alignment is not nucleotidic")
 		return
@@ -139,15 +144,46 @@ func DistMatrix(al align.Alignment, weights []float64, model DistModel, gamma bo
 	go func() {
 		defer close(distchan)
 		var seq1, seq2 []uint8
-		for i := 0; i < al.NbSequences(); i++ {
-			if seq1, err = model.Sequence(i); err != nil {
+		if range1Min >= 0 && range1Max >= 0 && range2Min >= 0 && range2Max >= 0 {
+			if range1Max >= al.NbSequences() {
+				range1Max = al.NbSequences() - 1
+			}
+			if range1Min > range1Max {
+				err = fmt.Errorf("range 1 min is greater than range 1 max")
 				return
 			}
-			for j := i + 1; j < al.NbSequences(); j++ {
-				if seq2, err = model.Sequence(j); err != nil {
+			if range2Max >= al.NbSequences() {
+				range2Max = al.NbSequences() - 1
+			}
+			if range2Min > range2Max {
+				err = fmt.Errorf("range 2 min is greater than range 2 max")
+				return
+			}
+
+			for i := range1Min; i <= range1Max; i++ {
+				if seq1, err = model.Sequence(i); err != nil {
 					return
 				}
-				distchan <- seqpairdist{i, j, seq1, seq2, model, weights}
+				for j := range2Min; j <= range2Max; j++ {
+					if j != i {
+						if seq2, err = model.Sequence(j); err != nil {
+							return
+						}
+						distchan <- seqpairdist{i, j, seq1, seq2, model, weights}
+					}
+				}
+			}
+		} else {
+			for i := 0; i < al.NbSequences(); i++ {
+				if seq1, err = model.Sequence(i); err != nil {
+					return
+				}
+				for j := i + 1; j < al.NbSequences(); j++ {
+					if seq2, err = model.Sequence(j); err != nil {
+						return
+					}
+					distchan <- seqpairdist{i, j, seq1, seq2, model, weights}
+				}
 			}
 		}
 	}()
@@ -190,7 +226,7 @@ func DistMatrix(al align.Alignment, weights []float64, model DistModel, gamma bo
 	return
 }
 
-/* Returns true if it is a transition, false otherwize */
+/* Returns true if it is a transition, false otherwise */
 func isTransition(n1 uint8, n2 uint8) bool {
 	return ((n1 == align.NT_A && n2 == align.NT_G) || (n1 == align.NT_G && n2 == align.NT_A) ||
 		(n1 == align.NT_T && n2 == align.NT_C) || (n1 == align.NT_C && n2 == align.NT_T))

@@ -17,6 +17,11 @@ This command implements different computations:
   For example if --rm-ambiguous is given, then R vs. Y will be taken into account
   because there is a difference. And N vs. A won't be taken into account in total length
   because we are not sure whether they are identical.
+  In case of a nucleotidic alignment, it is possible to specify sequence ranges to compare. For example, 
+  goalign compute distance -m pdist -i align.ph -p --range1 0:9 --range2 10:19
+  will compute distance only between sequences [0 to 9] and sequences [10 to 19].
+  Output matrix will be formatted the same way as usual, except that it will be made of 0 except for
+  the comparisons 0 vs. 10; 0 .vs 11; ...; 9 vs. 19.
 2. `goalign compute entropy`: Computes the entropy of each sites of the input alignment or the average entropy of all sites (`-a` option).
 3. `goalign compute pssm`: Computes and prints a Position specific scoring matrix. Different kind of matrices may be computed, depending on `-n` option:
     - `-n 0` : None, means raw counts

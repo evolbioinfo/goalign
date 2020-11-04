@@ -1,11 +1,12 @@
 package cmd
 
 import (
-	"errors"
 	"fmt"
 	"log"
 	"math"
 	"os"
+	"strconv"
+	"strings"
 
 	"github.com/spf13/cobra"
 
@@ -25,6 +26,8 @@ var computedistAverage bool
 var computedistAlpha float64
 var computedistCountGaps int
 var computedistRemoveAmbiguous bool
+var computedistRange1 string
+var computedistRange2 string
 
 // computedistCmd represents the computedist command
 var computedistCmd = &cobra.Command{
@@ -67,6 +70,12 @@ goalign compute distance -m k2p -i align.ph -p
 goalign compute distance -m k2p -i align.fa
 
 if -a is given: display only the average distance
+
+In case of a nucleotidic alignment, it is possible to specify sequence ranges to compare. For example, 
+goalign compute distance -m pdist -i align.ph -p --range1 0:9 --range2 10:19
+will compute distance only between sequences [0 to 9] and sequences [10 to 19].
+Output matrix will be formatted the same way as usual, except that it will be made of 0 except for
+the comparisons 0 vs. 10; 0 .vs 11; ...; 9 vs. 19.
 
 `,
 	RunE: func(cmd *cobra.Command, args []string) (err error) {
@@ -136,9 +145,31 @@ if -a is given: display only the average distance
 				}
 			}
 
+			var range1min, range1max, range2min, range2max int = -1, -1, -1, -1
+
+			if computedistRange1 != "" || computedistRange2 != "" {
+				r1 := strings.Split(computedistRange1, ":")
+				r2 := strings.Split(computedistRange2, ":")
+				if len(r1) != 2 || len(r2) != 2 {
+					return fmt.Errorf("Sequence ranges are not well formed, should be min:max")
+				}
+				if range1min, err = strconv.Atoi(r1[0]); err != nil {
+					return fmt.Errorf("Cannot convert range1 min to integer")
+				}
+				if range1max, err = strconv.Atoi(r1[1]); err != nil {
+					return fmt.Errorf("Cannot convert range1 max to integer")
+				}
+				if range2min, err = strconv.Atoi(r2[0]); err != nil {
+					return fmt.Errorf("Cannot convert range2 min to integer")
+				}
+				if range2max, err = strconv.Atoi(r2[1]); err != nil {
+					return fmt.Errorf("Cannot convert range2 max to integer")
+				}
+			}
+
 			for align := range aligns.Achan {
 				var distMatrix [][]float64
-				distMatrix, err = dna.DistMatrix(align, nil, model, cmd.Flags().Changed("alpha"), computedistAlpha, rootcpus)
+				distMatrix, err = dna.DistMatrix(align, nil, model, range1min, range1max, range2min, range2max, cmd.Flags().Changed("alpha"), computedistAlpha, rootcpus)
 				if err != nil {
 					io.LogError(err)
 					return
@@ -172,6 +203,8 @@ func init() {
 	computedistCmd.PersistentFlags().BoolVar(&computedistRemoveAmbiguous, "rm-ambiguous", false, "if true, ambiguous positions are removed for the normalisation by the length in case of non different positions. Only available for pdist (nt)")
 	computedistCmd.PersistentFlags().BoolVarP(&computedistAverage, "average", "a", false, "Compute only the average distance between all pairs of sequences")
 	computedistCmd.PersistentFlags().Float64Var(&computedistAlpha, "alpha", 0.0, "Gamma alpha parameter, if not given : no gamma")
+	computedistCmd.PersistentFlags().StringVar(&computedistRange1, "range1", "", "If set, then will restrict distance computation to the given seq range compared to range 2 (0-based, ex --range1 0:100 means [0,100]), only for nucleotide models so far")
+	computedistCmd.PersistentFlags().StringVar(&computedistRange2, "range2", "", "If set, then will restrict distance computation to the given seq range compared to range 1 (0-based, ex --range2 0:100 means [0:100]), only for nucleotide models so far")
 }
 
 func writeDistMatrix(al align.Alignment, matrix [][]float64, f *os.File) (err error) {
@@ -180,7 +213,7 @@ func writeDistMatrix(al align.Alignment, matrix [][]float64, f *os.File) (err er
 		if name, ok := al.GetSequenceNameById(i); ok {
 			f.WriteString(fmt.Sprintf("%s", name))
 		} else {
-			return errors.New(fmt.Sprintf("Sequence %d does not exist in the alignment", i))
+			return fmt.Errorf("Sequence %d does not exist in the alignment", i)
 		}
 		for j := 0; j < len(matrix); j++ {
 			f.WriteString(fmt.Sprintf("\t%.12f", matrix[i][j]))
