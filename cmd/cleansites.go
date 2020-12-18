@@ -10,6 +10,7 @@ import (
 )
 
 var cleanEnds bool
+var sitesposoutfile string
 
 // cleansitesCmd represents the cleansites command
 var cleansitesCmd = &cobra.Command{
@@ -35,13 +36,20 @@ will be removed.`,
 	RunE: func(cmd *cobra.Command, args []string) (err error) {
 		var aligns *align.AlignChannel
 		var nbstart, nbend int
-		var f *os.File
+		var kept []int
+		var f, sitesposout *os.File
 
 		if aligns, err = readalign(infile); err != nil {
 			io.LogError(err)
 			return
 		}
 		if f, err = openWriteFile(cleanOutput); err != nil {
+			io.LogError(err)
+			return
+		}
+		defer closeWriteFile(f, cleanOutput)
+
+		if sitesposout, err = openWriteFile(sitesposoutfile); err != nil {
 			io.LogError(err)
 			return
 		}
@@ -55,10 +63,10 @@ will be removed.`,
 
 			if cleanChar == string(align.GAP) || cleanChar == "GAP" {
 				char = "gaps"
-				nbstart, nbend = al.RemoveGapSites(cleanCutoff, cleanEnds)
+				nbstart, nbend, kept = al.RemoveGapSites(cleanCutoff, cleanEnds)
 			} else if cleanChar == "MAJ" {
 				char = "maj"
-				nbstart, nbend = al.RemoveMajorityCharacterSites(cleanCutoff, cleanEnds)
+				nbstart, nbend, kept = al.RemoveMajorityCharacterSites(cleanCutoff, cleanEnds)
 			} else {
 				//single character
 				c := []uint8(cleanChar)
@@ -68,10 +76,15 @@ will be removed.`,
 					return
 				}
 				char = string(c[0])
-				nbstart, nbend = al.RemoveCharacterSites(c[0], cleanCutoff, cleanEnds, cleanIgnoreCase)
+				nbstart, nbend, kept = al.RemoveCharacterSites(c[0], cleanCutoff, cleanEnds, cleanIgnoreCase)
 			}
 			afterlength := al.Length()
 			writeAlign(al, f)
+
+			for _, p := range kept {
+				fmt.Fprintf(sitesposout, "%d\n", p)
+			}
+
 			if !cleanQuiet {
 				io.PrintSimpleMessage(fmt.Sprintf("Alignment (%d) length before cleaning=%d", i, beforelength))
 				io.PrintSimpleMessage(fmt.Sprintf("Alignment (%d) length after cleaning=%d", i, afterlength))
@@ -91,5 +104,6 @@ will be removed.`,
 
 func init() {
 	cleansitesCmd.PersistentFlags().BoolVar(&cleanEnds, "ends", false, "If true, then only remove consecutive gap positions from alignment start and end")
+	cleansitesCmd.PersistentFlags().StringVar(&sitesposoutfile, "positions", "none", "Output file of all remaining positions (0-based, on position per line)")
 	cleanCmd.AddCommand(cleansitesCmd)
 }

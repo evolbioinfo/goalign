@@ -80,11 +80,11 @@ type Alignment interface {
 	// Removes sequences having >= cutoff character, returns number of removed sequences
 	RemoveCharacterSeqs(c uint8, cutoff float64, ignoreCase bool) int
 	// Removes sites having >= cutoff gaps, returns the number of consecutive removed sites at start and end of alignment
-	RemoveGapSites(cutoff float64, ends bool) (first, last int)
+	RemoveGapSites(cutoff float64, ends bool) (first, last int, kept []int)
 	// Removes sites having >= cutoff character, returns the number of consecutive removed sites at start and end of alignment
-	RemoveCharacterSites(c uint8, cutoff float64, ends bool, ignoreCase bool) (first, last int)
+	RemoveCharacterSites(c uint8, cutoff float64, ends bool, ignoreCase bool) (first, last int, kept []int)
 	// Removes sites having >= cutoff of the main character at these sites, returns the number of consecutive removed sites at start and end of alignment
-	RemoveMajorityCharacterSites(cutoff float64, ends bool) (first, last int)
+	RemoveMajorityCharacterSites(cutoff float64, ends bool) (first, last int, kept []int)
 	// Replaces match characters (.) by their corresponding characters on the first sequence
 	ReplaceMatchChars()
 	Sample(nb int) (Alignment, error) // generate a sub sample of the sequences
@@ -271,8 +271,9 @@ func (a *align) ShuffleSites(rate float64, roguerate float64, randroguefirst boo
 // Example with a cutoff of 0.3 and ends and with the given proportion of gaps:
 // 0.4 0.5 0.1 0.5 0.6 0.1 0.8 will remove positions 0,1 and 6
 //
-// Returns the number of consecutive removed sites at start and end of alignment
-func (a *align) RemoveGapSites(cutoff float64, ends bool) (first, last int) {
+// Returns the number of consecutive removed sites at start and end of alignment and the indexes of
+// the remaining positions
+func (a *align) RemoveGapSites(cutoff float64, ends bool) (first, last int, kept []int) {
 	return a.RemoveCharacterSites(GAP, cutoff, ends, false)
 }
 
@@ -289,9 +290,15 @@ func (a *align) RemoveGapSites(cutoff float64, ends bool) (first, last int) {
 // Example with a cutoff of 0.3 and ends and with the given proportion of this character:
 // 0.4 0.5 0.1 0.5 0.6 0.1 0.8 will remove positions 0,1 and 6
 //
-// Returns the number of consecutive removed sites at start and end of alignment
-func (a *align) RemoveCharacterSites(c uint8, cutoff float64, ends bool, ignoreCase bool) (first, last int) {
+// Returns the number of consecutive removed sites at start and end of alignment and the indexes of
+// the remaining positions
+func (a *align) RemoveCharacterSites(c uint8, cutoff float64, ends bool, ignoreCase bool) (first, last int, kept []int) {
 	var nbchars int
+	kept = make([]int, a.Length())
+	for i := 0; i < a.Length(); i++ {
+		kept[i] = i
+	}
+
 	if cutoff < 0 || cutoff > 1 {
 		cutoff = 0
 	}
@@ -332,12 +339,13 @@ func (a *align) RemoveCharacterSites(c uint8, cutoff float64, ends bool, ignoreC
 			for seq := 0; seq < a.NbSequences(); seq++ {
 				a.seqs[seq].sequence = append(a.seqs[seq].sequence[:toremove[i]], a.seqs[seq].sequence[toremove[i]+1:]...)
 			}
+			kept = append(kept[:toremove[i]], kept[toremove[i]+1:]...)
 		}
 	}
 	last = a.Length() - lastcontinuous
 	a.length -= nbremoved
 
-	return first, last
+	return first, last, kept
 }
 
 // RemoveMajorityCharacterSites Removes positions constituted of [cutoff*100%,100%] of the most
@@ -352,13 +360,18 @@ func (a *align) RemoveCharacterSites(c uint8, cutoff float64, ends bool, ignoreC
 // Example with a cutoff of 0.3 and ends and with the given proportion of this character:
 // 0.4 0.5 0.1 0.5 0.6 0.1 0.8 will remove positions 0,1 and 6
 //
-// Returns the number of consecutive removed sites at start and end of alignment
-func (a *align) RemoveMajorityCharacterSites(cutoff float64, ends bool) (first, last int) {
+// Returns the number of consecutive removed sites at start and end of alignment and the indexes of the
+// remaining positions
+func (a *align) RemoveMajorityCharacterSites(cutoff float64, ends bool) (first, last int, kept []int) {
 	_, occur := a.MaxCharStats(false)
+
+	kept = make([]int, a.Length())
+	for i := 0; i < a.Length(); i++ {
+		kept[i] = i
+	}
 
 	length := a.Length()
 	nbsesq := a.NbSequences()
-
 	toremove := make([]int, 0, 10)
 	// To remove only positions with this character at start and ends positions
 	firstcontinuous := -1
@@ -388,12 +401,13 @@ func (a *align) RemoveMajorityCharacterSites(cutoff float64, ends bool) (first, 
 			for seq := 0; seq < a.NbSequences(); seq++ {
 				a.seqs[seq].sequence = append(a.seqs[seq].sequence[:toremove[i]], a.seqs[seq].sequence[toremove[i]+1:]...)
 			}
+			kept = append(kept[:toremove[i]], kept[toremove[i]+1:]...)
 		}
 	}
 	last = a.Length() - lastcontinuous
 	a.length -= nbremoved
 
-	return first, last
+	return first, last, kept
 }
 
 // RefCoordinates converts coordinates on the given sequence to coordinates on the alignment.

@@ -178,10 +178,39 @@ Alignment (0) number of gaps=6
 Alignment (0) number of start gaps=3
 Alignment (0) number of end gaps=3
 EOF
-${GOALIGN} clean sites -i input -c 0.5 > result 2>log
+
+cat > expectedpos <<EOF
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25
+26
+EOF
+
+${GOALIGN} clean sites -i input -c 0.5 --positions pos> result 2>log
 diff -q -b result expected
 diff -q -b log expectedlog
-rm -f expected result log expectedlog
+diff -q -b pos expectedpos
+rm -f expected result log expectedlog expectedpos pos
 
 echo "->goalign clean sites --ends --char MAJ"
 cat > input <<EOF
@@ -253,10 +282,21 @@ Alignment (0) number of start maj=1
 Alignment (0) number of end maj=0
 EOF
 
-${GOALIGN} clean sites -i input -c 0.6 --char MAJ > result 2>log
+cat > expectedpos <<EOF
+2
+4
+5
+6
+7
+8
+9
+EOF
+
+${GOALIGN} clean sites -i input -c 0.6 --char MAJ --positions pos> result 2>log
 diff -q -b result expected
 diff -q -b log expectedlog
-rm -f expected result log expectedlog
+diff -q -b pos expectedpos
+rm -f expected result log expectedlog pos expectedpos
 
 ${GOALIGN} clean sites -i input -c 0.6 --char MAJ --ends > result 2>log
 diff -q -b result expected2
