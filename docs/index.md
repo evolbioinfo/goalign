@@ -96,8 +96,8 @@ Command                                                     | Subcommand |      
 [replace](commands/replace.md) ([api](api/replace.md))      |            | Replace characters in sequences of input alignment
 [sample](commands/sample.md) ([api](api/sample.md))         |            | Samples sequences or sites from an input alignment
 --                                                          | seqs       | Samples a subset of sequences from the input alignment
---                                                          | sites      | Take a random subalignment
---                                                          | rarefy     | Take a sample taking into accounts weights
+--                                                          | sites      | Takes a random subalignment
+--                                                          | rarefy     | Takes a sample taking into accounts weights
 [shuffle](commands/shuffle.md) ([api](api/shuffle.md))      |            | A set of commands to shuffle an alignment
 --                                                          | recomb     | Recombines sequences in the input alignment (copy/paste)
 --                                                          | rogue      | Simulates rogue taxa

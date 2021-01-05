@@ -4,7 +4,7 @@
 
 ### sample
 This command samples sites or sequences from an input alignment (fasta by default or phylip with `-p`):
-1. `goalign sample sites`: take a random subsequence starting at a random position and with the given length from the input alignment;
+1. `goalign sample sites`: take a random subalignment from the input alignment. If --consecutive is true, then a start position is randomly chosen, and the next "length" positions are extracted. Otherwise, if consecutive is false, then "length" positions are sampled without replacement from the original alignment (any order);
 2. `goalign sample seqs`: take a random subset of the sequences from an input alignment;
 3. `goalign sample rarefy`: Take a new sample taking into accounts counts. Each sequence in the alignment has associated counts. The sum s of the counts represents the number of sequences in the underlying initial dataset. The goal is to downsample (rarefy) the initial dataset, by sampling n sequences from s (n<s), and taking the alignment corresponding to this new sample, i.e by taking only unique (different) sequences from it.
 
@@ -14,9 +14,9 @@ If the input alignment contains several alignments (phylip), will process all of
 * general command:
 ```
 Available Commands:
-  rarefy      Take a new sample taking into accounts weights
+  rarefy      Takes a new sample taking into accounts weights
   seqs        Samples a subset of sequences from the input alignment
-  sites       Take a random subalignment
+  sites       Takes a random subalignment
 
 Flags:
   -h, --help   help for sample
@@ -66,6 +66,7 @@ Usage:
   goalign sample sites [flags]
 
 Flags:
+      --consecutive     If sampled sites are consecutive (inactivate with --consecutive=false) (default true)
   -h, --help            help for sites
   -l, --length int      Length of the random sub alignment (default 10)
   -n, --nsamples int    Number of samples to generate (default 1)

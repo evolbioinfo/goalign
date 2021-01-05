@@ -69,7 +69,7 @@ type Alignment interface {
 	NumMutationsUniquePerSequence(profile *CountProfile) (numuniques []int, numnew []int, nummuts []int, err error)
 	Pssm(log bool, pseudocount float64, normalization int) (pssm map[uint8][]float64, err error) // Normalization: PSSM_NORM_NONE, PSSM_NORM_UNIF, PSSM_NORM_DATA
 	Rarefy(nb int, counts map[string]int) (Alignment, error)                                     // Take a new rarefied sample taking into accounts weights
-	RandSubAlign(length int) (Alignment, error)                                                  // Extract a random subalignment with given length from this alignment
+	RandSubAlign(length int, consecutive bool) (Alignment, error)                                // Extract a random subalignment with given length from this alignment
 	Recombine(rate float64, lenprop float64)
 	// converts coordinates on the given sequence to coordinates on the alignment
 	RefCoordinates(name string, refstart, refend int) (alistart, aliend int, err error)
@@ -1465,8 +1465,16 @@ func (a *align) InversePositions(sites []int) (invsites []int, err error) {
 	return
 }
 
-// Extract a subalignment with given length and a random start position from this alignment
-func (a *align) RandSubAlign(length int) (Alignment, error) {
+// RandSubAlign extracts a subalignment of given length from this alignment
+// If consecutive is true, then a start position is randomly chosen, and the next "length" positions are extracted
+// Otherwise, if consecutive is false, then length positions are sampled without replacement from the original alignment
+func (a *align) RandSubAlign(length int, consecutive bool) (Alignment, error) {
+	var tmpseq []uint8
+	var permutation []int
+	var i, p, start int
+	var subalign *align
+	var seq *seq
+
 	if length > a.Length() {
 		return nil, errors.New("sub alignment is larger than original alignment ")
 	}
@@ -1474,11 +1482,23 @@ func (a *align) RandSubAlign(length int) (Alignment, error) {
 		return nil, errors.New("sub alignment cannot have 0 or negative length")
 	}
 
-	subalign := NewAlign(a.alphabet)
-	start := rand.Intn(a.Length() - length + 1)
-	for i := 0; i < a.NbSequences(); i++ {
-		seq := a.seqs[i]
-		subalign.AddSequenceChar(seq.name, seq.SequenceChar()[start:start+length], seq.Comment())
+	subalign = NewAlign(a.alphabet)
+	if consecutive {
+		start = rand.Intn(a.Length() - length + 1)
+		for i = 0; i < a.NbSequences(); i++ {
+			seq = a.seqs[i]
+			subalign.AddSequenceChar(seq.name, seq.SequenceChar()[start:start+length], seq.Comment())
+		}
+	} else {
+		permutation = rand.Perm(a.Length())
+		for i = 0; i < a.NbSequences(); i++ {
+			tmpseq = make([]uint8, length)
+			seq = a.seqs[i]
+			for p = 0; p < length; p++ {
+				tmpseq[p] = seq.SequenceChar()[permutation[p]]
+			}
+			subalign.AddSequenceChar(seq.name, tmpseq, seq.Comment())
+		}
 	}
 	return subalign, nil
 }
