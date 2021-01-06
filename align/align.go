@@ -21,7 +21,7 @@ type Alignment interface {
 	AddGaps(rate, lenprop float64)
 	Append(Alignment) error // Appends alignment sequences to this alignment
 	AvgAllelesPerSite() float64
-	BuildBootstrap() Alignment // Bootstrap alignment
+	BuildBootstrap(frac float64) Alignment // Bootstrap alignment
 	CharStatsSite(site int) (map[uint8]int, error)
 	Clone() (Alignment, error)
 	CodonAlign(ntseqs SeqBag) (codonAl *align, err error)
@@ -878,17 +878,26 @@ func (a *align) Rarefy(nb int, counts map[string]int) (al Alignment, err error) 
 	return
 }
 
-// This function builds a bootstrap alignment
-// and returns it with "indices", an array containing
-// the index (in the original alignment) of all bootstrap sites.
-func (a *align) BuildBootstrap() (boot Alignment) {
-	n := a.Length()
+// BuildBootstrap builds a bootstrap alignment
+// if frac is < 1.0, it is a partial bootstrap as is phylip seqboot,
+// which means that the sites are sampled from the full alignment with
+// replacement, but the output alignment length is a fraction of the
+// original alignment.
+// (see https://evolution.genetics.washington.edu/phylip/doc/seqboot.html)
+func (a *align) BuildBootstrap(frac float64) (boot Alignment) {
+	if frac <= 0 || frac > 1 {
+		frac = 1.0
+	}
+
+	alength := a.Length()
+	n := int(frac * float64(alength))
+
 	boot = NewAlign(a.alphabet)
 	indices := make([]int, n)
 	var buf []uint8
 
 	for i := 0; i < n; i++ {
-		indices[i] = rand.Intn(n)
+		indices[i] = rand.Intn(alength)
 	}
 
 	for _, seq := range a.seqs {

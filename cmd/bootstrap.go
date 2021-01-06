@@ -19,6 +19,7 @@ var bootstrapoutprefix string
 var bootstrapOrder bool
 var bootstraptar bool
 var bootstrapgz bool
+var bootstrapfrac float64
 var bootstrappartitionstr string
 var bootstrapoutputpartitionstr string
 
@@ -41,6 +42,10 @@ The input may be a Phylip or Fasta file.
 
 - It is possible to give a initial seed (--seed). In this case several runs of 
   the tool will give the exact same results.
+
+- If frac is < 1.0, output alignments are partial bootstrap alignments as is phylip
+  seqboot, which means that the sites are sampled from the full alignment with 
+  replacement, but the bootstrap alignment length is a fraction of the original alignment.
 
 Example of usage:
 
@@ -127,7 +132,7 @@ goalign build seqboot -i align.phylip -p -n 500 -o boot_
 			// several partitions. We generate bootstrap replicates
 			// for each partition, and then concatenate them all.
 			for _, a := range aligns {
-				tmpboot = a.BuildBootstrap()
+				tmpboot = a.BuildBootstrap(bootstrapfrac)
 				if boot == nil {
 					boot = tmpboot
 				} else {
@@ -187,21 +192,19 @@ func writenewfile(name string, gz bool, bootstring string) (err error) {
 	if gz {
 		if f, err = os.Create(name + ".gz"); err != nil {
 			return
-		} else {
-			gw := gzip.NewWriter(f)
-			buf := bufio.NewWriter(gw)
-			buf.WriteString(bootstring)
-			buf.Flush()
-			gw.Close()
-			f.Close()
 		}
+		gw := gzip.NewWriter(f)
+		buf := bufio.NewWriter(gw)
+		buf.WriteString(bootstring)
+		buf.Flush()
+		gw.Close()
+		f.Close()
 	} else {
 		if f, err = os.Create(name); err != nil {
 			return
-		} else {
-			f.WriteString(bootstring)
-			f.Close()
 		}
+		f.WriteString(bootstring)
+		f.Close()
 	}
 	return
 }
@@ -227,7 +230,7 @@ func addstringtotargz(tw *tar.Writer, name string, align string) error {
 	return nil
 }
 
-func min_int(a, b int) int {
+func minInt(a, b int) int {
 	if a < b {
 		return a
 	}
@@ -241,6 +244,7 @@ func init() {
 	seqbootCmd.PersistentFlags().BoolVar(&bootstraptar, "tar", false, "Will create a single tar file with all bootstrap alignments (one thread for tar, but not a bottleneck)")
 	seqbootCmd.PersistentFlags().BoolVar(&bootstrapgz, "gz", false, "Will gzip output file(s). Maybe slow if combined with --tar (only one thread working for tar/gz)")
 	seqbootCmd.PersistentFlags().IntVarP(&bootstrapNb, "nboot", "n", 1, "Number of bootstrap replicates to build")
+	seqbootCmd.PersistentFlags().Float64VarP(&bootstrapfrac, "frac", "f", 1.0, "Fraction of sites to sample (if < 1.0: Partial bootstrap as in phylip seqboot)")
 	seqbootCmd.PersistentFlags().StringVar(&bootstrappartitionstr, "partition", "none", "File containing definition of the partitions")
 	seqbootCmd.PersistentFlags().StringVar(&bootstrapoutputpartitionstr, "out-partition", "", "File containing output partitions (default: same name as input partition with _boot suffix)")
 	seqbootCmd.PersistentFlags().StringVarP(&bootstrapoutprefix, "out-prefix", "o", "none", "Prefix of output bootstrap files")

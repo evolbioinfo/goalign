@@ -20,6 +20,7 @@ var distbootAlpha float64
 var distbootmodel string
 var distbootcontinuous bool = false
 var distbootRemoveGaps bool
+var distbootFrac float64
 
 // distbootCmd represents the distboot command
 var distbootCmd = &cobra.Command{
@@ -47,6 +48,12 @@ Proteins:
 For example:
 
 goalign build distboot -m k2p -i align.fa -o mats.txt
+
+If frac is < 1.0, bootstrap alignment used for computing distances is a partial 
+bootstrap as is phylip seqboot, which means that the sites are sampled from the 
+full alignment with replacement, but the bootstrap alignment length is a fraction of the
+original alignment.
+
 `,
 	//If -c is given, then random continuous weights are associated to all sites.
 	//Weights follow a Dirichlet distribution D(n;1,...,1)
@@ -89,7 +96,7 @@ goalign build distboot -m k2p -i align.fa -o mats.txt
 					}
 					writeDenseDistBootMatrix(d, align, f)
 				} else {
-					boot := align.BuildBootstrap()
+					boot := align.BuildBootstrap(distbootFrac)
 					if _, _, d, err = protmodel.MLDist(boot, nil); err != nil {
 						io.LogError(err)
 						return
@@ -112,7 +119,7 @@ goalign build distboot -m k2p -i align.fa -o mats.txt
 						return
 					}
 				} else {
-					boot := align.BuildBootstrap()
+					boot := align.BuildBootstrap(distbootFrac)
 					if distMatrix, err = dna.DistMatrix(boot, nil, dnamodel, -1, -1, -1, -1, cmd.Flags().Changed("alpha"), distbootAlpha, rootcpus); err != nil {
 						io.LogError(err)
 						return
@@ -130,6 +137,7 @@ func init() {
 	distbootCmd.PersistentFlags().StringVarP(&distbootOutput, "output", "o", "stdout", "Distance matrices output file")
 	distbootCmd.PersistentFlags().StringVarP(&distbootmodel, "model", "m", "k2p", "Model for distance computation")
 	distbootCmd.PersistentFlags().IntVarP(&distbootnb, "nboot", "n", 1, "Number of bootstrap replicates to build")
+	distbootCmd.PersistentFlags().Float64VarP(&distbootFrac, "frac", "f", 1.0, "Fraction of sites to sample (if < 1.0: Partial bootstrap as in phylip seqboot)")
 	//distbootCmd.PersistentFlags().BoolVarP(&distbootcontinuous, "continuous", "c", false, "Bootstraps are done by weighting alignment with continuous weights (dirichlet)")
 	distbootCmd.PersistentFlags().BoolVarP(&distbootRemoveGaps, "rm-gaps", "r", false, "Do not take into account positions containing >=1 gaps")
 	distbootCmd.PersistentFlags().Float64Var(&distbootAlpha, "alpha", 0.0, "Gamma alpha parameter, if not given : no gamma")

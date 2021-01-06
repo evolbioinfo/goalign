@@ -13,6 +13,8 @@ This command builds bootstrap replicates from an input alignment (fasta or phyli
     - f84  : Felsenstein 84
     - tn93 : Tamura and Nei 1993
 
+If --frac/-f option is < 1.0, then bootstrap alignments (or the ones used for computing distances) are partial bootstraps as is phylip seqboot. It means that the sites are sampled from the full alignment with replacement, but the bootstrap alignment length is a fraction of the original alignment.
+
 #### Usage
 
 * General command
