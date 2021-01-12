@@ -98,6 +98,7 @@ type Alignment interface {
 	InversePositions(sites []int) (invsites []int, err error)
 
 	Swap(rate float64)
+	Transpose() (Alignment, error) // Output sequences are made of sites and output sites are sequences
 	TrimSequences(trimsize int, fromStart bool) error
 }
 
@@ -2000,6 +2001,34 @@ func (a *align) Split(part *PartitionSet) (als []Alignment, err error) {
 			}
 		}
 	}
+	return
+}
+
+// Transpose transposes the alignment such as the sites become the sequences
+// and the sequences become the sites.
+// Example:
+// >s1
+// AAA
+// >s2
+// CCC
+// Will give:
+// >0
+// AC
+// >1
+// AC
+// >2
+// AC
+func (a *align) Transpose() (t Alignment, err error) {
+	t = NewAlign(a.alphabet)
+
+	for site := 0; site < a.Length(); site++ {
+		pattern := make([]uint8, a.NbSequences())
+		for seq := 0; seq < a.NbSequences(); seq++ {
+			pattern[seq] = a.seqs[seq].sequence[site]
+		}
+		t.AddSequenceChar(fmt.Sprintf("%d", site), pattern, "")
+	}
+
 	return
 }
 

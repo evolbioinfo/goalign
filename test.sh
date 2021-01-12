@@ -4648,3 +4648,47 @@ diff -q -b expected1 extract.tmp/output.1.fa
 diff -q -b expected2 extract.tmp/output.2.fa
 
 rm -rf input.align input.coordinates extract.tmp expected1 expected2 expected1.2 expected2.2
+
+
+
+echo "->goalign transpose"
+cat > input <<EOF
+>s1
+ACGT--ACGT
+>s2
+-CGT---C-T
+>s3
+ACGT--ACGT
+>s4
+ACGT--TCGA
+>s5
+ACGT--TCGA
+EOF
+
+cat > expected <<EOF
+>0
+A-AAA
+>1
+CCCCC
+>2
+GGGGG
+>3
+TTTTT
+>4
+-----
+>5
+-----
+>6
+A-ATT
+>7
+CCCCC
+>8
+G-GGG
+>9
+TTTAA
+EOF
+
+${GOALIGN} transpose -i input -o output
+
+diff -q -b expected output
+rm -rf input output expected
