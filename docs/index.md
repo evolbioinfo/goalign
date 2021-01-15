@@ -122,6 +122,7 @@ Command                                                     | Subcommand |      
 [subsites](commands/subsites.md) (api)                      |            | Take a subset of the sites from the input alignment
 [sw](commands/sw.md) ([api](api/sw.md))                     |            | Aligns 2 sequences using Smith&Waterman algorithm
 [translate](commands/translate.md) ([api](api/translate.md))|            | Translates an input sequence into Amino-Acids
+[transpose](commands/transpose.md) ([api](api/transpose.md))|            | Transposes an input alignment (sequences<=>sites)
 [trim](commands/trim.md) ([api](api/trim.md))               |            | This command trims names of sequences or sequences themselves
 --                                                          | name       | Trims names of sequences
 --                                                          | seq        | Trims sequences of the input alignment
