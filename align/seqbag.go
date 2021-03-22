@@ -825,6 +825,7 @@ func (sb *seqbag) Translate(phase int, geneticcode int) (err error) {
 			}
 		}
 	}
+	sb.AutoAlphabet()
 
 	return
 }
