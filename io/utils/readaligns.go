@@ -127,3 +127,42 @@ func ParseMultiAlignmentsAuto(f io.Closer, r *bufio.Reader, rootinputstrict bool
 	}
 	return
 }
+
+// ReadAlign reads a single multiple sequence alignment in the given format
+// from the given file name.
+//
+// format is defined in github.com/evolbioinfo/goalign/align/ and may be:
+// - align.FORMAT_PHYLIP
+// - align.FORMAT_NEXUS
+// - align.FORMAT_CLUSTAL
+// - align.FORMAT_FASTA
+// - any other value is interpreted as align.FORMAT_FASTA
+func ReadAlign(file string, format int) (outAlign align.Alignment, err error) {
+	var fi io.Closer
+	var r *bufio.Reader
+
+	if fi, r, err = GetReader(file); err != nil {
+		return
+	}
+	if format == align.FORMAT_PHYLIP {
+		pp := phylip.NewParser(r, false)
+		pp.IgnoreIdentical(false)
+		outAlign, err = pp.Parse()
+	} else if format == align.FORMAT_NEXUS {
+		np := nexus.NewParser(r)
+		np.IgnoreIdentical(false)
+		outAlign, err = np.Parse()
+	} else if format == align.FORMAT_CLUSTAL {
+		cp := clustal.NewParser(r)
+		cp.IgnoreIdentical(false)
+		outAlign, err = cp.Parse()
+	} else {
+		// FASTA
+		fp := fasta.NewParser(r)
+		fp.IgnoreIdentical(false)
+		outAlign, err = fp.Parse()
+	}
+	fi.Close()
+
+	return
+}
