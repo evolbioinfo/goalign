@@ -243,7 +243,7 @@ var IupacCode = map[uint8][]uint8{
 	'H': {'A', 'C', 'T'},
 	'V': {'A', 'C', 'G'},
 	'N': {'A', 'C', 'G', 'T'},
-	'_': {'-'},
+	'-': {'-'},
 }
 
 // Index: iupac nucleotide (A-N)
