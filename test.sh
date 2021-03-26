@@ -4692,3 +4692,26 @@ ${GOALIGN} transpose -i input -o output
 
 diff -q -b expected output
 rm -rf input output expected
+
+
+echo "->goalign read xz/bz"
+cat > expected <<EOF
+length	30
+nseqs	10
+avgalleles	3.7667
+variable sites	30
+char	nb	freq
+A	75	0.250000
+C	69	0.230000
+G	71	0.236667
+T	85	0.283333
+alphabet	nucleotide
+EOF
+
+${GOALIGN} stats -i $TESTDATA/test_xz.xz > output
+diff -q -b expected output
+${GOALIGN} stats -i $TESTDATA/test_bz.bz > output
+diff -q -b expected output
+
+rm -rf output expected
+

@@ -12,7 +12,7 @@ Input files may be local or remote files:
 - If file name is of the form `http(s)://<URL>`, the file is download from the given URL.
 - Otherwise, the file is considered local.
 
-Gzipped input files (`.gz` extension) are supported, as well as XZ files (`.xz` extension).
+Gzipped input files (`.gz` extension) are supported, as well as XZ files (`.xz` extension) and BZipped files (`.bz[2]` extension).
 
 
 **Note**:

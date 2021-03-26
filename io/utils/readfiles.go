@@ -8,6 +8,8 @@ import (
 	"os"
 	"strings"
 
+	"compress/bzip2"
+
 	"github.com/ulikunitz/xz"
 )
 
@@ -50,6 +52,12 @@ func GetReader(inputfile string) (io.Closer, *bufio.Reader, error) {
 		} else {
 			reader = bufio.NewReader(gr)
 		}
+	} else if BZExtension(inputfile) {
+		if br := bzip2.NewReader(f); err != nil {
+			return nil, nil, err
+		} else {
+			reader = bufio.NewReader(br)
+		}
 	} else if XZExtension(inputfile) {
 		if xr, err := xz.NewReader(f); err != nil {
 			return nil, nil, err
@@ -81,8 +89,13 @@ func GzipExtension(name string) (gzipped bool) {
 	return
 }
 
-func XZExtension(name string) (gzipped bool) {
-	gzipped = strings.HasSuffix(name, ".xz")
+func XZExtension(name string) (xzipped bool) {
+	xzipped = strings.HasSuffix(name, ".xz")
+	return
+}
+
+func BZExtension(name string) (bzipped bool) {
+	bzipped = strings.HasSuffix(name, ".bz") || strings.HasSuffix(name, ".bz2")
 	return
 }
 
