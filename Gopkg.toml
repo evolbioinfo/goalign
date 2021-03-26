@@ -7,6 +7,10 @@
   version = "1.0.0"
 
 [[constraint]]
+  name = "github.com/ulikunitz/xz"
+  version = "0.5.10"
+
+[[constraint]]
   branch = "master"
   name = "github.com/fredericlemoine/cobrashell"
 
