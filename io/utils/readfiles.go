@@ -7,6 +7,8 @@ import (
 	"net/http"
 	"os"
 	"strings"
+
+	"github.com/ulikunitz/xz"
 )
 
 func OpenFile(inputfile string) (*os.File, error) {
@@ -48,6 +50,12 @@ func GetReader(inputfile string) (io.Closer, *bufio.Reader, error) {
 		} else {
 			reader = bufio.NewReader(gr)
 		}
+	} else if XZExtension(inputfile) {
+		if xr, err := xz.NewReader(f); err != nil {
+			return nil, nil, err
+		} else {
+			reader = bufio.NewReader(xr)
+		}
 	} else {
 		reader = bufio.NewReader(f)
 	}
@@ -70,6 +78,11 @@ func GetReaderFromReader(gzipped bool, rd io.Reader) (reader *bufio.Reader, err 
 
 func GzipExtension(name string) (gzipped bool) {
 	gzipped = strings.HasSuffix(name, ".gz")
+	return
+}
+
+func XZExtension(name string) (gzipped bool) {
+	gzipped = strings.HasSuffix(name, ".xz")
 	return
 }
 
