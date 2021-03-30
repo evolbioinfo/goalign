@@ -4335,15 +4335,15 @@ rm -f input expected result
 echo "->goalign consensus --ignore-gaps/3"
 cat > input <<EOF
 >s1
-ACGACGACGANCC
+ACGACGACGANCC-
 >2
-ATCTT-TTTTNTC
+ATCTT-TTTTNTC-
 >3
-ATCTT-TTTTGTT
+ATCTT-TTTTGTT-
 EOF
 cat > expected <<EOF
 >consensus
-ATCTTGTTTTNTC
+ATCTTGTTTTNTC-
 EOF
 
 ${GOALIGN} consensus -i input --ignore-gaps -o result
@@ -4353,15 +4353,15 @@ rm -f input expected result
 echo "->goalign consensus --ignore-n/3"
 cat > input <<EOF
 >s1
-ACGACGACGANCC
+ACGACGACGANCCN
 >2
-ATCTT-TTTTNTC
+ATCTT-TTTTNTCN
 >3
-ATCTT-TTTTGTT
+ATCTT-TTTTGTTN
 EOF
 cat > expected <<EOF
 >consensus
-ATCTT-TTTTGTC
+ATCTT-TTTTGTCN
 EOF
 
 ${GOALIGN} consensus -i input --ignore-n -o result
@@ -4589,6 +4589,101 @@ s5	0	0	0	0	0	0	0	0	5	0	8	0	2	2	2	2
 EOF
 
 ${GOALIGN} stats --per-sequences -i input --count-profile prof  > result
+diff -q -b expected result
+rm -f input expected result 
+
+echo "->goalign stats maxchar"
+cat > input <<EOF
+>s1
+ACGTACGT
+>s2
+ACGTACGT
+>s3
+ACGTACGT
+>s4
+ACGTTCGA
+>s5
+ACGTTCGA
+EOF
+
+cat > expected <<EOF
+site	char  nb
+0	A  5
+1	C  5
+2	G  5
+3	T  5
+4	A  3
+5  C  5
+6  G  5
+7  T  3
+EOF
+
+${GOALIGN} stats maxchar -i input > result
+diff -q -b expected result
+rm -f input expected result 
+
+echo "->goalign stats maxchar --ignore-gaps"
+cat > input <<EOF
+>s1
+ACGT-ACGT-
+>s2
+ACGT-ACGT-
+>s3
+ACGT-ACGT-
+>s4
+ACGT-TCGA-
+>s5
+ACGTATCGA-
+EOF
+
+cat > expected <<EOF
+site	char  nb
+0	A  5
+1	C  5
+2	G  5
+3	T  5
+4  A  1
+5	A  3
+6  C  5
+7  G  5
+8  T  3
+9  -  5
+EOF
+
+${GOALIGN} stats maxchar -i input --ignore-gaps > result
+diff -q -b expected result
+rm -f input expected result 
+
+
+echo "->goalign stats maxchar --ignore-n"
+cat > input <<EOF
+>s1
+ACGTNACGTN
+>s2
+ACGTNACGTN
+>s3
+ACGTnACGTN
+>s4
+ACGTnTCGAN
+>s5
+ACGTATCGAN
+EOF
+
+cat > expected <<EOF
+site	char  nb
+0	A  5
+1	C  5
+2	G  5
+3	T  5
+4  A  1
+5	A  3
+6  C  5
+7  G  5
+8  T  3
+9  N  5
+EOF
+
+${GOALIGN} stats maxchar -i input --ignore-n > result
 diff -q -b expected result
 rm -f input expected result 
 

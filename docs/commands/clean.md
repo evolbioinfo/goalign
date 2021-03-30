@@ -21,7 +21,11 @@ Two subcommands:
 
     If cutoff is <0 or >1, it will be considered as 0, which means that every site with at least 1 specified character
     will be removed.`,
-* `goalign clean seqs`: Removes sequences with gaps. So far only gap filter is implemented.
+* `goalign clean seqs`: Removes sequences with gaps (same options as `clean sites`).
+
+For both commands, it is possible to specify options :
+- `--ignore-gaps` : It ignores Gaps to compute the cutoff
+- `--ignore-n` : It ignores N/n (or X/x if protein) to compute the cutoff
 
 Examples with sites:
 - With a cutoff of 0.5: a site with 5 gaps over 10 sequences will be removed;
@@ -40,6 +44,9 @@ Available Commands:
 Flags:
   -c, --cutoff float    Cutoff for gap deletion : 0 remove sites/sequences with > 0 gap, 1 remove sites/sequences with 100% gaps)
   -h, --help            help for clean
+  --ignore-case         Ignore case of given character (--char) if non special character (GAP/-)
+  --ignore-gaps         Ignore gaps for the % computation
+  --ignore-n            Ignore Ns for the % computation
   -o, --output string   Cleaned alignment output file (default "stdout")
   -q, --quiet           Do not print results on stderr
 

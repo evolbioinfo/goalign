@@ -57,7 +57,7 @@ Different sub-commands:
   - both: # gaps that are unique in each sequence in the alignment and that are new compared the profile.
 
 * `goalign stats length`: Prints alignment length;
-* `goalign stats maxchar`: Prints max occurence char for each alignment site;
+* `goalign stats maxchar`: Prints max occurence char for each alignment site. It can ignore gaps or Ns with `--ignore-gaps` and `--ignore-n` (N/n for nucleotides and X/x if amino-aciods) (except if only Ns or Gaps at the position);
 * `goalign stats mutations`: Prints, for each sequence, the number of mutations on each alignment sequence, compared to a reference sequence or unique compared to all other sequences. It does not take into account '-' and 'N' as unique mutations, and does not take into account '-' and 'N' as mutations compared to a reference sequence; 	If `--unique` is specified, then counts only mutations (characters) that are unique in their column for the given sequence.	If `--ref-sequence` is specified, it will try to extract a sequence having that name from the alignment. If none exist, it will try to open a fasta file with the given name to take the first sequence as a reference. If a character is ambigous (IUPAC notation) in an nucleotide sequence, then it is counted as a mutation only if it is incompatible with the reference character. If `--profile` is given in addition to `--unique`, then the output will be : `unique\tnew\tboth`, with:
 
   - unique: # mutations that are unique in their column, for each sequence of the alignment
