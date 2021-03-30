@@ -82,9 +82,9 @@ type Alignment interface {
 	// Removes sites having >= cutoff gaps, returns the number of consecutive removed sites at start and end of alignment
 	RemoveGapSites(cutoff float64, ends bool) (first, last int, kept []int)
 	// Removes sites having >= cutoff character, returns the number of consecutive removed sites at start and end of alignment
-	RemoveCharacterSites(c uint8, cutoff float64, ends bool, ignoreCase bool) (first, last int, kept []int)
+	RemoveCharacterSites(c uint8, cutoff float64, ends bool, ignoreCase, ignoreGaps, ignoreNs bool) (first, last int, kept []int)
 	// Removes sites having >= cutoff of the main character at these sites, returns the number of consecutive removed sites at start and end of alignment
-	RemoveMajorityCharacterSites(cutoff float64, ends bool) (first, last int, kept []int)
+	RemoveMajorityCharacterSites(cutoff float64, ends, ignoreGaps, ignoreNs bool) (first, last int, kept []int)
 	// Replaces match characters (.) by their corresponding characters on the first sequence
 	ReplaceMatchChars()
 	Sample(nb int) (Alignment, error) // generate a sub sample of the sequences
@@ -211,10 +211,10 @@ func (a *align) ShuffleSites(rate float64, roguerate float64, randroguefirst boo
 	var sitepermutation, taxpermutation []int
 
 	if rate < 0 || rate > 1 {
-		io.ExitWithMessage(errors.New("Shuffle site rate must be >=0 and <=1"))
+		io.ExitWithMessage(errors.New("shuffle site rate must be >=0 and <=1"))
 	}
 	if roguerate < 0 || roguerate > 1 {
-		io.ExitWithMessage(errors.New("Shuffle rogue rate must be >=0 and <=1"))
+		io.ExitWithMessage(errors.New("shuffle rogue rate must be >=0 and <=1"))
 	}
 
 	nbSitesToShuffle := int(rate * float64(a.Length()))
@@ -231,7 +231,7 @@ func (a *align) ShuffleSites(rate float64, roguerate float64, randroguefirst boo
 	rogues := make([]string, nbRogueSeqToShuffle)
 
 	if (nbRogueSitesToShuffle + nbSitesToShuffle) > a.Length() {
-		io.ExitWithMessage(fmt.Errorf("Too many sites to shuffle (%d+%d>%d)",
+		io.ExitWithMessage(fmt.Errorf("too many sites to shuffle (%d+%d>%d)",
 			nbRogueSitesToShuffle, nbSitesToShuffle, a.Length()))
 	}
 
@@ -275,7 +275,7 @@ func (a *align) ShuffleSites(rate float64, roguerate float64, randroguefirst boo
 // Returns the number of consecutive removed sites at start and end of alignment and the indexes of
 // the remaining positions
 func (a *align) RemoveGapSites(cutoff float64, ends bool) (first, last int, kept []int) {
-	return a.RemoveCharacterSites(GAP, cutoff, ends, false)
+	return a.RemoveCharacterSites(GAP, cutoff, ends, false, false, false)
 }
 
 // RemoveCharacterSites Removes positions constituted of [cutoff*100%,100%] of the given character
@@ -285,6 +285,8 @@ func (a *align) RemoveGapSites(cutoff float64, ends bool) (first, last int, kept
 // other cutoffs : ]0,1] mean that positions with >= cutoff of this character will be removed
 //
 // if ignoreCase then the search is case insensitive
+// if ignoreGaps then gaps are ignored in the % computation
+// if ignoreNs then N/n/X/x (depending on alphabet) are ignored in the % computation
 //
 // If ends is true: then only removes consecutive positions that match the cutoff
 // from start or from end of alignment.
@@ -293,8 +295,10 @@ func (a *align) RemoveGapSites(cutoff float64, ends bool) (first, last int, kept
 //
 // Returns the number of consecutive removed sites at start and end of alignment and the indexes of
 // the remaining positions
-func (a *align) RemoveCharacterSites(c uint8, cutoff float64, ends bool, ignoreCase bool) (first, last int, kept []int) {
+func (a *align) RemoveCharacterSites(c uint8, cutoff float64, ends bool, ignoreCase, ignoreGaps, ignoreNs bool) (first, last int, kept []int) {
 	var nbchars int
+	var total int
+
 	kept = make([]int, a.Length())
 	for i := 0; i < a.Length(); i++ {
 		kept[i] = i
@@ -309,15 +313,27 @@ func (a *align) RemoveCharacterSites(c uint8, cutoff float64, ends bool, ignoreC
 	firstcontinuous := -1
 	lastcontinuous := a.Length()
 
+	all := ALL_AMINO
+	if a.Alphabet() == AMINOACIDS {
+		all = ALL_NUCLE
+	}
+	alllc := unicode.ToLower(all)
+
 	for site := 0; site < a.Length(); site++ {
 		nbchars = 0
-
+		total = 0
 		for seq := 0; seq < a.NbSequences(); seq++ {
 			if (a.seqs[seq].sequence[site] == c) || (ignoreCase && unicode.ToLower(rune(a.seqs[seq].sequence[site])) == unicode.ToLower(rune(c))) {
 				nbchars++
 			}
+			// If it's a gap and we ignore gaps, or if it's a N and we ignore N, then we do not count that
+			// nt/aa in the total
+			if !((ignoreGaps && a.seqs[seq].sequence[site] == GAP) ||
+				(ignoreNs && (a.seqs[seq].sequence[site] == all || a.seqs[seq].sequence[site] == alllc))) {
+				total++
+			}
 		}
-		if (cutoff > 0.0 && float64(nbchars) >= cutoff*float64(a.NbSequences())) || (cutoff == 0 && nbchars > 0) {
+		if (cutoff > 0.0 && float64(nbchars) >= cutoff*float64(total)) || (cutoff == 0 && nbchars > 0) {
 			toremove = append(toremove, site)
 			if site == firstcontinuous+1 {
 				firstcontinuous++
@@ -363,8 +379,16 @@ func (a *align) RemoveCharacterSites(c uint8, cutoff float64, ends bool, ignoreC
 //
 // Returns the number of consecutive removed sites at start and end of alignment and the indexes of the
 // remaining positions
-func (a *align) RemoveMajorityCharacterSites(cutoff float64, ends bool) (first, last int, kept []int) {
-	_, occur := a.MaxCharStats(false)
+func (a *align) RemoveMajorityCharacterSites(cutoff float64, ends, ignoreGaps, ignoreNs bool) (first, last int, kept []int) {
+	var toremove int
+
+	all := ALL_AMINO
+	if a.Alphabet() == AMINOACIDS {
+		all = ALL_NUCLE
+	}
+	alllc := unicode.ToLower(all)
+
+	_, occur := a.MaxCharStats(ignoreGaps, ignoreNs)
 
 	kept = make([]int, a.Length())
 	for i := 0; i < a.Length(); i++ {
@@ -379,6 +403,11 @@ func (a *align) RemoveMajorityCharacterSites(cutoff float64, ends bool) (first, 
 	lastcontinuous := a.Length()
 
 	for site := 0; site < length; site++ {
+		toremove = 0
+		if ignoreGaps {
+			toremove += occur[GAP]
+		}
+
 		if (cutoff > 0.0 && float64(occur[site]) >= cutoff*float64(nbsesq)) || (cutoff == 0 && occur[site] > 0) {
 			toremove = append(toremove, site)
 			if site == firstcontinuous+1 {
@@ -991,11 +1020,18 @@ func (a *align) MaskUnique() (err error) {
 	return
 }
 
-// Returns the Character with the most occurences
+// Returns the Character with the highest occurence
 // for each site of the alignment
-func (a *align) MaxCharStats(excludeGaps bool) (out []uint8, occur []int) {
+func (a *align) MaxCharStats(ignoreGaps, ignoreNs bool) (out []uint8, occur []int) {
 	out = make([]uint8, a.Length())
 	occur = make([]int, a.Length())
+
+	all := uint8(ALL_AMINO)
+	if a.Alphabet() == AMINOACIDS {
+		all = uint8(ALL_NUCLE)
+	}
+	allc := uint8(unicode.ToLower(rune(all)))
+
 	for site := 0; site < a.Length(); site++ {
 		mapstats := make(map[uint8]int)
 		max := 0
@@ -1008,7 +1044,7 @@ func (a *align) MaxCharStats(excludeGaps bool) (out []uint8, occur []int) {
 		for k, v := range mapstats {
 			// If we exclude gaps and it is a gap: we do nothing
 			// Otherwise, if v > max, we update max occurence char
-			if !(excludeGaps && k == GAP) && v > max {
+			if !(ignoreGaps && k == GAP) && !(ignoreNs && (k == all || k == allc)) && v > max {
 				out[site] = k
 				occur[site] = v
 				max = v

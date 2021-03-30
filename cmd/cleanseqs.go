@@ -53,7 +53,7 @@ will be removed.`,
 					io.LogError(err)
 					return
 				}
-				al.RemoveCharacterSeqs(c[0], cleanCutoff, cleanIgnoreCase)
+				al.RemoveCharacterSeqs(c[0], cleanCutoff, cleanIgnoreCase, cleanIgnoreGaps, cleanIgnoreNs)
 			}
 			after := al.NbSequences()
 			writeAlign(al, f)

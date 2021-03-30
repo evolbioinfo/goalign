@@ -62,6 +62,11 @@ will be removed.`,
 			beforelength := al.Length()
 
 			if cleanChar == string(align.GAP) || cleanChar == "GAP" {
+				if cleanIgnoreGaps {
+					err = fmt.Errorf("--ignore-gaps should not be given with --char GAP")
+					io.LogError(err)
+					return
+				}
 				char = "gaps"
 				nbstart, nbend, kept = al.RemoveGapSites(cleanCutoff, cleanEnds)
 			} else if cleanChar == "MAJ" {
@@ -76,7 +81,12 @@ will be removed.`,
 					return
 				}
 				char = string(c[0])
-				nbstart, nbend, kept = al.RemoveCharacterSites(c[0], cleanCutoff, cleanEnds, cleanIgnoreCase)
+				if (c[0] == 'N' || c[0] == 'n') && cleanIgnoreNs {
+					err = fmt.Errorf("--ignore-n should not be given with --char N")
+					io.LogError(err)
+					return
+				}
+				nbstart, nbend, kept = al.RemoveCharacterSites(c[0], cleanCutoff, cleanEnds, cleanIgnoreCase, cleanIgnoreGaps, cleanIgnoreNs)
 			}
 			afterlength := al.Length()
 			writeAlign(al, f)

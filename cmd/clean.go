@@ -9,6 +9,8 @@ var cleanCutoff float64
 var cleanQuiet bool
 var cleanChar string
 var cleanIgnoreCase bool
+var cleanIgnoreGaps bool
+var cleanIgnoreNs bool
 
 // cleanCmd represents the clean command
 var cleanCmd = &cobra.Command{
@@ -33,8 +35,10 @@ will be removed.
 func init() {
 	RootCmd.AddCommand(cleanCmd)
 	cleanCmd.PersistentFlags().StringVarP(&cleanOutput, "output", "o", "stdout", "Cleaned alignment output file")
-	cleanCmd.PersistentFlags().Float64VarP(&cleanCutoff, "cutoff", "c", 0, "Cutoff for gap deletion : 0 remove sites/sequences with > 0 gap, 1 remove sites/sequences with 100% gaps)")
+	cleanCmd.PersistentFlags().Float64VarP(&cleanCutoff, "cutoff", "c", 0, "Cutoff for deletion : 0 remove sites/sequences with > 0 given char, 1 remove sites/sequences with 100% given character)")
 	cleanCmd.PersistentFlags().StringVar(&cleanChar, "char", "GAP", "The character the cutoff is applied to. May be GAP, MAJ, or any other character")
 	cleanCmd.PersistentFlags().BoolVar(&cleanIgnoreCase, "ignore-case", false, "Ignore case of given character (--char) if non special character (GAP/-)")
+	cleanCmd.PersistentFlags().BoolVar(&cleanIgnoreGaps, "ignore-gaps", false, "Ignore gaps for the % computation")
+	cleanCmd.PersistentFlags().BoolVar(&cleanIgnoreNs, "ignore-n", false, "Ignore Ns for the % computation")
 	cleanCmd.PersistentFlags().BoolVarP(&cleanQuiet, "quiet", "q", false, "Do not print results on stderr")
 }
