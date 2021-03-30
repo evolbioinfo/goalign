@@ -28,15 +28,15 @@ func NewPartitionSet(alignmentLength int) (ps *PartitionSet) {
 
 func (ps *PartitionSet) AddRange(partName, modelName string, start, end, modulo int) (err error) {
 	if start < 0 {
-		err = fmt.Errorf("Start of partition is outside of alignment: %d", start)
+		err = fmt.Errorf("start of partition is outside of alignment: %d", start)
 		return
 	}
 	if end >= ps.length {
-		err = fmt.Errorf("End of partition is outside of alignment: %d", end)
+		err = fmt.Errorf("end of partition is outside of alignment: %d", end)
 		return
 	}
 	if modulo <= 0 {
-		err = fmt.Errorf("'Modulo' value is not authorized: %d", modulo)
+		err = fmt.Errorf("'modulo' value is not authorized: %d", modulo)
 		return
 	}
 
@@ -56,7 +56,7 @@ func (ps *PartitionSet) AddRange(partName, modelName string, start, end, modulo 
 
 	for i := start; i <= end; i += modulo {
 		if ps.partitions[i] != -1 {
-			err = fmt.Errorf("Several partitions are defined for site %d ", i)
+			err = fmt.Errorf("several partitions are defined for site %d ", i)
 			return
 		}
 		ps.partitions[i] = partitionIndex
@@ -68,7 +68,7 @@ func (ps *PartitionSet) AddRange(partName, modelName string, start, end, modulo 
 func (ps *PartitionSet) CheckSites() (err error) {
 	for j, p := range ps.partitions {
 		if p == -1 {
-			err = fmt.Errorf("Not all sites are in a partition (%d)", j)
+			err = fmt.Errorf("not all sites are in a partition (%d)", j)
 			return
 		}
 	}

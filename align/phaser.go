@@ -164,7 +164,7 @@ func (p *phaser) Phase(orfs, seqs SeqBag) (phased chan PhasedSequence, err error
 	// Channels for concurrency
 	var seqchan <-chan Sequence
 	if seqs.Alphabet() != NUCLEOTIDS {
-		err = fmt.Errorf("Wrong alphabet for phase : %s", seqs.AlphabetStr())
+		err = fmt.Errorf("wrong alphabet for phase : %s", seqs.AlphabetStr())
 		return
 	}
 
@@ -276,7 +276,7 @@ func (p *phaser) alignAgainstRefsAA(seq Sequence, orfsaa []Sequence) (ph PhasedS
 				tmpseq = revcomp
 			}
 			if seqaa, err = tmpseq.Translate(phase%3, p.geneticcode); err != nil {
-				ph = PhasedSequence{Err: fmt.Errorf("Error while translating %s : %v", seq.Name(), err)}
+				ph = PhasedSequence{Err: fmt.Errorf("error while translating %s : %v", seq.Name(), err)}
 				return
 			}
 			aligner = NewPwAligner(orfaa, seqaa, ALIGN_ALGO_ATG)
@@ -287,7 +287,7 @@ func (p *phaser) alignAgainstRefsAA(seq Sequence, orfsaa []Sequence) (ph PhasedS
 			}
 
 			if al, err = aligner.Alignment(); err != nil {
-				ph = PhasedSequence{Err: fmt.Errorf("Error while aligning %s with %s : %v", orfaa.Name(), seqaa.Name(), err)}
+				ph = PhasedSequence{Err: fmt.Errorf("error while aligning %s with %s : %v", orfaa.Name(), seqaa.Name(), err)}
 				return
 			}
 			_, seqstart := aligner.AlignStarts()
@@ -378,7 +378,7 @@ func (p *phaser) alignAgainstRefsNT(seq Sequence, orfs []Sequence) (ph PhasedSeq
 				aligner.SetScore(p.matchscore, p.mismatchscore)
 			}
 			if al, err = aligner.Alignment(); err != nil {
-				ph = PhasedSequence{Err: fmt.Errorf("Error while aligning %s with %s : %v", orf.Name(), tmpseq.Name(), err)}
+				ph = PhasedSequence{Err: fmt.Errorf("error while aligning %s with %s : %v", orf.Name(), tmpseq.Name(), err)}
 				return
 			}
 			_, seqstart := aligner.AlignStarts()

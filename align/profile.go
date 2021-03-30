@@ -56,7 +56,7 @@ func NewCountProfile() (p *CountProfile) {
 // (arbitrary order of character)
 func (p *CountProfile) CountsAt(i int) (counts []int, err error) {
 	if i > len(p.counts) || i < 0 {
-		err = fmt.Errorf("No counts for character at index %d", i)
+		err = fmt.Errorf("no counts for character at index %d", i)
 		return
 	}
 	counts = p.counts[i]
@@ -66,7 +66,7 @@ func (p *CountProfile) CountsAt(i int) (counts []int, err error) {
 // NameAt returns the name of ith character in the header
 func (p *CountProfile) NameAt(i int) (name uint8, err error) {
 	if i >= len(p.header) || i < 0 {
-		err = fmt.Errorf("No character at index %d", i)
+		err = fmt.Errorf("no character at index %d", i)
 		return
 	}
 	name = p.header[i]
@@ -86,11 +86,11 @@ func (p *CountProfile) Count(r uint8, site int) (count int, err error) {
 	var index int
 	count = 0
 	if index = p.names[int(r)]; index < 0 {
-		err = fmt.Errorf("Character does not exist in the Profile %c", r)
+		err = fmt.Errorf("character does not exist in the Profile %c", r)
 		return
 	}
 	if site < 0 || site >= len(p.counts[index]) {
-		err = fmt.Errorf("Site %d is outside the profile", site)
+		err = fmt.Errorf("site %d is outside the profile", site)
 		return
 	}
 	count = p.counts[index][site]
@@ -100,11 +100,11 @@ func (p *CountProfile) Count(r uint8, site int) (count int, err error) {
 // CountAt returns the number of occurences of the ith character at the position site
 func (p *CountProfile) CountAt(i, site int) (count int, err error) {
 	if i >= len(p.header) || i < 0 {
-		err = fmt.Errorf("No character at index %d", i)
+		err = fmt.Errorf("no character at index %d", i)
 		return
 	}
 	if site < 0 || site >= len(p.counts[i]) {
-		err = fmt.Errorf("Site %d is outside the profile", site)
+		err = fmt.Errorf("site %d is outside the profile", site)
 		return
 	}
 	count = p.counts[i][site]
@@ -135,14 +135,13 @@ func (p *CountProfile) SetHeader(header []uint8) {
 		p.names[int(r)] = i
 		p.counts[i] = make([]int, 0, 100)
 	}
-	return
 }
 
 // AppendCount appends a new site to the profile for the ith character, and
 // associates count to it
 func (p *CountProfile) AppendCount(i, count int) (err error) {
 	if i >= len(p.header) || i < 0 {
-		err = fmt.Errorf("No character at index %d", i)
+		err = fmt.Errorf("no character at index %d", i)
 		return
 	}
 	p.counts[i] = append(p.counts[i], count)

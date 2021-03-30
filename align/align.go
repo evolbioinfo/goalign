@@ -32,8 +32,9 @@ type Alignment interface {
 	Concat(Alignment) error
 	// Computes the majority consensus of the given alignemnt
 	// To do so, it takes the majority character at each alignment site
-	// if excludeGaps is true, then gaps are not taken into account for majority computation
-	Consensus(excludeGaps bool) *align
+	// if ignoreGaps is true, then gaps are not taken into account for majority computation (except if only Gaps)
+	// if ignoreNs is true, then Ns are not taken into account for majority computation (except if only Ns)
+	Consensus(ignoreGaps, ignoreNs bool) *align
 	// Compares all sequences to the first one and counts all differences per sequence
 	//
 	// - alldiffs: The set of all differences that have been seen at least once
@@ -59,7 +60,7 @@ type Alignment interface {
 	Length() int                  // Length of the alignment
 	Mask(start, length int) error // Masks given positions
 	MaskUnique() error            // Masks unique mutations in the given aligment (not the gaps)
-	MaxCharStats(excludeGaps bool) ([]uint8, []int)
+	MaxCharStats(excludeGaps, excludeNs bool) (out []uint8, occur []int, total []int)
 	Mutate(rate float64)  // Adds uniform substitutions in the alignment (~sequencing errors)
 	NbVariableSites() int // Nb of variable sites
 	// Number of Gaps in each sequence that are unique in their alignment site
@@ -76,9 +77,9 @@ type Alignment interface {
 	// converts sites on the given sequence to coordinates on the alignment
 	RefSites(name string, sites []int) (refsites []int, err error)
 	// Removes sequences having >= cutoff gaps, returns number of removed sequences
-	RemoveGapSeqs(cutoff float64) int
+	RemoveGapSeqs(cutoff float64, ignoreNs bool) int
 	// Removes sequences having >= cutoff character, returns number of removed sequences
-	RemoveCharacterSeqs(c uint8, cutoff float64, ignoreCase bool) int
+	RemoveCharacterSeqs(c uint8, cutoff float64, ignoreCase, ignoreGaps, ignoreNs bool) int
 	// Removes sites having >= cutoff gaps, returns the number of consecutive removed sites at start and end of alignment
 	RemoveGapSites(cutoff float64, ends bool) (first, last int, kept []int)
 	// Removes sites having >= cutoff character, returns the number of consecutive removed sites at start and end of alignment
@@ -121,7 +122,7 @@ func NewAlign(alphabet int) *align {
 	case BOTH:
 		alphabet = NUCLEOTIDS
 	default:
-		io.ExitWithMessage(errors.New("Unexpected sequence alphabet type"))
+		io.ExitWithMessage(errors.New("unexpected sequence alphabet type"))
 	}
 	return &align{
 		seqbag{
@@ -317,7 +318,7 @@ func (a *align) RemoveCharacterSites(c uint8, cutoff float64, ends bool, ignoreC
 	if a.Alphabet() == AMINOACIDS {
 		all = ALL_NUCLE
 	}
-	alllc := unicode.ToLower(all)
+	allc := unicode.ToLower(all)
 
 	for site := 0; site < a.Length(); site++ {
 		nbchars = 0
@@ -329,7 +330,7 @@ func (a *align) RemoveCharacterSites(c uint8, cutoff float64, ends bool, ignoreC
 			// If it's a gap and we ignore gaps, or if it's a N and we ignore N, then we do not count that
 			// nt/aa in the total
 			if !((ignoreGaps && a.seqs[seq].sequence[site] == GAP) ||
-				(ignoreNs && (a.seqs[seq].sequence[site] == all || a.seqs[seq].sequence[site] == alllc))) {
+				(ignoreNs && (a.seqs[seq].sequence[site] == uint8(all) || a.seqs[seq].sequence[site] == uint8(allc)))) {
 				total++
 			}
 		}
@@ -380,15 +381,7 @@ func (a *align) RemoveCharacterSites(c uint8, cutoff float64, ends bool, ignoreC
 // Returns the number of consecutive removed sites at start and end of alignment and the indexes of the
 // remaining positions
 func (a *align) RemoveMajorityCharacterSites(cutoff float64, ends, ignoreGaps, ignoreNs bool) (first, last int, kept []int) {
-	var toremove int
-
-	all := ALL_AMINO
-	if a.Alphabet() == AMINOACIDS {
-		all = ALL_NUCLE
-	}
-	alllc := unicode.ToLower(all)
-
-	_, occur := a.MaxCharStats(ignoreGaps, ignoreNs)
+	_, occur, total := a.MaxCharStats(ignoreGaps, ignoreNs)
 
 	kept = make([]int, a.Length())
 	for i := 0; i < a.Length(); i++ {
@@ -396,19 +389,13 @@ func (a *align) RemoveMajorityCharacterSites(cutoff float64, ends, ignoreGaps, i
 	}
 
 	length := a.Length()
-	nbsesq := a.NbSequences()
 	toremove := make([]int, 0, 10)
 	// To remove only positions with this character at start and ends positions
 	firstcontinuous := -1
 	lastcontinuous := a.Length()
 
 	for site := 0; site < length; site++ {
-		toremove = 0
-		if ignoreGaps {
-			toremove += occur[GAP]
-		}
-
-		if (cutoff > 0.0 && float64(occur[site]) >= cutoff*float64(nbsesq)) || (cutoff == 0 && occur[site] > 0) {
+		if (cutoff > 0.0 && float64(occur[site]) >= cutoff*float64(total[site])) || (cutoff == 0 && occur[site] > 0) {
 			toremove = append(toremove, site)
 			if site == firstcontinuous+1 {
 				firstcontinuous++
@@ -458,15 +445,15 @@ func (a *align) RefCoordinates(name string, refstart, reflen int) (alistart, ali
 	var ngaps int
 
 	if seq, exists = a.GetSequenceChar(name); !exists {
-		err = fmt.Errorf("Sequence %s does not exist in the alignment", name)
+		err = fmt.Errorf("sequence %s does not exist in the alignment", name)
 		return
 	}
 	if refstart < 0 {
-		err = fmt.Errorf("Start on reference sequence must be > 0 : %d", refstart)
+		err = fmt.Errorf("start on reference sequence must be > 0 : %d", refstart)
 		return
 	}
 	if reflen <= 0 {
-		err = fmt.Errorf("Reference length must be > 0 : %d", reflen)
+		err = fmt.Errorf("reference length must be > 0 : %d", reflen)
 		return
 	}
 
@@ -492,7 +479,7 @@ func (a *align) RefCoordinates(name string, refstart, reflen int) (alistart, ali
 	}
 
 	if refstart+reflen > len(seq)-ngaps {
-		err = fmt.Errorf("Start + Length (%d + %d) on reference sequence falls outside the sequence", refstart, reflen)
+		err = fmt.Errorf("start + Length (%d + %d) on reference sequence falls outside the sequence", refstart, reflen)
 	}
 
 	return
@@ -523,11 +510,11 @@ func (a *align) RefSites(name string, sites []int) (refsites []int, err error) {
 	mappos := make(map[int]bool)
 	for _, s := range sites {
 		if s < 0 {
-			err = fmt.Errorf("Site on reference sequence must be > 0 : %d", s)
+			err = fmt.Errorf("site on reference sequence must be > 0 : %d", s)
 			return
 		}
 		if s >= a.Length() {
-			err = fmt.Errorf("Site is outside alignment : %d", s)
+			err = fmt.Errorf("site is outside alignment : %d", s)
 			return
 		}
 		mappos[s] = true
@@ -556,8 +543,8 @@ func (a *align) RefSites(name string, sites []int) (refsites []int, err error) {
 // other cutoffs : ]0,1] mean that sequences with >= cutoff gaps will be removed
 //
 // Returns the number of removed sequences
-func (a *align) RemoveGapSeqs(cutoff float64) int {
-	return a.RemoveCharacterSeqs(GAP, cutoff, false)
+func (a *align) RemoveGapSeqs(cutoff float64, ignoreNs bool) int {
+	return a.RemoveCharacterSeqs(GAP, cutoff, false, false, ignoreNs)
 }
 
 // RemoveCharacterSeqs Removes sequences constituted of [cutoff*100%,100%] of the given character
@@ -567,10 +554,13 @@ func (a *align) RemoveGapSeqs(cutoff float64) int {
 // other cutoffs : ]0,1] mean that positions with >= cutoff of this character will be removed
 //
 // if ignoreCase then the search is case insensitive
+// if ignoreGaps is true, then gaps are not taken into account
+// if ignoreNs is true, then Ns are not taken into account
 //
 // Returns the number of removed sequences
-func (a *align) RemoveCharacterSeqs(c uint8, cutoff float64, ignoreCase bool) int {
+func (a *align) RemoveCharacterSeqs(c uint8, cutoff float64, ignoreCase, ignoreGaps, ignoreNs bool) int {
 	var nbseqs int
+	var total int
 	if cutoff < 0 || cutoff > 1 {
 		cutoff = 0
 	}
@@ -579,15 +569,27 @@ func (a *align) RemoveCharacterSeqs(c uint8, cutoff float64, ignoreCase bool) in
 	a.Clear()
 	nbremoved := 0
 
+	all := uint8(ALL_NUCLE)
+	if a.Alphabet() == AMINOACIDS {
+		all = uint8(ALL_AMINO)
+	}
+	allc := uint8(unicode.ToLower(rune(all)))
+
 	for _, seq := range oldseqs {
 		nbseqs = 0
+		total = 0
 
 		for site := 0; site < length; site++ {
 			if (seq.sequence[site] == c) || (ignoreCase && unicode.ToLower(rune(seq.sequence[site])) == unicode.ToLower(rune(c))) {
 				nbseqs++
 			}
+			// If we exclude gaps and it is a gap: we do nothing
+			// or if we exclude Ns and it is a N: we do nothing
+			if !(ignoreGaps && seq.sequence[site] == uint8(GAP)) && !(ignoreNs && (seq.sequence[site] == all || seq.sequence[site] == allc)) {
+				total++
+			}
 		}
-		if (cutoff > 0.0 && float64(nbseqs) >= cutoff*float64(length)) || (cutoff == 0 && nbseqs > 0) {
+		if (cutoff > 0.0 && float64(nbseqs) >= cutoff*float64(total)) || (cutoff == 0 && nbseqs > 0) {
 			nbremoved++
 		} else {
 			a.AddSequenceChar(seq.name, seq.sequence, seq.comment)
@@ -823,7 +825,7 @@ func (a *align) SimulateRogue(prop float64, proplen float64) ([]string, []string
 		seqlist[r] = seq.name
 		sitesToShuffle := rand.Perm(a.Length())[0:len]
 		// we Shuffle some sequence sites
-		for i, _ := range sitesToShuffle {
+		for i := range sitesToShuffle {
 			j := rand.Intn(i + 1)
 			seq.sequence[sitesToShuffle[i]], seq.sequence[sitesToShuffle[j]] = seq.sequence[sitesToShuffle[j]], seq.sequence[sitesToShuffle[i]]
 		}
@@ -840,7 +842,7 @@ func (a *align) SimulateRogue(prop float64, proplen float64) ([]string, []string
 // If trimsize >= sequence or trimsize < 0 lengths, then throw an error
 func (a *align) TrimSequences(trimsize int, fromStart bool) error {
 	if trimsize < 0 {
-		return errors.New("Trim size must not be < 0")
+		return errors.New("trim size must not be < 0")
 	}
 	if trimsize >= a.Length() {
 		return errors.New("Trim size must be < alignment length (" + fmt.Sprintf("%d", a.Length()) + ")")
@@ -946,7 +948,7 @@ func (a *align) CharStatsSite(site int) (outmap map[uint8]int, err error) {
 	outmap = make(map[uint8]int)
 
 	if site < 0 || site >= a.Length() {
-		err = errors.New("Cannot compute site char statistics: Site index is outside alignment")
+		err = errors.New("cannot compute site char statistics: Site index is outside alignment")
 	} else {
 
 		for _, s := range a.seqs {
@@ -1020,39 +1022,54 @@ func (a *align) MaskUnique() (err error) {
 	return
 }
 
-// Returns the Character with the highest occurence
-// for each site of the alignment
-func (a *align) MaxCharStats(ignoreGaps, ignoreNs bool) (out []uint8, occur []int) {
+// MaxCharStats returns the Character with the highest occurence
+// for each site of the alignment.
+// if ignoreGaps is true, then gaps are not taken into account (except if only Gaps)
+// if ignoreNs is true, then Ns are not taken into account (except if only Ns)
+// Returns
+//   - out: The character with the highest occurence at each site
+//   - occur: The number of occurences of the most common character at each site
+//   - total: The total number of sequences taken into account at each site (not always the number
+//            of sequences in the alignment if ignoreGaps or ignoreNs)
+func (a *align) MaxCharStats(ignoreGaps, ignoreNs bool) (out []uint8, occur []int, total []int) {
 	out = make([]uint8, a.Length())
 	occur = make([]int, a.Length())
+	total = make([]int, a.Length())
 
-	all := uint8(ALL_AMINO)
+	all := uint8(ALL_NUCLE)
 	if a.Alphabet() == AMINOACIDS {
-		all = uint8(ALL_NUCLE)
+		all = uint8(ALL_AMINO)
 	}
 	allc := uint8(unicode.ToLower(rune(all)))
-
 	for site := 0; site < a.Length(); site++ {
 		mapstats := make(map[uint8]int)
 		max := 0
-		for _, seq := range a.seqs {
+		for i, seq := range a.seqs {
+			// Initialize out with the first character of the site
+			// Allows to take into account cases with only Ns or only Gaps
+			if i == 0 {
+				out[site] = uint8(unicode.ToUpper(rune(seq.sequence[site])))
+				occur[site] = len(a.seqs)
+			}
+			// Increment character count
 			mapstats[uint8(unicode.ToUpper(rune(seq.sequence[site])))]++
 		}
 
-		out[site] = GAP
-		occur[site] = len(a.seqs)
 		for k, v := range mapstats {
 			// If we exclude gaps and it is a gap: we do nothing
 			// Otherwise, if v > max, we update max occurence char
-			if !(ignoreGaps && k == GAP) && !(ignoreNs && (k == all || k == allc)) && v > max {
-				out[site] = k
-				occur[site] = v
-				max = v
+			if !(ignoreGaps && k == GAP) && !(ignoreNs && (k == all || k == allc)) {
+				total[site] += v
+				if v > max {
+					out[site] = k
+					occur[site] = v
+					max = v
+				}
 			}
 		}
 	}
 
-	return out, occur
+	return
 }
 
 // RandomAlignment generates a random alignment with a given alphabet
@@ -1108,7 +1125,7 @@ func (a *align) AvgAllelesPerSite() float64 {
 // if removegaps is true, do not take into account gap characters
 func (a *align) Entropy(site int, removegaps bool) (float64, error) {
 	if site < 0 || site > a.Length() {
-		return 1.0, errors.New("Site position is outside alignment")
+		return 1.0, errors.New("site position is outside alignment")
 	}
 
 	// Number of occurences of each different aa/nt
@@ -1338,18 +1355,18 @@ func (a *align) Pssm(log bool, pseudocount float64, normalization int) (pssm map
 		total := 0.0
 		for _, c := range alphabet {
 			if s, ok := stats[c]; !ok {
-				err = errors.New(fmt.Sprintf("No charchacter %c in alignment statistics", c))
+				err = fmt.Errorf("no charchacter %c in alignment statistics", c)
 				return
 			} else {
 				total += float64(s)
 			}
 		}
 		for _, c := range alphabet {
-			s, _ := stats[c]
+			s := stats[c]
 			normfactors[c] = 1.0 / (float64(a.NbSequences()) + (float64(len(pssm)) * pseudocount)) / (float64(s) / total)
 		}
 	default:
-		err = errors.New("Unknown normalization option")
+		err = errors.New("unknown normalization option")
 		return
 	}
 
@@ -1379,7 +1396,7 @@ func (a *align) Pssm(log bool, pseudocount float64, normalization int) (pssm map
 	entropy = make([]float64, a.Length())
 	/* Applying normalization factors */
 	for k, v := range pssm {
-		for i, _ := range v {
+		for i := range v {
 			v[i] = v[i] * normfactors[k]
 			if normalization == PSSM_NORM_LOGO {
 				entropy[i] += -v[i] * math.Log(v[i]) / math.Log(2)
@@ -1390,7 +1407,7 @@ func (a *align) Pssm(log bool, pseudocount float64, normalization int) (pssm map
 	/* We compute the logo */
 	if normalization == PSSM_NORM_LOGO {
 		for _, v := range pssm {
-			for i, _ := range v {
+			for i := range v {
 				v[i] = v[i] * (math.Log(float64(len(alphabet)))/math.Log(2) - entropy[i])
 			}
 		}
@@ -1398,7 +1415,7 @@ func (a *align) Pssm(log bool, pseudocount float64, normalization int) (pssm map
 		/* Applying log2 transform */
 		if log {
 			for _, v := range pssm {
-				for i, _ := range v {
+				for i := range v {
 					v[i] = math.Log(v[i]) / math.Log(2)
 				}
 			}
@@ -1411,15 +1428,15 @@ func (a *align) Pssm(log bool, pseudocount float64, normalization int) (pssm map
 // Extract a subalignment from this alignment
 func (a *align) SubAlign(start, length int) (subalign Alignment, err error) {
 	if start < 0 || start > a.Length() {
-		err = fmt.Errorf("Start is outside the alignment")
+		err = fmt.Errorf("start is outside the alignment")
 		return
 	}
 	if length < 0 {
-		err = fmt.Errorf("Length is negative")
+		err = fmt.Errorf("length is negative")
 		return
 	}
 	if start+length < 0 || start+length > a.Length() {
-		err = fmt.Errorf("Start+Length is outside the alignment")
+		err = fmt.Errorf("start+length is outside the alignment")
 		return
 	}
 	subalign = NewAlign(a.alphabet)
@@ -1437,7 +1454,7 @@ func (a *align) SubAlign(start, length int) (subalign Alignment, err error) {
 func (a *align) SelectSites(sites []int) (subalign Alignment, err error) {
 	for _, site := range sites {
 		if site < 0 || site > a.Length() {
-			err = fmt.Errorf("Site is outside the alignment")
+			err = fmt.Errorf("site is outside the alignment")
 			return
 		}
 	}
@@ -1462,15 +1479,15 @@ func (a *align) InverseCoordinates(start, length int) (invstarts, invlengths []i
 	invstarts = make([]int, 0)
 	invlengths = make([]int, 0)
 	if start < 0 || start > a.Length() {
-		err = fmt.Errorf("Start is outside the alignment")
+		err = fmt.Errorf("start is outside the alignment")
 		return
 	}
 	if length < 0 {
-		err = fmt.Errorf("Length is negative")
+		err = fmt.Errorf("length is negative")
 		return
 	}
 	if start+length < 0 || start+length > a.Length() {
-		err = fmt.Errorf("Start+Length is outside the alignment")
+		err = fmt.Errorf("start+length is outside the alignment")
 		return
 	}
 
@@ -1492,7 +1509,7 @@ func (a *align) InversePositions(sites []int) (invsites []int, err error) {
 
 	for _, s := range sites {
 		if s < 0 || s > a.Length() {
-			err = fmt.Errorf("Site is outside the alignment")
+			err = fmt.Errorf("site is outside the alignment")
 			return
 		}
 	}
@@ -1601,7 +1618,7 @@ Returns an error if the sequences do not have the same alphabet.
 */
 func (a *align) Concat(c Alignment) (err error) {
 	if a.Alphabet() != c.Alphabet() {
-		return errors.New("Alignments do not have the same alphabet")
+		return errors.New("alignments do not have the same alphabet")
 	}
 	a.IterateAll(func(name string, sequence []uint8, comment string) bool {
 		_, ok := c.GetSequenceChar(name)
@@ -1651,9 +1668,9 @@ func (a *align) Concat(c Alignment) (err error) {
 //
 // if excludeGaps is true, then gaps are not taken into account for
 // majority computation
-func (a *align) Consensus(excludeGaps bool) (cons *align) {
+func (a *align) Consensus(excludeGaps, excludeNs bool) (cons *align) {
 	var consseq []uint8
-	consseq, _ = a.MaxCharStats(excludeGaps)
+	consseq, _, _ = a.MaxCharStats(excludeGaps, excludeNs)
 
 	cons = NewAlign(a.Alphabet())
 
@@ -1706,7 +1723,7 @@ func (a *align) CountDifferences() (alldiffs []string, diffs []map[string]int) {
 		return
 	}
 
-	alldiffsmap = make(map[string]bool, 0)
+	alldiffsmap = make(map[string]bool)
 	i = 0
 	a.IterateChar(func(name string, other []uint8) bool {
 		if i == 0 {
@@ -1775,7 +1792,7 @@ func (a *align) NumGapsUniquePerSequence(countProfile *CountProfile) (numuniques
 	// Check that profile has the right length
 	if countProfile != nil {
 		if !countProfile.CheckLength(a.Length()) {
-			err = fmt.Errorf("Profile does not have same length than alignment")
+			err = fmt.Errorf("profile does not have same length than alignment")
 			return
 		}
 	}
@@ -1835,7 +1852,7 @@ func (a *align) NumMutationsUniquePerSequence(countProfile *CountProfile) (numun
 	// Check that profile has the right length
 	if countProfile != nil {
 		if !countProfile.CheckLength(a.Length()) {
-			err = fmt.Errorf("Profile does not have same length than alignment")
+			err = fmt.Errorf("profile does not have same length than alignment")
 			return
 		}
 	}
@@ -1886,11 +1903,11 @@ func (a *align) CodonAlign(ntseqs SeqBag) (rtAl *align, err error) {
 	var buffer bytes.Buffer
 
 	if a.Alphabet() != AMINOACIDS {
-		return nil, errors.New("Wrong alphabet, cannot reverse translate nucleotides")
+		return nil, errors.New("wrong alphabet, cannot reverse translate nucleotides")
 	}
 
 	if ntseqs.Alphabet() != NUCLEOTIDS {
-		return nil, errors.New("Wrong nucleotidic alignment alphabet, cannot reverse translate")
+		return nil, errors.New("wrong nucleotidic alignment alphabet, cannot reverse translate")
 	}
 
 	rtAl = NewAlign(ntseqs.Alphabet())
@@ -1899,7 +1916,7 @@ func (a *align) CodonAlign(ntseqs SeqBag) (rtAl *align, err error) {
 		buffer.Reset()
 		ntseq, ok := ntseqs.GetSequenceChar(name)
 		if !ok {
-			err = fmt.Errorf("Sequence %s is not present in the nucleotidic sequence, cannot reverse translate", name)
+			err = fmt.Errorf("sequence %s is not present in the nucleotidic sequence, cannot reverse translate", name)
 			return true
 		}
 
@@ -1909,7 +1926,7 @@ func (a *align) CodonAlign(ntseqs SeqBag) (rtAl *align, err error) {
 				buffer.WriteString("---")
 			} else {
 				if ntseqindex+3 > len(ntseq) {
-					err = fmt.Errorf("Nucleotidic sequence %s is shorter than its aa counterpart", name)
+					err = fmt.Errorf("nucleotidic sequence %s is shorter than its aa counterpart", name)
 					return true
 				}
 				buffer.WriteString(string(ntseq[ntseqindex : ntseqindex+3]))
@@ -1922,7 +1939,7 @@ func (a *align) CodonAlign(ntseqs SeqBag) (rtAl *align, err error) {
 				log.Print(fmt.Sprintf("%s: Dropping %d additional nucleotides", name, len(ntseq)-ntseqindex))
 			} else {
 				// A problem with the sequences
-				err = fmt.Errorf("Nucleotidic sequence %s is longer than its aa counterpart (%d = more than 2 nucleotides remaining)", name, len(ntseq)-ntseqindex)
+				err = fmt.Errorf("nucleotidic sequence %s is longer than its aa counterpart (%d = more than 2 nucleotides remaining)", name, len(ntseq)-ntseqindex)
 				return true
 			}
 		}
@@ -1946,7 +1963,7 @@ func (a *align) SiteConservation(position int) (conservation int, err error) {
 	conservation = POSITION_NOT_CONSERVED
 
 	if position < 0 || position >= a.Length() {
-		err = errors.New("Site conservation: Position is not in sequence length range")
+		err = errors.New("site conservation: Position is not in sequence length range")
 		return
 	}
 
@@ -2003,12 +2020,12 @@ func (a *align) SiteConservation(position int) (conservation int, err error) {
 // If the partitionset has one partition or less, then returns an error
 func (a *align) Split(part *PartitionSet) (als []Alignment, err error) {
 	if part.NPartitions() <= 1 {
-		err = fmt.Errorf("The given partitionset contains less than 2 partitions")
+		err = fmt.Errorf("the given partitionset contains less than 2 partitions")
 		return
 	}
 
 	if part.AliLength() != a.Length() {
-		err = fmt.Errorf("The given partitionset has a different alignment length")
+		err = fmt.Errorf("the given partitionset has a different alignment length")
 		return
 	}
 
@@ -2076,7 +2093,7 @@ func seqBagToAlignment(sb *seqbag) (al *align, err error) {
 	sb.IterateChar(func(name string, s []uint8) bool {
 		l := len(s)
 		if al.length != -1 && al.length != l {
-			err = fmt.Errorf("Sequence %s does not have same length as other sequences", name)
+			err = fmt.Errorf("sequence %s does not have same length as other sequences", name)
 			return true
 		}
 		al.length = l

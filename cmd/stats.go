@@ -317,8 +317,8 @@ func printAllSequenceStats(al align.Alignment, refSequence align.Sequence, count
 
 // Prints the Character with the most frequency
 // for each site of the alignment
-func printMaxCharStats(align align.Alignment, excludeGaps bool) {
-	maxchars, occur := align.MaxCharStats(excludeGaps)
+func printMaxCharStats(align align.Alignment, ignoreGaps, ignoreNs bool) {
+	maxchars, occur, _ := align.MaxCharStats(ignoreGaps, ignoreNs)
 
 	fmt.Fprintf(os.Stdout, "site\tchar\tnb\n")
 	for i, c := range maxchars {

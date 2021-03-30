@@ -20,8 +20,8 @@ func Test_seqbag_UniqueCharacters(t *testing.T) {
 		{name: "t1",
 			fields: fields{seqmap: nil,
 				seqs: []*seq{
-					&seq{sequence: []uint8("ACGTACGTACGT")},
-					&seq{sequence: []uint8("ACGTAC*TACGT")}}},
+					{sequence: []uint8("ACGTACGTACGT")},
+					{sequence: []uint8("ACGTAC*TACGT")}}},
 			wantChars: []uint8("*ACGT")},
 	}
 	for _, tt := range tests {

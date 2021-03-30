@@ -339,7 +339,7 @@ func TestRemoveOneGapSequence(t *testing.T) {
 		return false
 	})
 
-	a.RemoveGapSeqs(0.0)
+	a.RemoveGapSeqs(0.0, false)
 
 	if a.NbSequences() != 0 {
 		t.Error(fmt.Errorf("We should have removed all sequences %d", a.NbSequences()))
@@ -363,7 +363,7 @@ func TestRemoveOneGapSequence2(t *testing.T) {
 		return false
 	})
 
-	a.RemoveGapSeqs(0.0)
+	a.RemoveGapSeqs(0.0, false)
 
 	if a.NbSequences() != 150 {
 		t.Error("We should have removed half of sequences")
@@ -385,7 +385,7 @@ func TestRemoveAllGapSequences(t *testing.T) {
 		seq0[i] = GAP
 	}
 
-	a.RemoveGapSeqs(1.0)
+	a.RemoveGapSeqs(1.0, false)
 
 	if a.NbSequences() != 299 {
 		t.Error("We should have removed only one sequence")
@@ -409,7 +409,7 @@ func TestRemoveHalfGapSequences(t *testing.T) {
 		}
 	}
 
-	a.RemoveGapSeqs(0.5)
+	a.RemoveGapSeqs(0.5, false)
 
 	if a.NbSequences() != 299 {
 		t.Error("We should have removed only one sequence")
@@ -607,7 +607,7 @@ func TestReplace(t *testing.T) {
 	a.IterateChar(func(name string, sequence []uint8) bool {
 		for _, c := range sequence {
 			if c == 'A' {
-				t.Error(fmt.Sprintf("There should not remains A after replace"))
+				t.Errorf("There should not remains A after replace")
 				return true
 			}
 			if c == '-' {
@@ -617,7 +617,7 @@ func TestReplace(t *testing.T) {
 		return false
 	})
 	if gapcount != acount {
-		t.Error(fmt.Sprintf("Each A should have been replaced by a -"))
+		t.Errorf("Each A should have been replaced by a -")
 	}
 }
 
@@ -795,7 +795,7 @@ func TestRogue3(t *testing.T) {
 func TestEntropy(t *testing.T) {
 	length := 3
 	nbseqs := 5
-	a, err := RandomAlignment(AMINOACIDS, length, nbseqs)
+	a, _ := RandomAlignment(AMINOACIDS, length, nbseqs)
 
 	alldifferent := []uint8{'A', 'R', 'N', 'D', 'C'}
 	// First site: only 'R' => Entropy 0.0
@@ -825,7 +825,7 @@ func TestEntropy(t *testing.T) {
 func TestSubAlign(t *testing.T) {
 	length := 200
 	nbseqs := 1001
-	a, err := RandomAlignment(AMINOACIDS, length, nbseqs)
+	a, _ := RandomAlignment(AMINOACIDS, length, nbseqs)
 
 	/* We put only A from index 9 to index 99 */
 	for i := 0; i < 1001; i++ {
@@ -887,7 +887,7 @@ func TestConcat(t *testing.T) {
 		s, _ := acopy.GetSequence(name)
 		s2, _ := a2.GetSequence(name)
 		if string(sequence) != s+s2 {
-			t.Error(fmt.Sprintf("Concatenated sequence is not correct"))
+			t.Errorf("Concatenated sequence is not correct")
 			return true
 		}
 		return false
@@ -934,16 +934,14 @@ func TestAppend(t *testing.T) {
 }
 func TestDedup(t *testing.T) {
 	var err error
-	var a Alignment
-
-	a = NewAlign(NUCLEOTIDS)
+	var a Alignment = NewAlign(NUCLEOTIDS)
 	a.AddSequence("A", "ACGT", "")
 	a.AddSequence("B", "ACGG", "")
 	a.AddSequence("C", "ACGT", "")
 	a.AddSequence("C", "ACGT", "")
 	a.AddSequence("D", "ACGT", "")
 
-	var expectedIdentical [][]string = [][]string{[]string{"A", "C", "C_0001", "D"}, []string{"B"}}
+	var expectedIdentical [][]string = [][]string{{"A", "C", "C_0001", "D"}, {"B"}}
 	var identical [][]string
 
 	if a.NbSequences() != 5 {
@@ -984,16 +982,14 @@ func TestDedup(t *testing.T) {
 
 func TestDedup2(t *testing.T) {
 	var err error
-	var sb SeqBag
-
-	sb = NewSeqBag(NUCLEOTIDS)
+	var sb SeqBag = NewSeqBag(NUCLEOTIDS)
 	sb.AddSequence("A", "ACGT", "")
 	sb.AddSequence("B", "ACGG", "")
 	sb.AddSequence("C", "ACGT", "")
 	sb.AddSequence("C", "ACGT", "")
 	sb.AddSequence("D", "ACGT", "")
 
-	var expectedIdentical [][]string = [][]string{[]string{"A", "C", "C_0001", "D"}, []string{"B"}}
+	var expectedIdentical [][]string = [][]string{{"A", "C", "C_0001", "D"}, {"B"}}
 	var identical [][]string
 
 	if sb.NbSequences() != 5 {
@@ -1034,16 +1030,14 @@ func TestDedup2(t *testing.T) {
 
 func TestDedup3(t *testing.T) {
 	var err error
-	var sb SeqBag
-
-	sb = NewSeqBag(NUCLEOTIDS)
+	var sb SeqBag = NewSeqBag(NUCLEOTIDS)
 	sb.AddSequence("A", "ACGT", "")
 	sb.AddSequence("B", "ACGG", "")
 	sb.AddSequence("C", "ACGT", "")
 	sb.AddSequence("C", "ACG", "")
 	sb.AddSequence("D", "A", "")
 
-	var expectedIdentical [][]string = [][]string{[]string{"A", "C"}, []string{"B"}, []string{"C_0001"}, []string{"D"}}
+	var expectedIdentical [][]string = [][]string{{"A", "C"}, {"B"}, {"C_0001"}, {"D"}}
 	var identical [][]string
 
 	if sb.NbSequences() != 5 {
@@ -1784,7 +1778,7 @@ func TestConsensus(t *testing.T) {
 	exp = NewAlign(NUCLEOTIDS)
 	exp.AddSequence("consensus", "ATCTT-TTTTTC", "")
 
-	c = a.Consensus(false)
+	c = a.Consensus(false, false)
 
 	if !exp.Identical(c) {
 		t.Error(fmt.Errorf("Consensus is not identical to expected alignment"))
@@ -1804,7 +1798,29 @@ func TestConsensusGaps(t *testing.T) {
 	exp = NewAlign(NUCLEOTIDS)
 	exp.AddSequence("consensus", "ATCTTGTTTTTC", "")
 
-	c = a.Consensus(true)
+	c = a.Consensus(true, false)
+
+	if !exp.Identical(c) {
+		fmt.Println(exp)
+		fmt.Println(c)
+		t.Error(fmt.Errorf("Consensus is not identical to expected alignment"))
+	}
+}
+
+func TestConsensusNs(t *testing.T) {
+	var a Alignment
+	var c Alignment
+	var exp Alignment
+
+	a = NewAlign(NUCLEOTIDS)
+	a.AddSequence("A", "ACGACGACGACCN", "")
+	a.AddSequence("B", "ATCTTNTTTTT-N", "")
+	a.AddSequence("C", "ATCTTNTTTTT-T", "")
+
+	exp = NewAlign(NUCLEOTIDS)
+	exp.AddSequence("consensus", "ATCTTGTTTTT-T", "")
+
+	c = a.Consensus(false, true)
 
 	if !exp.Identical(c) {
 		fmt.Println(exp)
@@ -1915,36 +1931,62 @@ func Test_align_NumMutationsComparedToReferenceSequence(t *testing.T) {
 }
 
 func Test_align_RemoveMajorityCharacterSites(t *testing.T) {
-	var a, a2, exp, exp2 Alignment
+	var a, a2, a3, a4, exp, exp2, exp3, exp4 Alignment
 
 	a = NewAlign(NUCLEOTIDS)
-	a.AddSequence("A", "N-ANGA-GACC", "")
-	a.AddSequence("B", "N-TN-T-TTTC", "")
-	a.AddSequence("C", "NCTN-TTT--T", "")
-	a.AddSequence("D", "C-ANCCCCCCC", "")
+	a.AddSequence("A", "N-ANGA-GACNC", "")
+	a.AddSequence("B", "N-TN-T-TTTAC", "")
+	a.AddSequence("C", "NCTN-TTT--AT", "")
+	a.AddSequence("D", "C-ANCCCCCCCC", "")
 
 	a2, _ = a.Clone()
+	a3, _ = a.Clone()
+	a4, _ = a.Clone()
 
 	exp = NewAlign(NUCLEOTIDS)
-	exp.AddSequence("A", "AGA-GAC", "")
-	exp.AddSequence("B", "T-T-TTT", "")
-	exp.AddSequence("C", "T-TTT--", "")
-	exp.AddSequence("D", "ACCCCCC", "")
+	exp.AddSequence("A", "AGA-GACN", "")
+	exp.AddSequence("B", "T-T-TTTA", "")
+	exp.AddSequence("C", "T-TTT--A", "")
+	exp.AddSequence("D", "ACCCCCCC", "")
 
 	exp2 = NewAlign(NUCLEOTIDS)
-	exp2.AddSequence("A", "ANGA-GAC", "")
-	exp2.AddSequence("B", "TN-T-TTT", "")
-	exp2.AddSequence("C", "TN-TTT--", "")
-	exp2.AddSequence("D", "ANCCCCCC", "")
+	exp2.AddSequence("A", "ANGA-GACN", "")
+	exp2.AddSequence("B", "TN-T-TTTA", "")
+	exp2.AddSequence("C", "TN-TTT--A", "")
+	exp2.AddSequence("D", "ANCCCCCCC", "")
 
-	a.RemoveMajorityCharacterSites(0.6, false)
-	a2.RemoveMajorityCharacterSites(0.6, true)
+	exp3 = NewAlign(NUCLEOTIDS)
+	exp3.AddSequence("A", "AGA-GAN", "")
+	exp3.AddSequence("B", "T-T-TTA", "")
+	exp3.AddSequence("C", "T-TTT-A", "")
+	exp3.AddSequence("D", "ACCCCCC", "")
+
+	exp4 = NewAlign(NUCLEOTIDS)
+	exp4.AddSequence("A", "AGA-GAC", "")
+	exp4.AddSequence("B", "T-T-TTT", "")
+	exp4.AddSequence("C", "T-TTT--", "")
+	exp4.AddSequence("D", "ACCCCCC", "")
+
+	a.RemoveMajorityCharacterSites(0.6, false, false, false)
+	a2.RemoveMajorityCharacterSites(0.6, true, false, false)
+	a3.RemoveMajorityCharacterSites(0.6, false, true, false)
+	a4.RemoveMajorityCharacterSites(0.6, false, false, true)
 
 	if !a.Identical(exp) {
+		t.Errorf(a.String())
 		t.Error(fmt.Errorf("Remove majority failed"))
 	}
 	if !a2.Identical(exp2) {
+		t.Errorf(a2.String())
 		t.Error(fmt.Errorf("Remove majority failed with ends"))
+	}
+	if !a3.Identical(exp3) {
+		t.Errorf(a3.String())
+		t.Error(fmt.Errorf("Remove majority failed ignore gaps"))
+	}
+	if !a4.Identical(exp4) {
+		t.Errorf(a4.String())
+		t.Error(fmt.Errorf("Remove majority failed ignore Ns"))
 	}
 }
 
@@ -1971,9 +2013,7 @@ func Test_align_MaskUnique(t *testing.T) {
 }
 
 func Test_align_InverseCoordinates(t *testing.T) {
-	var a Alignment
-
-	a = NewAlign(NUCLEOTIDS)
+	var a Alignment = NewAlign(NUCLEOTIDS)
 	a.AddSequence("A", "ACANGA-TACC", "")
 	a.AddSequence("B", "ACTN-T-TTTC", "")
 	a.AddSequence("C", "ACTN-TTT--T", "")
@@ -2014,9 +2054,7 @@ func Test_align_InverseCoordinates(t *testing.T) {
 }
 
 func Test_align_InversePositions(t *testing.T) {
-	var a Alignment
-
-	a = NewAlign(NUCLEOTIDS)
+	var a Alignment = NewAlign(NUCLEOTIDS)
 	a.AddSequence("A", "ACANGA-TACC", "")
 	a.AddSequence("B", "ACTN-T-TTTC", "")
 	a.AddSequence("C", "ACTN-TTT--T", "")

@@ -7,6 +7,8 @@ import (
 )
 
 var maxCharExcludeGaps bool
+var maxCharIgnoreGaps bool
+var maxCharIgnoreNs bool
 
 // charCmd represents the char command
 var maxCharCmd = &cobra.Command{
@@ -26,6 +28,7 @@ goalign stats maxchar -i align.fasta
 `,
 	RunE: func(cmd *cobra.Command, args []string) (err error) {
 		var aligns *align.AlignChannel
+		maxCharIgnoreGaps = maxCharIgnoreGaps || maxCharExcludeGaps
 
 		if aligns, err = readalign(infile); err != nil {
 			io.LogError(err)
@@ -38,7 +41,7 @@ goalign stats maxchar -i align.fasta
 			io.LogError(err)
 			return
 		}
-		printMaxCharStats(al, maxCharExcludeGaps)
+		printMaxCharStats(al, maxCharIgnoreGaps, maxCharIgnoreNs)
 
 		return
 	},
@@ -47,6 +50,7 @@ goalign stats maxchar -i align.fasta
 func init() {
 	statsCmd.AddCommand(maxCharCmd)
 
-	maxCharCmd.PersistentFlags().BoolVar(&maxCharExcludeGaps, "exclude-gaps", false, "Exclude gaps in the majority computation")
-
+	maxCharCmd.PersistentFlags().BoolVar(&maxCharExcludeGaps, "exclude-gaps", false, "Ignore gaps in the majority computation (for backward compatibility, will be removed in future releases)")
+	maxCharCmd.PersistentFlags().BoolVar(&maxCharIgnoreGaps, "ignore-gaps", false, "Ignore gaps in the majority computation")
+	maxCharCmd.PersistentFlags().BoolVar(&maxCharIgnoreNs, "ignore-n", false, "Ignore Ns in the majority computation")
 }

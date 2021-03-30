@@ -78,7 +78,7 @@ func NewSeqBag(alphabet int) *seqbag {
 	case AMINOACIDS, NUCLEOTIDS, UNKNOWN:
 		// OK
 	default:
-		io.ExitWithMessage(errors.New("Unexpected sequence alphabet type"))
+		io.ExitWithMessage(errors.New("unexpected sequence alphabet type"))
 	}
 	return &seqbag{
 		make(map[string]*seq),
@@ -103,10 +103,10 @@ func (sb *seqbag) SampleSeqBag(nb int) (sample SeqBag, err error) {
 // sampleSeqBag is a private function to allow manipulation of the structure and not the interface
 func (sb *seqbag) sampleSeqBag(nb int) (*seqbag, error) {
 	if sb.NbSequences() < nb {
-		return nil, errors.New("Number of sequences to sample is greater than alignment size")
+		return nil, errors.New("number of sequences to sample is greater than alignment size")
 	}
 	if nb < 1 {
-		return nil, errors.New("Cannot sample less than 1 sequence")
+		return nil, errors.New("cannot sample less than 1 sequence")
 	}
 	sample := NewSeqBag(sb.alphabet)
 	permutation := rand.Perm(sb.NbSequences())
@@ -212,8 +212,8 @@ func (sb *seqbag) AlphabetCharToIndex(c uint8) int {
 // Removes spaces and tabs at beginning and end of sequence names
 // and replaces newick special characters \s\t()[];,.: by "-"
 func (sb *seqbag) CleanNames(namemap map[string]string) {
-	firstlast := regexp.MustCompile("(^[\\s\\t]+|[\\s\\t]+$)")
-	inside := regexp.MustCompile("[\\|\\s\\t,\\[\\]\\(\\),;\\.:]+")
+	firstlast := regexp.MustCompile(`(^[\s\t]+|[\s\t]+$)`)
+	inside := regexp.MustCompile(`[\|\s\t,\[\]\(\),;\.:]+`)
 
 	for _, seq := range sb.seqs {
 		old := seq.name
@@ -378,10 +378,10 @@ func (sb *seqbag) NbSequences() int {
 
 func (sb *seqbag) SetSequenceChar(ithAlign, ithSite int, char uint8) error {
 	if ithAlign < 0 || ithAlign >= sb.NbSequences() {
-		return errors.New("Sequence index is > number of sequences")
+		return errors.New("sequence index is > number of sequences")
 	}
 	if ithSite < 0 || ithSite >= sb.seqs[ithAlign].Length() {
-		return errors.New("Site index is outside sequence length")
+		return errors.New("site index is outside sequence length")
 	}
 
 	sb.seqs[ithAlign].sequence[ithSite] = char
@@ -642,7 +642,7 @@ func (sb *seqbag) rarefySeqBag(nb int, counts map[string]int) (sample *seqbag, e
 	sort.Strings(tmpcountskeys)
 
 	if nb >= total {
-		err = fmt.Errorf("Number of sequences to sample %d is >= sum of the counts %d", nb, total)
+		err = fmt.Errorf("number of sequences to sample %d is >= sum of the counts %d", nb, total)
 		return
 	}
 
@@ -654,7 +654,7 @@ func (sb *seqbag) rarefySeqBag(nb int, counts map[string]int) (sample *seqbag, e
 		for idk, k := range tmpcountskeys {
 			v, ok := tmpcounts[k]
 			if !ok {
-				err = fmt.Errorf("No sequence named %s is present in the tmp count map", k)
+				err = fmt.Errorf("no sequence named %s is present in the tmp count map", k)
 				return
 			}
 			proba += float64(v) / float64(total)
@@ -763,7 +763,7 @@ func (sb *seqbag) Sort() {
 	// Sort names
 	sort.Strings(names)
 	for i, n := range names {
-		s, _ := sb.seqmap[n]
+		s := sb.seqmap[n]
 		sb.seqs[i] = s
 	}
 }
@@ -792,7 +792,7 @@ func (sb *seqbag) Translate(phase int, geneticcode int) (err error) {
 	}
 
 	if sb.Alphabet() != NUCLEOTIDS {
-		err = errors.New("Wrong alphabet, cannot translate to AA")
+		err = errors.New("wrong alphabet, cannot translate to AA")
 		return
 	}
 
@@ -864,7 +864,7 @@ func (sb *seqbag) LongestORF(reverse bool) (orf Sequence, err error) {
 	}
 
 	if !found {
-		err = fmt.Errorf("No ORF has been found on any sequence")
+		err = fmt.Errorf("no ORF has been found on any sequence")
 		return
 	}
 
@@ -891,7 +891,7 @@ func (sb *seqbag) MaxNameLength() (max int) {
 func (sb *seqbag) TrimNames(namemap map[string]string, size int) error {
 	shortmap := make(map[string]bool)
 	if math.Pow10(size-2) < float64(sb.NbSequences()) {
-		return fmt.Errorf("New name size (%d) does not allow to identify that amount of sequences (%d)",
+		return fmt.Errorf("new name size (%d) does not allow to identify that amount of sequences (%d)",
 			size-2, sb.NbSequences())
 	}
 	// If previous short names, we take them into account for uniqueness

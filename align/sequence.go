@@ -110,12 +110,10 @@ func (s *seq) LongestORF() (start, end int) {
 			strings.ToUpper(string(s.sequence)),
 			"U", "T", -1),
 		-1)
-	if idx != nil {
-		for _, pos := range idx {
-			if pos[1]-pos[0] > end-start {
-				end = pos[1]
-				start = pos[0]
-			}
+	for _, pos := range idx {
+		if pos[1]-pos[0] > end-start {
+			end = pos[1]
+			start = pos[0]
 		}
 	}
 	return start, end
@@ -130,7 +128,7 @@ func RandomSequence(alphabet, length int) ([]uint8, error) {
 		case NUCLEOTIDS:
 			seq[i] = stdnucleotides[rand.Intn(len(stdnucleotides))]
 		default:
-			return nil, errors.New("Unexpected sequence alphabet type")
+			return nil, errors.New("unexpected sequence alphabet type")
 		}
 	}
 	return seq, nil
@@ -154,7 +152,7 @@ func Complement(seq []uint8) (err error) {
 	for i, n := range seq {
 		c, ok := complement_nuc_mapping[n]
 		if !ok {
-			err = fmt.Errorf("Character %c can not be complemented", n)
+			err = fmt.Errorf("character %c can not be complemented", n)
 			return
 		}
 		seq[i] = c
@@ -166,7 +164,7 @@ func Complement(seq []uint8) (err error) {
 func (s *seq) Complement() error {
 	a := s.DetectAlphabet()
 	if a != NUCLEOTIDS && a != BOTH {
-		return fmt.Errorf("Wrong alphabet for Complementing sequence")
+		return fmt.Errorf("wrong alphabet for Complementing sequence")
 	}
 	return Complement(s.sequence)
 }
@@ -267,7 +265,7 @@ func (s *seq) NumMutationsComparedToReferenceSequence(alphabet int, refseq Seque
 	var nt uint8
 
 	if refseq.Length() != s.Length() {
-		err = fmt.Errorf("Reference sequence and sequence do not have same length (%d,%d), cannot compute a number of mutation", refseq.Length(), s.Length())
+		err = fmt.Errorf("reference sequence and sequence do not have same length (%d,%d), cannot compute a number of mutation", refseq.Length(), s.Length())
 		return
 	}
 
@@ -326,12 +324,12 @@ func (s *seq) Translate(phase int, geneticcode int) (tr Sequence, err error) {
 func bufferTranslate(s *seq, phase int, code map[string]uint8, buffer *bytes.Buffer) (err error) {
 	buffer.Reset()
 	if s.DetectAlphabet() != NUCLEOTIDS && s.DetectAlphabet() != BOTH {
-		err = fmt.Errorf("Cannot translate this sequence, wrong alphabet")
+		err = fmt.Errorf("cannot translate this sequence, wrong alphabet")
 		return
 	}
 
 	if len(s.sequence) < 3+phase {
-		err = fmt.Errorf("Cannot translate a sequence with length < 3+phase (%s)", s.name)
+		err = fmt.Errorf("cannot translate a sequence with length < 3+phase (%s)", s.name)
 		return
 	}
 	for i := phase; i < len(s.sequence)-2; i += 3 {
@@ -442,12 +440,12 @@ func GenAllPossibleCodons(nt1, nt2, nt3 uint8) (codons []string) {
 // n1 and nt2 valures are from NT_... in const.go
 func EqualOrCompatible(nt1, nt2 uint8) (ok bool, err error) {
 
-	if nt1 < 0 || nt1 > NT_N {
-		err = fmt.Errorf("Given nucleotide 1 code (%d) does not exist", nt1)
+	if nt1 > NT_N {
+		err = fmt.Errorf("given nucleotide 1 code (%d) does not exist", nt1)
 		return
 	}
-	if nt2 < 0 || nt2 > NT_N {
-		err = fmt.Errorf("Given nucleotide 1 code (%d) does not exist", nt1)
+	if nt2 > NT_N {
+		err = fmt.Errorf("given nucleotide 1 code (%d) does not exist", nt1)
 		return
 	}
 	if nt1 == nt2 {
@@ -481,12 +479,12 @@ func EqualOrCompatible(nt1, nt2 uint8) (ok bool, err error) {
 func NtIUPACDifference(nt1, nt2 uint8) (diff float64, err error) {
 	diff = 0.0
 
-	if nt1 < 0 || nt1 > NT_N {
-		err = fmt.Errorf("Given nucleotide 1 code (%d) does not exist", nt1)
+	if nt1 > NT_N {
+		err = fmt.Errorf("given nucleotide 1 code (%d) does not exist", nt1)
 		return
 	}
-	if nt2 < 0 || nt2 > NT_N {
-		err = fmt.Errorf("Given nucleotide 1 code (%d) does not exist", nt1)
+	if nt2 > NT_N {
+		err = fmt.Errorf("given nucleotide 1 code (%d) does not exist", nt1)
 		return
 	}
 

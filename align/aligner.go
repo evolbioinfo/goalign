@@ -102,7 +102,7 @@ func (a *pwaligner) initMatrix(l1, l2 int) {
 	a.matrix = make([][]float64, l1)
 	a.trace = make([][]int, l1)
 	a.maxa = make([]float64, l2)
-	for i, _ = range a.matrix {
+	for i = range a.matrix {
 		a.matrix[i] = make([]float64, l2)
 		a.trace[i] = make([]int, l2)
 	}
@@ -482,7 +482,7 @@ func (a *pwaligner) seqToindices(s Sequence) (indices []int, err error) {
 	for i = 0; i < len(s.SequenceChar()); i++ {
 		indices[i], ok = a.chartopos[uint8(unicode.ToUpper(rune(s.CharAt(i))))]
 		if !ok {
-			err = fmt.Errorf("Character not part of alphabet : %c", s.CharAt(i))
+			err = fmt.Errorf("character not part of alphabet : %c", s.CharAt(i))
 			return
 		}
 	}

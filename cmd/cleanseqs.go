@@ -44,7 +44,7 @@ will be removed.`,
 		for al := range aligns.Achan {
 			before := al.NbSequences()
 			if cleanChar == string(align.GAP) || cleanChar == "GAP" {
-				al.RemoveGapSeqs(cleanCutoff)
+				al.RemoveGapSeqs(cleanCutoff, cleanIgnoreNs)
 			} else {
 				//single character
 				c := []uint8(cleanChar)

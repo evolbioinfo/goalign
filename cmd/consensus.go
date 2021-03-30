@@ -10,6 +10,8 @@ import (
 
 var consensusOutput string
 var consensusExcludeGaps bool
+var consensusIgnoreGaps bool
+var consensusIgnoreNs bool
 
 // concatCmd represents the concat command
 var consensusCmd = &cobra.Command{
@@ -31,6 +33,8 @@ then will output several consensus sequences.
 		var aligns *align.AlignChannel
 		var f *os.File
 
+		consensusIgnoreGaps = consensusIgnoreGaps || consensusExcludeGaps
+
 		if aligns, err = readalign(infile); err != nil {
 			io.LogError(err)
 			return
@@ -43,7 +47,7 @@ then will output several consensus sequences.
 		defer closeWriteFile(f, consensusOutput)
 
 		for al := range aligns.Achan {
-			cons := al.Consensus(consensusExcludeGaps)
+			cons := al.Consensus(consensusIgnoreGaps, consensusIgnoreNs)
 			writeAlign(cons, f)
 		}
 
@@ -58,5 +62,7 @@ then will output several consensus sequences.
 func init() {
 	RootCmd.AddCommand(consensusCmd)
 	consensusCmd.PersistentFlags().StringVarP(&consensusOutput, "output", "o", "stdout", "Alignment output file")
-	consensusCmd.PersistentFlags().BoolVar(&consensusExcludeGaps, "exclude-gaps", false, "Exclude gaps in the majority computation")
+	consensusCmd.PersistentFlags().BoolVar(&consensusIgnoreGaps, "ignore-gaps", false, "Ignore gaps in the majority computation")
+	consensusCmd.PersistentFlags().BoolVar(&consensusExcludeGaps, "exclude-gaps", false, "Ignore gaps in the majority computation (for backward compatibility, will be removed in future releases)")
+	consensusCmd.PersistentFlags().BoolVar(&consensusIgnoreNs, "ignore-n", false, "Ignore Ns in the majority computation")
 }

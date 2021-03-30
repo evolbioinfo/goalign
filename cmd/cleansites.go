@@ -71,7 +71,7 @@ will be removed.`,
 				nbstart, nbend, kept = al.RemoveGapSites(cleanCutoff, cleanEnds)
 			} else if cleanChar == "MAJ" {
 				char = "maj"
-				nbstart, nbend, kept = al.RemoveMajorityCharacterSites(cleanCutoff, cleanEnds)
+				nbstart, nbend, kept = al.RemoveMajorityCharacterSites(cleanCutoff, cleanEnds, cleanIgnoreGaps, cleanIgnoreNs)
 			} else {
 				//single character
 				c := []uint8(cleanChar)

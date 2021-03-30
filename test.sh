@@ -359,9 +359,9 @@ ACCTACGGCTCTAGACAGCTGAAGTCCGGTTCCGAGCACTGTACGGAAACTTGAAAAGGCTCGACGGAGGCTTGTTCCGC
 AGAGTGGGACTATAACATAC
 EOF
 cat > expectedlog <<EOF
-[Warning] in cmd/cleanseqs.go (line 36), message: Alignment (0) #seqs before cleaning=10
-[Warning] in cmd/cleanseqs.go (line 37), message: Alignment (0) #seqs after cleaning=5
-[Warning] in cmd/cleanseqs.go (line 38), message: Alignment (0) removed sequences=5
+[Warning] in cmd/cleanseqs.go (line 61), message: Alignment (0) #seqs before cleaning=10
+[Warning] in cmd/cleanseqs.go (line 62), message: Alignment (0) #seqs after cleaning=5
+[Warning] in cmd/cleanseqs.go (line 63), message: Alignment (0) removed sequences=5
 EOF
 ${GOALIGN} clean seqs -i input > result 2>log
 diff -q -b result expected
@@ -374,6 +374,215 @@ rm -f result mapfile log expectedlog
 ${GOALIGN} replace -s "-" -n "N" -i input | ${GOALIGN} clean seqs --char n --ignore-case > result 2>log
 diff -q -b result expected
 rm -f expected result mapfile log expectedlog
+
+echo "->goalign clean seqs --ignore-gaps"
+cat > input <<EOF
+>Seq0000
+GATTAATTTGCCGTAGGCCAGAATCTGAAGATCGAACACTTTAAGTTTTCACTTCTAATGGAGAGGACTAGTTCATACTT
+TTTAAACACTTTTACATCGA
+>Seq0001
+--T-------A------G---A-AA-GNNNNNNNNC---G------A-G--T-T---T-C-G--GA---AC----G---T
+-T-A-------G---ATGTG
+>Seq0002
+-T-----C-GG---A-T---G------CAAGG-T-A---------A--GC--C---A-C---C-----C-----G---G-
+AG-------A--TG----C-
+>Seq0003
+GAGTGGAGGCTTTATGGCACAAGGTATTAGAGACTGAGGGGCACCCCGGCATGGTAAGCAGGAGCCATCGCGAAGGCTTC
+AGGTATCTTCCTGTGTTACC
+>Seq0004
+--T--C-----AT--C-------G------G---A-G--TAC--T--AC-A-----AC---G--G--A--CG-CT-----
+T---T---T------T-T--
+>Seq0005
+AGTTTGACTATGAGCGCCGGCTTAGTGCTGACAGTGATGCTCCGTTGTAAGGGTCCTGATGTTCTTGTGCTCGCGCATAT
+TAGAGCTGAGTTTCCCAAAG
+>Seq0006
+T----A----G----A-GT-CG-------A--AA-CAG-G-----C--C---A-------T-------T-CT--C--C-A
+---G----C----G-T--C-
+>Seq0007
+CTGGTAATACCTGCGCTATTTCGTCAGTTCGTGTACGGGTAACGATAGCGGTTAATGCTTATTCCGATCAGCTCACACCC
+ATGAAGGTGGCTCTGGAGCC
+>Seq0008
+T---T--CCCA--------A-CT--------G--A---G---C-C----TGG-----T---T-------G-C-C--G---
+-C------GT-A-CT-T---
+>Seq0009
+ACCTACGGCTCTAGACAGCTGAAGTCCGGTTCCGAGCACTGTACGGAAACTTGAAAAGGCTCGACGGAGGCTTGTTCCGC
+AGAGTGGGACTATAACATAC
+EOF
+cat > expected <<EOF
+>Seq0000
+GATTAATTTGCCGTAGGCCAGAATCTGAAGATCGAACACTTTAAGTTTTCACTTCTAATGGAGAGGACTAGTTCATACTT
+TTTAAACACTTTTACATCGA
+>Seq0002
+-T-----C-GG---A-T---G------CAAGG-T-A---------A--GC--C---A-C---C-----C-----G---G-
+AG-------A--TG----C-
+>Seq0003
+GAGTGGAGGCTTTATGGCACAAGGTATTAGAGACTGAGGGGCACCCCGGCATGGTAAGCAGGAGCCATCGCGAAGGCTTC
+AGGTATCTTCCTGTGTTACC
+>Seq0004
+--T--C-----AT--C-------G------G---A-G--TAC--T--AC-A-----AC---G--G--A--CG-CT-----
+T---T---T------T-T--
+>Seq0005
+AGTTTGACTATGAGCGCCGGCTTAGTGCTGACAGTGATGCTCCGTTGTAAGGGTCCTGATGTTCTTGTGCTCGCGCATAT
+TAGAGCTGAGTTTCCCAAAG
+>Seq0006
+T----A----G----A-GT-CG-------A--AA-CAG-G-----C--C---A-------T-------T-CT--C--C-A
+---G----C----G-T--C-
+>Seq0007
+CTGGTAATACCTGCGCTATTTCGTCAGTTCGTGTACGGGTAACGATAGCGGTTAATGCTTATTCCGATCAGCTCACACCC
+ATGAAGGTGGCTCTGGAGCC
+>Seq0008
+T---T--CCCA--------A-CT--------G--A---G---C-C----TGG-----T---T-------G-C-C--G---
+-C------GT-A-CT-T---
+>Seq0009
+ACCTACGGCTCTAGACAGCTGAAGTCCGGTTCCGAGCACTGTACGGAAACTTGAAAAGGCTCGACGGAGGCTTGTTCCGC
+AGAGTGGGACTATAACATAC
+EOF
+cat > expectedlog <<EOF
+[Warning] in cmd/cleanseqs.go (line 61), message: Alignment (0) #seqs before cleaning=10
+[Warning] in cmd/cleanseqs.go (line 62), message: Alignment (0) #seqs after cleaning=9
+[Warning] in cmd/cleanseqs.go (line 63), message: Alignment (0) removed sequences=1
+EOF
+
+${GOALIGN} clean seqs --char N --ignore-gaps -c 0.2 -i input > result 2>log
+diff -q -b result expected
+diff -q -b log expectedlog
+
+rm -f result mapfile log expectedlog
+
+
+echo "->goalign clean seqs --ignore-n"
+cat > input <<EOF
+>Seq0000
+GATTAATTTGCCGTAGGCCAGAATCTGAAGATCGAACACTTTAAGTTTTCACTTCTAATGGAGAGGACTAGTTCATACTT
+TTTAAACACTTTTACATCGA
+>Seq0001
+NNTNNNNNNNANNNNNNGNNNANAANG--------CNNNGNNNNNNANGNNTNTNNNTNCNGNNGANNNACNNNNGNNNT
+NTNANNNNNNNGNNNATGTG
+>Seq0002
+NTNNNNNCNGGNNNANTNNNGNNNNNNCAAGGNTNANNNNNNNNNANNGCNNCNNNANCNNNCNNNNNCNNNNNGNNNGN
+AGNNNNNNNANNTGNNNNCN
+>Seq0003
+GAGTGGAGGCTTTATGGCACAAGGTATTAGAGACTGAGGGGCACCCCGGCATGGTAAGCAGGAGCCATCGCGAAGGCTTC
+AGGTATCTTCCTGTGTTACC
+>Seq0004
+NNTNNCNNNNNATNNCNNNNNNNGNNNNNNGNNNANGNNTACNNTNNACNANNNNNACNNNGNNGNNANNCGNCTNNNNN
+TNNNTNNNTNNNNNNTNTNN
+>Seq0005
+AGTTTGACTATGAGCGCCGGCTTAGTGCTGACAGTGATGCTCCGTTGTAAGGGTCCTGATGTTCTTGTGCTCGCGCATAT
+TAGAGCTGAGTTTCCCAAAG
+>Seq0006
+TNNNNANNNNGNNNNANGTNCGNNNNNNNANNAANCAGNGNNNNNCNNCNNNANNNNNNNTNNNNNNNTNCTNNCNNCNA
+NNNGNNNNCNNNNGNTNNCN
+>Seq0007
+CTGGTAATACCTGCGCTATTTCGTCAGTTCGTGTACGGGTAACGATAGCGGTTAATGCTTATTCCGATCAGCTCACACCC
+ATGAAGGTGGCTCTGGAGCC
+>Seq0008
+TNNNTNNCCCANNNNNNNNANCTNNNNNNNNGNNANNNGNNNCNCNNNNTGGNNNNNTNNNTNNNNNNNGNCNCNNGNNN
+NCNNNNNNGTNANCTNTNNN
+>Seq0009
+ACCTACGGCTCTAGACAGCTGAAGTCCGGTTCCGAGCACTGTACGGAAACTTGAAAAGGCTCGACGGAGGCTTGTTCCGC
+AGAGTGGGACTATAACATAC
+EOF
+cat > expected <<EOF
+>Seq0000
+GATTAATTTGCCGTAGGCCAGAATCTGAAGATCGAACACTTTAAGTTTTCACTTCTAATGGAGAGGACTAGTTCATACTT
+TTTAAACACTTTTACATCGA
+>Seq0002
+NTNNNNNCNGGNNNANTNNNGNNNNNNCAAGGNTNANNNNNNNNNANNGCNNCNNNANCNNNCNNNNNCNNNNNGNNNGN
+AGNNNNNNNANNTGNNNNCN
+>Seq0003
+GAGTGGAGGCTTTATGGCACAAGGTATTAGAGACTGAGGGGCACCCCGGCATGGTAAGCAGGAGCCATCGCGAAGGCTTC
+AGGTATCTTCCTGTGTTACC
+>Seq0004
+NNTNNCNNNNNATNNCNNNNNNNGNNNNNNGNNNANGNNTACNNTNNACNANNNNNACNNNGNNGNNANNCGNCTNNNNN
+TNNNTNNNTNNNNNNTNTNN
+>Seq0005
+AGTTTGACTATGAGCGCCGGCTTAGTGCTGACAGTGATGCTCCGTTGTAAGGGTCCTGATGTTCTTGTGCTCGCGCATAT
+TAGAGCTGAGTTTCCCAAAG
+>Seq0006
+TNNNNANNNNGNNNNANGTNCGNNNNNNNANNAANCAGNGNNNNNCNNCNNNANNNNNNNTNNNNNNNTNCTNNCNNCNA
+NNNGNNNNCNNNNGNTNNCN
+>Seq0007
+CTGGTAATACCTGCGCTATTTCGTCAGTTCGTGTACGGGTAACGATAGCGGTTAATGCTTATTCCGATCAGCTCACACCC
+ATGAAGGTGGCTCTGGAGCC
+>Seq0008
+TNNNTNNCCCANNNNNNNNANCTNNNNNNNNGNNANNNGNNNCNCNNNNTGGNNNNNTNNNTNNNNNNNGNCNCNNGNNN
+NCNNNNNNGTNANCTNTNNN
+>Seq0009
+ACCTACGGCTCTAGACAGCTGAAGTCCGGTTCCGAGCACTGTACGGAAACTTGAAAAGGCTCGACGGAGGCTTGTTCCGC
+AGAGTGGGACTATAACATAC
+EOF
+cat > expectedlog <<EOF
+[Warning] in cmd/cleanseqs.go (line 61), message: Alignment (0) #seqs before cleaning=10
+[Warning] in cmd/cleanseqs.go (line 62), message: Alignment (0) #seqs after cleaning=9
+[Warning] in cmd/cleanseqs.go (line 63), message: Alignment (0) removed sequences=1
+EOF
+${GOALIGN} clean seqs --char GAP --ignore-n -c 0.2 -i input > result 2>log
+diff -q -b result expected
+diff -q -b log expectedlog
+rm -f result mapfile expected log expectedlog
+
+
+echo "->goalign clean seqs --ignore-n /2"
+cat > input <<EOF
+>Seq0000
+ACGTN
+>Seq0001
+AANNn
+>Seq0002
+ACGT-
+>Seq0003
+ACGT-
+EOF
+cat > expected <<EOF
+>Seq0000
+ACGTN
+>Seq0002
+ACGT-
+>Seq0003
+ACGT-
+EOF
+cat > expectedlog <<EOF
+[Warning] in cmd/cleanseqs.go (line 61), message: Alignment (0) #seqs before cleaning=4
+[Warning] in cmd/cleanseqs.go (line 62), message: Alignment (0) #seqs after cleaning=3
+[Warning] in cmd/cleanseqs.go (line 63), message: Alignment (0) removed sequences=1
+EOF
+
+${GOALIGN} clean seqs --char A --ignore-n -c 0.5 -i input > result 2>log
+diff -q -b result expected
+diff -q -b log expectedlog
+rm -f result mapfile expected log expectedlog
+
+
+echo "->goalign clean seqs --ignore-n /3"
+cat > input <<EOF
+>Seq0000
+ACGTN
+>Seq0001
+AaNnN
+>Seq0002
+ACGT-
+>Seq0003
+ACGT-
+EOF
+cat > expected <<EOF
+>Seq0000
+ACGTN
+>Seq0002
+ACGT-
+>Seq0003
+ACGT-
+EOF
+cat > expectedlog <<EOF
+[Warning] in cmd/cleanseqs.go (line 61), message: Alignment (0) #seqs before cleaning=4
+[Warning] in cmd/cleanseqs.go (line 62), message: Alignment (0) #seqs after cleaning=3
+[Warning] in cmd/cleanseqs.go (line 63), message: Alignment (0) removed sequences=1
+EOF
+
+${GOALIGN} clean seqs --char A --ignore-n --ignore-case -c 0.9 -i input > result 2>log
+diff -q -b result expected
+diff -q -b log expectedlog
+rm -f result mapfile expected log expectedlog
 
 
 echo "->goalign random"
@@ -4122,6 +4331,43 @@ EOF
 ${GOALIGN} consensus -i input -o result
 diff -q -b expected result
 rm -f input expected result
+
+echo "->goalign consensus --ignore-gaps/3"
+cat > input <<EOF
+>s1
+ACGACGACGANCC
+>2
+ATCTT-TTTTNTC
+>3
+ATCTT-TTTTGTT
+EOF
+cat > expected <<EOF
+>consensus
+ATCTTGTTTTNTC
+EOF
+
+${GOALIGN} consensus -i input --ignore-gaps -o result
+diff -q -b expected result
+rm -f input expected result
+
+echo "->goalign consensus --ignore-n/3"
+cat > input <<EOF
+>s1
+ACGACGACGANCC
+>2
+ATCTT-TTTTNTC
+>3
+ATCTT-TTTTGTT
+EOF
+cat > expected <<EOF
+>consensus
+ATCTT-TTTTGTC
+EOF
+
+${GOALIGN} consensus -i input --ignore-n -o result
+diff -q -b expected result
+rm -f input expected result
+
 
 
 echo "->goalign append"
