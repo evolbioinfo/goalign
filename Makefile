@@ -1,5 +1,4 @@
 GO_EXECUTABLE := go
-DEP_EXECUTABLE := ${GOPATH}/bin/dep
 VERSION := $(shell git describe --abbrev=10 --dirty --always --tags)
 DIST_DIRS := find * -type d -exec
 VERSION_PACKAGE := github.com/evolbioinfo/goalign/version.Version
@@ -9,7 +8,7 @@ PACKAGE:=github.com/evolbioinfo/goalign
 all: dep build test 
 
 dep:
-	${DEP_EXECUTABLE} ensure
+	${GO_EXECUTABLE} get .
 
 build:
 	${GO_EXECUTABLE} build -o ${NAME} -ldflags "-X ${VERSION_PACKAGE}=${VERSION}" ${PACKAGE}
@@ -32,20 +31,20 @@ deploy: deploywinamd deploywin386 deploylinuxamd deploylinux386 deploydarwinamd 
 deploydir:
 	mkdir -p deploy/${VERSION}
 
-deploywinamd: deploydir
+deploywinamd: dep deploydir
 	env GOOS=windows GOARCH=amd64 ${GO_EXECUTABLE} build -o deploy/${VERSION}/${NAME}_amd64.exe -ldflags "-X ${VERSION_PACKAGE}=${VERSION}" ${PACKAGE}
 
-deploywin386: deploydir
+deploywin386: dep deploydir
 	env GOOS=windows GOARCH=386 ${GO_EXECUTABLE} build -o deploy/${VERSION}/${NAME}_386.exe -ldflags "-X ${VERSION_PACKAGE}=${VERSION}" ${PACKAGE}
 
-deploylinuxamd: deploydir
+deploylinuxamd: dep deploydir
 	env GOOS=linux GOARCH=amd64 ${GO_EXECUTABLE} build -o deploy/${VERSION}/${NAME}_amd64_linux -ldflags "-X ${VERSION_PACKAGE}=${VERSION}" ${PACKAGE}
 
-deploylinux386: deploydir
+deploylinux386: dep deploydir
 	env GOOS=linux GOARCH=386 ${GO_EXECUTABLE} build -o deploy/${VERSION}/${NAME}_386_linux -ldflags "-X ${VERSION_PACKAGE}=${VERSION}" ${PACKAGE}
 
-deploydarwinamd: deploydir
+deploydarwinamd: dep deploydir
 	env GOOS=darwin GOARCH=amd64 ${GO_EXECUTABLE} build -o deploy/${VERSION}/${NAME}_amd64_darwin -ldflags "-X ${VERSION_PACKAGE}=${VERSION}" ${PACKAGE}
 
-deploydarwin386: deploydir
+deploydarwin386: dep deploydir
 	env GOOS=darwin GOARCH=386 ${GO_EXECUTABLE} build -o deploy/${VERSION}/${NAME}_386_darwin -ldflags "-X ${VERSION_PACKAGE}=${VERSION}" ${PACKAGE}
