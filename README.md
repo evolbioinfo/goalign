@@ -1,5 +1,5 @@
 # Goalign
-[![build](https://github.com/evolbioinfo/goalign/actions/workflows/go.yml/badge.svg)](https://github.com/evolbioinfo/goalign/actions) [![Anaconda-Server Badge](https://anaconda.org/bioconda/goalign/badges/installer/conda.svg)](https://anaconda.org/bioconda/goalign) [![Docker hub](https://img.shields.io/docker/cloud/build/evolbioinfo/gotree)](https://hub.docker.com/r/evolbioinfo/goalign/builds/)
+[![build](https://github.com/evolbioinfo/goalign/actions/workflows/go.yml/badge.svg)](https://github.com/evolbioinfo/goalign/actions) [![Anaconda-Server Badge](https://anaconda.org/bioconda/goalign/badges/installer/conda.svg)](https://anaconda.org/bioconda/goalign) [![Docker hub](https://img.shields.io/docker/cloud/build/evolbioinfo/goalign)](https://hub.docker.com/r/evolbioinfo/goalign/builds/)
 
 ![Goalign Logo](images/logo.png)
 
