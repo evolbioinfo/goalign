@@ -1,6 +1,5 @@
 GO_EXECUTABLE := go
 VERSION := $(shell git describe --abbrev=10 --dirty --always --tags)
-DIST_DIRS := find * -type d -exec
 VERSION_PACKAGE := github.com/evolbioinfo/goalign/version.Version
 NAME := goalign
 PACKAGE:=github.com/evolbioinfo/goalign
