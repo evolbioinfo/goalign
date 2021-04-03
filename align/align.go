@@ -306,7 +306,7 @@ func (a *align) RemoveCharacterSites(c uint8, cutoff float64, ends bool, ignoreC
 		cutoff = 0
 	}
 
-	toremove := make([]int, 0, 10)
+	toremove := make([]int, 0, a.Length())
 	// To remove only positions with this character at start and ends positions
 	firstcontinuous := -1
 	lastcontinuous := a.Length()
