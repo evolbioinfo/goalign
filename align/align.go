@@ -300,10 +300,7 @@ func (a *align) RemoveCharacterSites(c uint8, cutoff float64, ends bool, ignoreC
 	var nbchars int
 	var total int
 
-	kept = make([]int, a.Length())
-	for i := 0; i < a.Length(); i++ {
-		kept[i] = i
-	}
+	kept = make([]int, 0)
 
 	if cutoff < 0 || cutoff > 1 {
 		cutoff = 0
@@ -313,7 +310,7 @@ func (a *align) RemoveCharacterSites(c uint8, cutoff float64, ends bool, ignoreC
 	// To remove only positions with this character at start and ends positions
 	firstcontinuous := -1
 	lastcontinuous := a.Length()
-
+	lenBk := a.Length()
 	all := ALL_AMINO
 	if a.Alphabet() == AMINOACIDS {
 		all = ALL_NUCLE
@@ -339,31 +336,41 @@ func (a *align) RemoveCharacterSites(c uint8, cutoff float64, ends bool, ignoreC
 			if site == firstcontinuous+1 {
 				firstcontinuous++
 			}
+			if lastcontinuous == a.Length() {
+				lastcontinuous = site
+			}
+		} else {
+			lastcontinuous = a.Length()
 		}
 	}
 
-	first = firstcontinuous + 1
-
-	/* Now we remove positions, starting at the end */
+	/* Now we remove positions */
 	sort.Ints(toremove)
 	nbremoved := 0
-	for i := (len(toremove) - 1); i >= 0; i-- {
-		if toremove[i] == lastcontinuous-1 {
-			lastcontinuous--
-		}
-
-		if !ends || lastcontinuous == toremove[i] || toremove[i] <= firstcontinuous {
-			nbremoved++
-			for seq := 0; seq < a.NbSequences(); seq++ {
-				a.seqs[seq].sequence = append(a.seqs[seq].sequence[:toremove[i]], a.seqs[seq].sequence[toremove[i]+1:]...)
+	for seq := 0; seq < a.NbSequences(); seq++ {
+		nbremoved = 0
+		nbpotentialremove := 0
+		newseq := make([]uint8, 0, a.Length()-len(toremove))
+		for i := 0; i < a.Length(); i++ {
+			removed := (nbpotentialremove < len(toremove) && i == toremove[nbpotentialremove])
+			if removed {
+				nbpotentialremove++
 			}
-			kept = append(kept[:toremove[i]], kept[toremove[i]+1:]...)
+			if removed && (!ends || i >= lastcontinuous || i <= firstcontinuous) {
+				nbremoved++
+			} else {
+				newseq = append(newseq, a.seqs[seq].sequence[i])
+				if seq == 0 {
+					// We do that once for first sequence (all removed sites are the same for all sequences)
+					kept = append(kept, i)
+				}
+			}
 		}
+		a.seqs[seq].sequence = newseq
 	}
-	last = a.Length() - lastcontinuous
 	a.length -= nbremoved
 
-	return first, last, kept
+	return firstcontinuous + 1, lenBk - lastcontinuous, kept
 }
 
 // RemoveMajorityCharacterSites Removes positions constituted of [cutoff*100%,100%] of the most
@@ -383,10 +390,7 @@ func (a *align) RemoveCharacterSites(c uint8, cutoff float64, ends bool, ignoreC
 func (a *align) RemoveMajorityCharacterSites(cutoff float64, ends, ignoreGaps, ignoreNs bool) (first, last int, kept []int) {
 	_, occur, total := a.MaxCharStats(ignoreGaps, ignoreNs)
 
-	kept = make([]int, a.Length())
-	for i := 0; i < a.Length(); i++ {
-		kept[i] = i
-	}
+	kept = make([]int, 0)
 
 	length := a.Length()
 	toremove := make([]int, 0, 10)
@@ -400,31 +404,41 @@ func (a *align) RemoveMajorityCharacterSites(cutoff float64, ends, ignoreGaps, i
 			if site == firstcontinuous+1 {
 				firstcontinuous++
 			}
+			if lastcontinuous == a.Length() {
+				lastcontinuous = site
+			}
+		} else {
+			lastcontinuous = a.Length()
 		}
 	}
 
-	first = firstcontinuous + 1
-
-	/* Now we remove positions, starting at the end */
+	/* Now we remove positions */
 	sort.Ints(toremove)
 	nbremoved := 0
-	for i := (len(toremove) - 1); i >= 0; i-- {
-		if toremove[i] == lastcontinuous-1 {
-			lastcontinuous--
-		}
-
-		if !ends || lastcontinuous == toremove[i] || toremove[i] <= firstcontinuous {
-			nbremoved++
-			for seq := 0; seq < a.NbSequences(); seq++ {
-				a.seqs[seq].sequence = append(a.seqs[seq].sequence[:toremove[i]], a.seqs[seq].sequence[toremove[i]+1:]...)
+	for seq := 0; seq < a.NbSequences(); seq++ {
+		nbremoved = 0
+		nbpotentialremove := 0
+		newseq := make([]uint8, 0, a.Length()-len(toremove))
+		for i := 0; i < a.Length(); i++ {
+			removed := (nbpotentialremove < len(toremove) && i == toremove[nbpotentialremove])
+			if removed {
+				nbpotentialremove++
 			}
-			kept = append(kept[:toremove[i]], kept[toremove[i]+1:]...)
+			if removed && (!ends || i >= lastcontinuous || i <= firstcontinuous) {
+				nbremoved++
+			} else {
+				newseq = append(newseq, a.seqs[seq].sequence[i])
+				if seq == 0 {
+					// We do that once for first sequence (all removed sites are the same for all sequences)
+					kept = append(kept, i)
+				}
+			}
 		}
+		a.seqs[seq].sequence = newseq
 	}
-	last = a.Length() - lastcontinuous
 	a.length -= nbremoved
 
-	return first, last, kept
+	return firstcontinuous + 1, length - lastcontinuous, kept
 }
 
 // RefCoordinates converts coordinates on the given sequence to coordinates on the alignment.
