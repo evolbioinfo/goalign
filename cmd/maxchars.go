@@ -35,7 +35,7 @@ goalign stats maxchar -i align.fasta
 			return
 		}
 
-		al, _ := <-aligns.Achan
+		al := <-aligns.Achan
 		if aligns.Err != nil {
 			err = aligns.Err
 			io.LogError(err)

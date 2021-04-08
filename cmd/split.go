@@ -37,7 +37,7 @@ goalign split -i align.phylip --partition partition.txt
 			return
 		}
 
-		align, _ := <-aligns.Achan
+		align := <-aligns.Achan
 		if aligns.Err != nil {
 			err = aligns.Err
 			io.LogError(err)
@@ -54,7 +54,7 @@ goalign split -i align.phylip --partition partition.txt
 				return
 			}
 		} else {
-			err = fmt.Errorf("Partition file must be provided")
+			err = fmt.Errorf("partition file must be provided")
 			io.LogError(err)
 			return
 		}

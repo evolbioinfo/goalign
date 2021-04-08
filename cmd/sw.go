@@ -62,18 +62,18 @@ by formatting options (-p, -x, etc.)
 		}
 
 		if seqs.NbSequences() != 2 {
-			err = fmt.Errorf("Fasta file must contain 2 sequences to align")
+			err = fmt.Errorf("fasta file must contain 2 sequences to align")
 			io.LogError(err)
 			return
 		}
 
 		if seq1, ok = seqs.Sequence(0); !ok {
-			io.LogError(fmt.Errorf("Sequence 0 is not present in the seqbag"))
+			io.LogError(fmt.Errorf("sequence 0 is not present in the seqbag"))
 			return
 		}
 
 		if seq2, ok = seqs.Sequence(1); !ok {
-			io.LogError(fmt.Errorf("Sequence 1 is not present in the seqbag"))
+			io.LogError(fmt.Errorf("sequence 1 is not present in the seqbag"))
 			return
 		}
 

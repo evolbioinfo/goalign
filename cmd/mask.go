@@ -73,7 +73,10 @@ The output format is the same than input format.
 				start := maskstart
 				length := masklength
 				if refseq {
-					start, length, err = al.RefCoordinates(maskrefseq, start, length)
+					if start, length, err = al.RefCoordinates(maskrefseq, start, length); err != nil {
+						io.LogError(err)
+						return
+					}
 				}
 				if err = al.Mask(start, length); err != nil {
 					io.LogError(err)

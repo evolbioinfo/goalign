@@ -26,7 +26,6 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var cfgFile string
 var infile string
 var rootphylip bool
 var rootnexus bool
@@ -290,7 +289,7 @@ func openWriteFile(file string) (f *os.File, err error) {
 }
 
 func readMapFile(file string, revert bool) (map[string]string, error) {
-	outmap := make(map[string]string, 0)
+	outmap := make(map[string]string)
 	var mapfile *os.File
 	var err error
 	var reader *bufio.Reader

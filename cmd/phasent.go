@@ -99,7 +99,7 @@ Output file is an unaligned set of sequences in fasta.
 				return
 			}
 			if reforf.NbSequences() < 1 {
-				err = fmt.Errorf("Reference ORF file should contain at least one sequence")
+				err = fmt.Errorf("reference ORF file should contain at least one sequence")
 				io.LogError(err)
 				return
 			}
@@ -123,7 +123,7 @@ Output file is an unaligned set of sequences in fasta.
 		case "mitoi":
 			geneticcode = align.GENETIC_CODE_INVETEBRATE_MITO
 		default:
-			err = fmt.Errorf("Unknown genetic code : %s", phaseGeneticCode)
+			err = fmt.Errorf("unknown genetic code : %s", phaseGeneticCode)
 			return
 		}
 

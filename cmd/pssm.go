@@ -54,11 +54,11 @@ Possible to log2 transform the (normalized) value with --log (-l). Not taken int
 					io.LogError(err)
 					return
 				}
-				fmt.Fprintf(os.Stdout, pssmstring)
+				fmt.Fprint(os.Stdout, pssmstring)
 			}
 
 		default:
-			err = fmt.Errorf("Normlization does not exist: %d", pssmnorm)
+			err = fmt.Errorf("normalization does not exist: %d", pssmnorm)
 			io.LogError(err)
 			return
 		}
@@ -85,7 +85,7 @@ func printPSSM(a align.Alignment, pssm map[uint8][]float64) (pssmstring string, 
 	for _, c := range a.AlphabetCharacters() {
 		v, ok := pssm[c]
 		if !ok {
-			err = fmt.Errorf("Alphabet character %c is not in the pssm", c)
+			err = fmt.Errorf("alphabet character %c is not in the pssm", c)
 			return
 		}
 		buffer.WriteString(fmt.Sprintf("\t%c", c))
@@ -94,7 +94,7 @@ func printPSSM(a align.Alignment, pssm map[uint8][]float64) (pssmstring string, 
 			size = len(v)
 		} else {
 			if len(v) != size {
-				err = fmt.Errorf("Pssm has different sequence lengths for different characters")
+				err = fmt.Errorf("pssm has different sequence lengths for different characters")
 				return
 			}
 		}
@@ -104,7 +104,7 @@ func printPSSM(a align.Alignment, pssm map[uint8][]float64) (pssmstring string, 
 	for i := 0; i < size; i++ {
 		buffer.WriteString(fmt.Sprintf("%d", i+1))
 		for _, c := range a.AlphabetCharacters() {
-			v, _ := pssm[c]
+			v := pssm[c]
 			count := v[i]
 			buffer.WriteString(fmt.Sprintf("\t%.3f", count))
 		}

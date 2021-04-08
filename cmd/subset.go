@@ -72,7 +72,7 @@ given in the comand line.
 
 		if indices {
 			var i int
-			for indexstr, _ := range subset {
+			for indexstr := range subset {
 				if i, err = strconv.Atoi(indexstr); err != nil {
 					io.LogError(err)
 					return
@@ -89,7 +89,7 @@ given in the comand line.
 
 		//regexps := make([]*regexp.Regexp, 0, 10)
 		if regexmatch {
-			for k, _ := range subset {
+			for k := range subset {
 				if r, err = regexp.Compile(k); err == nil {
 					regexps = append(regexps, r)
 				} else {

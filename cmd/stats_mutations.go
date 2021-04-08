@@ -52,7 +52,7 @@ var statMutationsCmd = &cobra.Command{
 			return
 		}
 
-		al, _ := <-aligns.Achan
+		al := <-aligns.Achan
 		if aligns.Err != nil {
 			err = aligns.Err
 			io.LogError(err)
@@ -83,7 +83,7 @@ var statMutationsCmd = &cobra.Command{
 					return
 				}
 				if sb.NbSequences() < 1 {
-					err = fmt.Errorf("The reference sequence file does not contain any sequence")
+					err = fmt.Errorf("the reference sequence file does not contain any sequence")
 					io.LogError(err)
 					return
 				}
@@ -108,7 +108,7 @@ var statMutationsCmd = &cobra.Command{
 				fmt.Printf("\n")
 			}
 		} else {
-			err = fmt.Errorf("Mutations should be counted by comparing to a reference sequnce with --ref-sequence")
+			err = fmt.Errorf("mutations should be counted by comparing to a reference sequnce with --ref-sequence")
 			io.LogError(err)
 			return
 		}

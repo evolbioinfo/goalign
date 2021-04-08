@@ -151,19 +151,19 @@ the comparisons 0 vs. 10; 0 .vs 11; ...; 9 vs. 19.
 				r1 := strings.Split(computedistRange1, ":")
 				r2 := strings.Split(computedistRange2, ":")
 				if len(r1) != 2 || len(r2) != 2 {
-					return fmt.Errorf("Sequence ranges are not well formed, should be min:max")
+					return fmt.Errorf("sequence ranges are not well formed, should be min:max")
 				}
 				if range1min, err = strconv.Atoi(r1[0]); err != nil {
-					return fmt.Errorf("Cannot convert range1 min to integer")
+					return fmt.Errorf("cannot convert range1 min to integer")
 				}
 				if range1max, err = strconv.Atoi(r1[1]); err != nil {
-					return fmt.Errorf("Cannot convert range1 max to integer")
+					return fmt.Errorf("cannot convert range1 max to integer")
 				}
 				if range2min, err = strconv.Atoi(r2[0]); err != nil {
-					return fmt.Errorf("Cannot convert range2 min to integer")
+					return fmt.Errorf("cannot convert range2 min to integer")
 				}
 				if range2max, err = strconv.Atoi(r2[1]); err != nil {
-					return fmt.Errorf("Cannot convert range2 max to integer")
+					return fmt.Errorf("cannot convert range2 max to integer")
 				}
 			}
 
@@ -211,9 +211,9 @@ func writeDistMatrix(al align.Alignment, matrix [][]float64, f *os.File) (err er
 	f.WriteString(fmt.Sprintf("%d\n", len(matrix)))
 	for i := 0; i < len(matrix); i++ {
 		if name, ok := al.GetSequenceNameById(i); ok {
-			f.WriteString(fmt.Sprintf("%s", name))
+			f.WriteString(name)
 		} else {
-			return fmt.Errorf("Sequence %d does not exist in the alignment", i)
+			return fmt.Errorf("sequence %d does not exist in the alignment", i)
 		}
 		for j := 0; j < len(matrix); j++ {
 			f.WriteString(fmt.Sprintf("\t%.12f", matrix[i][j]))

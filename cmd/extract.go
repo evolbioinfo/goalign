@@ -90,7 +90,7 @@ var extractCmd = &cobra.Command{
 		var subalign, subaligntmp align.Alignment
 
 		if extractcoordfile == "none" {
-			err = fmt.Errorf("Subsequence coordinate file should be specified")
+			err = fmt.Errorf("subsequence coordinate file should be specified")
 			return
 		}
 
@@ -106,7 +106,7 @@ var extractCmd = &cobra.Command{
 
 		refseq := cmd.Flags().Changed("ref-seq")
 
-		al, _ := <-aligns.Achan
+		al := <-aligns.Achan
 		if aligns.Err != nil {
 			err = aligns.Err
 			io.LogError(err)
@@ -120,12 +120,12 @@ var extractCmd = &cobra.Command{
 				e := subseq.ends[i]
 				l := e - s
 				if s < 0 || e > al.Length() {
-					err = fmt.Errorf("Coordinates are outside alignment: [%d,%d[", s, e)
+					err = fmt.Errorf("coordinates are outside alignment: [%d,%d[", s, e)
 					io.LogError(err)
 					return
 				}
 				if s >= e {
-					err = fmt.Errorf("Block length should be >0 : [%d,%d[", s, e)
+					err = fmt.Errorf("block length should be >0 : [%d,%d[", s, e)
 					io.LogError(err)
 					return
 				}
@@ -148,7 +148,10 @@ var extractCmd = &cobra.Command{
 				}
 			}
 			if al.Alphabet() == align.NUCLEOTIDS && extracttranslate >= 0 {
-				err = subalign.Translate(0, extracttranslate)
+				if err = subalign.Translate(0, extracttranslate); err != nil {
+					io.LogError(err)
+					return
+				}
 			}
 			if f, err = openWriteFile(fmt.Sprintf("%s%c%s%s", extractoutput, os.PathSeparator, subseq.name, alignExtension())); err != nil {
 				io.LogError(err)
@@ -198,7 +201,7 @@ func parseCoordinateFile(file string) (coords []extractSubSequence, err error) {
 	for e == nil {
 		cols := strings.Split(l, "\t")
 		if cols == nil || len(cols) != 3 {
-			err = errors.New("Bad format from coordinate file: There should be 3 columns")
+			err = errors.New("bad format from coordinate file: There should be 3 columns")
 			return
 		}
 		subseq := extractSubSequence{
@@ -211,7 +214,7 @@ func parseCoordinateFile(file string) (coords []extractSubSequence, err error) {
 		endstr := strings.Split(cols[1], ",")
 
 		if len(startstr) == 0 || len(endstr) == 0 || len(startstr) != len(endstr) {
-			err = errors.New("Bad format from coordinate file: start en end coordinates should have at least 1 coordinate and have the same length")
+			err = errors.New("bad format from coordinate file: start en end coordinates should have at least 1 coordinate and have the same length")
 			return
 		}
 

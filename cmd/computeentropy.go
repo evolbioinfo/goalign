@@ -67,12 +67,12 @@ and it will not be taken into account in the average.
 							total++
 						}
 					} else {
-						fmt.Println(fmt.Sprintf("%d\t%d\t%.3f", nb, i, e))
+						fmt.Printf("%d\t%d\t%.3f\n", nb, i, e)
 					}
 				}
 			}
 			if entropyAverage {
-				fmt.Println(fmt.Sprintf("%d\t%.3f", nb, avg/float64(total)))
+				fmt.Printf("%d\t%.3f\n", nb, avg/float64(total))
 			}
 			nb++
 		}

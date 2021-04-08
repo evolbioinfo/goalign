@@ -25,7 +25,7 @@ If the replacement changes sequence length, then returns an error.
 		var f *os.File
 		var seqs align.SeqBag
 
-		if !cmd.Flags().Changed("old") || !cmd.Flags().Changed("old") {
+		if !cmd.Flags().Changed("old") || !cmd.Flags().Changed("new") {
 			err = errors.New("--old and --new must be specified")
 			return
 		}

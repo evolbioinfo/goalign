@@ -316,6 +316,7 @@ func (a *align) RemoveCharacterSites(c uint8, cutoff float64, ends bool, ignoreC
 		all = ALL_NUCLE
 	}
 	allc := unicode.ToLower(all)
+	//log.Println("Before computing toremove")
 
 	for site := 0; site < a.Length(); site++ {
 		nbchars = 0
@@ -343,6 +344,7 @@ func (a *align) RemoveCharacterSites(c uint8, cutoff float64, ends bool, ignoreC
 			lastcontinuous = a.Length()
 		}
 	}
+	//log.Println("Before removing")
 
 	/* Now we remove positions */
 	sort.Ints(toremove)
@@ -369,6 +371,7 @@ func (a *align) RemoveCharacterSites(c uint8, cutoff float64, ends bool, ignoreC
 		a.seqs[seq].sequence = newseq
 	}
 	a.length -= nbremoved
+	//log.Println("Done")
 
 	return firstcontinuous + 1, lenBk - lastcontinuous, kept
 }
@@ -760,15 +763,6 @@ func (a *align) Append(al Alignment) (err error) {
 		return err != nil
 
 	})
-	return
-}
-
-func (a *align) append(al *align) (err error) {
-	for _, s := range al.seqs {
-		if err = a.AddSequenceChar(s.name, s.sequence, s.comment); err != nil {
-			return
-		}
-	}
 	return
 }
 

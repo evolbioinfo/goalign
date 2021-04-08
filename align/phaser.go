@@ -233,7 +233,7 @@ func (p *phaser) Phase(orfs, seqs SeqBag) (phased chan PhasedSequence, err error
 		close(phased)
 		// In case an error occured
 		// we must finish to read the seqchan
-		for _ = range seqchan {
+		for range seqchan {
 		}
 	}()
 

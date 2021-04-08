@@ -95,7 +95,7 @@ n...
 							return
 						}
 						if sb.NbSequences() < 1 {
-							err = fmt.Errorf("The reference sequence file does not contain any sequence")
+							err = fmt.Errorf("the reference sequence file does not contain any sequence")
 							io.LogError(err)
 							return
 						}
@@ -150,7 +150,7 @@ func printSiteCharStats(al align.Alignment, only string) (err error) {
 	profile = align.NewCountProfileFromAlignment(al)
 	onlyr := []uint8(only)
 	if len(onlyr) > 1 {
-		err = fmt.Errorf("Character should have length 1: %s", only)
+		err = fmt.Errorf("character should have length 1: %s", only)
 	}
 
 	fmt.Fprintf(os.Stdout, "site")
@@ -241,9 +241,7 @@ func printAllSequenceStats(al align.Alignment, refSequence align.Sequence, count
 	var nummutations int
 	var gaps int
 	var name string
-	var uniquechars []uint8
-
-	uniquechars = al.UniqueCharacters()
+	var uniquechars []uint8 = al.UniqueCharacters()
 
 	if numgapsuniques, numnewgaps, numgapsboth, err = al.NumGapsUniquePerSequence(countProfile); err != nil {
 		return

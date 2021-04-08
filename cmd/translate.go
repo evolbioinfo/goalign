@@ -54,7 +54,7 @@ IUPAC code is ambiguous for translation, then a X is added in place of the amino
 			geneticcode = align.GENETIC_CODE_INVETEBRATE_MITO
 
 		default:
-			err = fmt.Errorf("Unknown genetic code : %s", translateGeneticCode)
+			err = fmt.Errorf("unknown genetic code : %s", translateGeneticCode)
 			return
 		}
 
