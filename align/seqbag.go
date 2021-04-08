@@ -60,6 +60,7 @@ type SeqBag interface {
 	ShuffleSequences()                                // Shuffle sequence order
 	String() string                                   // Raw string representation (just write all sequences)
 	Translate(phase int, geneticcode int) (err error) // Translates nt sequence in aa
+	ReverseComplement() (err error)                   // Reverse-complements the alignment
 	TrimNames(namemap map[string]string, size int) error
 	TrimNamesAuto(namemap map[string]string, curid *int) error
 	Sort() // Sorts the sequences by name
@@ -826,6 +827,27 @@ func (sb *seqbag) Translate(phase int, geneticcode int) (err error) {
 		}
 	}
 	sb.AutoAlphabet()
+
+	return
+}
+
+/*
+ReverseComplement reverse complements all input seuqences.
+- if the alphabet is not NUCLEOTIDES: returns an error
+- IUPAC characters are supported
+*/
+func (sb *seqbag) ReverseComplement() (err error) {
+	if sb.Alphabet() != NUCLEOTIDS {
+		err = errors.New("wrong alphabet, cannot reverse complement")
+		return
+	}
+
+	for _, seq := range sb.seqs {
+		if err = Complement(seq.sequence); err != nil {
+			return
+		}
+		Reverse(seq.sequence)
+	}
 
 	return
 }

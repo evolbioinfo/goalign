@@ -5056,3 +5056,39 @@ diff -q -b expected output
 
 rm -rf output expected
 
+echo "->goalign revcomp "
+cat > input <<EOF
+>s1
+ATUGCYRSWKMBDHVN*.
+>s2
+TAACGRYSWMKVHDBN*.
+EOF
+cat > expected <<EOF
+>s1
+.*NBDHVKMWSYRGCAAT
+>s2
+.*NVHDBMKWSRYCGTTA
+EOF
+
+${GOALIGN} revcomp -i input > output
+diff -q -b expected output
+rm -rf input output expected
+
+
+echo "->goalign revcomp --unaligned"
+cat > input <<EOF
+>s1
+ATUGCYRSWKMBDHVN*.
+>s2
+TAACGRYSWMKVHDBN*.ACGT
+EOF
+cat > expected <<EOF
+>s1
+.*NBDHVKMWSYRGCAAT
+>s2
+ACGT.*NVHDBMKWSRYCGTTA
+EOF
+
+${GOALIGN} revcomp -i input --unaligned > output
+diff -q -b expected output
+rm -rf input output expected
