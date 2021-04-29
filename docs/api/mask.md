@@ -38,7 +38,7 @@ func main() {
 		panic(err)
 	}
 
-	if err = al.Mask(0, 2); err != nil {
+	if err = al.Mask(0, 2, ""); err != nil {
 		panic(err)
 	}
 
