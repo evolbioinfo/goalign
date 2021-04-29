@@ -46,11 +46,18 @@ Usage:
   goalign mask [flags]
 
 Flags:
-  -h, --help            help for mask
-  -l, --length int      Length of the sub alignment (default 10)
-  -o, --output string   Alignment output file (default "stdout")
-  -s, --start int       Start position (0-based inclusive)
-      --unique          If given, then masks characters that are unique in their columns (start and length are ignored)
+      --at-most int      The number of occurences that defines the uniqueness of the characher in the column 
+                         (only used with --unique) (default 1)
+  -h, --help             help for mask
+  -l, --length int       Length of the sub alignment (default 10)
+  -o, --output string    Alignment output file (default "stdout")
+      --ref-seq string   Coordinates are considered wrt. to the given reference sequence (with --unique, it 
+                         masks unique characters that are different from the reference sequence) (default "none")
+      --replace string   Replacement character. If AMBIG: N or X (depending on alphabet), if GAP: -, if MAJ: the 
+                         main character of the column, or can be any other character (default "AMBIG")
+  -s, --start int        Start position (0-based inclusive)
+      --unique           If given, then masks characters that are unique (defined with --at-most) in their columns 
+                         (start and length are ignored)
 
 Global Flags:
   -i, --align string       Alignment input file (default "stdin")
