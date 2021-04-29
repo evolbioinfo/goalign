@@ -3811,6 +3811,62 @@ ${GOALIGN} mask --unique -i input -o result
 diff -q -b expected result
 rm -f input expected result
 
+echo "->goalign mask --unique --ref-seq"
+cat > input <<EOF
+>A
+ACANGA-TACC
+>B
+ACTN-T-TTTC
+>C
+ACTN-TTT--T
+>D
+C-ANCCCCCCC
+EOF
+
+cat > expected << EOF
+>A
+ACANGA-TACC
+>B
+ACTN-T-TNNC
+>C
+ACTN-TNT--N
+>D
+N-ANNNNNNCC
+EOF
+
+${GOALIGN} mask --unique --ref-seq A -i input -o result
+diff -q -b expected result
+rm -f input expected result
+
+
+echo "->goalign mask --unique --at-most --ref-seq"
+cat > input <<EOF
+>A
+ACANGA-TACC
+>B
+ACTN-T-TTTC
+>C
+ACTN-TTT--T
+>D
+C-ANCCCCCCC
+EOF
+
+cat > expected << EOF
+>A
+ACANGA-TACC
+>B
+ACNN-N-TNNC
+>C
+ACNN-NNT--N
+>D
+N-ANNNNNNCC
+EOF
+
+${GOALIGN} mask --unique --ref-seq A --at-most 2 -i input -o result
+diff -q -b expected result
+rm -f input expected result
+
+
 echo "->goalign replace"
 cat > input <<EOF
    10   20
