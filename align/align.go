@@ -152,7 +152,7 @@ func NewAlign(alphabet int) *align {
 		seqbag{
 			make(map[string]*seq),
 			make([]*seq, 0, 100),
-			false,
+			IGNORE_NONE,
 			alphabet},
 		-1,
 	}
@@ -186,9 +186,16 @@ func (a *align) AddSequenceChar(name string, sequence []uint8, comment string) e
 	idx := 0
 	tmpname := name
 
+	// If the sequence name already exists
+	// and ignoreidentical is true, then we ignore this sequence
+	if ok && a.ignoreidentical == IGNORE_NAME {
+		log.Print(fmt.Sprintf("Warning: sequence name \"%s\" already exists in alignment, ignoring", name))
+		return nil
+	}
+
 	// If the sequence name already exists with the same sequence
 	// and ignoreidentical is true, then we ignore this sequence
-	if ok && a.ignoreidentical && s.SameSequence(sequence) {
+	if ok && a.ignoreidentical == IGNORE_SEQUENCE && s.SameSequence(sequence) {
 		log.Print(fmt.Sprintf("Warning: sequence \"%s\" already exists in alignment with the same sequence, ignoring", name))
 		return nil
 	}

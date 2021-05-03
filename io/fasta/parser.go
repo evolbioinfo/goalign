@@ -11,9 +11,13 @@ import (
 )
 
 // Parser represents a parser.
+// If ignore is align.IGNORE_NONE: Does not ignore anything
+// If ignore is align.IGNORE_NAME: Ignore sequences having the same name (keep the first one whatever their sequence)
+// If ignore is align.IGNORE_SEQUENCE: Ignore sequences having the same name and the same sequence
+// Otherwise, sets IGNORE_NONE
 type Parser struct {
 	s               *Scanner
-	ignoreidentical bool
+	ignoreidentical int
 	buf             struct {
 		tok Token  // last read token
 		lit string // last read literal
@@ -23,12 +27,12 @@ type Parser struct {
 
 // NewParser returns a new instance of Parser.
 func NewParser(r io.Reader) *Parser {
-	return &Parser{s: NewScanner(r), ignoreidentical: false}
+	return &Parser{s: NewScanner(r), ignoreidentical: align.IGNORE_NONE}
 }
 
 // If sets to true, then will ignore duplicate sequences that have the same name and the same sequence
 // Otherwise, it just renames them just as the sequences that have same name and different sequences
-func (p *Parser) IgnoreIdentical(ignore bool) {
+func (p *Parser) IgnoreIdentical(ignore int) {
 	p.ignoreidentical = ignore
 }
 

@@ -40,7 +40,12 @@ type SeqBag interface {
 	GetSequenceNameById(ith int) (string, bool)
 	GetSequenceByName(name string) (Sequence, bool)
 	SetSequenceChar(ithAlign, ithSite int, char uint8) error
-	IgnoreIdentical(bool)                // if true, then it won't add the sequence if a sequence with the same name AND same sequence exists
+	// IgnoreIdentical sets the behavior when duplicate names are encountered while building the alignment
+	// If ignore is IGNORE_NONE: Does not ignore anything
+	// If ignore is IGNORE_NAME: Ignore sequences having the same name (keep the first one whatever their sequence)
+	// If ignore is IGNORE_SEQUENCE: Ignore sequences having the same name and the same sequence
+	// Otherwise, sets IGNORE_NONE
+	IgnoreIdentical(int)
 	SampleSeqBag(nb int) (SeqBag, error) // generate a sub sample of the sequences
 	Sequence(ith int) (Sequence, bool)
 	SequenceByName(name string) (Sequence, bool)
@@ -70,7 +75,7 @@ type SeqBag interface {
 type seqbag struct {
 	seqmap          map[string]*seq // Map of sequences
 	seqs            []*seq          // Set of sequences (to preserve order)
-	ignoreidentical bool            // if true, then it won't add the sequence if a sequence with the same name AND same sequence exists
+	ignoreidentical int             // if true, then it won't add the sequence if a sequence with the same name AND same sequence exists
 	alphabet        int             // AMINOACIDS , NUCLEOTIDS or UNKOWN
 }
 
@@ -84,13 +89,23 @@ func NewSeqBag(alphabet int) *seqbag {
 	return &seqbag{
 		make(map[string]*seq),
 		make([]*seq, 0, 100),
-		false,
+		IGNORE_NONE,
 		alphabet,
 	}
 }
 
-func (sb *seqbag) IgnoreIdentical(ignoreidentical bool) {
-	sb.ignoreidentical = ignoreidentical
+// IgnoreIdentical sets the behavior when duplicates are encountered
+// If ignore is IGNORE_NONE: Does not ignore anything
+// If ignore is IGNORE_NAME: Ignore sequences having the same name (keep the first one whatever their sequence)
+// If ignore is IGNORE_SEQUENCE: Ignore sequences having the same name and the same sequence
+// Otherwise, sets IGNORE_NONE
+func (sb *seqbag) IgnoreIdentical(ignore int) {
+	switch ignore {
+	case IGNORE_NONE, IGNORE_NAME, IGNORE_SEQUENCE:
+		sb.ignoreidentical = ignore
+	default:
+		sb.ignoreidentical = IGNORE_NONE
+	}
 }
 
 // Samples randomly a subset of the sequences
@@ -133,10 +148,18 @@ func (sb *seqbag) AddSequenceChar(name string, sequence []uint8, comment string)
 
 	// If the sequence name already exists with the same sequence
 	// and ignoreidentical is true, then we ignore this sequence
-	if ok && sb.ignoreidentical && s.SameSequence(sequence) {
+	if ok && sb.ignoreidentical == IGNORE_NAME {
+		log.Print(fmt.Sprintf("Warning: sequence name \"%s\" already exists in alignment, ignoring", name))
+		return nil
+	}
+
+	// If the sequence name already exists with the same sequence
+	// and ignoreidentical is true, then we ignore this sequence
+	if ok && sb.ignoreidentical == IGNORE_SEQUENCE && s.SameSequence(sequence) {
 		log.Print(fmt.Sprintf("Warning: sequence \"%s\" already exists in alignment with the same sequence, ignoring", name))
 		return nil
 	}
+
 	// Other possibility: we rename the sequence
 	// If the sequence name already exists, we add a 4 digit index at the end and print a warning on stderr */
 	for ok {

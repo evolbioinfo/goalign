@@ -9,7 +9,7 @@ func Test_seqbag_UniqueCharacters(t *testing.T) {
 	type fields struct {
 		seqmap          map[string]*seq
 		seqs            []*seq
-		ignoreidentical bool
+		ignoreidentical int
 		alphabet        int
 	}
 	tests := []struct {
@@ -43,7 +43,7 @@ func Test_seqbag_ReverseComplement(t *testing.T) {
 	type fields struct {
 		seqmap          map[string]*seq
 		seqs            []*seq
-		ignoreidentical bool
+		ignoreidentical int
 		alphabet        int
 	}
 	tests := []struct {
@@ -54,13 +54,13 @@ func Test_seqbag_ReverseComplement(t *testing.T) {
 		{name: "t1",
 			fields: fields{seqmap: nil,
 				seqs:            []*seq{{sequence: []uint8("ATUGCYRSWKMBDHVN*.")}},
-				ignoreidentical: false,
+				ignoreidentical: IGNORE_NONE,
 				alphabet:        NUCLEOTIDS},
 			wantseq: []uint8(".*NBDHVKMWSYRGCAAT")},
 		{name: "t2",
 			fields: fields{seqmap: nil,
 				seqs:            []*seq{{sequence: []uint8("TAACGRYSWMKVHDBN*.")}},
-				ignoreidentical: false,
+				ignoreidentical: IGNORE_NONE,
 				alphabet:        NUCLEOTIDS},
 			wantseq: []uint8(".*NVHDBMKWSRYCGTTA")},
 	}

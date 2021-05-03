@@ -38,6 +38,10 @@ const (
 	GENETIC_CODE_VETEBRATE_MITO   = 1 // Vertebrate mitochondrial genetic code
 	GENETIC_CODE_INVETEBRATE_MITO = 2 // Invertebrate mitochondrial genetic code
 
+	IGNORE_NONE     = 0
+	IGNORE_NAME     = 1
+	IGNORE_SEQUENCE = 2
+
 	// IUPAC Nucleotide Code : For bitwise operations
 	NT_OTHER = 0 // GAP, *, etc;?
 	NT_A     = 1

@@ -2885,9 +2885,20 @@ cat > expected <<EOF
 3  GGGGGG
 4  GGGGGG
 EOF
-${GOALIGN} reformat phylip -i input -o result --ignore-identical -p 
+
+cat > expected2 <<EOF
+   4   6
+1  AAAAAA
+2  GGGGGG
+3  GGGGGG
+4  GGGGGG
+EOF
+
+${GOALIGN} reformat phylip -i input -o result --ignore-identical 2 -p 
 diff -q -b expected result
-rm -f input expected result
+${GOALIGN} reformat phylip -i input -o result --ignore-identical 1 -p 
+diff -q -b expected2 result
+rm -f input expected expected2 result
 
 echo "->goalign reformat ignore identical 2"
 cat > input <<EOF
@@ -2907,10 +2918,20 @@ cat > expected <<EOF
 2  GGGGGG
 3  GGGGGG
 EOF
-${GOALIGN} reformat phylip -i input -o result --ignore-identical -p 
-diff -q -b expected result
-rm -f input expected result
 
+cat > expected2 <<EOF
+   3   6
+1  AAAAAA
+2  GGGGGG
+3  GGGGGG
+EOF
+
+${GOALIGN} reformat phylip -i input -o result --ignore-identical 2 -p 
+diff -q -b expected result
+
+${GOALIGN} reformat phylip -i input -o result --ignore-identical 1 -p 
+diff -q -b expected2 result
+rm -f input expected2 expected result
 
 echo "->goalign reformat ignore identical clustal->fasta"
 cat > input <<EOF
@@ -2957,7 +2978,7 @@ FNLDFDTGSSDLWIASTLCT
 -----------------YTGSLHWVPVTVQQYWQFTVDS---VTISGVVV-----------------YTGSLHWVPVTVQ
 QYWQFTVDS---VTISGVVV
 EOF
-${GOALIGN} reformat fasta -u -i input -o result --ignore-identical
+${GOALIGN} reformat fasta -u -i input -o result --ignore-identical 2
 diff -q -b expected result
 rm -f input expected result
 

@@ -10,6 +10,7 @@ import (
 
 var dedupOutput string
 var dedupLogOutput string
+var dedupName bool
 
 // dedupCmd represents the dedup command
 var dedupCmd = &cobra.Command{
@@ -102,6 +103,7 @@ This means that seq1 is identical to seq2 and seq3 is identical to seq4.
 func init() {
 	RootCmd.AddCommand(dedupCmd)
 	dedupCmd.PersistentFlags().BoolVar(&unaligned, "unaligned", false, "Considers sequences as unaligned and format fasta (phylip, nexus,... options are ignored)")
+	dedupCmd.PersistentFlags().BoolVar(&dedupName, "name", false, "Deduplicate by name instead of sequence event if sequences are different (only the first appears in the output file)")
 	dedupCmd.PersistentFlags().StringVarP(&dedupOutput, "output", "o", "stdout", "Deduplicated output alignment file")
 	dedupCmd.PersistentFlags().StringVarP(&dedupLogOutput, "log", "l", "none", "Deduplicated output log file")
 }

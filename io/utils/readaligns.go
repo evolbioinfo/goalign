@@ -146,20 +146,20 @@ func ReadAlign(file string, format int) (outAlign align.Alignment, err error) {
 	}
 	if format == align.FORMAT_PHYLIP {
 		pp := phylip.NewParser(r, false)
-		pp.IgnoreIdentical(false)
+		pp.IgnoreIdentical(align.IGNORE_NONE)
 		outAlign, err = pp.Parse()
 	} else if format == align.FORMAT_NEXUS {
 		np := nexus.NewParser(r)
-		np.IgnoreIdentical(false)
+		np.IgnoreIdentical(align.IGNORE_NONE)
 		outAlign, err = np.Parse()
 	} else if format == align.FORMAT_CLUSTAL {
 		cp := clustal.NewParser(r)
-		cp.IgnoreIdentical(false)
+		cp.IgnoreIdentical(align.IGNORE_NONE)
 		outAlign, err = cp.Parse()
 	} else {
 		// FASTA
 		fp := fasta.NewParser(r)
-		fp.IgnoreIdentical(false)
+		fp.IgnoreIdentical(align.IGNORE_NONE)
 		outAlign, err = fp.Parse()
 	}
 	fi.Close()
