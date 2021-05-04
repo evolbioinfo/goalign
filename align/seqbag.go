@@ -990,10 +990,7 @@ func (sb *seqbag) TrimNamesAuto(namemap map[string]string, curid *int) (err erro
 			(*curid)++
 			// In case of several alignments to rename,
 			// The number of necessary digits may be updated
-			newlength := int(math.Ceil(math.Log10(float64(*curid + 1))))
-			if newlength > length {
-				length = newlength
-			}
+			length = int(math.Ceil(math.Log10(float64(*curid + 1))))
 		}
 		seq.name = newname
 	}

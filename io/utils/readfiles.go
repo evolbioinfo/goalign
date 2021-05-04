@@ -2,13 +2,12 @@ package utils
 
 import (
 	"bufio"
+	"compress/bzip2"
 	"compress/gzip"
 	"io"
 	"net/http"
 	"os"
 	"strings"
-
-	"compress/bzip2"
 
 	"github.com/ulikunitz/xz"
 )
