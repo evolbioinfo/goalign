@@ -1675,6 +1675,242 @@ cat divprefix_* > result
 diff -q -b result expected
 rm -f expected result divprefix* input
 
+echo "->goalign divide --nb-sequences"
+cat > expected.0 <<EOF
+>Seq0000
+GATTAATTTG
+>Seq0001
+CCGTAGGCCA
+EOF
+cat > expected.1 <<EOF
+>Seq0002
+GAATCTGAAG
+>Seq0003
+ATCGAACACT
+EOF
+cat > expected.2 <<EOF
+>Seq0004
+TTAAGTTTTC
+>Seq0005
+ACTTCTAATG
+EOF
+cat > expected.3 <<EOF
+>Seq0006
+GAGAGGACTA
+>Seq0007
+GTTCATACTT
+EOF
+cat > expected.4 <<EOF
+>Seq0008
+TTTAAACACT
+>Seq0009
+TTTACATCGA
+EOF
+cat > expected.5 <<EOF
+>Seq0010
+TGTCGGACCT
+EOF
+
+rm -f input
+${GOALIGN} random -n 11 -l 10 --seed 10 -p > input
+${GOALIGN} divide -i input -p -o divprefix -f --nb-sequences 2
+for i in {0..5}
+do
+    diff -q -b divprefix_00${i}.fa expected.${i}
+    rm divprefix_00${i}.fa expected.${i}
+done
+rm -f input
+
+echo "->goalign divide several aligns --nb-sequences"
+cat > input <<EOF
+   11   10
+Seq0000  GATTAATTTG
+Seq0001  CCGTAGGCCA
+Seq0002  GAATCTGAAG
+Seq0003  ATCGAACACT
+Seq0004  TTAAGTTTTC
+Seq0005  ACTTCTAATG
+Seq0006  GAGAGGACTA
+Seq0007  GTTCATACTT
+Seq0008  TTTAAACACT
+Seq0009  TTTACATCGA
+Seq0010  TGTCGGACCT
+   3   10
+Seq0000  GATTAATTTG
+Seq0001  CCGTAGGCCA
+Seq0002  GAATCTGAAG
+EOF
+cat > expected.0 <<EOF
+>Seq0000
+GATTAATTTG
+>Seq0001
+CCGTAGGCCA
+EOF
+cat > expected.1 <<EOF
+>Seq0002
+GAATCTGAAG
+>Seq0003
+ATCGAACACT
+EOF
+cat > expected.2 <<EOF
+>Seq0004
+TTAAGTTTTC
+>Seq0005
+ACTTCTAATG
+EOF
+cat > expected.3 <<EOF
+>Seq0006
+GAGAGGACTA
+>Seq0007
+GTTCATACTT
+EOF
+cat > expected.4 <<EOF
+>Seq0008
+TTTAAACACT
+>Seq0009
+TTTACATCGA
+EOF
+cat > expected.5 <<EOF
+>Seq0010
+TGTCGGACCT
+EOF
+cat > expected.6 <<EOF
+>Seq0000
+GATTAATTTG
+>Seq0001
+CCGTAGGCCA
+EOF
+cat > expected.7 <<EOF
+>Seq0002
+GAATCTGAAG
+EOF
+
+${GOALIGN} divide -i input -p -o divprefix -f --nb-sequences 2
+for i in {0..7}
+do
+    diff -q -b divprefix_00${i}.fa expected.${i}
+    rm divprefix_00${i}.fa expected.${i}
+done
+rm -f input
+
+
+echo "->goalign divide --unaligned"
+cat > input <<EOF
+>Seq0000
+G
+>Seq0001
+CA
+>Seq0002
+AAG
+>Seq0003
+CACT
+>Seq0004
+TTTTC
+>Seq0005
+CTAATG
+>Seq0006
+AGGACTA
+>Seq0007
+TCATACTT
+>Seq0008
+TTAAACACT
+>Seq0009
+TTTACATCGA
+EOF
+cat > expected <<EOF
+>Seq0000
+G
+>Seq0001
+CA
+>Seq0002
+AAG
+>Seq0003
+CACT
+>Seq0004
+TTTTC
+>Seq0005
+CTAATG
+>Seq0006
+AGGACTA
+>Seq0007
+TCATACTT
+>Seq0008
+TTAAACACT
+>Seq0009
+TTTACATCGA
+EOF
+${GOALIGN} divide -i input -o divprefix --unaligned
+diff -q -b divprefix_000.fa expected
+rm -f expected input divprefix*
+
+echo "->goalign divide --nb-sequences --unaligned"
+cat > input <<EOF
+>Seq0000
+G
+>Seq0001
+CA
+>Seq0002
+AAG
+>Seq0003
+CACT
+>Seq0004
+TTTTC
+>Seq0005
+CTAATG
+>Seq0006
+AGGACTA
+>Seq0007
+TCATACTT
+>Seq0008
+TTAAACACT
+>Seq0009
+TTTACATCGA
+>Seq00010
+AAAAAAAAAA
+EOF
+cat > expected.0 <<EOF
+>Seq0000
+G
+>Seq0001
+CA
+EOF
+cat > expected.1 <<EOF
+>Seq0002
+AAG
+>Seq0003
+CACT
+EOF
+cat > expected.2 <<EOF
+>Seq0004
+TTTTC
+>Seq0005
+CTAATG
+EOF
+cat > expected.3 <<EOF
+>Seq0006
+AGGACTA
+>Seq0007
+TCATACTT
+EOF
+cat > expected.4 <<EOF
+>Seq0008
+TTAAACACT
+>Seq0009
+TTTACATCGA
+EOF
+cat > expected.5 <<EOF
+>Seq00010
+AAAAAAAAAA
+EOF
+
+${GOALIGN} divide -i input -o divprefix --unaligned --nb-sequences 2
+for i in {0..5}
+do
+    diff -q -b divprefix_00${i}.fa expected.${i}
+    rm divprefix_00${i}.fa expected.${i}
+done
+rm -f input
+
 
 echo "->goalign mutate gaps"
 cat > expected <<EOF
