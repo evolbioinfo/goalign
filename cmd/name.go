@@ -10,6 +10,7 @@ import (
 
 var trimMapout string
 var trimAuto bool
+var trimUnaligned bool
 
 // nameCmd represents the name command
 var nameCmd = &cobra.Command{
@@ -35,10 +36,6 @@ Id -a is given, then names are generated with the pattern "S000<i>".
 		var aligns *align.AlignChannel
 		var f *os.File
 
-		if aligns, err = readalign(infile); err != nil {
-			io.LogError(err)
-			return
-		}
 		if f, err = openWriteFile(trimAlignOut); err != nil {
 			io.LogError(err)
 			return
@@ -47,25 +44,55 @@ Id -a is given, then names are generated with the pattern "S000<i>".
 
 		namemap := make(map[string]string)
 		curid := 1
-		for al := range aligns.Achan {
-			if aligns.Err != nil {
-				err = aligns.Err
+
+		if trimUnaligned {
+			var seqs align.SeqBag
+			if seqs, err = readsequences(infile); err != nil {
 				io.LogError(err)
 				return
 			}
-
 			if trimAuto {
-				if err = al.TrimNamesAuto(namemap, &curid); err != nil {
+				if err = seqs.TrimNamesAuto(namemap, &curid); err != nil {
 					io.LogError(err)
 					return
 				}
 			} else {
-				if err = al.TrimNames(namemap, trimNb); err != nil {
+				if err = seqs.TrimNames(namemap, trimNb); err != nil {
 					io.LogError(err)
 					return
 				}
 			}
-			writeAlign(al, f)
+			writeSequences(seqs, f)
+		} else {
+			if aligns, err = readalign(infile); err != nil {
+				io.LogError(err)
+				return
+			}
+			for al := range aligns.Achan {
+				if aligns.Err != nil {
+					err = aligns.Err
+					io.LogError(err)
+					return
+				}
+
+				if trimAuto {
+					if err = al.TrimNamesAuto(namemap, &curid); err != nil {
+						io.LogError(err)
+						return
+					}
+				} else {
+					if err = al.TrimNames(namemap, trimNb); err != nil {
+						io.LogError(err)
+						return
+					}
+				}
+				writeAlign(al, f)
+			}
+
+			if aligns.Err != nil {
+				err = aligns.Err
+				io.LogError(err)
+			}
 		}
 		if trimMapout != "none" {
 			if err = writeNameMap(namemap, trimMapout); err != nil {
@@ -74,10 +101,6 @@ Id -a is given, then names are generated with the pattern "S000<i>".
 			}
 		}
 
-		if aligns.Err != nil {
-			err = aligns.Err
-			io.LogError(err)
-		}
 		return
 	},
 }
@@ -102,6 +125,7 @@ func writeNameMap(namemap map[string]string, outfile string) (err error) {
 func init() {
 	trimCmd.AddCommand(nameCmd)
 	nameCmd.PersistentFlags().StringVarP(&trimMapout, "out-map", "m", "none", "Mapping output file")
+	nameCmd.PersistentFlags().BoolVar(&trimUnaligned, "unaligned", false, "Considers sequences as unaligned and format fasta (phylip, nexus,... options are ignored)")
 	nameCmd.PersistentFlags().IntVarP(&trimNb, "nb-char", "n", 1, "Number of characters to keep in sequence names")
 	nameCmd.PersistentFlags().BoolVarP(&trimAuto, "auto", "a", false, "Automatically generates sequence identifiers (priority over --nb-cchar)")
 }

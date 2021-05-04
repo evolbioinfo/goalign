@@ -2730,6 +2730,71 @@ diff -q -b result expected
 diff -q -b <(sort mapfile) <(sort mapfile2)
 rm -f expected result mapfile input mapfile2
 
+echo "->goalign trim name unaligned"
+cat > input <<EOF
+>Seq0000
+GATTA
+>Seq0001
+ATTT
+>Seq0002
+CCG
+>Seq0003
+GG
+EOF
+cat > expected <<EOF
+>S01
+GATTA
+>S02
+ATTT
+>S03
+CCG
+>S04
+GG
+EOF
+cat > expectedmap <<EOF
+Seq0002	S03
+Seq0003	S04
+Seq0000	S01
+Seq0001	S02
+EOF
+${GOALIGN} trim name -n 3 -m mapfile --unaligned -i input > result
+diff -q -b result expected
+diff -q -b <(sort mapfile) <(sort expectedmap)
+rm -f expected result expectedmap mapfile
+
+
+echo "->goalign trim name auto unaligned"
+cat > input <<EOF
+>Seq0000
+GATTA
+>Seq0001
+ATTT
+>Seq0002
+CCG
+>Seq0003
+GG
+EOF
+cat > expected <<EOF
+>S1
+GATTA
+>S2
+ATTT
+>S3
+CCG
+>S4
+GG
+EOF
+cat > expectedmap <<EOF
+Seq0002	S3
+Seq0003	S4
+Seq0000	S1
+Seq0001	S2
+EOF
+${GOALIGN} trim name -a --unaligned -m mapfile -i input > result
+diff -q -b result expected
+diff -q -b <(sort mapfile) <(sort expectedmap)
+rm -f expected result expectedmap mapfile
+
 
 echo "->goalign trim seq"
 cat > expected <<EOF
