@@ -57,9 +57,33 @@ type Alignment interface {
 	// if startinggapsasincomplete is true, then considers gaps as the beginning
 	// as incomplete sequence, then take the right phase
 	Stops(startingGapsAsIncomplete bool, geneticode int) (stops []int, err error)
-	Length() int                  // Length of the alignment
-	Mask(start, length int) error // Masks given positions
-	MaskUnique() error            // Masks unique mutations in the given aligment (not the gaps)
+	Length() int // Length of the alignment
+	// maskreplace defines the replacing character. If maskreplace is "", then, masked characters
+	// are replaced by "N" or "X" depending on the alphabet. Orherwise:
+	//    1) if maskreplace is AMBIG: just like ""
+	//    2) if maskreplace is MAJ: Replacing character is most frequent character of the column
+	//    3) if maskreplace is GAP: Replacing character is a GAP
+	Mask(start, length int, maskreplace string) error // Masks given positions
+	// Masks unique mutations in the given aligment (not the gaps).
+	// If refseq is not "" then masks unique characters if
+	//    1) they are different from the given reference sequence
+	//    2) or if the reference is a GAP
+	// maskreplace defines the replacing character. If maskreplace is "", then, masked characters
+	// are replaced by "N" or "X" depending on the alphabet. Orherwise:
+	//    1) if maskreplace is AMBIG: just like ""
+	//    2)  if maskreplace is MAJ: Replacing character is most frequent character of the column
+	//    3)  if maskreplace is GAP: Replacing character is a GAP
+	MaskUnique(refseq string, maskreplace string) error
+	// Masks mutations that appear less or equal than the given number of max occurences in their columns (not the gaps).
+	// If refseq is not "" then masks these characters if
+	//    1) they are different from the given reference sequence
+	//    2) or if the reference is a GAP
+	// maskreplace defines the replacing character. If maskreplace is "", then, masked characters
+	// are replaced by "N" or "X" depending on the alphabet. Orherwise:
+	//    1) if maskreplace is AMBIG: just like ""
+	//    2)  if maskreplace is MAJ: Replacing character is most frequent character of the column
+	//    3)  if maskreplace is GAP: Replacing character is a GAP
+	MaskOccurences(refseq string, maxOccurence int, maskreplace string) error
 	MaxCharStats(excludeGaps, excludeNs bool) (out []uint8, occur []int, total []int)
 	Mutate(rate float64)  // Adds uniform substitutions in the alignment (~sequencing errors)
 	NbVariableSites() int // Nb of variable sites
@@ -128,7 +152,7 @@ func NewAlign(alphabet int) *align {
 		seqbag{
 			make(map[string]*seq),
 			make([]*seq, 0, 100),
-			false,
+			IGNORE_NONE,
 			alphabet},
 		-1,
 	}
@@ -162,9 +186,16 @@ func (a *align) AddSequenceChar(name string, sequence []uint8, comment string) e
 	idx := 0
 	tmpname := name
 
+	// If the sequence name already exists
+	// and ignoreidentical is true, then we ignore this sequence
+	if ok && a.ignoreidentical == IGNORE_NAME {
+		log.Print(fmt.Sprintf("Warning: sequence name \"%s\" already exists in alignment, ignoring", name))
+		return nil
+	}
+
 	// If the sequence name already exists with the same sequence
 	// and ignoreidentical is true, then we ignore this sequence
-	if ok && a.ignoreidentical && s.SameSequence(sequence) {
+	if ok && a.ignoreidentical == IGNORE_SEQUENCE && s.SameSequence(sequence) {
 		log.Print(fmt.Sprintf("Warning: sequence \"%s\" already exists in alignment with the same sequence, ignoring", name))
 		return nil
 	}
@@ -300,25 +331,23 @@ func (a *align) RemoveCharacterSites(c uint8, cutoff float64, ends bool, ignoreC
 	var nbchars int
 	var total int
 
-	kept = make([]int, a.Length())
-	for i := 0; i < a.Length(); i++ {
-		kept[i] = i
-	}
+	kept = make([]int, 0)
 
 	if cutoff < 0 || cutoff > 1 {
 		cutoff = 0
 	}
 
-	toremove := make([]int, 0, 10)
+	toremove := make([]int, 0, a.Length())
 	// To remove only positions with this character at start and ends positions
 	firstcontinuous := -1
 	lastcontinuous := a.Length()
-
+	lenBk := a.Length()
 	all := ALL_AMINO
 	if a.Alphabet() == AMINOACIDS {
 		all = ALL_NUCLE
 	}
 	allc := unicode.ToLower(all)
+	//log.Println("Before computing toremove")
 
 	for site := 0; site < a.Length(); site++ {
 		nbchars = 0
@@ -339,31 +368,43 @@ func (a *align) RemoveCharacterSites(c uint8, cutoff float64, ends bool, ignoreC
 			if site == firstcontinuous+1 {
 				firstcontinuous++
 			}
+			if lastcontinuous == a.Length() {
+				lastcontinuous = site
+			}
+		} else {
+			lastcontinuous = a.Length()
 		}
 	}
+	//log.Println("Before removing")
 
-	first = firstcontinuous + 1
-
-	/* Now we remove positions, starting at the end */
+	/* Now we remove positions */
 	sort.Ints(toremove)
 	nbremoved := 0
-	for i := (len(toremove) - 1); i >= 0; i-- {
-		if toremove[i] == lastcontinuous-1 {
-			lastcontinuous--
-		}
-
-		if !ends || lastcontinuous == toremove[i] || toremove[i] <= firstcontinuous {
-			nbremoved++
-			for seq := 0; seq < a.NbSequences(); seq++ {
-				a.seqs[seq].sequence = append(a.seqs[seq].sequence[:toremove[i]], a.seqs[seq].sequence[toremove[i]+1:]...)
+	for seq := 0; seq < a.NbSequences(); seq++ {
+		nbremoved = 0
+		nbpotentialremove := 0
+		newseq := make([]uint8, 0, a.Length()-len(toremove))
+		for i := 0; i < a.Length(); i++ {
+			removed := (nbpotentialremove < len(toremove) && i == toremove[nbpotentialremove])
+			if removed {
+				nbpotentialremove++
 			}
-			kept = append(kept[:toremove[i]], kept[toremove[i]+1:]...)
+			if removed && (!ends || i >= lastcontinuous || i <= firstcontinuous) {
+				nbremoved++
+			} else {
+				newseq = append(newseq, a.seqs[seq].sequence[i])
+				if seq == 0 {
+					// We do that once for first sequence (all removed sites are the same for all sequences)
+					kept = append(kept, i)
+				}
+			}
 		}
+		a.seqs[seq].sequence = newseq
 	}
-	last = a.Length() - lastcontinuous
 	a.length -= nbremoved
+	//log.Println("Done")
 
-	return first, last, kept
+	return firstcontinuous + 1, lenBk - lastcontinuous, kept
 }
 
 // RemoveMajorityCharacterSites Removes positions constituted of [cutoff*100%,100%] of the most
@@ -383,10 +424,7 @@ func (a *align) RemoveCharacterSites(c uint8, cutoff float64, ends bool, ignoreC
 func (a *align) RemoveMajorityCharacterSites(cutoff float64, ends, ignoreGaps, ignoreNs bool) (first, last int, kept []int) {
 	_, occur, total := a.MaxCharStats(ignoreGaps, ignoreNs)
 
-	kept = make([]int, a.Length())
-	for i := 0; i < a.Length(); i++ {
-		kept[i] = i
-	}
+	kept = make([]int, 0)
 
 	length := a.Length()
 	toremove := make([]int, 0, 10)
@@ -400,31 +438,41 @@ func (a *align) RemoveMajorityCharacterSites(cutoff float64, ends, ignoreGaps, i
 			if site == firstcontinuous+1 {
 				firstcontinuous++
 			}
+			if lastcontinuous == a.Length() {
+				lastcontinuous = site
+			}
+		} else {
+			lastcontinuous = a.Length()
 		}
 	}
 
-	first = firstcontinuous + 1
-
-	/* Now we remove positions, starting at the end */
+	/* Now we remove positions */
 	sort.Ints(toremove)
 	nbremoved := 0
-	for i := (len(toremove) - 1); i >= 0; i-- {
-		if toremove[i] == lastcontinuous-1 {
-			lastcontinuous--
-		}
-
-		if !ends || lastcontinuous == toremove[i] || toremove[i] <= firstcontinuous {
-			nbremoved++
-			for seq := 0; seq < a.NbSequences(); seq++ {
-				a.seqs[seq].sequence = append(a.seqs[seq].sequence[:toremove[i]], a.seqs[seq].sequence[toremove[i]+1:]...)
+	for seq := 0; seq < a.NbSequences(); seq++ {
+		nbremoved = 0
+		nbpotentialremove := 0
+		newseq := make([]uint8, 0, a.Length()-len(toremove))
+		for i := 0; i < a.Length(); i++ {
+			removed := (nbpotentialremove < len(toremove) && i == toremove[nbpotentialremove])
+			if removed {
+				nbpotentialremove++
 			}
-			kept = append(kept[:toremove[i]], kept[toremove[i]+1:]...)
+			if removed && (!ends || i >= lastcontinuous || i <= firstcontinuous) {
+				nbremoved++
+			} else {
+				newseq = append(newseq, a.seqs[seq].sequence[i])
+				if seq == 0 {
+					// We do that once for first sequence (all removed sites are the same for all sequences)
+					kept = append(kept, i)
+				}
+			}
 		}
+		a.seqs[seq].sequence = newseq
 	}
-	last = a.Length() - lastcontinuous
 	a.length -= nbremoved
 
-	return first, last, kept
+	return firstcontinuous + 1, length - lastcontinuous, kept
 }
 
 // RefCoordinates converts coordinates on the given sequence to coordinates on the alignment.
@@ -749,15 +797,6 @@ func (a *align) Append(al Alignment) (err error) {
 	return
 }
 
-func (a *align) append(al *align) (err error) {
-	for _, s := range al.seqs {
-		if err = a.AddSequenceChar(s.name, s.sequence, s.comment); err != nil {
-			return
-		}
-	}
-	return
-}
-
 // Add substitutions uniformly to the alignment
 // if rate < 0 : does nothing
 // if rate > 1 : rate=1
@@ -960,9 +999,12 @@ func (a *align) CharStatsSite(site int) (outmap map[uint8]int, err error) {
 
 // Mask masks sites of the alignment, going from start,
 // with a given length.
-// - For aa sequences: It masks with X
-// - For nt sequences: It masks with N
-func (a *align) Mask(start, length int) (err error) {
+// maxreplace defines the replacing character. If maskreplace is "", then, masked characters
+// are replaced by "N" or "X" depending on the alphabet. Orherwise:
+//    1) if maskreplace is AMBIG: just like ""
+//    2) if maskreplace is MAJ: Replacing character is most frequent character of the column
+//    3) if maskreplace is GAP: Replacing character is a GAP
+func (a *align) Mask(start, length int, maskreplace string) (err error) {
 	if start < 0 {
 		err = errors.New("Mask: Start position cannot be < 0")
 		return
@@ -973,53 +1015,141 @@ func (a *align) Mask(start, length int) (err error) {
 	}
 
 	rep := uint8('.')
-	if a.Alphabet() == AMINOACIDS {
-		rep = ALL_AMINO
-	} else if a.Alphabet() == NUCLEOTIDS {
-		rep = ALL_NUCLE
+	if maskreplace == "AMBIG" || maskreplace == "" {
+		if a.Alphabet() == AMINOACIDS {
+			rep = ALL_AMINO
+		} else if a.Alphabet() == NUCLEOTIDS {
+			rep = ALL_NUCLE
+		} else {
+			err = errors.New("Mask: Cannot mask alignment, wrong alphabet")
+			return
+		}
+	} else if maskreplace == "GAP" {
+		rep = GAP
+	} else if maskreplace == "MAJ" {
+		rep = uint8('.')
+	} else if len(maskreplace) == 1 {
+		rep = uint8(maskreplace[0])
 	} else {
-		err = errors.New("Mask: Cannot mask alignment, wrong alphabet")
+		err = fmt.Errorf("mask: unknown replacement character : %s", maskreplace)
+		return
 	}
-
-	for _, seq := range a.seqs {
-		for i := start; i < (start+length) && i < a.Length(); i++ {
+	for i := start; i < (start+length) && i < a.Length(); i++ {
+		occurences := make([]int, 130)
+		// We compute the most frequent character of the column
+		if maskreplace == "MAJ" {
+			for _, seq := range a.seqs {
+				r := seq.sequence[i]
+				occurences[int(r)]++
+			}
+			max := 0
+			for c, num := range occurences {
+				if num > max {
+					rep = uint8(c)
+					max = num
+				}
+			}
+		}
+		for _, seq := range a.seqs {
 			seq.sequence[i] = rep
 		}
 	}
 	return
 }
 
-// MaskUnique masks nucleotides that are unique in their columns (unique mutations)
-// - For aa sequences: It masks with X
-// - For nt sequences: It masks with N
-func (a *align) MaskUnique() (err error) {
+// MaskOccurences masks nucleotides that appear less or equal than the given number of times
+// in their columns (low frenquency mutations)
+// If refseq is not "" then masks unique characters if:
+//    1) they are different from the given reference sequence
+//    2) or if the reference is a GAP
+// maxreplace defines the replacing character. If maskreplace is "", then, masked characters
+// are replaced by "N" or "X" depending on the alphabet. Orherwise:
+//    1) if maskreplace is AMBIG: just like ""
+//    2)  if maskreplace is MAJ: Replacing character is most frequent character of the column
+//    3)  if maskreplace is GAP: Replacing character is a GAP
+func (a *align) MaskOccurences(refseq string, maxOccurence int, maskreplace string) (err error) {
+	var ok bool
+	var refSequence Sequence = nil
+
 	rep := uint8('.')
-	if a.Alphabet() == AMINOACIDS {
-		rep = ALL_AMINO
-	} else if a.Alphabet() == NUCLEOTIDS {
-		rep = ALL_NUCLE
+	if maskreplace == "AMBIG" || maskreplace == "" {
+		if a.Alphabet() == AMINOACIDS {
+			rep = ALL_AMINO
+		} else if a.Alphabet() == NUCLEOTIDS {
+			rep = ALL_NUCLE
+		} else {
+			err = errors.New("Mask: Cannot mask alignment, wrong alphabet")
+			return
+		}
+	} else if maskreplace == "GAP" {
+		rep = GAP
+	} else if maskreplace == "MAJ" {
+		rep = uint8('.')
+	} else if len(maskreplace) == 1 {
+		rep = uint8(maskreplace[0])
 	} else {
-		err = errors.New("Mask: Cannot mask alignment, wrong alphabet")
+		err = fmt.Errorf("mask: unknown replacement character : %s", maskreplace)
+		return
 	}
 
+	// We take the reference sequence from the alignment
+	if refseq != "" {
+		if refSequence, ok = a.GetSequenceByName(refseq); !ok {
+			err = fmt.Errorf("given reference sequence does not exist in the alignment")
+			return
+		}
+	}
+
+	// For each site of the alignment
 	for i := 0; i < a.Length(); i++ {
 		occurences := make([]int, 130)
-		indices := make([]int, 130)
-
+		indices := make([][]int, 130)
+		for i2 := range indices {
+			indices[i2] = make([]int, 0)
+		}
+		// For each sequence
 		for j, s := range a.seqs {
 			r := s.sequence[i]
-			occurences[int(r)]++
-			indices[int(r)] = j
+			if refseq == "" || (s.name != refseq && (r != refSequence.CharAt(i) || refSequence.CharAt(i) == GAP)) {
+				occurences[int(r)]++
+				indices[int(r)] = append(indices[int(r)], j)
+			}
+		}
+
+		if maskreplace == "MAJ" {
+			max := 0
+			for c, num := range occurences {
+				if num > max {
+					rep = uint8(c)
+					max = num
+				}
+			}
 		}
 
 		for c, num := range occurences {
-			if num == 1 && uint8(c) != rep && uint8(c) != GAP {
-				ind := indices[c]
-				a.seqs[ind].sequence[i] = rep
+			if num <= maxOccurence && num > 0 && uint8(c) != rep && uint8(c) != GAP {
+				for _, ind := range indices[c] {
+					a.seqs[ind].sequence[i] = rep
+				}
 			}
+			indices[c] = nil
 		}
+		indices = nil
 	}
 	return
+}
+
+// MaskUnique masks nucleotides that are unique in their columns (unique mutations)
+// If refseq is not "" then masks unique characters if:
+//    1) they are different from the given reference sequence
+//    2) or if the reference is a GAP
+// maxreplace defines the replacing character. If maskreplace is "", then, masked characters
+// are replaced by "N" or "X" depending on the alphabet. Orherwise:
+//    1) if maskreplace is AMBIG: just like ""
+//    2)  if maskreplace is MAJ: Replacing character is most frequent character
+//    3)  if maskreplace is GAP: Replacing character is a GAP
+func (a *align) MaskUnique(refseq string, maskreplace string) (err error) {
+	return a.MaskOccurences(refseq, 1, maskreplace)
 }
 
 // MaxCharStats returns the Character with the highest occurence

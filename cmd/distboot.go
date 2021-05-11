@@ -78,7 +78,7 @@ original alignment.
 		}
 		defer closeWriteFile(f, distbootOutput)
 
-		align, _ := <-aligns.Achan
+		align := <-aligns.Achan
 		if aligns.Err != nil {
 			err = aligns.Err
 			io.LogError(err)
@@ -150,7 +150,7 @@ func writeDistBootMatrix(matrix [][]float64, a align.Alignment, f *os.File) {
 		if !ok {
 			f.WriteString(fmt.Sprintf("%d", i))
 		} else {
-			f.WriteString(fmt.Sprintf("%s", name))
+			f.WriteString(name)
 		}
 		for j := 0; j < len(matrix); j++ {
 			f.WriteString(fmt.Sprintf("\t%.12f", matrix[i][j]))
@@ -167,7 +167,7 @@ func writeDenseDistBootMatrix(matrix *mat.Dense, a align.Alignment, f *os.File) 
 		if !ok {
 			f.WriteString(fmt.Sprintf("%d", i))
 		} else {
-			f.WriteString(fmt.Sprintf("%s", name))
+			f.WriteString(name)
 		}
 		for j := 0; j < c; j++ {
 			f.WriteString(fmt.Sprintf("\t%.12f", matrix.At(i, j)))

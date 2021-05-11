@@ -2,19 +2,24 @@
 
 ## Commands
 
-### transpose
-Transposes an input alignment such that the sequences become the sites and the sites become the sequence.
+### revcomp
+Reverse complements an input alignment.
 
-Each sequence of the output alignment is one site of the input alignment, whose name is the site index (starting from 0).
+If the input alignment is not nucleotides, then returns an error.
+
+If `--unaligned` is specified, then input sequences may be unaligned.
+
+IUPAC codes are taken into account.
 
 #### Usage
 ```
 Usage:
-  goalign transpose [flags]
+  goalign revcomp [flags]
 
 Flags:
-  -h, --help            help for transpose
-  -o, --output string   Output transposed alignment (default "stdout")
+  -h, --help            help for revcomp
+  -o, --output string   Output reverse complement alignment file (default "stdout")
+      --unaligned       Considers sequences as unaligned and format fasta (phylip, nexus,... options are ignored)
 
 Global Flags:
   -i, --align string          Alignment input file (default "stdin")
@@ -31,37 +36,57 @@ Global Flags:
 
 
 #### Examples
-* Transposing an input alignment:
+* Reverse complement:
 
 seq.fa
 ```
 >Seq0000
-CTTTC
+CTTTCGCAAA
 >Seq0001
-GCAAA
+GTGCAGTCCG
 >Seq0002
-GTGCA
+TGAGTTTAGT
 >Seq0003
-GTCCG
+CATTCACTCG
 >Seq0004
-TGAGT
+CGGTCTGATC
+>Seq0005
+CCCTACAGTT
+>Seq0006
+TGCAGACGTG
+>Seq0007
+TAGGTGCTAA
+>Seq0008
+TCCCCTCTTG
+>Seq0009
+GAGTATATCG
 ```
 
 
 ```
-goalign transpose -i seq.fa 
+goalign revcomp -i seq.fa
 ```
 
 Should output:
 ```
->0
-CGGGT
->1
-TCTTG
->2
-TAGCA
->3
-TACCG
->4
-CAAGT
+>Seq0000
+TTTGCGAAAG
+>Seq0001
+CGGACTGCAC
+>Seq0002
+ACTAAACTCA
+>Seq0003
+CGAGTGAATG
+>Seq0004
+GATCAGACCG
+>Seq0005
+AACTGTAGGG
+>Seq0006
+CACGTCTGCA
+>Seq0007
+TTAGCACCTA
+>Seq0008
+CAAGAGGGGA
+>Seq0009
+CGATATACTC
 ```

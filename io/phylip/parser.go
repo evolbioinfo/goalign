@@ -15,7 +15,7 @@ import (
 type Parser struct {
 	s               *Scanner
 	strict          bool
-	ignoreidentical bool
+	ignoreidentical int
 	buf             struct {
 		tok Token  // last read token
 		lit string // last read literal
@@ -25,12 +25,12 @@ type Parser struct {
 
 // NewParser returns a new instance of Parser.
 func NewParser(r io.Reader, strict bool) *Parser {
-	return &Parser{s: NewScanner(r), strict: strict, ignoreidentical: false}
+	return &Parser{s: NewScanner(r), strict: strict, ignoreidentical: align.IGNORE_NONE}
 }
 
 // If sets to true, then will ignore duplicate sequences that have the same name and the same sequence
 // Otherwise, it just renames them just as the sequences that have same name and different sequences
-func (p *Parser) IgnoreIdentical(ignore bool) {
+func (p *Parser) IgnoreIdentical(ignore int) {
 	p.ignoreidentical = ignore
 }
 

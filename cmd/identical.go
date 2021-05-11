@@ -20,7 +20,7 @@ var identicalCmd = &cobra.Command{
 		var aligns, compaligns *align.AlignChannel
 
 		if compalign == "none" {
-			io.LogError(fmt.Errorf("No compared alignment has been given"))
+			io.LogError(fmt.Errorf("no compared alignment has been given"))
 			return
 		}
 
@@ -34,8 +34,8 @@ var identicalCmd = &cobra.Command{
 			return
 		}
 
-		al, _ := <-aligns.Achan
-		comp, _ := <-compaligns.Achan
+		al := <-aligns.Achan
+		comp := <-compaligns.Achan
 
 		if aligns.Err != nil {
 			err = aligns.Err

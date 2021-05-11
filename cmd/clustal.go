@@ -35,7 +35,7 @@ goalign reformat clustal -i align.fasta
 		}
 		defer closeWriteFile(f, reformatOutput)
 
-		a, _ := <-aligns.Achan
+		a := <-aligns.Achan
 		if aligns.Err != nil {
 			err = aligns.Err
 			io.LogError(err)

@@ -70,13 +70,13 @@ goalign build seqboot -i align.phylip -p -n 500 -o boot_
 		}
 
 		if bootstrapoutprefix == "none" {
-			err = errors.New("Output bootstrap file prefix is mandatory")
+			err = errors.New("output bootstrap file prefix is mandatory")
 			io.LogError(err)
 			return
 		}
 
 		// We take the first alignment of the channel
-		al, _ = <-alignChan.Achan
+		al = <-alignChan.Achan
 		if alignChan.Err != nil {
 			err = alignChan.Err
 			io.LogError(err)
@@ -228,13 +228,6 @@ func addstringtotargz(tw *tar.Writer, name string, align string) error {
 		return err
 	}
 	return nil
-}
-
-func minInt(a, b int) int {
-	if a < b {
-		return a
-	}
-	return b
 }
 
 func init() {

@@ -26,7 +26,6 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var cfgFile string
 var infile string
 var rootphylip bool
 var rootnexus bool
@@ -39,7 +38,7 @@ var rootoutputnoblock = false
 var rootAutoDetectInputFormat bool
 var seed int64 = -1
 var unaligned bool
-var ignoreidentical = false
+var ignoreidentical = align.IGNORE_NONE
 
 var helptemplate string = `{{with or .Long .Short }}{{. | trim}}
 
@@ -198,8 +197,13 @@ func init() {
 	RootCmd.PersistentFlags().BoolVarP(&rootnexus, "nexus", "x", false, "Alignment is in nexus? default fasta")
 	RootCmd.PersistentFlags().BoolVarP(&rootclustal, "clustal", "u", false, "Alignment is in clustal? default fasta")
 	RootCmd.PersistentFlags().IntVarP(&rootcpus, "threads", "t", 1, "Number of threads")
-	RootCmd.PersistentFlags().BoolVar(&ignoreidentical, "ignore-identical", false, "Ignore duplicated sequences that have the same name and same sequences")
 
+	// If ignore is IGNORE_NONE: Does not ignore anything
+	// If ignore is IGNORE_NAME: Ignore sequences having the same name (keep the first one whatever their sequence)
+	// If ignore is IGNORE_SEQUENCE: Ignore sequences having the same name and the same sequence
+	// Otherwise, sets IGNORE_NONE
+
+	RootCmd.PersistentFlags().IntVar(&ignoreidentical, "ignore-identical", align.IGNORE_NONE, fmt.Sprintf("Ignore duplicated sequences that have the same name and potentially have same sequences, %d : Does not ignore anything, %d: Ignore sequences having the same name (keep the first one whatever their sequence), %d: Ignore sequences having the same name and the same sequence", align.IGNORE_NONE, align.IGNORE_NAME, align.IGNORE_SEQUENCE))
 	RootCmd.PersistentFlags().Int64Var(&seed, "seed", -1, "Random Seed: -1 = nano seconds since 1970/01/01 00:00:00")
 	RootCmd.PersistentFlags().BoolVar(&rootinputstrict, "input-strict", false, "Strict phylip input format (only used with -p)")
 	RootCmd.PersistentFlags().BoolVar(&rootoutputstrict, "output-strict", false, "Strict phylip output format (only used with -p)")
@@ -290,7 +294,7 @@ func openWriteFile(file string) (f *os.File, err error) {
 }
 
 func readMapFile(file string, revert bool) (map[string]string, error) {
-	outmap := make(map[string]string, 0)
+	outmap := make(map[string]string)
 	var mapfile *os.File
 	var err error
 	var reader *bufio.Reader

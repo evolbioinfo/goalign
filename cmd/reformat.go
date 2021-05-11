@@ -5,7 +5,6 @@ import (
 )
 
 var reformatOutput string
-var reformatOutputString string
 var reformatCleanNames bool
 
 // reformatCmd represents the reformat command

@@ -143,7 +143,7 @@ func parseCountFile(file string) (counts map[string]int, err error) {
 	for e == nil {
 		cols := strings.Split(l, "\t")
 		if cols == nil || len(cols) != 2 {
-			err = errors.New("Bad format from counts: Wrong number of columns")
+			err = errors.New("bad format from counts: Wrong number of columns")
 			return
 		}
 		if c, err = strconv.Atoi(cols[1]); err != nil {

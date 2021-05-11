@@ -1,10 +1,11 @@
+
 # Goalign: toolkit and api for alignment manipulation
 
 ## API
 
-### mask
+### revcomp
 
-Mask part of an input fasta alignment
+This command reverse complements an input alignment.
 
 ```go
 package main
@@ -25,23 +26,24 @@ func main() {
 	var err error
 	var al align.Alignment
 
-	/* First Alignment*/
-
 	/* Get reader (plain text or gzip) */
-	if fi, r, err = utils.GetReader("align.fa"); err != nil {
+	fi, r, err = utils.GetReader("align.fa")
+	if err != nil {
 		panic(err)
 	}
-	defer fi.Close()
 
 	/* Parse Fasta */
-	if al, err = fasta.NewParser(r).Parse(); err != nil {
+	al, err = fasta.NewParser(r).Parse()
+	if err != nil {
 		panic(err)
 	}
+	fi.Close()
 
-	if err = al.Mask(0, 2, ""); err != nil {
+	/* Translate */
+	if err = al.ReverseComplement(); err != nil {
 		panic(err)
+	} else {
+		fmt.Println(fasta.WriteAlignment(al))
 	}
-
-	fmt.Println(fasta.WriteAlignment(al))
 }
 ```

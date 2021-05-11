@@ -8,8 +8,6 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var phylipstrict bool
-
 // phylipCmd represents the phylip command
 var phylipCmd = &cobra.Command{
 	Use:   "phylip",

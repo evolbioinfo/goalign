@@ -52,7 +52,7 @@ goalign reformat fasta -i align.fasta
 				return
 			}
 
-			a, _ := <-aligns.Achan
+			a := <-aligns.Achan
 			if aligns.Err != nil {
 				err = aligns.Err
 				io.LogError(err)

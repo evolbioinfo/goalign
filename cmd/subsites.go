@@ -98,7 +98,7 @@ If --reverse is given, then will output all positions but the ones that should b
 			}
 
 			if len(sites) == 0 {
-				err = fmt.Errorf("No sites are provided")
+				err = fmt.Errorf("no sites are provided")
 				io.LogError(err)
 				return
 			}
@@ -113,7 +113,7 @@ If --reverse is given, then will output all positions but the ones that should b
 			if subsitesinformative {
 				sites = al.InformativeSites()
 				if len(sites) == 0 {
-					err = fmt.Errorf("No informative sites in the alignment")
+					err = fmt.Errorf("no informative sites in the alignment")
 					io.LogError(err)
 					return
 				}
@@ -129,7 +129,10 @@ If --reverse is given, then will output all positions but the ones that should b
 
 			sitespos := sites
 			if refseq {
-				sitespos, err = al.RefSites(subsitesrefseq, sites)
+				if sitespos, err = al.RefSites(subsitesrefseq, sites); err != nil {
+					io.LogError(err)
+					return
+				}
 			}
 
 			if subsitesreverse {

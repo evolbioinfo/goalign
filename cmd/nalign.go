@@ -31,7 +31,7 @@ goalign stats nalign -i align.ph -p
 		}
 
 		naligns := 0
-		for _ = range aligns.Achan {
+		for range aligns.Achan {
 			naligns++
 		}
 		fmt.Println(naligns)

@@ -1675,6 +1675,242 @@ cat divprefix_* > result
 diff -q -b result expected
 rm -f expected result divprefix* input
 
+echo "->goalign divide --nb-sequences"
+cat > expected.0 <<EOF
+>Seq0000
+GATTAATTTG
+>Seq0001
+CCGTAGGCCA
+EOF
+cat > expected.1 <<EOF
+>Seq0002
+GAATCTGAAG
+>Seq0003
+ATCGAACACT
+EOF
+cat > expected.2 <<EOF
+>Seq0004
+TTAAGTTTTC
+>Seq0005
+ACTTCTAATG
+EOF
+cat > expected.3 <<EOF
+>Seq0006
+GAGAGGACTA
+>Seq0007
+GTTCATACTT
+EOF
+cat > expected.4 <<EOF
+>Seq0008
+TTTAAACACT
+>Seq0009
+TTTACATCGA
+EOF
+cat > expected.5 <<EOF
+>Seq0010
+TGTCGGACCT
+EOF
+
+rm -f input
+${GOALIGN} random -n 11 -l 10 --seed 10 -p > input
+${GOALIGN} divide -i input -p -o divprefix -f --nb-sequences 2
+for i in {0..5}
+do
+    diff -q -b divprefix_00${i}.fa expected.${i}
+    rm divprefix_00${i}.fa expected.${i}
+done
+rm -f input
+
+echo "->goalign divide several aligns --nb-sequences"
+cat > input <<EOF
+   11   10
+Seq0000  GATTAATTTG
+Seq0001  CCGTAGGCCA
+Seq0002  GAATCTGAAG
+Seq0003  ATCGAACACT
+Seq0004  TTAAGTTTTC
+Seq0005  ACTTCTAATG
+Seq0006  GAGAGGACTA
+Seq0007  GTTCATACTT
+Seq0008  TTTAAACACT
+Seq0009  TTTACATCGA
+Seq0010  TGTCGGACCT
+   3   10
+Seq0000  GATTAATTTG
+Seq0001  CCGTAGGCCA
+Seq0002  GAATCTGAAG
+EOF
+cat > expected.0 <<EOF
+>Seq0000
+GATTAATTTG
+>Seq0001
+CCGTAGGCCA
+EOF
+cat > expected.1 <<EOF
+>Seq0002
+GAATCTGAAG
+>Seq0003
+ATCGAACACT
+EOF
+cat > expected.2 <<EOF
+>Seq0004
+TTAAGTTTTC
+>Seq0005
+ACTTCTAATG
+EOF
+cat > expected.3 <<EOF
+>Seq0006
+GAGAGGACTA
+>Seq0007
+GTTCATACTT
+EOF
+cat > expected.4 <<EOF
+>Seq0008
+TTTAAACACT
+>Seq0009
+TTTACATCGA
+EOF
+cat > expected.5 <<EOF
+>Seq0010
+TGTCGGACCT
+EOF
+cat > expected.6 <<EOF
+>Seq0000
+GATTAATTTG
+>Seq0001
+CCGTAGGCCA
+EOF
+cat > expected.7 <<EOF
+>Seq0002
+GAATCTGAAG
+EOF
+
+${GOALIGN} divide -i input -p -o divprefix -f --nb-sequences 2
+for i in {0..7}
+do
+    diff -q -b divprefix_00${i}.fa expected.${i}
+    rm divprefix_00${i}.fa expected.${i}
+done
+rm -f input
+
+
+echo "->goalign divide --unaligned"
+cat > input <<EOF
+>Seq0000
+G
+>Seq0001
+CA
+>Seq0002
+AAG
+>Seq0003
+CACT
+>Seq0004
+TTTTC
+>Seq0005
+CTAATG
+>Seq0006
+AGGACTA
+>Seq0007
+TCATACTT
+>Seq0008
+TTAAACACT
+>Seq0009
+TTTACATCGA
+EOF
+cat > expected <<EOF
+>Seq0000
+G
+>Seq0001
+CA
+>Seq0002
+AAG
+>Seq0003
+CACT
+>Seq0004
+TTTTC
+>Seq0005
+CTAATG
+>Seq0006
+AGGACTA
+>Seq0007
+TCATACTT
+>Seq0008
+TTAAACACT
+>Seq0009
+TTTACATCGA
+EOF
+${GOALIGN} divide -i input -o divprefix --unaligned
+diff -q -b divprefix_000.fa expected
+rm -f expected input divprefix*
+
+echo "->goalign divide --nb-sequences --unaligned"
+cat > input <<EOF
+>Seq0000
+G
+>Seq0001
+CA
+>Seq0002
+AAG
+>Seq0003
+CACT
+>Seq0004
+TTTTC
+>Seq0005
+CTAATG
+>Seq0006
+AGGACTA
+>Seq0007
+TCATACTT
+>Seq0008
+TTAAACACT
+>Seq0009
+TTTACATCGA
+>Seq00010
+AAAAAAAAAA
+EOF
+cat > expected.0 <<EOF
+>Seq0000
+G
+>Seq0001
+CA
+EOF
+cat > expected.1 <<EOF
+>Seq0002
+AAG
+>Seq0003
+CACT
+EOF
+cat > expected.2 <<EOF
+>Seq0004
+TTTTC
+>Seq0005
+CTAATG
+EOF
+cat > expected.3 <<EOF
+>Seq0006
+AGGACTA
+>Seq0007
+TCATACTT
+EOF
+cat > expected.4 <<EOF
+>Seq0008
+TTAAACACT
+>Seq0009
+TTTACATCGA
+EOF
+cat > expected.5 <<EOF
+>Seq00010
+AAAAAAAAAA
+EOF
+
+${GOALIGN} divide -i input -o divprefix --unaligned --nb-sequences 2
+for i in {0..5}
+do
+    diff -q -b divprefix_00${i}.fa expected.${i}
+    rm divprefix_00${i}.fa expected.${i}
+done
+rm -f input
+
 
 echo "->goalign mutate gaps"
 cat > expected <<EOF
@@ -2494,6 +2730,71 @@ diff -q -b result expected
 diff -q -b <(sort mapfile) <(sort mapfile2)
 rm -f expected result mapfile input mapfile2
 
+echo "->goalign trim name unaligned"
+cat > input <<EOF
+>Seq0000
+GATTA
+>Seq0001
+ATTT
+>Seq0002
+CCG
+>Seq0003
+GG
+EOF
+cat > expected <<EOF
+>S01
+GATTA
+>S02
+ATTT
+>S03
+CCG
+>S04
+GG
+EOF
+cat > expectedmap <<EOF
+Seq0002	S03
+Seq0003	S04
+Seq0000	S01
+Seq0001	S02
+EOF
+${GOALIGN} trim name -n 3 -m mapfile --unaligned -i input > result
+diff -q -b result expected
+diff -q -b <(sort mapfile) <(sort expectedmap)
+rm -f expected result expectedmap mapfile
+
+
+echo "->goalign trim name auto unaligned"
+cat > input <<EOF
+>Seq0000
+GATTA
+>Seq0001
+ATTT
+>Seq0002
+CCG
+>Seq0003
+GG
+EOF
+cat > expected <<EOF
+>S1
+GATTA
+>S2
+ATTT
+>S3
+CCG
+>S4
+GG
+EOF
+cat > expectedmap <<EOF
+Seq0002	S3
+Seq0003	S4
+Seq0000	S1
+Seq0001	S2
+EOF
+${GOALIGN} trim name -a --unaligned -m mapfile -i input > result
+diff -q -b result expected
+diff -q -b <(sort mapfile) <(sort expectedmap)
+rm -f expected result expectedmap mapfile
+
 
 echo "->goalign trim seq"
 cat > expected <<EOF
@@ -2885,9 +3186,20 @@ cat > expected <<EOF
 3  GGGGGG
 4  GGGGGG
 EOF
-${GOALIGN} reformat phylip -i input -o result --ignore-identical -p 
+
+cat > expected2 <<EOF
+   4   6
+1  AAAAAA
+2  GGGGGG
+3  GGGGGG
+4  GGGGGG
+EOF
+
+${GOALIGN} reformat phylip -i input -o result --ignore-identical 2 -p 
 diff -q -b expected result
-rm -f input expected result
+${GOALIGN} reformat phylip -i input -o result --ignore-identical 1 -p 
+diff -q -b expected2 result
+rm -f input expected expected2 result
 
 echo "->goalign reformat ignore identical 2"
 cat > input <<EOF
@@ -2907,10 +3219,20 @@ cat > expected <<EOF
 2  GGGGGG
 3  GGGGGG
 EOF
-${GOALIGN} reformat phylip -i input -o result --ignore-identical -p 
-diff -q -b expected result
-rm -f input expected result
 
+cat > expected2 <<EOF
+   3   6
+1  AAAAAA
+2  GGGGGG
+3  GGGGGG
+EOF
+
+${GOALIGN} reformat phylip -i input -o result --ignore-identical 2 -p 
+diff -q -b expected result
+
+${GOALIGN} reformat phylip -i input -o result --ignore-identical 1 -p 
+diff -q -b expected2 result
+rm -f input expected2 expected result
 
 echo "->goalign reformat ignore identical clustal->fasta"
 cat > input <<EOF
@@ -2957,7 +3279,7 @@ FNLDFDTGSSDLWIASTLCT
 -----------------YTGSLHWVPVTVQQYWQFTVDS---VTISGVVV-----------------YTGSLHWVPVTVQ
 QYWQFTVDS---VTISGVVV
 EOF
-${GOALIGN} reformat fasta -u -i input -o result --ignore-identical
+${GOALIGN} reformat fasta -u -i input -o result --ignore-identical 2
 diff -q -b expected result
 rm -f input expected result
 
@@ -3810,6 +4132,62 @@ EOF
 ${GOALIGN} mask --unique -i input -o result
 diff -q -b expected result
 rm -f input expected result
+
+echo "->goalign mask --unique --ref-seq"
+cat > input <<EOF
+>A
+ACANGA-TACC
+>B
+ACTN-T-TTTC
+>C
+ACTN-TTT--T
+>D
+C-ANCCCCCCC
+EOF
+
+cat > expected << EOF
+>A
+ACANGA-TACC
+>B
+ACTN-T-TNNC
+>C
+ACTN-TNT--N
+>D
+N-ANNNNNNCC
+EOF
+
+${GOALIGN} mask --unique --ref-seq A -i input -o result
+diff -q -b expected result
+rm -f input expected result
+
+
+echo "->goalign mask --unique --at-most --ref-seq"
+cat > input <<EOF
+>A
+ACANGA-TACC
+>B
+ACTN-T-TTTC
+>C
+ACTN-TTT--T
+>D
+C-ANCCCCCCC
+EOF
+
+cat > expected << EOF
+>A
+ACANGA-TACC
+>B
+ACNN-N-TNNC
+>C
+ACNN-NNT--N
+>D
+N-ANNNNNNCC
+EOF
+
+${GOALIGN} mask --unique --ref-seq A --at-most 2 -i input -o result
+diff -q -b expected result
+rm -f input expected result
+
 
 echo "->goalign replace"
 cat > input <<EOF
@@ -5056,3 +5434,39 @@ diff -q -b expected output
 
 rm -rf output expected
 
+echo "->goalign revcomp "
+cat > input <<EOF
+>s1
+ATUGCYRSWKMBDHVN*.
+>s2
+TAACGRYSWMKVHDBN*.
+EOF
+cat > expected <<EOF
+>s1
+.*NBDHVKMWSYRGCAAT
+>s2
+.*NVHDBMKWSRYCGTTA
+EOF
+
+${GOALIGN} revcomp -i input > output
+diff -q -b expected output
+rm -rf input output expected
+
+
+echo "->goalign revcomp --unaligned"
+cat > input <<EOF
+>s1
+ATUGCYRSWKMBDHVN*.
+>s2
+TAACGRYSWMKVHDBN*.ACGT
+EOF
+cat > expected <<EOF
+>s1
+.*NBDHVKMWSYRGCAAT
+>s2
+ACGT.*NVHDBMKWSRYCGTTA
+EOF
+
+${GOALIGN} revcomp -i input --unaligned > output
+diff -q -b expected output
+rm -rf input output expected

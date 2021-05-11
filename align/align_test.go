@@ -1457,10 +1457,67 @@ func TestMaskNt(t *testing.T) {
 	exp.AddSequence("Seq0002", "TTAAGTTTNNACTTCTAATG", "")
 	exp.AutoAlphabet()
 
-	if err := in.Mask(8, 2); err != nil {
+	exp2 := NewSeqBag(UNKNOWN)
+	exp2.AddSequence("Seq0000", "GATTAATT--CCGTAGGCCA", "")
+	exp2.AddSequence("Seq0001", "GAATCTGA--ATCGAACACT", "")
+	exp2.AddSequence("Seq0002", "TTAAGTTT--ACTTCTAATG", "")
+	exp2.AutoAlphabet()
+
+	exp3 := NewSeqBag(UNKNOWN)
+	exp3.AddSequence("Seq0000", "GATTAATT,,CCGTAGGCCA", "")
+	exp3.AddSequence("Seq0001", "GAATCTGA,,ATCGAACACT", "")
+	exp3.AddSequence("Seq0002", "TTAAGTTT,,ACTTCTAATG", "")
+	exp3.AutoAlphabet()
+
+	exp4 := NewAlign(UNKNOWN)
+	exp4.AddSequence("Seq0000", "GATTAATTTGACGTAGGCCA", "")
+	exp4.AddSequence("Seq0001", "GAATCTGAAGACCGAACACT", "")
+	exp4.AddSequence("Seq0002", "TTAAGTTTTGACTTCTAATG", "")
+	exp4.AutoAlphabet()
+
+	res, _ := in.Clone()
+	if err := res.Mask(8, 2, ""); err != nil {
 		t.Error(err)
 	} else {
-		if !exp.Identical(in) {
+		if !exp.Identical(res) {
+			t.Error(fmt.Errorf("Expected sequences are different from masked sequences"))
+		}
+	}
+
+	res, _ = in.Clone()
+	if err := res.Mask(8, 2, "AMBIG"); err != nil {
+		t.Error(err)
+	} else {
+		if !exp.Identical(res) {
+			t.Error(fmt.Errorf("Expected sequences are different from masked sequences"))
+		}
+	}
+
+	res, _ = in.Clone()
+	if err := res.Mask(8, 2, "GAP"); err != nil {
+		t.Error(err)
+	} else {
+		if !exp2.Identical(res) {
+			t.Error(fmt.Errorf("Expected sequences are different from masked sequences"))
+		}
+	}
+
+	res, _ = in.Clone()
+	if err := res.Mask(8, 2, ","); err != nil {
+		t.Error(err)
+	} else {
+		if !exp3.Identical(res) {
+			t.Error(fmt.Errorf("Expected sequences are different from masked sequences"))
+		}
+	}
+
+	res, _ = in.Clone()
+	if err := res.Mask(9, 3, "MAJ"); err != nil {
+		t.Error(err)
+	} else {
+		if !exp4.Identical(res) {
+			fmt.Println(exp4)
+			fmt.Println(res)
 			t.Error(fmt.Errorf("Expected sequences are different from masked sequences"))
 		}
 	}
@@ -1479,7 +1536,7 @@ func TestMaskProt(t *testing.T) {
 	exp.AddSequence("Seq0002", "GDMMEDSGSIAIXXXXXXXX", "")
 	exp.AutoAlphabet()
 
-	if err := in.Mask(12, 2000); err != nil {
+	if err := in.Mask(12, 2000, "AMBIG"); err != nil {
 		t.Error(err)
 	} else {
 		if !exp.Identical(in) {
@@ -1991,7 +2048,7 @@ func Test_align_RemoveMajorityCharacterSites(t *testing.T) {
 }
 
 func Test_align_MaskUnique(t *testing.T) {
-	var a, exp Alignment
+	var a, res, exp, exp2, exp3 Alignment
 
 	a = NewAlign(NUCLEOTIDS)
 	a.AddSequence("A", "ACANGA-TACC", "")
@@ -2005,10 +2062,135 @@ func Test_align_MaskUnique(t *testing.T) {
 	exp.AddSequence("C", "ACTN-TNT--N", "")
 	exp.AddSequence("D", "N-ANNNNNNCC", "")
 
-	a.MaskUnique()
+	exp2 = NewAlign(NUCLEOTIDS)
+	exp2.AddSequence("A", "ACANGA-TACC", "")
+	exp2.AddSequence("B", "ACTN-T-TNNC", "")
+	exp2.AddSequence("C", "ACTN-TNT--N", "")
+	exp2.AddSequence("D", "N-ANNNNNNCC", "")
 
-	if !a.Identical(exp) {
-		t.Error(fmt.Errorf("Remove majority failed"))
+	exp3 = NewAlign(NUCLEOTIDS)
+	exp3.AddSequence("A", "ACANGA-TACC", "")
+	exp3.AddSequence("B", "ACNN-N-TNNC", "")
+	exp3.AddSequence("C", "ACNN-NNT--N", "")
+	exp3.AddSequence("D", "N-ANNNNNNCC", "")
+
+	res, _ = a.Clone()
+	res.MaskUnique("", "AMBIG")
+
+	if !res.Identical(exp) {
+		t.Error(fmt.Errorf("Mask unique failed"))
+	}
+
+	res, _ = a.Clone()
+	res.MaskUnique("A", "AMBIG")
+	if !res.Identical(exp2) {
+		t.Error(fmt.Errorf("Mask unique with refseq failed"))
+	}
+
+	res, _ = a.Clone()
+	res.MaskOccurences("A", 2, "AMBIG")
+	if !res.Identical(exp3) {
+		t.Error(fmt.Errorf("Mask unique with refseq and maxocc failed"))
+	}
+}
+
+func Test_align_MaskUniqueGAP(t *testing.T) {
+	var a, res, exp, exp2, exp3 Alignment
+
+	a = NewAlign(NUCLEOTIDS)
+	a.AddSequence("A", "ACANGA-TACC", "")
+	a.AddSequence("B", "ACTN-T-TTTC", "")
+	a.AddSequence("C", "ACTN-TTT--T", "")
+	a.AddSequence("D", "C-ANCCCCCCC", "")
+
+	exp = NewAlign(NUCLEOTIDS)
+	exp.AddSequence("A", "ACAN---T-CC", "")
+	exp.AddSequence("B", "ACTN-T-T--C", "")
+	exp.AddSequence("C", "ACTN-T-T---", "")
+	exp.AddSequence("D", "--AN-----CC", "")
+
+	exp2 = NewAlign(NUCLEOTIDS)
+	exp2.AddSequence("A", "ACANGA-TACC", "")
+	exp2.AddSequence("B", "ACTN-T-T--C", "")
+	exp2.AddSequence("C", "ACTN-T-T---", "")
+	exp2.AddSequence("D", "--AN-----CC", "")
+
+	exp3 = NewAlign(NUCLEOTIDS)
+	exp3.AddSequence("A", "ACANGA-TACC", "")
+	exp3.AddSequence("B", "AC-N---T--C", "")
+	exp3.AddSequence("C", "AC-N---T---", "")
+	exp3.AddSequence("D", "--AN-----CC", "")
+
+	res, _ = a.Clone()
+	res.MaskUnique("", "GAP")
+
+	if !res.Identical(exp) {
+		t.Error(fmt.Errorf("Mask unique failed"))
+	}
+
+	res, _ = a.Clone()
+	res.MaskUnique("A", "GAP")
+	if !res.Identical(exp2) {
+		t.Error(fmt.Errorf("Mask unique with refseq failed"))
+	}
+
+	res, _ = a.Clone()
+	res.MaskOccurences("A", 2, "GAP")
+	if !res.Identical(exp3) {
+		t.Error(fmt.Errorf("Mask unique with refseq and maxocc failed"))
+	}
+}
+
+func Test_align_MaskUniqueMAJ(t *testing.T) {
+	var a, res, exp, exp2, exp3 Alignment
+
+	a = NewAlign(NUCLEOTIDS)
+	a.AddSequence("A", "AAAAAAAAAAA", "")
+	a.AddSequence("B", "AAAAAAAAAAA", "")
+	a.AddSequence("C", "CCCCCCCCCCC", "")
+	a.AddSequence("D", "CCCCCCCCCCC", "")
+	a.AddSequence("E", "TTTTTTTTTTT", "")
+
+	exp = NewAlign(NUCLEOTIDS)
+	exp.AddSequence("A", "AAAAAAAAAAA", "")
+	exp.AddSequence("B", "AAAAAAAAAAA", "")
+	exp.AddSequence("C", "CCCCCCCCCCC", "")
+	exp.AddSequence("D", "CCCCCCCCCCC", "")
+	exp.AddSequence("E", "AAAAAAAAAAA", "")
+
+	exp2 = NewAlign(NUCLEOTIDS)
+	exp2.AddSequence("A", "AAAAAAAAAAA", "")
+	exp2.AddSequence("B", "AAAAAAAAAAA", "")
+	exp2.AddSequence("C", "CCCCCCCCCCC", "")
+	exp2.AddSequence("D", "CCCCCCCCCCC", "")
+	exp2.AddSequence("E", "CCCCCCCCCCC", "")
+
+	exp3 = NewAlign(NUCLEOTIDS)
+	exp3.AddSequence("A", "AAAAAAAAAAA", "")
+	exp3.AddSequence("B", "AAAAAAAAAAA", "")
+	exp3.AddSequence("C", "CCCCCCCCCCC", "")
+	exp3.AddSequence("D", "CCCCCCCCCCC", "")
+	exp3.AddSequence("E", "CCCCCCCCCCC", "")
+
+	res, _ = a.Clone()
+	res.MaskUnique("", "MAJ")
+
+	if !res.Identical(exp) {
+		t.Error(fmt.Errorf("Mask unique failed"))
+	}
+
+	res, _ = a.Clone()
+	res.MaskUnique("A", "MAJ")
+	if !res.Identical(exp2) {
+		fmt.Println(res)
+		fmt.Println(exp2)
+		t.Error(fmt.Errorf("Mask unique with refseq failed"))
+	}
+
+	res, _ = a.Clone()
+	res.MaskOccurences("A", 2, "MAJ")
+	if !res.Identical(exp3) {
+		t.Error(fmt.Errorf("Mask unique with refseq and maxocc failed"))
 	}
 }
 

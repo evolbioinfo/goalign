@@ -33,7 +33,7 @@ goalign stats taxa -i align.fasta
 			}
 			i := 0
 			seqs.Iterate(func(name string, sequence string) bool {
-				fmt.Print(fmt.Sprintf("%d\t%s\n", i, name))
+				fmt.Printf("%d\t%s\n", i, name)
 				i++
 				return false
 			})
@@ -45,7 +45,7 @@ goalign stats taxa -i align.fasta
 				return
 			}
 
-			al, _ := <-aligns.Achan
+			al := <-aligns.Achan
 			if aligns.Err != nil {
 				err = aligns.Err
 				io.LogError(err)
@@ -54,7 +54,7 @@ goalign stats taxa -i align.fasta
 
 			i := 0
 			al.Iterate(func(name string, sequence string) bool {
-				fmt.Print(fmt.Sprintf("%d\t%s\n", i, name))
+				fmt.Printf("%d\t%s\n", i, name)
 				i++
 				return false
 			})

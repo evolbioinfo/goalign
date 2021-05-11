@@ -38,6 +38,10 @@ const (
 	GENETIC_CODE_VETEBRATE_MITO   = 1 // Vertebrate mitochondrial genetic code
 	GENETIC_CODE_INVETEBRATE_MITO = 2 // Invertebrate mitochondrial genetic code
 
+	IGNORE_NONE     = 0
+	IGNORE_NAME     = 1
+	IGNORE_SEQUENCE = 2
+
 	// IUPAC Nucleotide Code : For bitwise operations
 	NT_OTHER = 0 // GAP, *, etc;?
 	NT_A     = 1
@@ -357,22 +361,25 @@ var blosum62_subst_matrix = [][]float64{
 }
 
 var complement_nuc_mapping = map[uint8]uint8{
-	'A': 'T',
-	'T': 'A',
-	'U': 'A',
-	'G': 'C',
-	'C': 'G',
-	'Y': 'R',
-	'R': 'Y',
-	'S': 'S',
-	'W': 'W',
-	'K': 'M',
-	'M': 'K',
-	'B': 'V',
-	'D': 'H',
-	'H': 'D',
-	'V': 'B',
-	'N': 'N',
+	'A':   'T',
+	'T':   'A',
+	'U':   'A',
+	'G':   'C',
+	'C':   'G',
+	'Y':   'R',
+	'R':   'Y',
+	'S':   'S',
+	'W':   'W',
+	'K':   'M',
+	'M':   'K',
+	'B':   'V',
+	'D':   'H',
+	'H':   'D',
+	'V':   'B',
+	'N':   'N',
+	GAP:   GAP,
+	POINT: POINT,
+	OTHER: OTHER,
 }
 
 /*
