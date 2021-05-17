@@ -52,20 +52,18 @@ conda install -c bioconda goalign
 ```
 
 ### From sources
-In order to compile Goalign, you must first [download](https://golang.org/dl/) and [install](https://golang.org/doc/install) Go on your system ($>=1.10$).
+In order to build Goalign, you must first [download](https://golang.org/dl/) and [install](https://golang.org/doc/install) Go on your system ($1.16.4$).
 
 Then you just have to type :
 ```
 go get github.com/evolbioinfo/goalign/
-go get -u github.com/golang/dep/cmd/dep
 ```
-This will download GoAlign sources from github, and all its dependencies.
+This will download Goalign sources from github.
 
 You can then build it with:
 ```
 cd $GOPATH/src/github.com/evolbioinfo/goalign/
-dep ensure
-make
+make && make install
 ```
 The `goalign` executable should be located in the `$GOPATH/bin` folder.
 
