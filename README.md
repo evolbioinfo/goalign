@@ -19,6 +19,14 @@ Gzipped input files (`.gz` extension) are supported, as well as XZ files (`.xz` 
 
 TO manipulate phylogenetic trees, See also [Gotree](https://github.com/evolbioinfo/gotree).
 
+## Reference
+
+```
+Gotree/Goalign : Toolkit and Go API to facilitate the development of phylogenetic workflows
+Frédéric Lemoine, Olivier Gascuel
+bioRxiv 2021.06.09.447704; doi: https://doi.org/10.1101/2021.06.09.447704
+```
+
 ## Installation
 ### Easy way: Binaries
 You can download ready to run binaries for the latest release in the [release](https://github.com/evolbioinfo/goalign/releases) section.
