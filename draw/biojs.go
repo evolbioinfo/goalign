@@ -19,12 +19,21 @@ func NewBioJSLayout(writer *bufio.Writer) AlignLayout {
 /*
 Draw the tree on the specific drawer. Does not close the file. The caller must do it.
 */
-func (layout *bioJSLayout) DrawAlign(a align.Alignment) error {
-	var err error = nil
-	_, err = layout.writer.WriteString(`
+func (layout *bioJSLayout) DrawAlign(a align.Alignment) (err error) {
+	var biojs string
+
+	if biojs, err = biojsDepString(); err != nil {
+		return
+	}
+
+	layout.writer.WriteString(`
 <html>
 <head>
-  <script src="https://s3.eu-central-1.amazonaws.com/cdn.bio.sh/msa/latest/msa.min.gz.js"></script>
+  <script>
+`)
+	layout.writer.WriteString(biojs)
+	layout.writer.WriteString(`
+  </script>
   <style media="screen" type="text/css">
     #cy {
     width: 100%;
@@ -37,7 +46,8 @@ func (layout *bioJSLayout) DrawAlign(a align.Alignment) error {
   <pre id="fasta" style="display: none;">
 `)
 	layout.writer.WriteString(fasta.WriteAlignment(a))
-	_, err = layout.writer.WriteString(`
+
+	layout.writer.WriteString(`
   </pre>
   <div id="align" style="width:100%;height:100%;">
   </div>
