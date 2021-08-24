@@ -45,6 +45,12 @@ var helptemplate string = `{{with or .Long .Short }}{{. | trim}}
 {{end}}Version: ` + version.Version + `
 
 {{if or .Runnable .HasSubCommands}}{{.UsageString}}{{end}}
+
+If you use the Gotree/Goalign toolkit, please cite:
+Lemoine F, Gascuel O. 
+Gotree/Goalign: toolkit and Go API to facilitate the development of phylogenetic workflows. 
+NAR Genom Bioinform. 2021 Aug 11;3(3):lqab075.
+doi: 10.1093/nargab/lqab075. PMID: 34396097; PMCID: PMC8356961.
 `
 
 // RootCmd represents the base command when called without any subcommands
