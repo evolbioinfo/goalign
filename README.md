@@ -145,6 +145,7 @@ You may go to the [doc](docs/index.md) for a more detailed documentation of the 
 * divide:      Divide an input alignment in several output files (one per alignment)
 * draw:   Draw alignments
   * biojs:     Display an input alignment in an html file using [BioJS](http://msa.biojs.net/)
+  * png: Display an input alignment in a png file, one sequence per line and one pixel per character
 * extract: Extract several sub-alignments, potentially composed of several blocks, from an input alignment, using an coordinate file
 * identical: Tell whether two alignments are identical
 * mask: Replace positions by N (of nucleotides) or X (if amino-acids)
