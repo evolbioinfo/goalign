@@ -2,12 +2,12 @@ package cmd
 
 import (
 	"fmt"
-	"os"
 
 	"github.com/spf13/cobra"
 
 	"github.com/evolbioinfo/goalign/align"
 	"github.com/evolbioinfo/goalign/io"
+	"github.com/evolbioinfo/goalign/io/utils"
 )
 
 var splitpartition *align.PartitionSet
@@ -30,7 +30,7 @@ goalign split -i align.phylip --partition partition.txt
 		var aligns *align.AlignChannel
 		var splitAligns []align.Alignment
 
-		var f *os.File
+		var f utils.StringWriterCloser
 
 		if aligns, err = readalign(infile); err != nil {
 			io.LogError(err)
@@ -66,7 +66,7 @@ goalign split -i align.phylip --partition partition.txt
 
 		for i, a := range splitAligns {
 			name := splitprefix + splitpartition.PartitionName(i) + alignExtension()
-			if f, err = openWriteFile(name); err != nil {
+			if f, err = utils.OpenWriteFile(name); err != nil {
 				io.LogError(err)
 				return
 			}

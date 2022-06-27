@@ -2,10 +2,10 @@ package cmd
 
 import (
 	"fmt"
-	"os"
 
 	"github.com/evolbioinfo/goalign/align"
 	"github.com/evolbioinfo/goalign/io"
+	"github.com/evolbioinfo/goalign/io/utils"
 	"github.com/spf13/cobra"
 )
 
@@ -28,17 +28,17 @@ If cutoff is <0 or >1, it will be considered as 0, which means that every sequen
 will be removed.`,
 	RunE: func(cmd *cobra.Command, args []string) (err error) {
 		var aligns *align.AlignChannel
-		var f *os.File
+		var f utils.StringWriterCloser
 
 		if aligns, err = readalign(infile); err != nil {
 			io.LogError(err)
 			return
 		}
-		if f, err = openWriteFile(cleanOutput); err != nil {
+		if f, err = utils.OpenWriteFile(cleanOutput); err != nil {
 			io.LogError(err)
 			return
 		}
-		defer closeWriteFile(f, cleanOutput)
+		defer utils.CloseWriteFile(f, cleanOutput)
 
 		i := 0
 		for al := range aligns.Achan {

@@ -1,10 +1,9 @@
 package cmd
 
 import (
-	"os"
-
 	"github.com/evolbioinfo/goalign/align"
 	"github.com/evolbioinfo/goalign/io"
+	"github.com/evolbioinfo/goalign/io/utils"
 	"github.com/spf13/cobra"
 )
 
@@ -23,13 +22,13 @@ If the input alignment is not nucleotides, then returns an error.
 IUPAC codes are taken into account for the reverse complement.
 `,
 	RunE: func(cmd *cobra.Command, args []string) (err error) {
-		var f *os.File
+		var f utils.StringWriterCloser
 
-		if f, err = openWriteFile(revCompOutput); err != nil {
+		if f, err = utils.OpenWriteFile(revCompOutput); err != nil {
 			io.LogError(err)
 			return
 		}
-		defer closeWriteFile(f, revCompOutput)
+		defer utils.CloseWriteFile(f, revCompOutput)
 
 		if unaligned {
 			var seqs align.SeqBag

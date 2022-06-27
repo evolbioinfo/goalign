@@ -1,10 +1,9 @@
 package cmd
 
 import (
-	"os"
-
 	"github.com/evolbioinfo/goalign/align"
 	"github.com/evolbioinfo/goalign/io"
+	"github.com/evolbioinfo/goalign/io/utils"
 	"github.com/spf13/cobra"
 )
 
@@ -34,13 +33,13 @@ Id -a is given, then names are generated with the pattern "S000<i>".
 `,
 	RunE: func(cmd *cobra.Command, args []string) (err error) {
 		var aligns *align.AlignChannel
-		var f *os.File
+		var f utils.StringWriterCloser
 
-		if f, err = openWriteFile(trimAlignOut); err != nil {
+		if f, err = utils.OpenWriteFile(trimAlignOut); err != nil {
 			io.LogError(err)
 			return
 		}
-		defer closeWriteFile(f, trimAlignOut)
+		defer utils.CloseWriteFile(f, trimAlignOut)
 
 		namemap := make(map[string]string)
 		curid := 1
@@ -106,9 +105,9 @@ Id -a is given, then names are generated with the pattern "S000<i>".
 }
 
 func writeNameMap(namemap map[string]string, outfile string) (err error) {
-	var f *os.File
+	var f utils.StringWriterCloser
 
-	if f, err = openWriteFile(outfile); err != nil {
+	if f, err = utils.OpenWriteFile(outfile); err != nil {
 		return
 	}
 
@@ -118,7 +117,7 @@ func writeNameMap(namemap map[string]string, outfile string) (err error) {
 		f.WriteString(short)
 		f.WriteString("\n")
 	}
-	closeWriteFile(f, outfile)
+	utils.CloseWriteFile(f, outfile)
 	return
 }
 

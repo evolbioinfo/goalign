@@ -2,12 +2,12 @@ package cmd
 
 import (
 	"fmt"
-	"os"
 	"sort"
 	"strings"
 
 	"github.com/evolbioinfo/goalign/align"
 	"github.com/evolbioinfo/goalign/io"
+	"github.com/evolbioinfo/goalign/io/utils"
 	"github.com/spf13/cobra"
 )
 
@@ -37,13 +37,13 @@ If option --reverse is given, then replaces . with the characters on the first s
 `,
 	RunE: func(cmd *cobra.Command, args []string) (err error) {
 		var aligns *align.AlignChannel
-		var f *os.File
+		var f utils.StringWriterCloser
 
-		if f, err = openWriteFile(diffOutput); err != nil {
+		if f, err = utils.OpenWriteFile(diffOutput); err != nil {
 			io.LogError(err)
 			return
 		}
-		defer closeWriteFile(f, diffOutput)
+		defer utils.CloseWriteFile(f, diffOutput)
 
 		if aligns, err = readalign(infile); err != nil {
 			io.LogError(err)
@@ -72,7 +72,7 @@ If option --reverse is given, then replaces . with the characters on the first s
 	},
 }
 
-func writeDiffCounts(al align.Alignment, alldiffs []string, diffs []map[string]int, f *os.File) {
+func writeDiffCounts(al align.Alignment, alldiffs []string, diffs []map[string]int, f utils.StringWriterCloser) {
 	sort.Strings(alldiffs)
 	for _, d := range alldiffs {
 		if !(strings.Contains(d, "-") && diffNoGaps) {

@@ -1,10 +1,9 @@
 package cmd
 
 import (
-	"os"
-
 	"github.com/evolbioinfo/goalign/align"
 	"github.com/evolbioinfo/goalign/io"
+	"github.com/evolbioinfo/goalign/io/utils"
 	"github.com/spf13/cobra"
 )
 
@@ -23,16 +22,16 @@ If input sequences are aligned (contain '-'), then they are unaligned first.
 Output is in fasta format.
 `,
 	RunE: func(cmd *cobra.Command, args []string) (err error) {
-		var f *os.File
+		var f utils.StringWriterCloser
 		var reforf align.SeqBag
 		var inseqs align.SeqBag
 		var orf align.Sequence
 
-		if f, err = openWriteFile(orfOutput); err != nil {
+		if f, err = utils.OpenWriteFile(orfOutput); err != nil {
 			io.LogError(err)
 			return
 		}
-		defer closeWriteFile(f, orfOutput)
+		defer utils.CloseWriteFile(f, orfOutput)
 
 		if inseqs, err = readsequences(infile); err != nil {
 			io.LogError(err)

@@ -2,12 +2,12 @@ package cmd
 
 import (
 	"fmt"
-	"os"
 	"path/filepath"
 	"strconv"
 
 	"github.com/evolbioinfo/goalign/align"
 	"github.com/evolbioinfo/goalign/io"
+	"github.com/evolbioinfo/goalign/io/utils"
 	"github.com/spf13/cobra"
 )
 
@@ -63,7 +63,7 @@ If --reverse is given, then will output all positions but the ones that should b
 `,
 	RunE: func(cmd *cobra.Command, args []string) (err error) {
 		var aligns *align.AlignChannel
-		var f *os.File
+		var f utils.StringWriterCloser
 		var c int
 		var subalign align.Alignment
 
@@ -71,7 +71,7 @@ If --reverse is given, then will output all positions but the ones that should b
 			io.LogError(err)
 			return
 		}
-		if f, err = openWriteFile(subsitesout); err != nil {
+		if f, err = utils.OpenWriteFile(subsitesout); err != nil {
 			io.LogError(err)
 			return
 		}
@@ -121,7 +121,7 @@ If --reverse is given, then will output all positions but the ones that should b
 			if filenum > 0 && subsitesout != "stdout" && subsitesout != "-" {
 				fileid = fmt.Sprintf("%s_al%d%s", name, filenum, extension)
 				f.Close()
-				if f, err = openWriteFile(fileid); err != nil {
+				if f, err = utils.OpenWriteFile(fileid); err != nil {
 					io.LogError(err)
 					return
 				}

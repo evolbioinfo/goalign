@@ -2,11 +2,11 @@ package cmd
 
 import (
 	"fmt"
-	"os"
 	"strings"
 
 	"github.com/evolbioinfo/goalign/align"
 	"github.com/evolbioinfo/goalign/io"
+	"github.com/evolbioinfo/goalign/io/utils"
 	"github.com/spf13/cobra"
 )
 
@@ -55,24 +55,24 @@ If input sequences are not nucleotidic, then returns an error.
 Output file is an unaligned set of sequences in fasta.
 `,
 	RunE: func(cmd *cobra.Command, args []string) (err error) {
-		var f, aaf, logf *os.File
+		var f, aaf, logf utils.StringWriterCloser
 		var phased chan align.PhasedSequence
 		var inseqs align.SeqBag
 		var reforf align.SeqBag
 		var orf align.Sequence
 		var geneticcode int
 
-		if f, err = openWriteFile(phaseOutput); err != nil {
+		if f, err = utils.OpenWriteFile(phaseOutput); err != nil {
 			io.LogError(err)
 			return
 		}
-		defer closeWriteFile(f, phaseOutput)
+		defer utils.CloseWriteFile(f, phaseOutput)
 
-		if aaf, err = openWriteFile(phaseAAOutput); err != nil {
+		if aaf, err = utils.OpenWriteFile(phaseAAOutput); err != nil {
 			io.LogError(err)
 			return
 		}
-		defer closeWriteFile(aaf, phaseAAOutput)
+		defer utils.CloseWriteFile(aaf, phaseAAOutput)
 
 		if unaligned {
 			if inseqs, err = readsequences(infile); err != nil {
@@ -142,11 +142,11 @@ Output file is an unaligned set of sequences in fasta.
 			return
 		}
 
-		if logf, err = openWriteFile(phaseLogOutput); err != nil {
+		if logf, err = utils.OpenWriteFile(phaseLogOutput); err != nil {
 			io.LogError(err)
 			return
 		}
-		defer closeWriteFile(logf, phaseLogOutput)
+		defer utils.CloseWriteFile(logf, phaseLogOutput)
 
 		fmt.Fprintf(logf, "Detected/Given ORF: %s\n", reforf.String())
 		fmt.Fprintf(logf, "SeqName\tBestRef\tStartPosition\tExtractedSequenceLength\tFirstStop\n")

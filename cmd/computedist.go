@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"log"
 	"math"
-	"os"
 	"strconv"
 	"strings"
 
@@ -14,6 +13,7 @@ import (
 	"github.com/evolbioinfo/goalign/distance/dna"
 	"github.com/evolbioinfo/goalign/distance/protein"
 	"github.com/evolbioinfo/goalign/io"
+	"github.com/evolbioinfo/goalign/io/utils"
 	pm "github.com/evolbioinfo/goalign/models/protein"
 
 	"gonum.org/v1/gonum/mat"
@@ -79,16 +79,16 @@ the comparisons 0 vs. 10; 0 .vs 11; ...; 9 vs. 19.
 
 `,
 	RunE: func(cmd *cobra.Command, args []string) (err error) {
-		var f *os.File
+		var f utils.StringWriterCloser
 		var model dna.DistModel
 		var aligns *align.AlignChannel
 		var protmodel int
 
-		if f, err = openWriteFile(computedistOutput); err != nil {
+		if f, err = utils.OpenWriteFile(computedistOutput); err != nil {
 			io.LogError(err)
 			return
 		}
-		defer closeWriteFile(f, computedistOutput)
+		defer utils.CloseWriteFile(f, computedistOutput)
 
 		if aligns, err = readalign(infile); err != nil {
 			io.LogError(err)
@@ -207,7 +207,7 @@ func init() {
 	computedistCmd.PersistentFlags().StringVar(&computedistRange2, "range2", "", "If set, then will restrict distance computation to the given seq range compared to range 1 (0-based, ex --range2 0:100 means [0:100]), only for nucleotide models so far")
 }
 
-func writeDistMatrix(al align.Alignment, matrix [][]float64, f *os.File) (err error) {
+func writeDistMatrix(al align.Alignment, matrix [][]float64, f utils.StringWriterCloser) (err error) {
 	f.WriteString(fmt.Sprintf("%d\n", len(matrix)))
 	for i := 0; i < len(matrix); i++ {
 		if name, ok := al.GetSequenceNameById(i); ok {
@@ -223,7 +223,7 @@ func writeDistMatrix(al align.Alignment, matrix [][]float64, f *os.File) (err er
 	return
 }
 
-func writeDistAverage(al align.Alignment, matrix [][]float64, f *os.File) {
+func writeDistAverage(al align.Alignment, matrix [][]float64, f utils.StringWriterCloser) {
 	sum := 0.0
 	total := 0
 	nan := 0
@@ -238,7 +238,7 @@ func writeDistAverage(al align.Alignment, matrix [][]float64, f *os.File) {
 		}
 	}
 	if nan > 0 {
-		log.Print(fmt.Sprintf("Warning: The average distance hides %d NaN distances", nan))
+		log.Printf("Warning: The average distance hides %d NaN distances", nan)
 	}
 	sum /= float64(total)
 	f.WriteString(fmt.Sprintf("%.12f\n", sum))

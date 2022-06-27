@@ -51,7 +51,7 @@ given in the comand line.
 		var subset map[string]int
 		var aligns *align.AlignChannel
 		var seqs align.SeqBag
-		var f *os.File
+		var f utils.StringWriterCloser
 		var r *regexp.Regexp
 		var indexlist []int
 		var regexps []*regexp.Regexp
@@ -81,11 +81,11 @@ given in the comand line.
 			}
 		}
 
-		if f, err = openWriteFile(nameout); err != nil {
+		if f, err = utils.OpenWriteFile(nameout); err != nil {
 			io.LogError(err)
 			return
 		}
-		defer closeWriteFile(f, nameout)
+		defer utils.CloseWriteFile(f, nameout)
 
 		//regexps := make([]*regexp.Regexp, 0, 10)
 		if regexmatch {

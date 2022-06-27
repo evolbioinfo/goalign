@@ -3,7 +3,6 @@ package cmd
 import (
 	"bufio"
 	goio "io"
-	"os"
 
 	"github.com/evolbioinfo/goalign/align"
 	"github.com/evolbioinfo/goalign/io"
@@ -33,7 +32,7 @@ the protein alignment length * 3, returns an error.
 `,
 	RunE: func(cmd *cobra.Command, args []string) (err error) {
 		var aligns *align.AlignChannel
-		var f *os.File
+		var f utils.StringWriterCloser
 		var ntseqsf *bufio.Reader
 		var toclose goio.Closer
 		var ntseqs align.SeqBag
@@ -58,11 +57,11 @@ the protein alignment length * 3, returns an error.
 		}
 
 		// Open output file
-		if f, err = openWriteFile(codonAlignOutput); err != nil {
+		if f, err = utils.OpenWriteFile(codonAlignOutput); err != nil {
 			io.LogError(err)
 			return
 		}
-		defer closeWriteFile(f, codonAlignOutput)
+		defer utils.CloseWriteFile(f, codonAlignOutput)
 
 		for al := range aligns.Achan {
 			if codonAl, err = al.CodonAlign(ntseqs); err != nil {

@@ -1,10 +1,9 @@
 package cmd
 
 import (
-	"os"
-
 	"github.com/evolbioinfo/goalign/align"
 	"github.com/evolbioinfo/goalign/io"
+	"github.com/evolbioinfo/goalign/io/utils"
 	"github.com/spf13/cobra"
 )
 
@@ -17,13 +16,13 @@ var sortCmd = &cobra.Command{
 	Long: `sorts input algignment by sequence name.
 `,
 	RunE: func(cmd *cobra.Command, args []string) (err error) {
-		var f *os.File
+		var f utils.StringWriterCloser
 
-		if f, err = openWriteFile(sortOutput); err != nil {
+		if f, err = utils.OpenWriteFile(sortOutput); err != nil {
 			io.LogError(err)
 			return
 		}
-		defer closeWriteFile(f, sortOutput)
+		defer utils.CloseWriteFile(f, sortOutput)
 
 		if unaligned {
 			var seqs align.SeqBag

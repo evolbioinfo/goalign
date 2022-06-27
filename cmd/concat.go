@@ -1,10 +1,9 @@
 package cmd
 
 import (
-	"os"
-
 	"github.com/evolbioinfo/goalign/align"
 	"github.com/evolbioinfo/goalign/io"
+	"github.com/evolbioinfo/goalign/io/utils"
 	"github.com/spf13/cobra"
 )
 
@@ -33,7 +32,7 @@ or goalign concat -i none -p align*.phy
 		var aligns *align.AlignChannel
 		var alchan *align.AlignChannel
 		var align align.Alignment = nil
-		var f *os.File
+		var f utils.StringWriterCloser
 
 		if infile != "none" {
 			if aligns, err = readalign(infile); err != nil {
@@ -78,12 +77,12 @@ or goalign concat -i none -p align*.phy
 			}
 		}
 
-		if f, err = openWriteFile(concatout); err != nil {
+		if f, err = utils.OpenWriteFile(concatout); err != nil {
 			io.LogError(err)
 			return
 		}
 		writeAlign(align, f)
-		closeWriteFile(f, concatout)
+		utils.CloseWriteFile(f, concatout)
 
 		return
 	},

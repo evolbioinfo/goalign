@@ -1,10 +1,9 @@
 package cmd
 
 import (
-	"os"
-
 	"github.com/evolbioinfo/goalign/align"
 	"github.com/evolbioinfo/goalign/io"
+	"github.com/evolbioinfo/goalign/io/utils"
 	"github.com/spf13/cobra"
 )
 
@@ -44,20 +43,20 @@ This means that seq1 is identical to seq2 and seq3 is identical to seq4.
 
 `,
 	RunE: func(cmd *cobra.Command, args []string) (err error) {
-		var f, l *os.File
+		var f, l utils.StringWriterCloser
 		var id [][]string
 
-		if f, err = openWriteFile(dedupOutput); err != nil {
+		if f, err = utils.OpenWriteFile(dedupOutput); err != nil {
 			io.LogError(err)
 			return
 		}
-		defer closeWriteFile(f, dedupOutput)
+		defer utils.CloseWriteFile(f, dedupOutput)
 
-		if l, err = openWriteFile(dedupLogOutput); err != nil {
+		if l, err = utils.OpenWriteFile(dedupLogOutput); err != nil {
 			io.LogError(err)
 			return
 		}
-		defer closeWriteFile(l, dedupLogOutput)
+		defer utils.CloseWriteFile(l, dedupLogOutput)
 
 		if unaligned {
 			var seqs align.SeqBag
@@ -108,7 +107,7 @@ func init() {
 	dedupCmd.PersistentFlags().StringVarP(&dedupLogOutput, "log", "l", "none", "Deduplicated output log file")
 }
 
-func writeIdentical(id [][]string, logfile *os.File) {
+func writeIdentical(id [][]string, logfile utils.StringWriterCloser) {
 	for _, s := range id {
 		for i, name := range s {
 			if i > 0 {

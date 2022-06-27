@@ -2,10 +2,10 @@ package cmd
 
 import (
 	"fmt"
-	"os"
 
 	"github.com/evolbioinfo/goalign/align"
 	"github.com/evolbioinfo/goalign/io"
+	"github.com/evolbioinfo/goalign/io/utils"
 	"github.com/spf13/cobra"
 )
 
@@ -36,14 +36,14 @@ IUPAC codes are taken into account for the translation. If a codon containing
 IUPAC code is ambiguous for translation, then a X is added in place of the aminoacid.
 `,
 	RunE: func(cmd *cobra.Command, args []string) (err error) {
-		var f *os.File
+		var f utils.StringWriterCloser
 		var geneticcode int
 
-		if f, err = openWriteFile(translateOutput); err != nil {
+		if f, err = utils.OpenWriteFile(translateOutput); err != nil {
 			io.LogError(err)
 			return
 		}
-		defer closeWriteFile(f, translateOutput)
+		defer utils.CloseWriteFile(f, translateOutput)
 
 		switch translateGeneticCode {
 		case "standard":

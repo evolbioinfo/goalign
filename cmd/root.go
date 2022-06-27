@@ -226,7 +226,7 @@ func initConfig() {
 
 }
 
-func writeAlign(al align.Alignment, f *os.File) {
+func writeAlign(al align.Alignment, f utils.StringWriterCloser) {
 	if rootphylip {
 		f.WriteString(phylip.WriteAlignment(al, rootoutputstrict, rootoutputoneline, rootoutputnoblock))
 	} else if rootnexus {
@@ -264,39 +264,28 @@ func alignExtension() (out string) {
 	return
 }
 
-func writeSequences(seqs align.SeqBag, f *os.File) {
+func writeSequences(seqs align.SeqBag, f utils.StringWriterCloser) {
 	f.WriteString(fasta.WriteAlignment(seqs))
 }
 
-func writeAlignFasta(al align.Alignment, f *os.File) {
+func writeAlignFasta(al align.Alignment, f utils.StringWriterCloser) {
 	f.WriteString(fasta.WriteAlignment(al))
 }
 
-func writeAlignPhylip(al align.Alignment, f *os.File) {
+func writeAlignPhylip(al align.Alignment, f utils.StringWriterCloser) {
 	f.WriteString(phylip.WriteAlignment(al, rootoutputstrict, rootoutputoneline, rootoutputnoblock))
 }
 
-func writeAlignNexus(al align.Alignment, f *os.File) {
+func writeAlignNexus(al align.Alignment, f utils.StringWriterCloser) {
 	f.WriteString(nexus.WriteAlignment(al))
 }
 
-func writeAlignClustal(al align.Alignment, f *os.File) {
+func writeAlignClustal(al align.Alignment, f utils.StringWriterCloser) {
 	f.WriteString(clustal.WriteAlignment(al))
 }
 
-func writeAlignPaml(al align.Alignment, f *os.File) {
+func writeAlignPaml(al align.Alignment, f utils.StringWriterCloser) {
 	f.WriteString(paml.WriteAlignment(al))
-}
-
-func openWriteFile(file string) (f *os.File, err error) {
-	if file == "stdout" || file == "-" {
-		f = os.Stdout
-	} else if file == "none" {
-		f, err = os.OpenFile(os.DevNull, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0666)
-	} else {
-		f, err = os.Create(file)
-	}
-	return
 }
 
 func readMapFile(file string, revert bool) (map[string]string, error) {
@@ -339,12 +328,6 @@ func readMapFile(file string, revert bool) (map[string]string, error) {
 	}
 
 	return outmap, nil
-}
-
-func closeWriteFile(f goio.Closer, filename string) {
-	if filename != "-" && filename != "stdout" && filename != "none" {
-		f.Close()
-	}
 }
 
 func parsePartition(partitionfile string, alilength int) (ps *align.PartitionSet, err error) {

@@ -1,10 +1,9 @@
 package cmd
 
 import (
-	"os"
-
 	"github.com/evolbioinfo/goalign/align"
 	"github.com/evolbioinfo/goalign/io"
+	"github.com/evolbioinfo/goalign/io/utils"
 	"github.com/spf13/cobra"
 )
 
@@ -31,7 +30,7 @@ then will output several consensus sequences.
 `,
 	RunE: func(cmd *cobra.Command, args []string) (err error) {
 		var aligns *align.AlignChannel
-		var f *os.File
+		var f utils.StringWriterCloser
 
 		consensusIgnoreGaps = consensusIgnoreGaps || consensusExcludeGaps
 
@@ -40,11 +39,11 @@ then will output several consensus sequences.
 			return
 		}
 
-		if f, err = openWriteFile(consensusOutput); err != nil {
+		if f, err = utils.OpenWriteFile(consensusOutput); err != nil {
 			io.LogError(err)
 			return
 		}
-		defer closeWriteFile(f, consensusOutput)
+		defer utils.CloseWriteFile(f, consensusOutput)
 
 		for al := range aligns.Achan {
 			cons := al.Consensus(consensusIgnoreGaps, consensusIgnoreNs)

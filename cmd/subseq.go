@@ -2,11 +2,11 @@ package cmd
 
 import (
 	"fmt"
-	"os"
 	"path/filepath"
 
 	"github.com/evolbioinfo/goalign/align"
 	"github.com/evolbioinfo/goalign/io"
+	"github.com/evolbioinfo/goalign/io/utils"
 	"github.com/spf13/cobra"
 )
 
@@ -93,14 +93,14 @@ If several alignments are present in the input file and the output is a file
 `,
 	RunE: func(cmd *cobra.Command, args []string) (err error) {
 		var aligns *align.AlignChannel
-		var f *os.File
+		var f utils.StringWriterCloser
 		var subalign, subaligntmp align.Alignment
 
 		if aligns, err = readalign(infile); err != nil {
 			io.LogError(err)
 			return
 		}
-		if f, err = openWriteFile(subseqout); err != nil {
+		if f, err = utils.OpenWriteFile(subseqout); err != nil {
 			io.LogError(err)
 			return
 		}
@@ -123,7 +123,7 @@ If several alignments are present in the input file and the output is a file
 			if filenum > 0 && subseqout != "stdout" && subseqout != "-" {
 				fileid = fmt.Sprintf("_al%d", filenum)
 				f.Close()
-				if f, err = openWriteFile(name + fileid + extension); err != nil {
+				if f, err = utils.OpenWriteFile(name + fileid + extension); err != nil {
 					io.LogError(err)
 					return
 				}
@@ -166,7 +166,7 @@ If several alignments are present in the input file and the output is a file
 						subalignnum++
 						f.Close()
 						n := fmt.Sprintf("%s%s_sub%d%s", name, fileid, subalignnum, extension)
-						if f, err = openWriteFile(n); err != nil {
+						if f, err = utils.OpenWriteFile(n); err != nil {
 							io.LogError(err)
 							return
 						}

@@ -15,10 +15,9 @@
 package cmd
 
 import (
-	"os"
-
 	"github.com/evolbioinfo/goalign/align"
 	"github.com/evolbioinfo/goalign/io"
+	"github.com/evolbioinfo/goalign/io/utils"
 	"github.com/spf13/cobra"
 )
 
@@ -46,24 +45,24 @@ S4 12345678    S4 1234567
 `,
 	RunE: func(cmd *cobra.Command, args []string) (err error) {
 		var aligns *align.AlignChannel
-		var namefile *os.File
-		var f *os.File
+		var namefile utils.StringWriterCloser
+		var f utils.StringWriterCloser
 
 		if aligns, err = readalign(infile); err != nil {
 			io.LogError(err)
 			return
 		}
-		if namefile, err = openWriteFile(rogueNameFile); err != nil {
+		if namefile, err = utils.OpenWriteFile(rogueNameFile); err != nil {
 			io.LogError(err)
 			return
 		}
-		defer closeWriteFile(namefile, rogueNameFile)
+		defer utils.CloseWriteFile(namefile, rogueNameFile)
 
-		if f, err = openWriteFile(shuffleOutput); err != nil {
+		if f, err = utils.OpenWriteFile(shuffleOutput); err != nil {
 			io.LogError(err)
 			return
 		}
-		defer closeWriteFile(f, shuffleOutput)
+		defer utils.CloseWriteFile(f, shuffleOutput)
 
 		for al := range aligns.Achan {
 			names, _ := al.SimulateRogue(rogueNb, rogueLength)

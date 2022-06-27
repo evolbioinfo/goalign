@@ -2,10 +2,10 @@ package cmd
 
 import (
 	"fmt"
-	"os"
 
 	"github.com/evolbioinfo/goalign/align"
 	"github.com/evolbioinfo/goalign/io"
+	"github.com/evolbioinfo/goalign/io/utils"
 	"github.com/spf13/cobra"
 )
 
@@ -39,23 +39,23 @@ and weight file:
 `,
 	RunE: func(cmd *cobra.Command, args []string) (err error) {
 		var aligns *align.AlignChannel
-		var f, wf *os.File
+		var f, wf utils.StringWriterCloser
 
 		if aligns, err = readalign(infile); err != nil {
 			io.LogError(err)
 			return
 		}
-		if f, err = openWriteFile(compressOutput); err != nil {
+		if f, err = utils.OpenWriteFile(compressOutput); err != nil {
 			io.LogError(err)
 			return
 		}
-		defer closeWriteFile(f, compressOutput)
+		defer utils.CloseWriteFile(f, compressOutput)
 
-		if wf, err = openWriteFile(compressWeightOutput); err != nil {
+		if wf, err = utils.OpenWriteFile(compressWeightOutput); err != nil {
 			io.LogError(err)
 			return
 		}
-		defer closeWriteFile(f, compressWeightOutput)
+		defer utils.CloseWriteFile(wf, compressWeightOutput)
 
 		for al := range aligns.Achan {
 			var w []int
@@ -82,7 +82,7 @@ func init() {
 	RootCmd.AddCommand(compressCmd)
 }
 
-func writeWeights(weights []int, f *os.File) {
+func writeWeights(weights []int, f utils.StringWriterCloser) {
 	for _, w := range weights {
 		fmt.Fprintf(f, "%d\n", w)
 	}

@@ -2,7 +2,6 @@ package cmd
 
 import (
 	"fmt"
-	"os"
 
 	"github.com/spf13/cobra"
 
@@ -10,6 +9,7 @@ import (
 	"github.com/evolbioinfo/goalign/distance/dna"
 	"github.com/evolbioinfo/goalign/distance/protein"
 	"github.com/evolbioinfo/goalign/io"
+	"github.com/evolbioinfo/goalign/io/utils"
 	pm "github.com/evolbioinfo/goalign/models/protein"
 	"gonum.org/v1/gonum/mat"
 )
@@ -65,18 +65,18 @@ original alignment.
 		var protmodelI int
 		var d *mat.Dense
 		var aligns *align.AlignChannel
-		var f *os.File
+		var f utils.StringWriterCloser
 		var weights []float64
 
 		if aligns, err = readalign(infile); err != nil {
 			io.LogError(err)
 			return
 		}
-		if f, err = openWriteFile(distbootOutput); err != nil {
+		if f, err = utils.OpenWriteFile(distbootOutput); err != nil {
 			io.LogError(err)
 			return
 		}
-		defer closeWriteFile(f, distbootOutput)
+		defer utils.CloseWriteFile(f, distbootOutput)
 
 		align := <-aligns.Achan
 		if aligns.Err != nil {
@@ -143,7 +143,7 @@ func init() {
 	distbootCmd.PersistentFlags().Float64Var(&distbootAlpha, "alpha", 0.0, "Gamma alpha parameter, if not given : no gamma")
 }
 
-func writeDistBootMatrix(matrix [][]float64, a align.Alignment, f *os.File) {
+func writeDistBootMatrix(matrix [][]float64, a align.Alignment, f utils.StringWriterCloser) {
 	f.WriteString(fmt.Sprintf("%d\n", len(matrix)))
 	for i := 0; i < len(matrix); i++ {
 		name, ok := a.GetSequenceNameById(i)
@@ -159,7 +159,7 @@ func writeDistBootMatrix(matrix [][]float64, a align.Alignment, f *os.File) {
 	}
 }
 
-func writeDenseDistBootMatrix(matrix *mat.Dense, a align.Alignment, f *os.File) {
+func writeDenseDistBootMatrix(matrix *mat.Dense, a align.Alignment, f utils.StringWriterCloser) {
 	r, c := matrix.Dims()
 	f.WriteString(fmt.Sprintf("%d\n", c))
 	for i := 0; i < r; i++ {

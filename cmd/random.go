@@ -1,10 +1,9 @@
 package cmd
 
 import (
-	"os"
-
 	"github.com/evolbioinfo/goalign/align"
 	"github.com/evolbioinfo/goalign/io"
+	"github.com/evolbioinfo/goalign/io/utils"
 	"github.com/spf13/cobra"
 )
 
@@ -19,14 +18,14 @@ var randomCmd = &cobra.Command{
 	Long: `Generate random sequences.
 `,
 	RunE: func(cmd *cobra.Command, args []string) (err error) {
-		var f *os.File
+		var f utils.StringWriterCloser
 		var a align.Alignment
 
-		if f, err = openWriteFile(randomOutput); err != nil {
+		if f, err = utils.OpenWriteFile(randomOutput); err != nil {
 			io.LogError(err)
 			return
 		}
-		defer closeWriteFile(f, randomOutput)
+		defer utils.CloseWriteFile(f, randomOutput)
 
 		if !randomAA {
 			if a, err = align.RandomAlignment(align.NUCLEOTIDS, randomLength, randomSize); err != nil {

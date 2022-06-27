@@ -1,10 +1,9 @@
 package cmd
 
 import (
-	"os"
-
 	"github.com/evolbioinfo/goalign/align"
 	"github.com/evolbioinfo/goalign/io"
+	"github.com/evolbioinfo/goalign/io/utils"
 	"github.com/spf13/cobra"
 )
 
@@ -25,13 +24,13 @@ goalign reformat fasta -i align.fasta
 
 `,
 	RunE: func(cmd *cobra.Command, args []string) (err error) {
-		var f *os.File
+		var f utils.StringWriterCloser
 
-		if f, err = openWriteFile(reformatOutput); err != nil {
+		if f, err = utils.OpenWriteFile(reformatOutput); err != nil {
 			io.LogError(err)
 			return
 		}
-		defer closeWriteFile(f, reformatOutput)
+		defer utils.CloseWriteFile(f, reformatOutput)
 
 		if unaligned {
 			var seqs align.SeqBag

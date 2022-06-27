@@ -1,10 +1,9 @@
 package cmd
 
 import (
-	"os"
-
 	"github.com/evolbioinfo/goalign/align"
 	"github.com/evolbioinfo/goalign/io"
+	"github.com/evolbioinfo/goalign/io/utils"
 	"github.com/spf13/cobra"
 )
 
@@ -18,15 +17,15 @@ var transposeCmd = &cobra.Command{
 	become the sites and the sites become the sequence.
 `,
 	RunE: func(cmd *cobra.Command, args []string) (err error) {
-		var f *os.File
+		var f utils.StringWriterCloser
 		var aligns *align.AlignChannel
 		var al, tr align.Alignment
 
-		if f, err = openWriteFile(transposeOutput); err != nil {
+		if f, err = utils.OpenWriteFile(transposeOutput); err != nil {
 			io.LogError(err)
 			return
 		}
-		defer closeWriteFile(f, transposeOutput)
+		defer utils.CloseWriteFile(f, transposeOutput)
 
 		if aligns, err = readalign(infile); err != nil {
 			io.LogError(err)

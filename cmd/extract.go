@@ -85,7 +85,7 @@ var extractCmd = &cobra.Command{
 `,
 	RunE: func(cmd *cobra.Command, args []string) (err error) {
 		var aligns *align.AlignChannel
-		var f *os.File
+		var f utils.StringWriterCloser
 		var subcoords []extractSubSequence
 		var subalign, subaligntmp align.Alignment
 
@@ -153,7 +153,7 @@ var extractCmd = &cobra.Command{
 					return
 				}
 			}
-			if f, err = openWriteFile(fmt.Sprintf("%s%c%s%s", extractoutput, os.PathSeparator, subseq.name, alignExtension())); err != nil {
+			if f, err = utils.OpenWriteFile(fmt.Sprintf("%s%c%s%s", extractoutput, os.PathSeparator, subseq.name, alignExtension())); err != nil {
 				io.LogError(err)
 				return
 			}

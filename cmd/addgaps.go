@@ -1,10 +1,9 @@
 package cmd
 
 import (
-	"os"
-
 	"github.com/evolbioinfo/goalign/align"
 	"github.com/evolbioinfo/goalign/io"
+	"github.com/evolbioinfo/goalign/io/utils"
 	"github.com/spf13/cobra"
 )
 
@@ -21,17 +20,17 @@ goalign mutate gaps -i align.fa -n 0.5 -r 0.5
 `,
 	RunE: func(cmd *cobra.Command, args []string) (err error) {
 		var aligns *align.AlignChannel
-		var f *os.File
+		var f utils.StringWriterCloser
 
 		if aligns, err = readalign(infile); err != nil {
 			io.LogError(err)
 			return
 		}
-		if f, err = openWriteFile(mutateOutput); err != nil {
+		if f, err = utils.OpenWriteFile(mutateOutput); err != nil {
 			io.LogError(err)
 			return
 		}
-		defer closeWriteFile(f, mutateOutput)
+		defer utils.CloseWriteFile(f, mutateOutput)
 
 		for al := range aligns.Achan {
 			al.AddGaps(mutateRate, gapnbseqs)

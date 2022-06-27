@@ -2,10 +2,10 @@ package cmd
 
 import (
 	"errors"
-	"os"
 
 	"github.com/evolbioinfo/goalign/align"
 	"github.com/evolbioinfo/goalign/io"
+	"github.com/evolbioinfo/goalign/io/utils"
 	"github.com/spf13/cobra"
 )
 
@@ -52,7 +52,7 @@ while ignoring formatting options (phylip, etc.).
 `,
 	RunE: func(cmd *cobra.Command, args []string) (err error) {
 		var setregex, setreplace bool
-		var f *os.File
+		var f utils.StringWriterCloser
 		var namemap map[string]string
 
 		setregex = cmd.Flags().Changed("regexp")
@@ -63,11 +63,11 @@ while ignoring formatting options (phylip, etc.).
 			return
 		}
 
-		if f, err = openWriteFile(renameOutput); err != nil {
+		if f, err = utils.OpenWriteFile(renameOutput); err != nil {
 			io.LogError(err)
 			return
 		}
-		defer closeWriteFile(f, renameOutput)
+		defer utils.CloseWriteFile(f, renameOutput)
 
 		// Read Map File
 		if !setregex && !renameCleanNames {

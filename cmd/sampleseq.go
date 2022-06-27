@@ -1,10 +1,9 @@
 package cmd
 
 import (
-	"os"
-
 	"github.com/evolbioinfo/goalign/align"
 	"github.com/evolbioinfo/goalign/io"
+	"github.com/evolbioinfo/goalign/io/utils"
 	"github.com/spf13/cobra"
 )
 
@@ -34,13 +33,13 @@ divide the output file with 'goalign divide' for example.
 
 `,
 	RunE: func(cmd *cobra.Command, args []string) (err error) {
-		var f *os.File
+		var f utils.StringWriterCloser
 
-		if f, err = openWriteFile(sampleseqOutput); err != nil {
+		if f, err = utils.OpenWriteFile(sampleseqOutput); err != nil {
 			io.LogError(err)
 			return
 		}
-		defer closeWriteFile(f, sampleseqOutput)
+		defer utils.CloseWriteFile(f, sampleseqOutput)
 
 		if unaligned {
 			var seqs align.SeqBag

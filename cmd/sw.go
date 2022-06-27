@@ -2,10 +2,10 @@ package cmd
 
 import (
 	"fmt"
-	"os"
 
 	"github.com/evolbioinfo/goalign/align"
 	"github.com/evolbioinfo/goalign/io"
+	"github.com/evolbioinfo/goalign/io/utils"
 	"github.com/spf13/cobra"
 )
 
@@ -40,20 +40,20 @@ by formatting options (-p, -x, etc.)
 		var seq1 align.Sequence
 		var seq2 align.Sequence
 		var ok bool
-		var f, log *os.File
+		var f, log utils.StringWriterCloser
 
-		if f, err = openWriteFile(swOutput); err != nil {
+		if f, err = utils.OpenWriteFile(swOutput); err != nil {
 			io.LogError(err)
 			return
 		}
-		defer closeWriteFile(f, swOutput)
+		defer utils.CloseWriteFile(f, swOutput)
 
 		if swLog != "none" {
-			if log, err = openWriteFile(swLog); err != nil {
+			if log, err = utils.OpenWriteFile(swLog); err != nil {
 				io.LogError(err)
 				return
 			}
-			defer closeWriteFile(log, swLog)
+			defer utils.CloseWriteFile(log, swLog)
 		}
 
 		if seqs, err = readsequences(infile); err != nil {

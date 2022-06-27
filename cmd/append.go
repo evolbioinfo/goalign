@@ -1,10 +1,9 @@
 package cmd
 
 import (
-	"os"
-
 	"github.com/evolbioinfo/goalign/align"
 	"github.com/evolbioinfo/goalign/io"
+	"github.com/evolbioinfo/goalign/io/utils"
 	"github.com/spf13/cobra"
 )
 
@@ -34,7 +33,7 @@ goalign append -i align.fasta others*.fasta
 		var refAligns *align.AlignChannel = nil
 		var refAlign align.Alignment = nil
 
-		var f *os.File
+		var f utils.StringWriterCloser
 
 		if infile != "none" {
 			if refAligns, err = readalign(infile); err != nil {
@@ -76,12 +75,12 @@ goalign append -i align.fasta others*.fasta
 			}
 		}
 
-		if f, err = openWriteFile(appendout); err != nil {
+		if f, err = utils.OpenWriteFile(appendout); err != nil {
 			io.LogError(err)
 			return
 		}
 		writeAlign(refAlign, f)
-		closeWriteFile(f, appendout)
+		utils.CloseWriteFile(f, appendout)
 
 		return
 	},

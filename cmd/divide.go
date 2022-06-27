@@ -2,16 +2,17 @@ package cmd
 
 import (
 	"fmt"
-	"os"
 
 	"github.com/evolbioinfo/goalign/align"
 	"github.com/evolbioinfo/goalign/io"
+	"github.com/evolbioinfo/goalign/io/utils"
 	"github.com/spf13/cobra"
 )
 
 var divideOutput string
 var divideoutputFasta bool
 var divideNbSeqs int
+var divideCompress bool
 var divideUnaligned bool
 
 // divideCmd represents the divide command
@@ -45,13 +46,16 @@ gotree divide -i align.ph -p -o out
 		var tmpAlign align.Alignment
 		var tmpSeqs align.SeqBag
 
-		var f *os.File
+		var f utils.StringWriterCloser
 
 		i := 0
 
 		ext := alignExtension()
 		if divideoutputFasta {
 			ext = ".fa"
+		}
+		if divideCompress {
+			ext += ".gz"
 		}
 
 		if divideUnaligned {
@@ -62,7 +66,7 @@ gotree divide -i align.ph -p -o out
 			}
 
 			if divideNbSeqs == 0 {
-				if f, err = openWriteFile(fmt.Sprintf("%s_%03d%s", divideOutput, i, ext)); err != nil {
+				if f, err = utils.OpenWriteFile(fmt.Sprintf("%s_%03d%s", divideOutput, i, ext)); err != nil {
 					io.LogError(err)
 					return
 				}
@@ -76,7 +80,7 @@ gotree divide -i align.ph -p -o out
 					tmpSeqs.AddSequenceChar(name, sequence, comment)
 					nb++
 					if divideNbSeqs > 0 && nb%divideNbSeqs == 0 {
-						if f, err = openWriteFile(fmt.Sprintf("%s_%03d%s", divideOutput, i, ext)); err != nil {
+						if f, err = utils.OpenWriteFile(fmt.Sprintf("%s_%03d%s", divideOutput, i, ext)); err != nil {
 							io.LogError(err)
 							return true
 						}
@@ -88,7 +92,7 @@ gotree divide -i align.ph -p -o out
 					return false
 				})
 				if nb%divideNbSeqs > 0 {
-					if f, err = openWriteFile(fmt.Sprintf("%s_%03d%s", divideOutput, i, ext)); err != nil {
+					if f, err = utils.OpenWriteFile(fmt.Sprintf("%s_%03d%s", divideOutput, i, ext)); err != nil {
 						io.LogError(err)
 					}
 					writeSequences(tmpSeqs, f)
@@ -104,7 +108,7 @@ gotree divide -i align.ph -p -o out
 
 			for al := range aligns.Achan {
 				if divideNbSeqs == 0 {
-					if f, err = openWriteFile(fmt.Sprintf("%s_%03d%s", divideOutput, i, ext)); err != nil {
+					if f, err = utils.OpenWriteFile(fmt.Sprintf("%s_%03d%s", divideOutput, i, ext)); err != nil {
 						io.LogError(err)
 						return
 					}
@@ -122,7 +126,7 @@ gotree divide -i align.ph -p -o out
 						tmpAlign.AddSequenceChar(name, sequence, comment)
 						nb++
 						if nb%divideNbSeqs == 0 {
-							if f, err = openWriteFile(fmt.Sprintf("%s_%03d%s", divideOutput, i, ext)); err != nil {
+							if f, err = utils.OpenWriteFile(fmt.Sprintf("%s_%03d%s", divideOutput, i, ext)); err != nil {
 								io.LogError(err)
 								return true
 							}
@@ -138,7 +142,7 @@ gotree divide -i align.ph -p -o out
 						return false
 					})
 					if nb%divideNbSeqs > 0 {
-						if f, err = openWriteFile(fmt.Sprintf("%s_%03d%s", divideOutput, i, ext)); err != nil {
+						if f, err = utils.OpenWriteFile(fmt.Sprintf("%s_%03d%s", divideOutput, i, ext)); err != nil {
 							io.LogError(err)
 						}
 						if divideoutputFasta {
@@ -167,6 +171,7 @@ func init() {
 	divideCmd.PersistentFlags().StringVarP(&divideOutput, "output", "o", "prefix", "Divided alignment output files prefix")
 	divideCmd.PersistentFlags().IntVar(&divideNbSeqs, "nb-sequences", 0, "Number of sequences per output file (<=0 : all sequences, >0: each alignment will be additionnaly split in several alignments)")
 	divideCmd.PersistentFlags().BoolVar(&divideUnaligned, "unaligned", false, "Considers sequences as unaligned and format fasta (phylip, nexus,... options are ignored)")
+	divideCmd.PersistentFlags().BoolVar(&divideCompress, "compress", false, "Output is compressed (gz)")
 	divideCmd.PersistentFlags().BoolVarP(&divideoutputFasta, "out-fasta", "f", false, "Forces output files to be in fasta format")
 
 }

@@ -2,10 +2,10 @@ package cmd
 
 import (
 	"fmt"
-	"os"
 
 	"github.com/evolbioinfo/goalign/align"
 	"github.com/evolbioinfo/goalign/io"
+	"github.com/evolbioinfo/goalign/io/utils"
 	"github.com/spf13/cobra"
 )
 
@@ -38,7 +38,7 @@ If align contains 3 alignments, this will generate 3 files:
 `,
 	RunE: func(cmd *cobra.Command, args []string) (err error) {
 		var aligns *align.AlignChannel
-		var f *os.File
+		var f utils.StringWriterCloser
 
 		if aligns, err = readalign(infile); err != nil {
 			io.LogError(err)
@@ -51,12 +51,12 @@ If align contains 3 alignments, this will generate 3 files:
 			if filename != "stdout" && filename != "-" {
 				filename = fmt.Sprintf("%s_%.6d.fa", unalignOutput, i)
 			}
-			if f, err = openWriteFile(filename); err != nil {
+			if f, err = utils.OpenWriteFile(filename); err != nil {
 				io.LogError(err)
 				return
 			}
 			writeSequences(al.Unalign(), f)
-			closeWriteFile(f, filename)
+			utils.CloseWriteFile(f, filename)
 			i++
 		}
 

@@ -42,14 +42,14 @@ is considered as 0). Sum of counts of all sequences must be > n.
 Output: An alignment (phylip or fasta).
 `,
 	RunE: func(cmd *cobra.Command, args []string) (err error) {
-		var f *os.File
+		var f utils.StringWriterCloser
 		var counts map[string]int
 
-		if f, err = openWriteFile(rarefyOutput); err != nil {
+		if f, err = utils.OpenWriteFile(rarefyOutput); err != nil {
 			io.LogError(err)
 			return
 		}
-		defer closeWriteFile(f, rarefyOutput)
+		defer utils.CloseWriteFile(f, rarefyOutput)
 
 		if counts, err = parseCountFile(rarefyCounts); err != nil {
 			io.LogError(err)

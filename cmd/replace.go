@@ -2,10 +2,10 @@ package cmd
 
 import (
 	"errors"
-	"os"
 
 	"github.com/evolbioinfo/goalign/align"
 	"github.com/evolbioinfo/goalign/io"
+	"github.com/evolbioinfo/goalign/io/utils"
 	"github.com/spf13/cobra"
 )
 
@@ -22,7 +22,7 @@ If the replacement changes sequence length, then returns an error.
 `,
 	RunE: func(cmd *cobra.Command, args []string) (err error) {
 		var aligns *align.AlignChannel
-		var f *os.File
+		var f utils.StringWriterCloser
 		var seqs align.SeqBag
 
 		if !cmd.Flags().Changed("old") || !cmd.Flags().Changed("new") {
@@ -30,11 +30,11 @@ If the replacement changes sequence length, then returns an error.
 			return
 		}
 
-		if f, err = openWriteFile(replaceOutput); err != nil {
+		if f, err = utils.OpenWriteFile(replaceOutput); err != nil {
 			io.LogError(err)
 			return
 		}
-		defer closeWriteFile(f, replaceOutput)
+		defer utils.CloseWriteFile(f, replaceOutput)
 
 		if unaligned {
 			if seqs, err = readsequences(infile); err != nil {

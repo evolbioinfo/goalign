@@ -2,10 +2,10 @@ package cmd
 
 import (
 	"fmt"
-	"os"
 
 	"github.com/evolbioinfo/goalign/align"
 	"github.com/evolbioinfo/goalign/io"
+	"github.com/evolbioinfo/goalign/io/utils"
 	"github.com/spf13/cobra"
 )
 
@@ -25,17 +25,17 @@ goalign reformat tnt -i align.fasta
 `,
 	RunE: func(cmd *cobra.Command, args []string) (err error) {
 		var aligns *align.AlignChannel
-		var f *os.File
+		var f utils.StringWriterCloser
 
 		if aligns, err = readalign(infile); err != nil {
 			io.LogError(err)
 			return
 		}
-		if f, err = openWriteFile(reformatOutput); err != nil {
+		if f, err = utils.OpenWriteFile(reformatOutput); err != nil {
 			io.LogError(err)
 			return
 		}
-		defer closeWriteFile(f, reformatOutput)
+		defer utils.CloseWriteFile(f, reformatOutput)
 
 		al := <-aligns.Achan
 		if aligns.Err != nil {

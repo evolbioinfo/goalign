@@ -1,10 +1,9 @@
 package cmd
 
 import (
-	"os"
-
 	"github.com/evolbioinfo/goalign/align"
 	"github.com/evolbioinfo/goalign/io"
+	"github.com/evolbioinfo/goalign/io/utils"
 	"github.com/spf13/cobra"
 )
 
@@ -38,17 +37,17 @@ goalign shuffle swap -i align.fasta -r 0.5
 `,
 	RunE: func(cmd *cobra.Command, args []string) (err error) {
 		var aligns *align.AlignChannel
-		var f *os.File
+		var f utils.StringWriterCloser
 
 		if aligns, err = readalign(infile); err != nil {
 			io.LogError(err)
 			return
 		}
-		if f, err = openWriteFile(shuffleOutput); err != nil {
+		if f, err = utils.OpenWriteFile(shuffleOutput); err != nil {
 			io.LogError(err)
 			return
 		}
-		defer closeWriteFile(f, shuffleOutput)
+		defer utils.CloseWriteFile(f, shuffleOutput)
 
 		for al := range aligns.Achan {
 			al.Swap(swapRate)

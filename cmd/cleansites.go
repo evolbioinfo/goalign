@@ -2,10 +2,10 @@ package cmd
 
 import (
 	"fmt"
-	"os"
 
 	"github.com/evolbioinfo/goalign/align"
 	"github.com/evolbioinfo/goalign/io"
+	"github.com/evolbioinfo/goalign/io/utils"
 	"github.com/spf13/cobra"
 )
 
@@ -37,23 +37,23 @@ will be removed.`,
 		var aligns *align.AlignChannel
 		var nbstart, nbend int
 		var kept []int
-		var f, sitesposout *os.File
+		var f, sitesposout utils.StringWriterCloser
 
 		if aligns, err = readalign(infile); err != nil {
 			io.LogError(err)
 			return
 		}
-		if f, err = openWriteFile(cleanOutput); err != nil {
+		if f, err = utils.OpenWriteFile(cleanOutput); err != nil {
 			io.LogError(err)
 			return
 		}
-		defer closeWriteFile(f, cleanOutput)
+		defer utils.CloseWriteFile(f, cleanOutput)
 
-		if sitesposout, err = openWriteFile(sitesposoutfile); err != nil {
+		if sitesposout, err = utils.OpenWriteFile(sitesposoutfile); err != nil {
 			io.LogError(err)
 			return
 		}
-		defer closeWriteFile(f, cleanOutput)
+		defer utils.CloseWriteFile(sitesposout, cleanOutput)
 
 		i := 0
 		char := ""

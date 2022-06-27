@@ -2,10 +2,10 @@ package cmd
 
 import (
 	"fmt"
-	"os"
 
 	"github.com/evolbioinfo/goalign/align"
 	"github.com/evolbioinfo/goalign/io"
+	"github.com/evolbioinfo/goalign/io/utils"
 	"github.com/spf13/cobra"
 )
 
@@ -32,7 +32,7 @@ var samplesitesCmd = &cobra.Command{
 	`,
 	RunE: func(cmd *cobra.Command, args []string) (err error) {
 		var aligns *align.AlignChannel
-		var f *os.File
+		var f utils.StringWriterCloser
 		var subalign align.Alignment
 
 		if aligns, err = readalign(infile); err != nil {
@@ -54,11 +54,11 @@ var samplesitesCmd = &cobra.Command{
 			if sitenb > 1 && !(rootphylip && (siteout == "stdout" || siteout == "-")) {
 				name = fmt.Sprintf("%s_%d.%s", siteout, i, extension)
 			}
-			if f, err = openWriteFile(name); err != nil {
+			if f, err = utils.OpenWriteFile(name); err != nil {
 				io.LogError(err)
 				return
 			}
-			defer closeWriteFile(f, name)
+			defer utils.CloseWriteFile(f, name)
 
 			if subalign, err = al.RandSubAlign(sitelength, siteconsecutive); err != nil {
 				io.LogError(err)

@@ -3,12 +3,12 @@ package cmd
 import (
 	"bufio"
 	"fmt"
-	"os"
 	"path/filepath"
 
 	"github.com/evolbioinfo/goalign/align"
 	"github.com/evolbioinfo/goalign/draw"
 	"github.com/evolbioinfo/goalign/io"
+	"github.com/evolbioinfo/goalign/io/utils"
 	"github.com/spf13/cobra"
 )
 
@@ -27,7 +27,7 @@ Color schemes are specific to the alphabet of sequences:
 	RunE: func(cmd *cobra.Command, args []string) (err error) {
 		var l draw.AlignLayout
 		var aligns *align.AlignChannel
-		var f *os.File
+		var f utils.StringWriterCloser
 
 		if aligns, err = readalign(infile); err != nil {
 			io.LogError(err)
@@ -43,7 +43,7 @@ Color schemes are specific to the alphabet of sequences:
 				ext := filepath.Ext(fname)
 				fname = fmt.Sprintf("%s_%d.%s", fname[0:len(fname)-len(ext)], nalign, ext)
 			}
-			if f, err = openWriteFile(fname); err != nil {
+			if f, err = utils.OpenWriteFile(fname); err != nil {
 				io.LogError(err)
 				return
 			}
