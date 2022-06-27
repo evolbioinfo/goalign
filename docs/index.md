@@ -51,7 +51,7 @@ Almost all commands can have the following arguments:
     4. Phylip
     If none of these formats is recognized, then will exit with an error. Please also note that in `--auto-detect` mode, phylip format is considered as not strict.
 
-Output are written to stdout by default, but can be generally written to files with the `-o` option. If the given output file has a `.gz` or `.xz` extension, the output is compressed accordingly.
+Output is written to stdout by default, but can be generally written to files with the `-o` option. If the given output file has a `.gz` or `.xz` extension, the output is compressed accordingly.
 
 Command                                                     | Subcommand |        Description
 ------------------------------------------------------------|------------|-----------------------------------------------------------------------
