@@ -1,6 +1,6 @@
 module github.com/evolbioinfo/goalign
 
-go 1.16
+go 1.18
 
 require (
 	github.com/abiosoft/ishell v2.0.0+incompatible // indirect
