@@ -64,7 +64,8 @@ type Alignment interface {
 	//    2) if maskreplace is MAJ: Replacing character is most frequent character of the column
 	//    3) if maskreplace is GAP: Replacing character is a GAP
 	// if nogap is true, then Mask will not replace gaps with the replacement character
-	Mask(start, length int, maskreplace string, nogap bool) error // Masks given positions
+	// if noref is true, then does not replace the character if it is the same as the reference sequences (only if refseq is specified).
+	Mask(refseq string, start, length int, maskreplace string, nogap, noref bool) error // Masks given positions
 	// Masks unique mutations in the given aligment (not the gaps).
 	// If refseq is not "" then masks unique characters if
 	//    1) they are different from the given reference sequence
@@ -1006,7 +1007,11 @@ func (a *align) CharStatsSite(site int) (outmap map[uint8]int, err error) {
 //    2) if maskreplace is MAJ: Replacing character is most frequent character of the column
 //    3) if maskreplace is GAP: Replacing character is a GAP
 // if nogap is true, then Mask will not replace gaps with the replacement character
-func (a *align) Mask(start, length int, maskreplace string, nogap bool) (err error) {
+// if noref is true, then does not replace the character if it is the same as the reference sequences (only if refseq is specified).
+func (a *align) Mask(refseq string, start, length int, maskreplace string, nogap, noref bool) (err error) {
+	var ok bool
+	var refSequence Sequence = nil
+
 	if start < 0 {
 		err = errors.New("Mask: Start position cannot be < 0")
 		return
@@ -1036,7 +1041,20 @@ func (a *align) Mask(start, length int, maskreplace string, nogap bool) (err err
 		err = fmt.Errorf("mask: unknown replacement character : %s", maskreplace)
 		return
 	}
+
+	// We take the reference sequence from the alignment
+	if refseq != "" && noref {
+		if refSequence, ok = a.GetSequenceByName(refseq); !ok {
+			err = fmt.Errorf("given reference sequence does not exist in the alignment")
+			return
+		}
+	}
+
+	var refchar uint8 = '.'
 	for i := start; i < (start+length) && i < a.Length(); i++ {
+		if refseq != "" && noref {
+			refchar = refSequence.CharAt(i)
+		}
 		occurences := make([]int, 130)
 		// We compute the most frequent character of the column
 		if maskreplace == "MAJ" {
@@ -1054,7 +1072,8 @@ func (a *align) Mask(start, length int, maskreplace string, nogap bool) (err err
 		}
 		for _, seq := range a.seqs {
 			// We do not mask gaps if nogap is true
-			if !nogap || !(seq.sequence[i] == GAP) {
+			// We do not mask ref character
+			if !(nogap && (seq.sequence[i] == GAP)) && !(noref && (seq.sequence[i] == refchar)) {
 				seq.sequence[i] = rep
 			}
 		}

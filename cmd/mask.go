@@ -15,6 +15,7 @@ var maskunique bool
 var maskrefseq string
 var maskreplace string
 var masknogap bool
+var masknoref bool
 
 // subseqCmd represents the subseq command
 var maskCmd = &cobra.Command{
@@ -36,6 +37,7 @@ goalign mask -p -i al.phy -s 9 -l 10
 This will replace 10 positions with N|X from the 10th position.
 
 If --no-gaps is specified, then does not replace gaps.
+If --no-ref is specified, then does not replace the character if it is the same as the reference sequences (only with --ref-seq).
 
 If --ref-seq is specified, then coordinates are considered on the given reference sequence
 without considering gaps. In that case, if the range of masked sites incorporates gaps in
@@ -96,7 +98,7 @@ The output format is the same than input format.
 						return
 					}
 				}
-				if err = al.Mask(start, length, maskreplace, masknogap); err != nil {
+				if err = al.Mask(maskrefseq, start, length, maskreplace, masknogap, masknoref); err != nil {
 					io.LogError(err)
 					return
 				}
@@ -119,4 +121,5 @@ func init() {
 	maskCmd.PersistentFlags().StringVar(&maskreplace, "replace", "AMBIG", "Replacement character. If AMBIG: N or X (depending on alphabet), if GAP: -, if MAJ: the main character of the column, or can be any other character")
 	maskCmd.PersistentFlags().IntVar(&maskatmost, "at-most", 1, "The number of occurences that defines the uniqueness of the characher in the column (only used with --unique)")
 	maskCmd.PersistentFlags().BoolVar(&masknogap, "no-gaps", false, "Do not mask gaps (has no effect on --unique --at-most options, for which gaps are not taken into account anyway)")
+	maskCmd.PersistentFlags().BoolVar(&masknoref, "no-ref", false, "Do not mask if same as reference (only with --ref-seq, and has no effect on --unique --at-most options")
 }

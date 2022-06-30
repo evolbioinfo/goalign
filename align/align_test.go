@@ -1476,7 +1476,7 @@ func TestMaskNt(t *testing.T) {
 	exp4.AutoAlphabet()
 
 	res, _ := in.Clone()
-	if err := res.Mask(8, 2, "", false); err != nil {
+	if err := res.Mask("", 8, 2, "", false, false); err != nil {
 		t.Error(err)
 	} else {
 		if !exp.Identical(res) {
@@ -1485,7 +1485,7 @@ func TestMaskNt(t *testing.T) {
 	}
 
 	res, _ = in.Clone()
-	if err := res.Mask(8, 2, "AMBIG", false); err != nil {
+	if err := res.Mask("", 8, 2, "AMBIG", false, false); err != nil {
 		t.Error(err)
 	} else {
 		if !exp.Identical(res) {
@@ -1494,7 +1494,7 @@ func TestMaskNt(t *testing.T) {
 	}
 
 	res, _ = in.Clone()
-	if err := res.Mask(8, 2, "GAP", false); err != nil {
+	if err := res.Mask("", 8, 2, "GAP", false, false); err != nil {
 		t.Error(err)
 	} else {
 		if !exp2.Identical(res) {
@@ -1503,7 +1503,7 @@ func TestMaskNt(t *testing.T) {
 	}
 
 	res, _ = in.Clone()
-	if err := res.Mask(8, 2, ",", false); err != nil {
+	if err := res.Mask("", 8, 2, ",", false, false); err != nil {
 		t.Error(err)
 	} else {
 		if !exp3.Identical(res) {
@@ -1512,7 +1512,7 @@ func TestMaskNt(t *testing.T) {
 	}
 
 	res, _ = in.Clone()
-	if err := res.Mask(9, 3, "MAJ", false); err != nil {
+	if err := res.Mask("", 9, 3, "MAJ", false, false); err != nil {
 		t.Error(err)
 	} else {
 		if !exp4.Identical(res) {
@@ -1523,7 +1523,7 @@ func TestMaskNt(t *testing.T) {
 	}
 }
 
-func TestMaskNoGAP(t *testing.T) {
+func TestMaskNoGap(t *testing.T) {
 	in := NewAlign(UNKNOWN)
 	in.AddSequence("Seq0000", "GATTAATTTGCCGTAGGCCA", "")
 	in.AddSequence("Seq0001", "GAATCTGAA-ATCGAACACT", "")
@@ -1549,7 +1549,7 @@ func TestMaskNoGAP(t *testing.T) {
 	exp3.AutoAlphabet()
 
 	res, _ := in.Clone()
-	if err := res.Mask(9, 1, "", false); err != nil {
+	if err := res.Mask("", 9, 1, "", false, false); err != nil {
 		t.Error(err)
 	} else {
 		if !exp.Identical(res) {
@@ -1558,7 +1558,7 @@ func TestMaskNoGAP(t *testing.T) {
 	}
 
 	res, _ = in.Clone()
-	if err := res.Mask(9, 1, "MAJ", true); err != nil {
+	if err := res.Mask("", 9, 1, "MAJ", true, false); err != nil {
 		t.Error(err)
 	} else {
 		if !exp2.Identical(res) {
@@ -1567,7 +1567,69 @@ func TestMaskNoGAP(t *testing.T) {
 	}
 
 	res, _ = in.Clone()
-	if err := res.Mask(9, 1, "", true); err != nil {
+	if err := res.Mask("", 9, 1, "", true, false); err != nil {
+		t.Error(err)
+	} else {
+		if !exp3.Identical(res) {
+			t.Error(fmt.Errorf("Expected sequences are different from masked sequences"))
+		}
+	}
+}
+
+func TestMaskNoRef(t *testing.T) {
+	in := NewAlign(UNKNOWN)
+	in.AddSequence("Seq0000", "GATTAATTTGCCGTAGGCCA", "")
+	in.AddSequence("Seq0001", "GAATCTGAAGATCGAACACT", "")
+	in.AddSequence("Seq0002", "TTAAGTTTT-ACTTCTAATG", "")
+	in.AutoAlphabet()
+
+	exp := NewSeqBag(UNKNOWN)
+	exp.AddSequence("Seq0000", "GATTAATTTNCCGTAGGCCA", "")
+	exp.AddSequence("Seq0001", "GAATCTGAANATCGAACACT", "")
+	exp.AddSequence("Seq0002", "TTAAGTTTTNACTTCTAATG", "")
+	exp.AutoAlphabet()
+
+	exp2 := NewSeqBag(UNKNOWN)
+	exp2.AddSequence("Seq0000", "GATTAATTTGCCGTAGGCCA", "")
+	exp2.AddSequence("Seq0001", "GAATCTGAAGATCGAACACT", "")
+	exp2.AddSequence("Seq0002", "TTAAGTTTT-ACTTCTAATG", "")
+	exp2.AutoAlphabet()
+
+	exp3 := NewSeqBag(UNKNOWN)
+	exp3.AddSequence("Seq0000", "GATTAATTTGCCGTAGGCCA", "")
+	exp3.AddSequence("Seq0001", "GAATCTGAAGATCGAACACT", "")
+	exp3.AddSequence("Seq0002", "TTAAGTTTTNACTTCTAATG", "")
+	exp3.AutoAlphabet()
+
+	res, _ := in.Clone()
+	if err := res.Mask("", 9, 1, "", false, false); err != nil {
+		t.Error(err)
+	} else {
+		if !exp.Identical(res) {
+			t.Error(fmt.Errorf("Expected sequences are different from masked sequences"))
+		}
+	}
+
+	res, _ = in.Clone()
+	if err := res.Mask("Seq0000", 9, 1, "MAJ", true, false); err != nil {
+		t.Error(err)
+	} else {
+		if !exp2.Identical(res) {
+			t.Error(fmt.Errorf("Expected sequences are different from masked sequences"))
+		}
+	}
+
+	res, _ = in.Clone()
+	if err := res.Mask("Seq0000", 9, 1, "MAJ", true, true); err != nil {
+		t.Error(err)
+	} else {
+		if !exp2.Identical(res) {
+			t.Error(fmt.Errorf("Expected sequences are different from masked sequences"))
+		}
+	}
+
+	res, _ = in.Clone()
+	if err := res.Mask("Seq0000", 9, 1, "", false, true); err != nil {
 		t.Error(err)
 	} else {
 		if !exp3.Identical(res) {
@@ -1589,7 +1651,7 @@ func TestMaskProt(t *testing.T) {
 	exp.AddSequence("Seq0002", "GDMMEDSGSIAIXXXXXXXX", "")
 	exp.AutoAlphabet()
 
-	if err := in.Mask(12, 2000, "AMBIG", false); err != nil {
+	if err := in.Mask("", 12, 2000, "AMBIG", false, false); err != nil {
 		t.Error(err)
 	} else {
 		if !exp.Identical(in) {

@@ -4233,6 +4233,54 @@ $GOALIGN mask -i input --start 9 --length 1 --no-gaps -o result
 diff -q -b expected3 result
 rm -f input result expected1 expected2 expected3
 
+
+echo "->goalign mask --no-ref"
+cat > input <<EOF
+>Seq0000
+GATTAATTTGCCGTAGGCCA
+>Seq0001
+GAATCTGAAGATCGAACACT
+>Seq0002
+TTAAGTTTT-ACTTCTAATG
+EOF
+
+cat > expected1 <<EOF
+>Seq0000
+GATTAATTTNCCGTAGGCCA
+>Seq0001
+GAATCTGAANATCGAACACT
+>Seq0002
+TTAAGTTTTNACTTCTAATG
+EOF
+
+cat > expected2 <<EOF
+>Seq0000
+GATTAATTTGCCGTAGGCCA
+>Seq0001
+GAATCTGAAGATCGAACACT
+>Seq0002
+TTAAGTTTT-ACTTCTAATG
+EOF
+
+cat > expected3 <<EOF
+>Seq0000
+GATTAATTTGCCGTAGGCCA
+>Seq0001
+GAATCTGAAGATCGAACACT
+>Seq0002
+TTAAGTTTTNACTTCTAATG
+EOF
+
+$GOALIGN mask -i input --start 9 --length 1 -o result
+diff -q -b expected1 result
+$GOALIGN mask -i input --no-gaps --ref-seq "Seq0000" --replace "MAJ" --start 9 --length 1 -o result
+diff -q -b expected2 result
+$GOALIGN mask -i input --no-gaps --no-ref --ref-seq "Seq0000" --replace "MAJ" --start 9 --length 1 -o result
+diff -q -b expected2 result
+$GOALIGN mask -i input --no-ref --ref-seq "Seq0000" --start 9 --length 1 -o result
+diff -q -b expected3 result
+rm -f input result expected1 expected2 expected3
+
 echo "->goalign replace"
 cat > input <<EOF
    10   20
