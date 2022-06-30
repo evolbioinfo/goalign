@@ -19,6 +19,8 @@ goalign mask -p -i al.phy -s 9 -l 10
 
 This will replace 10 positions with N|X from the 10th position.
 
+If `--no-gaps` is specified, then does not replace gaps.
+
 If `--ref-seq` is specified, then coordinates are considered on the given reference sequence
 without considering gaps. In that case, if the range of masked sites incorporates gaps in
 the reference sequence, these gaps will also be masked in the output alignment.
@@ -28,7 +30,7 @@ are unique (defined by `--at-most` option) in their column (except GAPS) with N 
 In that case, if `--ref-seq` option is given, then a unique character is masked if:
     1) It is different from the given reference sequence
     2) Or the reference is a GAP
-In this case, `--length` and `--start` are ignored.
+In this case, `--length`, `--start`, and `--no-gaps` are ignored.
 
 Option `--replace` defines the replacement character. If `--replace` is "" (default), then, 
 masked characters are replaced by "N" or "X" depending on the alphabet. 

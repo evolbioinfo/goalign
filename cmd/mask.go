@@ -14,6 +14,7 @@ var maskatmost int
 var maskunique bool
 var maskrefseq string
 var maskreplace string
+var masknogap bool
 
 // subseqCmd represents the subseq command
 var maskCmd = &cobra.Command{
@@ -34,6 +35,8 @@ goalign mask -p -i al.phy -s 9 -l 10
 
 This will replace 10 positions with N|X from the 10th position.
 
+If --no-gaps is specified, then does not replace gaps.
+
 If --ref-seq is specified, then coordinates are considered on the given reference sequence
 without considering gaps. In that case, if the range of masked sites incorporates gaps in
 the reference sequence, these gaps will also be masked in the output alignment.
@@ -43,7 +46,7 @@ are unique (defined by --at-most option) in their column (except GAPS) with N or
 In that case, if --ref-seq option is given, then a unique character is masked if:
     1) It is different from the given reference sequence
     2) Or the reference is a GAP
-In this case, --length and --start are ignored.
+In this case, --length, --start, and --no-gaps are ignored.
 
 Option --replace defines the replacement character. If --replace is "" (default), then, 
 masked characters are replaced by "N" or "X" depending on the alphabet. 
@@ -93,7 +96,7 @@ The output format is the same than input format.
 						return
 					}
 				}
-				if err = al.Mask(start, length, maskreplace); err != nil {
+				if err = al.Mask(start, length, maskreplace, masknogap); err != nil {
 					io.LogError(err)
 					return
 				}
@@ -115,4 +118,5 @@ func init() {
 	maskCmd.PersistentFlags().BoolVar(&maskunique, "unique", false, "If given, then masks characters that are unique (defined with --at-most) in their columns (start and length are ignored)")
 	maskCmd.PersistentFlags().StringVar(&maskreplace, "replace", "AMBIG", "Replacement character. If AMBIG: N or X (depending on alphabet), if GAP: -, if MAJ: the main character of the column, or can be any other character")
 	maskCmd.PersistentFlags().IntVar(&maskatmost, "at-most", 1, "The number of occurences that defines the uniqueness of the characher in the column (only used with --unique)")
+	maskCmd.PersistentFlags().BoolVar(&masknogap, "no-gaps", false, "Do not mask gaps (has no effect on --unique --at-most options, for which gaps are not taken into account anyway)")
 }

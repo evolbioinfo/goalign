@@ -63,7 +63,8 @@ type Alignment interface {
 	//    1) if maskreplace is AMBIG: just like ""
 	//    2) if maskreplace is MAJ: Replacing character is most frequent character of the column
 	//    3) if maskreplace is GAP: Replacing character is a GAP
-	Mask(start, length int, maskreplace string) error // Masks given positions
+	// if nogap is true, then Mask will not replace gaps with the replacement character
+	Mask(start, length int, maskreplace string, nogap bool) error // Masks given positions
 	// Masks unique mutations in the given aligment (not the gaps).
 	// If refseq is not "" then masks unique characters if
 	//    1) they are different from the given reference sequence
@@ -1004,7 +1005,8 @@ func (a *align) CharStatsSite(site int) (outmap map[uint8]int, err error) {
 //    1) if maskreplace is AMBIG: just like ""
 //    2) if maskreplace is MAJ: Replacing character is most frequent character of the column
 //    3) if maskreplace is GAP: Replacing character is a GAP
-func (a *align) Mask(start, length int, maskreplace string) (err error) {
+// if nogap is true, then Mask will not replace gaps with the replacement character
+func (a *align) Mask(start, length int, maskreplace string, nogap bool) (err error) {
 	if start < 0 {
 		err = errors.New("Mask: Start position cannot be < 0")
 		return
@@ -1051,7 +1053,10 @@ func (a *align) Mask(start, length int, maskreplace string) (err error) {
 			}
 		}
 		for _, seq := range a.seqs {
-			seq.sequence[i] = rep
+			// We do not mask gaps if nogap is true
+			if !nogap || !(seq.sequence[i] == GAP) {
+				seq.sequence[i] = rep
+			}
 		}
 	}
 	return
@@ -1067,6 +1072,7 @@ func (a *align) Mask(start, length int, maskreplace string) (err error) {
 //    1) if maskreplace is AMBIG: just like ""
 //    2)  if maskreplace is MAJ: Replacing character is most frequent character of the column
 //    3)  if maskreplace is GAP: Replacing character is a GAP
+// if nogap is true, then MaskOccurences will not replace gaps with the replacement character
 func (a *align) MaskOccurences(refseq string, maxOccurence int, maskreplace string) (err error) {
 	var ok bool
 	var refSequence Sequence = nil
@@ -1148,6 +1154,7 @@ func (a *align) MaskOccurences(refseq string, maxOccurence int, maskreplace stri
 //    1) if maskreplace is AMBIG: just like ""
 //    2)  if maskreplace is MAJ: Replacing character is most frequent character
 //    3)  if maskreplace is GAP: Replacing character is a GAP
+// if nogap is true, then MaskUnique will not replace gaps with the replacement character
 func (a *align) MaskUnique(refseq string, maskreplace string) (err error) {
 	return a.MaskOccurences(refseq, 1, maskreplace)
 }

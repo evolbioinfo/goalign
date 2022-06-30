@@ -4188,6 +4188,50 @@ ${GOALIGN} mask --unique --ref-seq A --at-most 2 -i input -o result
 diff -q -b expected result
 rm -f input expected result
 
+echo "->goalign mask --no-gaps"
+cat > input <<EOF
+>Seq0000
+GATTAATTTGCCGTAGGCCA
+>Seq0001
+GAATCTGAA-ATCGAACACT
+>Seq0002
+TTAAGTTTT-ACTTCTAATG
+EOF
+
+cat > expected1 <<EOF
+>Seq0000
+GATTAATTTNCCGTAGGCCA
+>Seq0001
+GAATCTGAANATCGAACACT
+>Seq0002
+TTAAGTTTTNACTTCTAATG
+EOF
+
+cat > expected2 <<EOF
+>Seq0000
+GATTAATTT-CCGTAGGCCA
+>Seq0001
+GAATCTGAA-ATCGAACACT
+>Seq0002
+TTAAGTTTT-ACTTCTAATG
+EOF
+
+cat > expected3 <<EOF
+>Seq0000
+GATTAATTTNCCGTAGGCCA
+>Seq0001
+GAATCTGAA-ATCGAACACT
+>Seq0002
+TTAAGTTTT-ACTTCTAATG
+EOF
+
+$GOALIGN mask -i input --start 9 --length 1 -o result
+diff -q -b expected1 result
+$GOALIGN mask -i input --start 9 --length 1 --replace MAJ --no-gaps -o result
+diff -q -b expected2 result
+$GOALIGN mask -i input --start 9 --length 1 --no-gaps -o result
+diff -q -b expected3 result
+rm -f input result expected1 expected2 expected3
 
 echo "->goalign replace"
 cat > input <<EOF
