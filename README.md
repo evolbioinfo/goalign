@@ -1,6 +1,6 @@
 # Goalign
-[![build](https://github.com/evolbioinfo/goalign/actions/workflows/go.yml/badge.svg)](https://github.com/evolbioinfo/goalign/actions) [![Anaconda-Server Badge](https://anaconda.org/bioconda/goalign/badges/installer/conda.svg)](https://anaconda.org/bioconda/goalign) [![Docker hub](https://img.shields.io/docker/cloud/build/evolbioinfo/goalign)](https://hub.docker.com/r/evolbioinfo/goalign/builds/)
-[![DOI:10.1093/nargab/lqab075](https://zenodo.org/badge/DOI/10.1093/nargab/lqab075.svg)](https://doi.org/10.1093/nargab/lqab075)[![downloads](https://anaconda.org/bioconda/goalign/badges/downloads.svg)](https://anaconda.org/bioconda/goalign/)
+[![build](https://github.com/evolbioinfo/goalign/actions/workflows/go.yml/badge.svg)](https://github.com/evolbioinfo/goalign/actions) [![Anaconda-Server Badge](https://anaconda.org/bioconda/goalign/badges/installer/conda.svg)](https://anaconda.org/bioconda/goalign) [![Docker hub](https://img.shields.io/docker/pulls/evolbioinfo/goalign)](https://hub.docker.com/r/evolbioinfo/goalign/tags/) [![downloads](https://anaconda.org/bioconda/goalign/badges/downloads.svg)](https://anaconda.org/bioconda/goalign/)
+[![DOI:10.1093/nargab/lqab075](https://zenodo.org/badge/DOI/10.1093/nargab/lqab075.svg)](https://doi.org/10.1093/nargab/lqab075)
 
 ![Goalign Logo](images/logo.png)
 
