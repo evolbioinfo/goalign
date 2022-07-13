@@ -206,11 +206,22 @@ cat > expectedpos <<EOF
 26
 EOF
 
-${GOALIGN} clean sites -i input -c 0.5 --positions pos> result 2>log
+
+cat > expectedrmpos <<EOF
+0
+1
+2
+27
+28
+29
+EOF
+
+${GOALIGN} clean sites -i input -c 0.5 --positions pos --positions-rm rmpos > result 2>log
 diff -q -b result expected
 diff -q -b log expectedlog
 diff -q -b pos expectedpos
-rm -f expected result log expectedlog expectedpos pos
+diff -q -b rmpos expectedrmpos
+rm -f expected result log expectedlog expectedpos expectedrmpos pos rmpos 
 
 echo "->goalign clean sites --ends --char MAJ"
 cat > input <<EOF
@@ -292,11 +303,19 @@ cat > expectedpos <<EOF
 9
 EOF
 
-${GOALIGN} clean sites -i input -c 0.6 --char MAJ --positions pos> result 2>log
+cat > expectedrmpos <<EOF
+0
+1
+3
+10
+EOF
+
+${GOALIGN} clean sites -i input -c 0.6 --char MAJ --positions pos --positions-rm rmpos > result 2>log
 diff -q -b result expected
 diff -q -b log expectedlog
 diff -q -b pos expectedpos
-rm -f expected result log expectedlog pos expectedpos
+diff -q -b rmpos expectedrmpos
+rm -f expected result log expectedlog pos expectedpos rmpos expectedrmpos
 
 ${GOALIGN} clean sites -i input -c 0.6 --char MAJ --ends > result 2>log
 diff -q -b result expected2

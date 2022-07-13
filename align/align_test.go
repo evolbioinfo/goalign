@@ -80,7 +80,7 @@ func TestCleanNames(t *testing.T) {
 
 func TestRemoveOneGapSite(t *testing.T) {
 	var start, end int
-	var kept []int
+	var kept, rm []int
 	var l int
 	a, err := RandomAlignment(AMINOACIDS, 300, 300)
 	if err != nil {
@@ -97,7 +97,7 @@ func TestRemoveOneGapSite(t *testing.T) {
 		return false
 	})
 
-	start, end, kept = a.RemoveGapSites(0.0, false)
+	start, end, kept, rm = a.RemoveGapSites(0.0, false)
 
 	if start != l {
 		t.Errorf("We should have removed all positions from start: %d %d", start, l)
@@ -114,6 +114,9 @@ func TestRemoveOneGapSite(t *testing.T) {
 	if len(kept) != 0 {
 		t.Error("We should have removed all positions in kept slice")
 	}
+	if len(rm) != 300 {
+		t.Error("We should have removed all positions in rm slice")
+	}
 
 	a.IterateChar(func(name string, sequence []uint8) bool {
 		if len(sequence) != 0 {
@@ -126,7 +129,7 @@ func TestRemoveOneGapSite(t *testing.T) {
 
 func TestRemoveAllGapSites(t *testing.T) {
 	var start, end int
-	var kept []int
+	var kept, rm []int
 
 	a, err := RandomAlignment(AMINOACIDS, 300, 300)
 	if err != nil {
@@ -154,7 +157,7 @@ func TestRemoveAllGapSites(t *testing.T) {
 	/* Remove position 20 */
 	backupseq = append(backupseq[:20], backupseq[21:]...)
 
-	start, end, kept = a.RemoveGapSites(1.0, false)
+	start, end, kept, rm = a.RemoveGapSites(1.0, false)
 
 	if start != 0 {
 		t.Errorf("We should have removed 0 positions from start: %d", start)
@@ -170,6 +173,10 @@ func TestRemoveAllGapSites(t *testing.T) {
 
 	if len(kept) != 299 {
 		t.Errorf("We should have removed only one position in kept slice (%d remaining)", len(kept))
+	}
+
+	if len(rm) != 1 {
+		t.Errorf("We should have removed only one position in rm slice (%d removed)", len(rm))
 	}
 
 	a.IterateChar(func(name string, sequence []uint8) bool {
@@ -194,7 +201,7 @@ func TestRemoveAllGapSites(t *testing.T) {
 
 func TestRemoveOneGapSiteEnds(t *testing.T) {
 	var l, start, end int
-	var kept []int
+	var kept, rm []int
 
 	a, err := RandomAlignment(AMINOACIDS, 300, 300)
 	if err != nil {
@@ -211,7 +218,7 @@ func TestRemoveOneGapSiteEnds(t *testing.T) {
 		return false
 	})
 
-	start, end, kept = a.RemoveGapSites(0.0, true)
+	start, end, kept, rm = a.RemoveGapSites(0.0, true)
 
 	if start != l {
 		t.Errorf("We should have removed all positions from start: %d %d", start, l)
@@ -229,6 +236,10 @@ func TestRemoveOneGapSiteEnds(t *testing.T) {
 		t.Error("We should have removed all positions in kept slice")
 	}
 
+	if len(rm) != 300 {
+		t.Error("We should have removed all positions in rm slice")
+	}
+
 	a.IterateChar(func(name string, sequence []uint8) bool {
 		if len(sequence) != 0 {
 			t.Error(fmt.Sprintf("Sequence length after removing gaps should be 0 and is : %d", len(sequence)))
@@ -239,7 +250,7 @@ func TestRemoveOneGapSiteEnds(t *testing.T) {
 
 func TestRemoveAllGapSitesEnds(t *testing.T) {
 	var start, end int
-	var kept []int
+	var kept, rm []int
 
 	a, err := RandomAlignment(AMINOACIDS, 300, 300)
 	if err != nil {
@@ -258,7 +269,7 @@ func TestRemoveAllGapSitesEnds(t *testing.T) {
 		return false
 	})
 
-	start, end, kept = a.RemoveGapSites(1.0, true)
+	start, end, kept, rm = a.RemoveGapSites(1.0, true)
 
 	if start != 0 {
 		t.Errorf("We should have removed 0 positions from start: %d", start)
@@ -276,6 +287,10 @@ func TestRemoveAllGapSitesEnds(t *testing.T) {
 		t.Error("We should not have removed any position in kept slice")
 	}
 
+	if len(rm) != 0 {
+		t.Error("We should not have removed any position in rm slice")
+	}
+
 	a.IterateChar(func(name string, sequence []uint8) bool {
 		if len(sequence) != 300 {
 			t.Error(fmt.Sprintf("Sequence length after removing gaps should be 299 and is : %d", len(sequence)))
@@ -287,7 +302,7 @@ func TestRemoveAllGapSitesEnds(t *testing.T) {
 
 func TestRemoveGapSitesEnds(t *testing.T) {
 	var start, end int
-	var kept []int
+	var kept, rm []int
 
 	in := NewAlign(UNKNOWN)
 	in.AddSequence("Seq0000", "--GGTCCACTCTTTTGTCTT-TACCTA-G--", "")
@@ -305,7 +320,7 @@ func TestRemoveGapSitesEnds(t *testing.T) {
 	exp.AddSequence("Seq0004", "--GAAGG-CCAAGGT-TCGCCGCC", "")
 	exp.AutoAlphabet()
 
-	start, end, kept = in.RemoveGapSites(0.5, true)
+	start, end, kept, rm = in.RemoveGapSites(0.5, true)
 
 	if start != 3 {
 		t.Errorf("We should have removed 3 positions from start: %d", start)
@@ -317,6 +332,10 @@ func TestRemoveGapSitesEnds(t *testing.T) {
 
 	if len(kept) != 24 {
 		t.Errorf("We should have kept 24 positions in kept slice, not %d", len(kept))
+	}
+
+	if len(rm) != 7 {
+		t.Errorf("We should have removed 7 positions in rm slice, not %d", len(rm))
 	}
 
 	if !exp.Identical(in) {
