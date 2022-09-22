@@ -81,45 +81,10 @@ The `goalign` executable should be located in the `$GOPATH/bin` folder.
 
 ## Auto completion
 
-### Bash
-* Install bash-completion:
+goalign uses [cobra](https://github.com/spf13/cobra), and therefore proposes a command to generate auto completion scripts:
 ```
-# MacOS brew
-brew install bash-completion
-
-# MacOS port (do not forget to change
-# the path to bash command in terminal
-# preferences to /opt/local/bin/bash -l)
-sudo port install bash-completion
-
-# Centos
-yum install bash-completion -y
-# Ubuntu
-apt-get install bash-completion
+gotree completion -h
 ```
-
-* Activate goalign bash completion
-```
-# Once
-source <(goalign completion bash)
-# Permanently
-mkdir ~/.goalign
-goalign completion bash > ~/.goalign/completion.bash.inc
-printf "
-# goalign shell completion
-source '$HOME/.goalign/completion.bash.inc'
-" >> $HOME/.bashrc
-```
-
-### Zsh (not tested)
-
-```
-# Once
-source <(goalign completion zsh)
-# Permanently
-goalign completion zsh > "${fpath[1]}/_goalign"
-```
-
 
 ## Usage
 You may go to the [doc](docs/index.md) for a more detailed documentation of the commands.
