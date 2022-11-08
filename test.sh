@@ -3991,6 +3991,10 @@ EOF
 ${GOALIGN} mask -i input -o result -s 0 -l 2 -p
 diff -q -b expected result
 
+${GOALIGN} mask -i input -o result --pos 0,1 -p
+diff -q -b expected result
+
+
 cat > expected <<EOF
    10   20
 Seq0000  PHGVHCVSXX XXEKCPNFFC
@@ -4006,6 +4010,9 @@ Seq0009  PGTTAYLLXX XXNWFCSEKN
 EOF
 
 ${GOALIGN} mask -i input -o result -s 8 -l 4 -p
+diff -q -b expected result
+
+${GOALIGN} mask -i input -o result --pos 8,9,10,11 -p
 diff -q -b expected result
 
 cat > expected <<EOF
@@ -4024,6 +4031,10 @@ EOF
 
 ${GOALIGN} mask -i input -o result -s 18 -l 2 -p
 diff -q -b expected result
+
+${GOALIGN} mask -i input -o result --pos 18,19 -p
+diff -q -b expected result
+
 
 cat > expected <<EOF
    10   20
@@ -4090,7 +4101,10 @@ EOF
 
 ${GOALIGN} mask -i input -o result -s 0 -l 2 -p
 diff -q -b expected result
+${GOALIGN} mask -i input -o result --pos 0,1 -p
+diff -q -b expected result
 rm -f input expected result
+
 
 echo "->goalign mask / nucl --ref-seq"
 cat > input <<EOF
@@ -4121,9 +4135,26 @@ Seq0008  GGTTGAAGNN NNNNNNNNCT
 Seq0009  GTAAAGGGNN NNNNNNNNTG
 EOF
 
+cat > expected2 <<EOF
+   10   20
+Seq0000  GATTAATTNN NNNNNGGNCA
+Seq0001  GAATCTGANN NNNNNACNCT
+Seq0002  TTAAGT--NN NNNNN--NTG
+Seq0003  GAGAGGACNN NNNNNTANTT
+Seq0004  TTTAAACANN NNNNNATNGA
+Seq0005  TGTCGGACNN NNNNNTTNAG
+Seq0006  TACAACGGNN NNNNNCANCG
+Seq0007  GTGGAGAGNN NNNNNTTNCC
+Seq0008  GGTTGAAGNN NNNNNGANCT
+Seq0009  GTAAAGGGNN NNNNNATNTG
+EOF
+
+
 ${GOALIGN} mask -i input -o result -s 6 -l 8 --ref-seq Seq0002 -p
 diff -q -b expected result
-rm -f input expected result
+${GOALIGN} mask -i input -o result --pos 6,7,8,9,10,11,12,13 --ref-seq Seq0002 -p
+diff -q -b expected2 result
+rm -f input expected expected2 result
 
 echo "->goalign mask --unique"
 cat > input <<EOF
@@ -4292,12 +4323,23 @@ EOF
 
 $GOALIGN mask -i input --start 9 --length 1 -o result
 diff -q -b expected1 result
+$GOALIGN mask -i input --pos 9 -o result
+diff -q -b expected1 result
 $GOALIGN mask -i input --no-gaps --ref-seq "Seq0000" --replace "MAJ" --start 9 --length 1 -o result
 diff -q -b expected2 result
+$GOALIGN mask -i input --no-gaps --ref-seq "Seq0000" --replace "MAJ" --pos 9 -o result
+diff -q -b expected2 result
+
 $GOALIGN mask -i input --no-gaps --no-ref --ref-seq "Seq0000" --replace "MAJ" --start 9 --length 1 -o result
 diff -q -b expected2 result
+$GOALIGN mask -i input --no-gaps --no-ref --ref-seq "Seq0000" --replace "MAJ" --pos 9 -o result
+diff -q -b expected2 result
+
 $GOALIGN mask -i input --no-ref --ref-seq "Seq0000" --start 9 --length 1 -o result
 diff -q -b expected3 result
+$GOALIGN mask -i input --no-ref --ref-seq "Seq0000" --pos 9 -o result
+diff -q -b expected3 result
+
 rm -f input result expected1 expected2 expected3
 
 echo "->goalign replace"
