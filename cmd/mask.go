@@ -1,6 +1,9 @@
 package cmd
 
 import (
+	"strconv"
+	"strings"
+
 	"github.com/evolbioinfo/goalign/align"
 	"github.com/evolbioinfo/goalign/io"
 	"github.com/evolbioinfo/goalign/io/utils"
@@ -13,6 +16,7 @@ var masklength int
 var maskatmost int
 var maskunique bool
 var maskrefseq string
+var maskpos string
 var maskreplace string
 var masknogap bool
 var masknoref bool
@@ -35,6 +39,13 @@ For example:
 goalign mask -p -i al.phy -s 9 -l 10
 
 This will replace 10 positions with N|X from the 10th position.
+
+if --pos is specified, it replaces -s -l, and mask specified positions. 
+
+For example: 
+goalign mask --pos 0,1,2,3 -i al.fa
+
+This will mask positions 0, 1, 2 and 3 with N|X.
 
 If --no-gaps is specified, then does not replace gaps.
 If --no-ref is specified, then does not replace the character if it is the same as the reference sequences (only with --ref-seq).
@@ -89,16 +100,27 @@ The output format is the same than input format.
 					io.LogError(err)
 					return
 				}
-			} else {
-				start := maskstart
-				length := masklength
-				if refseq {
-					if start, length, err = al.RefCoordinates(maskrefseq, start, length); err != nil {
+			} else if maskpos != "" {
+				var positions []string
+				var p string
+				var posint int64
+				positions = strings.Split(maskpos, ",")
+				for _, p = range positions {
+					if posint, err = strconv.ParseInt(p, 10, 32); err != nil {
+						io.LogError(err)
+						return
+					}
+					start := int(posint)
+					length := 1
+					if err = mask(al, start, length, refseq, maskrefseq, maskreplace, masknogap, masknoref); err != nil {
 						io.LogError(err)
 						return
 					}
 				}
-				if err = al.Mask(maskrefseq, start, length, maskreplace, masknogap, masknoref); err != nil {
+			} else {
+				start := maskstart
+				length := masklength
+				if err = mask(al, start, length, refseq, maskrefseq, maskreplace, masknogap, masknoref); err != nil {
 					io.LogError(err)
 					return
 				}
@@ -111,9 +133,24 @@ The output format is the same than input format.
 	},
 }
 
+func mask(al align.Alignment, start, length int, refseq bool, maskrefseq, maskreplace string, masknogap, masknoref bool) (err error) {
+	if refseq {
+		if start, length, err = al.RefCoordinates(maskrefseq, start, length); err != nil {
+			io.LogError(err)
+			return
+		}
+	}
+	if err = al.Mask(maskrefseq, start, length, maskreplace, masknogap, masknoref); err != nil {
+		io.LogError(err)
+		return
+	}
+	return
+}
+
 func init() {
 	RootCmd.AddCommand(maskCmd)
 	maskCmd.PersistentFlags().StringVarP(&maskout, "output", "o", "stdout", "Alignment output file")
+	maskCmd.PersistentFlags().StringVar(&maskpos, "pos", "", "Positions to mask, coma separated, without space (0-based)")
 	maskCmd.PersistentFlags().IntVarP(&maskstart, "start", "s", 0, "Start position (0-based inclusive)")
 	maskCmd.PersistentFlags().IntVarP(&masklength, "length", "l", 10, "Length of the sub alignment")
 	maskCmd.PersistentFlags().StringVar(&maskrefseq, "ref-seq", "none", "Coordinates are considered wrt. to the given reference sequence (with --unique, it masks unique characters that are different from the reference sequence)")
