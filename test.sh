@@ -2353,9 +2353,18 @@ B	8
 C	6
 EOF
 
-${GOALIGN} stats mutations -i input --ref-sequence refseq > result
+cat > expected2 <<EOF
+A	C0A,C1A,C2A,C4G,C5A,C7G,C8A,C9-,C10G,C11A,C14-
+B	C0-,C1-,C2A,C3T,C4-,C5T,C6T,C7-,C8T,C9-,C10T,C11T,C12T,C13-,C14-
+C	C0-,C1-,C3T,C4T,C5-,C6T,C7T,C8T,C9-,C10-,C11T,C14-
+EOF
+
+${GOALIGN} stats mutations  -i input --ref-sequence refseq > result
 diff -q -b result expected
-rm -f expected result refseq
+
+${GOALIGN} stats mutations list -i input --ref-sequence refseq > result
+diff -q -b result expected2
+rm -f expected expected2 result refseq
 
 cat > input <<EOF
 >A
@@ -2372,9 +2381,18 @@ B	8
 C	6
 EOF
 
+cat > expected2 <<EOF
+B	C0-,C1-,C2A,C3T,C4-,C5T,C6T,C7-,C8T,C9-,C10T,C11T,C12T,C13-,C14-
+C	C0-,C1-,C3T,C4T,C5-,C6T,C7T,C8T,C9-,C10-,C11T,C14-
+EOF
+
 ${GOALIGN} stats mutations -i input --ref-sequence A > result
 diff -q -b result expected
-rm -f input expected result refseq
+
+${GOALIGN} stats mutations list -i input --ref-sequence A > result
+diff -q -b result expected2
+rm -f input expected expected2 result refseq
+
 
 echo "->goalign stats gaps"
 cat > input <<EOF

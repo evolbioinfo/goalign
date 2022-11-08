@@ -1,16 +1,19 @@
-// +build ignore
+//go:build ignore
 
 package cmd
 
 import (
 	"fmt"
-	"os"
 
 	"github.com/evolbioinfo/goalign/align"
-	"github.com/evolbioinfo/goalign/distance"
+	"github.com/evolbioinfo/goalign/distance/dna"
 	"github.com/evolbioinfo/goalign/io"
+	"github.com/evolbioinfo/goalign/io/utils"
 	"github.com/spf13/cobra"
 )
+
+var weightbootOutput string
+var weightbootnb int
 
 // weightbootCmd represents the weightboot command
 var weightbootCmd = &cobra.Command{
@@ -24,29 +27,29 @@ Weights follow a Dirichlet distribtion D(n;1,...,1)
 
 `,
 	RunE: func(cmd *cobra.Command, args []string) (err error) {
-		var f *os.File
-		var aligns align.AlignChannel
+		var f utils.StringWriterCloser
+		var alignChan *align.AlignChannel
 
-		if aligns, err = readalign(infile); err != nil {
+		if alignChan, err = readalign(infile); err != nil {
 			io.LogError(err)
 			return
 		}
-		al, _ := <-aligns.Achan
-		if aligns.Err != nil {
-			err = aligns.Err
+		al, _ := <-alignChan.Achan
+		if alignChan.Err != nil {
+			err = alignChan.Err
 			io.LogError(err)
 			return
 		}
 
-		if f, err = openWriteFile(weightbootOutput); err != nil {
+		if f, err = utils.OpenWriteFile(weightbootOutput); err != nil {
 			io.LogError(err)
 			return
 		}
-		defer closeWriteFile(f, weightbootOutput)
+		defer utils.CloseWriteFile(f, weightbootOutput)
 
 		for i := 0; i < weightbootnb; i++ {
 			var weights []float64 = nil
-			weights = distance.BuildWeightsDirichlet(al)
+			weights = dna.BuildWeightsDirichlet(al)
 			for i, w := range weights {
 				if i > 0 {
 					f.WriteString("\t")

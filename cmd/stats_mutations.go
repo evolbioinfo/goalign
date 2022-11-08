@@ -119,8 +119,8 @@ var statMutationsCmd = &cobra.Command{
 
 func init() {
 	statMutationsCmd.PersistentFlags().StringVar(&statMutationsRef, "ref-sequence", "none", "Reference sequence to compare each sequence with.")
-	statMutationsCmd.PersistentFlags().BoolVar(&statMutationsUnique, "unique", false, "Count, in each sequence, the number of mutations/characters that are unique in a site")
-	statMutationsCmd.PersistentFlags().StringVar(&statMutationsProfile, "count-profile", "none", "A profile to compare the alignment with, and to compute statistics faster (only with --unique)")
+	statMutationsCmd.Flags().BoolVar(&statMutationsUnique, "unique", false, "Count, in each sequence, the number of mutations/characters that are unique in a site")
+	statMutationsCmd.Flags().StringVar(&statMutationsProfile, "count-profile", "none", "A profile to compare the alignment with, and to compute statistics faster (only with --unique)")
 
 	statsCmd.AddCommand(statMutationsCmd)
 }

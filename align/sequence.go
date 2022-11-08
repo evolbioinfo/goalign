@@ -34,6 +34,13 @@ type Sequence interface {
 	// It does not take into account 'N' and '-' in sequences as mutations compared to ref
 	/// sequence (ref sequence can have a '-' or a 'N')
 	NumMutationsComparedToReferenceSequence(alphabet int, seq Sequence) (nummutations int, err error)
+	// returns the list ofdifferences between the reference sequence and each sequence of the alignment
+	// Counts only non N sites in each sequences (may be a gap or a N in the reference sequence though)
+	// If a character is ambigous (IUPAC notation), then it is counted as a mutation only if it is incompatible with
+	// the reference character.
+	//
+	// If lengths are different, returns an error
+	ListMutationsComparedToReferenceSequence(alphabet int, refseq Sequence) (mutations []Mutation, err error)
 
 	Clone() Sequence
 }
@@ -201,7 +208,7 @@ func (s *seq) DetectAlphabet() int {
 	}
 }
 
-//NumGaps returns the number of Gaps on the given sequence
+// NumGaps returns the number of Gaps on the given sequence
 func (s *seq) NumGaps() (numgaps int) {
 	numgaps = 0
 	for _, c := range s.sequence {
@@ -212,7 +219,7 @@ func (s *seq) NumGaps() (numgaps int) {
 	return
 }
 
-//NumGapsOpenning returns the number of Gaps on the given sequence
+// NumGapsOpenning returns the number of Gaps on the given sequence
 func (s *seq) NumGapsOpenning() (numgaps int) {
 	numgaps = 0
 	var prevChar uint8 = '>'
@@ -296,6 +303,55 @@ func (s *seq) NumMutationsComparedToReferenceSequence(alphabet int, refseq Seque
 		}
 		if s.SequenceChar()[i] != GAP && s.SequenceChar()[i] != all && !eq {
 			nummutations++
+		}
+	}
+	return
+}
+
+// returns the list ofdifferences between the reference sequence and each sequence of the alignment
+// Counts only non N sites in each sequences (may be a gap or a N in the reference sequence though)
+// If a character is ambigous (IUPAC notation), then it is counted as a mutation only if it is incompatible with
+// the reference character.
+//
+// If lengths are different, returns an error
+func (s *seq) ListMutationsComparedToReferenceSequence(alphabet int, refseq Sequence) (mutations []Mutation, err error) {
+	var refseqCode []uint8
+	var refseqchar []uint8
+	var nt uint8
+
+	if refseq.Length() != s.Length() {
+		err = fmt.Errorf("reference sequence and sequence do not have same length (%d,%d), cannot compute a number of mutation", refseq.Length(), s.Length())
+		return
+	}
+
+	refseqchar = refseq.SequenceChar()
+	all := uint8('.')
+	if alphabet == NUCLEOTIDS {
+		refseqCode = make([]uint8, s.Length())
+		for i := 0; i < s.Length(); i++ {
+			if refseqCode[i], err = Nt2IndexIUPAC(refseqchar[i]); err != nil {
+				return
+			}
+		}
+		all = ALL_NUCLE
+	} else {
+		all = ALL_AMINO
+	}
+
+	for i := 0; i < s.Length(); i++ {
+		eq := true
+		if alphabet == NUCLEOTIDS {
+			if nt, err = Nt2IndexIUPAC(s.sequence[i]); err != nil {
+				return
+			}
+			if eq, err = EqualOrCompatible(nt, refseqCode[i]); err != nil {
+				return
+			}
+		} else {
+			eq = (s.sequence[i] == refseqchar[i])
+		}
+		if s.sequence[i] != all && !eq {
+			mutations = append(mutations, Mutation{Ref: refseqchar[i], Pos: i, Alt: s.sequence[i]})
 		}
 	}
 	return
@@ -462,12 +518,13 @@ func EqualOrCompatible(nt1, nt2 uint8) (ok bool, err error) {
 //
 // - if the two nucleotides are identical : returns 0.0
 // - if the two nucleotides are different:
-//      1) If none are ambigous: returns 1.0
-//      2) Otherwise, returns 1-Card(I)/Card(U), I being the
-//         intersection of the sets of possible
-//         nucleotides of nt1 and nt2, and U being
-//         the union of the sets of possible nucleotides
-//         of nt1 and nt2.
+//  1. If none are ambigous: returns 1.0
+//  2. Otherwise, returns 1-Card(I)/Card(U), I being the
+//     intersection of the sets of possible
+//     nucleotides of nt1 and nt2, and U being
+//     the union of the sets of possible nucleotides
+//     of nt1 and nt2.
+//
 // For example, if we want to compare Y and S :
 // Y = {C | T} and S = {G | C}. Card(I)=1, Card(U)=3, so diff=2/3
 //
