@@ -26,6 +26,9 @@ var extractrefseq string
 var extractcoordfile string
 var extractoutput string
 var extracttranslate int
+var extractgff bool
+var extractsuffix string
+var extractprefix string
 
 // extractCmd represents the extract command
 var extractCmd = &cobra.Command{
@@ -99,9 +102,16 @@ var extractCmd = &cobra.Command{
 			return
 		}
 
-		if subcoords, err = parseCoordinateFile(extractcoordfile); err != nil {
-			io.LogError(err)
-			return
+		if extractgff {
+			if subcoords, err = parseGFFFile(extractcoordfile); err != nil {
+				io.LogError(err)
+				return
+			}
+		} else {
+			if subcoords, err = parseCoordinateFile(extractcoordfile); err != nil {
+				io.LogError(err)
+				return
+			}
 		}
 
 		refseq := cmd.Flags().Changed("ref-seq")
@@ -114,7 +124,6 @@ var extractCmd = &cobra.Command{
 		}
 
 		for _, subseq := range subcoords {
-
 			subalign = nil
 			for i, s := range subseq.starts {
 				e := subseq.ends[i]
@@ -153,7 +162,7 @@ var extractCmd = &cobra.Command{
 					return
 				}
 			}
-			if f, err = utils.OpenWriteFile(fmt.Sprintf("%s%c%s%s", extractoutput, os.PathSeparator, subseq.name, alignExtension())); err != nil {
+			if f, err = utils.OpenWriteFile(fmt.Sprintf("%s%c%s%s%s%s", extractoutput, os.PathSeparator, extractprefix, subseq.name, extractsuffix, alignExtension())); err != nil {
 				io.LogError(err)
 				return
 			}
@@ -171,6 +180,10 @@ func init() {
 	extractCmd.PersistentFlags().IntVar(&extracttranslate, "translate", -1, "Wether the extracted sequence will be translated (only if input alignment is nucleotide). <0: No translation, 0: Std code, 1: Vertebrate mito, 2: Invertebrate mito")
 	extractCmd.PersistentFlags().StringVarP(&extractoutput, "output", "o", ".", "Output folder")
 	extractCmd.PersistentFlags().StringVar(&extractcoordfile, "coordinates", "none", "File with all coordinates of the sequences to extract")
+	extractCmd.PersistentFlags().BoolVar(&extractgff, "gff", false, "Wether the coordinate file specified with --coordinates is in gff format")
+	extractCmd.PersistentFlags().StringVar(&extractprefix, "prefix", "", "The prefix of the generated files (before gene name)")
+	extractCmd.PersistentFlags().StringVar(&extractsuffix, "suffix", "", "The suffix of the generated files (before extension)")
+
 }
 
 func parseCoordinateFile(file string) (coords []extractSubSequence, err error) {
@@ -230,6 +243,128 @@ func parseCoordinateFile(file string) (coords []extractSubSequence, err error) {
 		}
 		coords = append(coords, subseq)
 		l, e = utils.Readln(r)
+	}
+
+	return
+}
+
+func parseGFFFile(file string) (coords []extractSubSequence, err error) {
+	var f *os.File
+	var r *bufio.Reader
+	var gr *gzip.Reader
+	var ok bool
+	var strand bool
+	var start, end int
+	var curgene *extractSubSequence
+	// Name of the gene to the gene coords
+	var coordsMap map[string]*extractSubSequence
+	// Mapping between gene ids and gene names
+	var geneID2Name map[string]string
+
+	coordsMap = make(map[string]*extractSubSequence)
+	geneID2Name = make(map[string]string)
+
+	if file == "stdin" || file == "-" {
+		f = os.Stdin
+	} else {
+		if f, err = os.Open(file); err != nil {
+			return
+		}
+	}
+
+	if strings.HasSuffix(file, ".gz") {
+		if gr, err = gzip.NewReader(f); err != nil {
+			return
+		}
+		r = bufio.NewReader(gr)
+	} else {
+		r = bufio.NewReader(f)
+	}
+	l, e := utils.Readln(r)
+
+	for e == nil {
+		cols := strings.Split(l, "\t")
+		if cols == nil || len(cols) < 9 {
+			err = errors.New("bad format from gff file: There should be 9 columns")
+			return
+		}
+
+		infos := strings.Split(cols[8], ";")
+		strand = cols[6] == "+"
+		if start, err = strconv.Atoi(cols[3]); err != nil {
+			err = fmt.Errorf("cannot convert start to int")
+			return
+		}
+		if end, err = strconv.Atoi(cols[4]); err != nil {
+			err = fmt.Errorf("cannot convert end to int")
+			return
+		}
+
+		if !strand {
+			err = fmt.Errorf("goalign extract only supports + strand so far")
+			return
+		}
+
+		// We extract gene id and name from gene line
+		if cols[2] == "gene" {
+			gname := ""
+			gid := ""
+			for _, info := range infos {
+				cols := strings.Split(info, "=")
+				if len(cols) != 2 {
+					err = fmt.Errorf("info field is malformed, a field is not in the form key=value")
+					return
+				}
+				if cols[0] == "ID" {
+					gid = cols[1]
+				}
+				if cols[0] == "Name" {
+					gname = cols[1]
+				}
+			}
+			geneID2Name[gid] = gname
+		}
+
+		// Now we want only want CDS lines
+		if cols[2] == "CDS" {
+
+			parentGeneID := ""
+			parentGeneName := ""
+			for _, info := range infos {
+				cols := strings.Split(info, "=")
+				if len(cols) != 2 {
+					err = fmt.Errorf("info field is malformed, a field is not in the form key=value")
+					return
+				}
+				if cols[0] == "Parent" {
+					parentGeneID = cols[1]
+				}
+			}
+			if parentGeneID == "" {
+				err = fmt.Errorf("cds has no parent gene")
+				return
+			}
+			if parentGeneName, ok = geneID2Name[parentGeneID]; !ok {
+				err = fmt.Errorf("cds parent gene id has no name")
+				return
+			}
+
+			if curgene, ok = coordsMap[parentGeneName]; !ok {
+				curgene = &extractSubSequence{
+					starts: make([]int, 0),
+					ends:   make([]int, 0),
+					name:   parentGeneName,
+				}
+				coordsMap[parentGeneName] = curgene
+			}
+			curgene.starts = append(curgene.starts, start-1)
+			curgene.ends = append(curgene.ends, end)
+		}
+		l, e = utils.Readln(r)
+	}
+
+	for _, coord := range coordsMap {
+		coords = append(coords, *coord)
 	}
 
 	return
