@@ -5139,7 +5139,7 @@ EOF
 
 ${GOALIGN} stats --per-sequences -i input --count-profile prof  > result
 diff -q -b expected result
-rm -f input expected result 
+rm -f input expected result prof
 
 echo "->goalign stats maxchar"
 cat > input <<EOF
@@ -5369,7 +5369,7 @@ EOF
 
 ${GOALIGN} subsites -i input --sitefile posfile -o result
 diff -q -b exp result
-rm -f input exp result 
+rm -f input exp result posfile
 
 
 echo "->goalign subsite --informative"
