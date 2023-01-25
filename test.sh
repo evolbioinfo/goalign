@@ -2335,16 +2335,16 @@ rm -f expected result
 echo "->goalign stats mutations"
 cat > input <<EOF
 >A
-AAACGACGA-GACC-
+AAACGA---CGA-GACC-C
 >B
---AT-TT-T-TTT--
+--AT-T---T-T-TTT--C
 >C
---CTT-TTT--TCC-
+--CTT----TTT--TCC-C
 EOF
 
 cat > refseq <<EOF
 >ref
-CCCCCCCCCCCCCCC
+CCCCCC---CCCCCCCC-C
 EOF
 
 cat > expected <<EOF
@@ -2354,9 +2354,15 @@ C	6
 EOF
 
 cat > expected2 <<EOF
-A	C0A,C1A,C2A,C4G,C5A,C7G,C8A,C9-,C10G,C11A,C14-
-B	C0-,C1-,C2A,C3T,C4-,C5T,C6T,C7-,C8T,C9-,C10T,C11T,C12T,C13-,C14-
-C	C0-,C1-,C3T,C4T,C5-,C6T,C7T,C8T,C9-,C10-,C11T,C14-
+A	C0A,C1A,C2A,C4G,C5A,C7G,C8A,C9-,C10G,C11A
+B	C0-,C1-,C2A,C3T,C4-,C5T,C6T,C7-,C8T,C9-,C10T,C11T,C12T,C13-
+C	C0-,C1-,C3T,C4T,C5-,C6T,C7T,C8T,C9-,C10-,C11T
+EOF
+
+cat > expected3 <<EOF
+A	P0K,P1R,P2R,P3/
+B	P0/,P1/,P2/,P3/,P4/
+C	P0/,P1/,P2F,P3/
 EOF
 
 ${GOALIGN} stats mutations  -i input --ref-sequence refseq > result
@@ -2364,7 +2370,11 @@ diff -q -b result expected
 
 ${GOALIGN} stats mutations list -i input --ref-sequence refseq > result
 diff -q -b result expected2
-rm -f expected expected2 result refseq
+
+${GOALIGN} stats mutations list -i input --ref-sequence refseq --aa > result
+diff -q -b result expected3
+
+rm -f expected expected2 expected3 result refseq
 
 cat > input <<EOF
 >A
