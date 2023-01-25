@@ -63,6 +63,14 @@ Different sub-commands:
   - unique: # mutations that are unique in their column, for each sequence of the alignment
   - new: # mutations that are new in each sequence compared to the profile
   - both: # mutations that are unique in each sequence in the alignment and that are new compared the profile.
+	It does not take into account 'N' as mutations compared to a reference sequence.
+  
+* `goalign stats mutations list` : Print mutation list of each alignment sequence compared to the given reference sequence. Options:
+	- --ref-sequence: it will try to extract the given sequence from the alignment. If none exist, 
+	it will try to open a fasta file with the given name to take the first sequence as a reference. If a character is ambigous 
+	(IUPAC notation) in a nucleotide sequence, then it is counted as a mutation only if it is incompatible with the reference character.
+	- --aa : takes reference sequence codon by codon to list mutations in the aligned sequences. In case of an insertion or a deletion in the target sequence: if length%3!=0 (without gaps): it may be a frameshift, indicated by a '/'. It is better to use this option rather than translating the alignment and then listing mutations in aa, because the insertions/deletions may not be appropriately listed if the gap is inside a reference codon for example.
+
 
 * `goalign stats nalign`: Prints the number of alignments in the input file (Phylip);
 * `goalign stats nseq`: Prints the number of sequences in the input alignment;
