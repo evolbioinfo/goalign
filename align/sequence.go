@@ -433,9 +433,12 @@ func (s *seq) listMutationsComparedToReferenceSequenceAA(alphabet int, refseq Se
 	aaidx := 0
 	for refcodonidx[2] < s.Length() {
 		var refaa uint8
+		var allgaps bool = false
+
 		if refseqchar[refcodonidx[0]] == GAP && refseqchar[refcodonidx[1]] == GAP && refseqchar[refcodonidx[2]] == GAP {
 			refaa = '-'
 			aaidx--
+			allgaps = true
 		} else {
 			// We find the three reference positions without gap
 			for refcodonidx[2] < s.Length() && refseqchar[refcodonidx[0]] == GAP {
@@ -471,7 +474,9 @@ func (s *seq) listMutationsComparedToReferenceSequenceAA(alphabet int, refseq Se
 
 		// Deletion
 		if len(tmpseq) == 0 {
-			mutations = append(mutations, Mutation{Ref: refaa, Pos: aaidx, Alt: []uint8{'-'}})
+			if !allgaps {
+				mutations = append(mutations, Mutation{Ref: refaa, Pos: aaidx, Alt: []uint8{'-'}})
+			}
 		} else if len(tmpseq)%3 != 0 {
 			// Potential frameshift
 			mutations = append(mutations, Mutation{Ref: refaa, Pos: aaidx, Alt: []uint8{'/'}})
