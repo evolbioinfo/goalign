@@ -38,9 +38,12 @@ type Sequence interface {
 	// Counts only non N sites in each sequences (may be a gap or a N in the reference sequence though)
 	// If a character is ambigous (IUPAC notation), then it is counted as a mutation only if it is incompatible with
 	// the reference character.
+	// if aa is true: the sequences are nucleotides and nucleotides are taken codon by codon of the reference sequence
+	// to list mutations. In case of insertion or a deletion in the target sequence: if %3==0: - or aa insert,
+	// otherwise "/" ~frameshift?
 	//
 	// If lengths are different, returns an error
-	ListMutationsComparedToReferenceSequence(alphabet int, refseq Sequence) (mutations []Mutation, err error)
+	ListMutationsComparedToReferenceSequence(alphabet int, refseq Sequence, aa bool) (mutations []Mutation, err error)
 
 	Clone() Sequence
 }
@@ -314,7 +317,14 @@ func (s *seq) NumMutationsComparedToReferenceSequence(alphabet int, refseq Seque
 // the reference character.
 //
 // If lengths are different, returns an error
-func (s *seq) ListMutationsComparedToReferenceSequence(alphabet int, refseq Sequence) (mutations []Mutation, err error) {
+func (s *seq) ListMutationsComparedToReferenceSequence(alphabet int, refseq Sequence, aa bool) (mutations []Mutation, err error) {
+	if aa {
+		return s.listMutationsComparedToReferenceSequenceAA(alphabet, refseq)
+	}
+	return s.listMutationsComparedToReferenceSequence(alphabet, refseq)
+}
+
+func (s *seq) listMutationsComparedToReferenceSequence(alphabet int, refseq Sequence) (mutations []Mutation, err error) {
 	var refseqCode []uint8
 	var refseqchar []uint8
 	var nt uint8
@@ -338,6 +348,8 @@ func (s *seq) ListMutationsComparedToReferenceSequence(alphabet int, refseq Sequ
 		all = ALL_AMINO
 	}
 
+	curinsert := make([]uint8, 0) // buffer of current consecutive insertions in query seq (gaps in ref seq)
+	refi := 0                     // Current index on ref sequence (without gaps)
 	for i := 0; i < s.Length(); i++ {
 		eq := true
 		if alphabet == NUCLEOTIDS {
@@ -350,9 +362,138 @@ func (s *seq) ListMutationsComparedToReferenceSequence(alphabet int, refseq Sequ
 		} else {
 			eq = (s.sequence[i] == refseqchar[i])
 		}
-		if s.sequence[i] != all && !eq {
-			mutations = append(mutations, Mutation{Ref: refseqchar[i], Pos: i, Alt: s.sequence[i]})
+
+		if refseqchar[i] == GAP {
+			if s.sequence[i] != GAP {
+				curinsert = append(curinsert, s.sequence[i])
+			}
+		} else {
+			if len(curinsert) > 0 {
+				mutations = append(mutations, Mutation{Ref: '-', Pos: refi, Alt: curinsert})
+				curinsert = make([]uint8, 0)
+			}
+			if s.sequence[i] != all && !eq {
+				mutations = append(mutations, Mutation{Ref: refseqchar[i], Pos: refi, Alt: []uint8{s.sequence[i]}})
+			}
 		}
+
+		if refseqchar[i] != GAP {
+			refi++
+		}
+	}
+	if len(curinsert) > 0 {
+		mutations = append(mutations, Mutation{Ref: '-', Pos: refi, Alt: curinsert})
+		curinsert = make([]uint8, 0)
+	}
+
+	return
+}
+
+// listMutationsComparedToReferenceSequenceAA takes nucleotides codon by codon of the reference seqence
+// to list mutations. In case of insertion or a deletion in the target sequence: if %3==0: - or aa insert,
+// otherwise "/" ~frameshift?
+func (s *seq) listMutationsComparedToReferenceSequenceAA(alphabet int, refseq Sequence) (mutations []Mutation, err error) {
+	var refseqchar []uint8
+	var code map[string]uint8
+
+	if refseq.Length() != s.Length() {
+		err = fmt.Errorf("reference sequence and sequence do not have same length (%d,%d), cannot compute a number of mutation", refseq.Length(), s.Length())
+		return
+	}
+
+	if alphabet != NUCLEOTIDS {
+		err = fmt.Errorf("alignment must be nucleotidic to work codon by codon")
+		return
+	}
+
+	if code, err = geneticCode(GENETIC_CODE_STANDARD); err != nil {
+		return
+	}
+
+	refseqchar = refseq.SequenceChar()
+
+	refcodonidx := []int{0, 1, 2}
+	// We traverse reference nt 3 by 3
+	//The reference codon may have gaps between nt ,
+	// ex 1:
+	// Ref: AC--GTACGT
+	// Seq: ACTTGTACGT
+	// In that case, the first ref codon is [0,1,4], corresponding to sequence ACTTG in seq
+	// ACTTG % 3 != 0 ==> Frameshift?
+	// ex 2:
+	// Ref: AC---GTACGT
+	// Seq: ACTTTGTACGT
+	// ref codon: [0,1,5]
+	// seq      : ACTTTG : Insertion - OK
+	// ex 3:
+	// Ref: ACGTACGT
+	// Seq: A--TACGT
+	// ref codon: [0,1,2]
+	// ses      : A--: Deletion: not ok : Frameshift?
+	aaidx := 0
+	for refcodonidx[2] < s.Length() {
+		var refaa uint8
+		if refseqchar[refcodonidx[0]] == GAP && refseqchar[refcodonidx[1]] == GAP && refseqchar[refcodonidx[2]] == GAP {
+			refaa = '-'
+			aaidx--
+		} else {
+			// We find the three reference positions without gap
+			for refcodonidx[2] < s.Length() && refseqchar[refcodonidx[0]] == GAP {
+				refcodonidx[0]++
+				refcodonidx[1]++
+				refcodonidx[2]++
+			}
+			if refcodonidx[2] >= s.Length() {
+				break
+			}
+			for refcodonidx[2] < s.Length() && refseqchar[refcodonidx[1]] == GAP {
+				refcodonidx[1]++
+				refcodonidx[2]++
+			}
+			if refcodonidx[2] >= s.Length() {
+				break
+			}
+			for refcodonidx[2] < s.Length() && refseqchar[refcodonidx[2]] == GAP {
+				refcodonidx[2]++
+			}
+			if refcodonidx[2] >= s.Length() {
+				break
+			}
+			refaa = translateCodon(refseqchar[refcodonidx[0]], refseqchar[refcodonidx[1]], refseqchar[refcodonidx[2]], code)
+		}
+		// We remove the gaps from the compared sequence corresponding to the reference codon
+		tmpseq := make([]uint8, 0)
+		for si := refcodonidx[0]; si <= refcodonidx[2]; si++ {
+			if s.sequence[si] != GAP {
+				tmpseq = append(tmpseq, s.sequence[si])
+			}
+		}
+
+		// Deletion
+		if len(tmpseq) == 0 {
+			mutations = append(mutations, Mutation{Ref: refaa, Pos: aaidx, Alt: []uint8{'-'}})
+		} else if len(tmpseq)%3 != 0 {
+			// Potential frameshift
+			mutations = append(mutations, Mutation{Ref: refaa, Pos: aaidx, Alt: []uint8{'/'}})
+		} else {
+			// Mutations + potentiel Insertions
+			// We find all corresponding codons of the target sequence, between refcodonidx[0] and refcodonidx[2]
+			curinsert := make([]uint8, 0) // buffer of current consecutive insertions in query seq (gaps in ref seq)
+			diff := false
+			for si := 0; si <= len(tmpseq)-2; si += 3 {
+				aa := translateCodon(tmpseq[si], tmpseq[si+1], tmpseq[si+2], code)
+				curinsert = append(curinsert, aa)
+				diff = diff || aa != refaa
+			}
+			if len(curinsert) > 1 || diff {
+				mutations = append(mutations, Mutation{Ref: refaa, Pos: aaidx, Alt: curinsert})
+			}
+		}
+
+		refcodonidx[0] = refcodonidx[2] + 1
+		refcodonidx[1] = refcodonidx[2] + 2
+		refcodonidx[2] = refcodonidx[2] + 3
+		aaidx++
 	}
 	return
 }
@@ -390,29 +531,39 @@ func bufferTranslate(s *seq, phase int, code map[string]uint8, buffer *bytes.Buf
 	}
 	for i := phase; i < len(s.sequence)-2; i += 3 {
 		var aa uint8 = ' '
-		var aatmp uint8 = ' '
-		var found bool = false
-		// We handle possible IUPAC characters
-		codons := GenAllPossibleCodons(s.sequence[i], s.sequence[i+1], s.sequence[i+2])
-		if len(codons) == 0 {
-			aa = 'X'
-		}
-		for _, codon := range codons {
-			// The codon i=s not found
-			// We return X
-			if aatmp, found = code[codon]; !found {
-				aa = 'X'
-				break
-			}
-			// Different codons give different AA
-			// We can not translate it uniquely
-			if aa != ' ' && aatmp != aa {
-				aa = 'X'
-				break
-			}
-			aa = aatmp
-		}
+		aa = translateCodon(s.sequence[i], s.sequence[i+1], s.sequence[i+2], code)
 		buffer.WriteByte(aa)
+	}
+	return
+}
+
+// We translate the given codon
+// If IUPAC codes : we generate all possible codons.
+// If all codons give the same amino acid: we take this one.
+// Otherwise we translate by 'X'
+func translateCodon(n1, n2, n3 uint8, code map[string]uint8) (aa uint8) {
+	var aatmp uint8 = ' '
+	var found bool = false
+	aa = ' '
+	// We handle possible IUPAC characters
+	codons := GenAllPossibleCodons(n1, n2, n3)
+	if len(codons) == 0 {
+		aa = 'X'
+	}
+	for _, codon := range codons {
+		// The codon i=s not found
+		// We return X
+		if aatmp, found = code[codon]; !found {
+			aa = 'X'
+			break
+		}
+		// Different codons give different AA
+		// We can not translate it uniquely
+		if aa != ' ' && aatmp != aa {
+			aa = 'X'
+			break
+		}
+		aa = aatmp
 	}
 	return
 }

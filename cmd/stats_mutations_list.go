@@ -8,13 +8,15 @@ import (
 	"github.com/spf13/cobra"
 )
 
+var statMutationsListAA bool
+
 // charCmd represents the char command
 var statMutationsListCmd = &cobra.Command{
 	Use:   "list",
 	Short: "Print mutation list of each alignment sequence",
 	Long: `Print mutations list of each alignment sequence.
 
-	- --ref-sequence: it will try to extract a seqsuence having that name from the alignment. If none exist, 
+	- --ref-sequence: it will try to extract a sequence having that name from the alignment. If none exist, 
 	it will try to open a fasta file with the given name to take the first sequence as a reference. If a character is ambigous 
 	(IUPAC notation) in an nucleotide sequence, then it is counted as a mutation only if it is incompatible with the reference character.
 
@@ -61,16 +63,16 @@ var statMutationsListCmd = &cobra.Command{
 		}
 		for _, s2 := range al.Sequences() {
 			if s2.Name() != statMutationsRef {
-				if mutations, err = s2.ListMutationsComparedToReferenceSequence(al.Alphabet(), align.NewSequence("ref", []uint8(s), "")); err != nil {
+				if mutations, err = s2.ListMutationsComparedToReferenceSequence(al.Alphabet(), align.NewSequence("ref", []uint8(s), ""), statMutationsListAA); err != nil {
 					io.LogError(err)
 					return
 				}
 				fmt.Printf("%s", s2.Name())
 				for i, m := range mutations {
 					if i == 0 {
-						fmt.Printf("\t%c%d%c", m.Ref, m.Pos, m.Alt)
+						fmt.Printf("\t%c%d%s", m.Ref, m.Pos, string(m.Alt))
 					} else {
-						fmt.Printf(",%c%d%c", m.Ref, m.Pos, m.Alt)
+						fmt.Printf(",%c%d%s", m.Ref, m.Pos, string(m.Alt))
 					}
 				}
 				fmt.Printf("\n")
@@ -81,5 +83,6 @@ var statMutationsListCmd = &cobra.Command{
 }
 
 func init() {
+	statMutationsListCmd.PersistentFlags().BoolVar(&statMutationsListAA, "aa", false, "Take the reference sequence condon by codon, and translate ")
 	statMutationsCmd.AddCommand(statMutationsListCmd)
 }
