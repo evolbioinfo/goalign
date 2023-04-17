@@ -223,6 +223,62 @@ diff -q -b pos expectedpos
 diff -q -b rmpos expectedrmpos
 rm -f expected result log expectedlog expectedpos expectedrmpos pos rmpos 
 
+echo "->goalign clean sites --char ACG --reverse"
+cat > input <<EOF
+>A
+N-ANGA-GACC
+>B
+N-TN-T-TTTC
+>C
+NCTN-TTT--T
+>D
+N-ANCCCCCCC
+EOF
+
+cat > expected <<EOF
+>A
+-AGA-GACC
+>B
+-T-T-TTTC
+>C
+CT-TTT--T
+>D
+-ACCCCCCC
+EOF
+
+cat > expectedlog <<EOF
+Alignment (0) length before cleaning=11
+Alignment (0) length after cleaning=9
+Alignment (0) number of ACG=2
+Alignment (0) number of start ACG=1
+Alignment (0) number of end ACG=0
+EOF
+
+cat > expectedpos <<EOF
+1
+2
+4
+5
+6
+7
+8
+9
+10
+EOF
+
+cat > expectedrmpos <<EOF
+0
+3
+EOF
+
+${GOALIGN} clean sites --char ACG --reverse -c 0.8 --positions pos --positions-rm rmpos -i input > result 2>log
+diff -q -b result expected
+diff -q -b log expectedlog
+diff -q -b pos expectedpos
+diff -q -b rmpos expectedrmpos
+rm -f input expected result log expectedlog pos expectedpos rmpos expectedrmpos
+
+
 echo "->goalign clean sites --ends --char MAJ"
 cat > input <<EOF
 >A

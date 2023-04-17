@@ -274,11 +274,12 @@ var iupacCodeByte = [][]uint8{
 // This matrix was created by Todd Lowe   12/10/92
 //
 // Uses ambiguous nucleotide codes, probabilities rounded to
-//  nearest integer
+//
+//	nearest integer
 //
 // Lowest score = -4, Highest score = 5
 //
-//A   T   G   C   S   W   R   Y   K   M   B   V   H   D   N   U
+// A   T   G   C   S   W   R   Y   K   M   B   V   H   D   N   U
 var dnafull_subst_matrix = [][]float64{
 	{5, -4, -4, -4, -4, 1, 1, -4, -4, 1, -4, -1, -1, -1, -2, -4},
 	{-4, 5, -4, -4, -4, 1, -4, 1, 1, -4, -1, -4, -1, -1, -2, 5},
@@ -405,7 +406,8 @@ func Nt2Index(nt uint8) (idx int, err error) {
 	return
 }
 
-/*PossibleNtIUPAC returns the possible meaning of the given iupac nucleotide
+/*
+PossibleNtIUPAC returns the possible meaning of the given iupac nucleotide
 Ex: NT_B : {NT_C, NT_G, NT_T}
 */
 func PossibleNtIUPAC(nt uint8) (idx []uint8, err error) {

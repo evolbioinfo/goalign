@@ -12,6 +12,7 @@ import (
 	"unicode"
 
 	"github.com/armon/go-radix"
+	"github.com/evolbioinfo/goalign/gutils"
 	"github.com/evolbioinfo/goalign/io"
 )
 
@@ -109,7 +110,7 @@ type Alignment interface {
 	// Removes sites having >= cutoff gaps, returns the number of consecutive removed sites at start and end of alignment
 	RemoveGapSites(cutoff float64, ends bool) (first, last int, kept, removed []int)
 	// Removes sites having >= cutoff character, returns the number of consecutive removed sites at start and end of alignment
-	RemoveCharacterSites(c uint8, cutoff float64, ends bool, ignoreCase, ignoreGaps, ignoreNs bool) (first, last int, kept, removed []int)
+	RemoveCharacterSites(c []uint8, cutoff float64, ends bool, ignoreCase, ignoreGaps, ignoreNs, reverse bool) (first, last int, kept, removed []int)
 	// Removes sites having >= cutoff of the main character at these sites, returns the number of consecutive removed sites at start and end of alignment
 	RemoveMajorityCharacterSites(cutoff float64, ends, ignoreGaps, ignoreNs bool) (first, last int, kept, removed []int)
 	// Replaces match characters (.) by their corresponding characters on the first sequence
@@ -309,7 +310,7 @@ func (a *align) ShuffleSites(rate float64, roguerate float64, randroguefirst boo
 // Returns the number of consecutive removed sites at start and end of alignment and the indexes of
 // the remaining positions
 func (a *align) RemoveGapSites(cutoff float64, ends bool) (first, last int, kept, rm []int) {
-	return a.RemoveCharacterSites(GAP, cutoff, ends, false, false, false)
+	return a.RemoveCharacterSites([]uint8{GAP}, cutoff, ends, false, false, false, false)
 }
 
 // RemoveCharacterSites Removes positions constituted of [cutoff*100%,100%] of the given character
@@ -329,7 +330,7 @@ func (a *align) RemoveGapSites(cutoff float64, ends bool) (first, last int, kept
 //
 // Returns the number of consecutive removed sites at start and end of alignment and the indexes of
 // the remaining positions
-func (a *align) RemoveCharacterSites(c uint8, cutoff float64, ends bool, ignoreCase, ignoreGaps, ignoreNs bool) (first, last int, kept, rm []int) {
+func (a *align) RemoveCharacterSites(c []uint8, cutoff float64, ends bool, ignoreCase, ignoreGaps, ignoreNs, reverse bool) (first, last int, kept, rm []int) {
 	var nbchars int
 	var total int
 
@@ -356,7 +357,11 @@ func (a *align) RemoveCharacterSites(c uint8, cutoff float64, ends bool, ignoreC
 		nbchars = 0
 		total = 0
 		for seq := 0; seq < a.NbSequences(); seq++ {
-			if (a.seqs[seq].sequence[site] == c) || (ignoreCase && unicode.ToLower(rune(a.seqs[seq].sequence[site])) == unicode.ToLower(rune(c))) {
+			selected := gutils.ContainsRune(c, a.seqs[seq].sequence[site], ignoreCase)
+			if reverse {
+				selected = !selected
+			}
+			if selected {
 				nbchars++
 			}
 			// If it's a gap and we ignore gaps, or if it's a N and we ignore N, then we do not count that
@@ -494,9 +499,9 @@ func (a *align) RemoveMajorityCharacterSites(cutoff float64, ends, ignoreGaps, i
 // It returns an error if the sequence does not exist or if the coordinates are outside the ref
 // sequence (<0 or > sequence length without gaps)
 // Parameters:
-//    - name: The name of the sequence to take as reference
-//    - refstart: The start coordinate to convert (on the ref sequence, 0-based)
-//    - reflen: The length of the ref sequence to consider from refstart
+//   - name: The name of the sequence to take as reference
+//   - refstart: The start coordinate to convert (on the ref sequence, 0-based)
+//   - reflen: The length of the ref sequence to consider from refstart
 func (a *align) RefCoordinates(name string, refstart, reflen int) (alistart, alilen int, err error) {
 	var exists bool
 	var seq []uint8
@@ -552,8 +557,8 @@ func (a *align) RefCoordinates(name string, refstart, reflen int) (alistart, ali
 // It returns an error if the sequence does not exist or if the coordinates are outside the ref
 // sequence (<0 or > sequence length without gaps)
 // Parameters:
-//    - name: The name of the sequence to take as reference
-//    - sites: The positions to convert (on the ref sequence, 0-based)
+//   - name: The name of the sequence to take as reference
+//   - sites: The positions to convert (on the ref sequence, 0-based)
 func (a *align) RefSites(name string, sites []int) (refsites []int, err error) {
 	var exists bool
 	var seq []uint8
@@ -848,7 +853,8 @@ func (a *align) Mutate(rate float64) {
 // Simulate rogue taxa in the alignment:
 // take the proportion prop of sequences as rogue taxa => R
 // For each t in R
-//   * We shuffle the alignment sites of t
+//   - We shuffle the alignment sites of t
+//
 // Output: List of rogue sequence names, and List of intact sequence names
 func (a *align) SimulateRogue(prop float64, proplen float64) ([]string, []string) {
 	var seq *seq
@@ -942,7 +948,8 @@ Parameters are:
 from the number of sequences in the output alignment)
 * counts: counts associated to each sequence (if the count of a sequence is missing, it
 is considered as 0, if the count of an unkown sequence is present, it will return an error).
- Sum of counts of all sequences must be > n.
+
+	Sum of counts of all sequences must be > n.
 */
 func (a *align) Rarefy(nb int, counts map[string]int) (al Alignment, err error) {
 	var rarefySeqBag *seqbag
@@ -1013,9 +1020,10 @@ func (a *align) CharStatsSite(site int) (outmap map[uint8]int, err error) {
 // with a given length.
 // maxreplace defines the replacing character. If maskreplace is "", then, masked characters
 // are replaced by "N" or "X" depending on the alphabet. Orherwise:
-//    1) if maskreplace is AMBIG: just like ""
-//    2) if maskreplace is MAJ: Replacing character is most frequent character of the column
-//    3) if maskreplace is GAP: Replacing character is a GAP
+//  1. if maskreplace is AMBIG: just like ""
+//  2. if maskreplace is MAJ: Replacing character is most frequent character of the column
+//  3. if maskreplace is GAP: Replacing character is a GAP
+//
 // if nogap is true, then Mask will not replace gaps with the replacement character
 // if noref is true, then does not replace the character if it is the same as the reference sequences (only if refseq is specified).
 func (a *align) Mask(refseq string, start, length int, maskreplace string, nogap, noref bool) (err error) {
@@ -1094,13 +1102,15 @@ func (a *align) Mask(refseq string, start, length int, maskreplace string, nogap
 // MaskOccurences masks nucleotides that appear less or equal than the given number of times
 // in their columns (low frenquency mutations)
 // If refseq is not "" then masks unique characters if:
-//    1) they are different from the given reference sequence
-//    2) or if the reference is a GAP
+//  1. they are different from the given reference sequence
+//  2. or if the reference is a GAP
+//
 // maxreplace defines the replacing character. If maskreplace is "", then, masked characters
 // are replaced by "N" or "X" depending on the alphabet. Orherwise:
-//    1) if maskreplace is AMBIG: just like ""
-//    2)  if maskreplace is MAJ: Replacing character is most frequent character of the column
-//    3)  if maskreplace is GAP: Replacing character is a GAP
+//  1. if maskreplace is AMBIG: just like ""
+//  2. if maskreplace is MAJ: Replacing character is most frequent character of the column
+//  3. if maskreplace is GAP: Replacing character is a GAP
+//
 // if nogap is true, then MaskOccurences will not replace gaps with the replacement character
 func (a *align) MaskOccurences(refseq string, maxOccurence int, maskreplace string) (err error) {
 	var ok bool
@@ -1176,13 +1186,15 @@ func (a *align) MaskOccurences(refseq string, maxOccurence int, maskreplace stri
 
 // MaskUnique masks nucleotides that are unique in their columns (unique mutations)
 // If refseq is not "" then masks unique characters if:
-//    1) they are different from the given reference sequence
-//    2) or if the reference is a GAP
+//  1. they are different from the given reference sequence
+//  2. or if the reference is a GAP
+//
 // maxreplace defines the replacing character. If maskreplace is "", then, masked characters
 // are replaced by "N" or "X" depending on the alphabet. Orherwise:
-//    1) if maskreplace is AMBIG: just like ""
-//    2)  if maskreplace is MAJ: Replacing character is most frequent character
-//    3)  if maskreplace is GAP: Replacing character is a GAP
+//  1. if maskreplace is AMBIG: just like ""
+//  2. if maskreplace is MAJ: Replacing character is most frequent character
+//  3. if maskreplace is GAP: Replacing character is a GAP
+//
 // if nogap is true, then MaskUnique will not replace gaps with the replacement character
 func (a *align) MaskUnique(refseq string, maskreplace string) (err error) {
 	return a.MaskOccurences(refseq, 1, maskreplace)
@@ -1196,7 +1208,7 @@ func (a *align) MaskUnique(refseq string, maskreplace string) (err error) {
 //   - out: The character with the highest occurence at each site
 //   - occur: The number of occurences of the most common character at each site
 //   - total: The total number of sequences taken into account at each site (not always the number
-//            of sequences in the alignment if ignoreGaps or ignoreNs)
+//     of sequences in the alignment if ignoreGaps or ignoreNs)
 func (a *align) MaxCharStats(ignoreGaps, ignoreNs bool) (out []uint8, occur []int, total []int) {
 	out = make([]uint8, a.Length())
 	occur = make([]int, a.Length())
@@ -1472,16 +1484,19 @@ func (a *align) Stops(startingGapsAsIncomplete bool, geneticcode int) (stops []i
 	return
 }
 
-/* Computes a position-specific scoring matrix (PSSM)matrix
+/*
+	Computes a position-specific scoring matrix (PSSM)matrix
+
 (see https://en.wikipedia.org/wiki/Position_weight_matrix)
 This matrix may be in log2 scale or not (log argument)
 A pseudo count may be added to values (to avoid log2(0))) with pseudocount argument
 values may be normalized: normalization arg:
-   PSSM_NORM_NONE = 0 => No normalization
-   PSSM_NORM_FREQ = 1 => Normalization by frequency in the site
-   PSSM_NORM_DATA = 2 => Normalization by frequency in the site and divided by aa/nt frequency in data
-   PSSM_NORM_UNIF = 3 => Normalization by frequency in the site and divided by uniform frequency (1/4 or 1/20)
-   PSSM_NORM_LOGO = 4 => Normalization like "Logo"
+
+	PSSM_NORM_NONE = 0 => No normalization
+	PSSM_NORM_FREQ = 1 => Normalization by frequency in the site
+	PSSM_NORM_DATA = 2 => Normalization by frequency in the site and divided by aa/nt frequency in data
+	PSSM_NORM_UNIF = 3 => Normalization by frequency in the site and divided by uniform frequency (1/4 or 1/20)
+	PSSM_NORM_LOGO = 4 => Normalization like "Logo"
 */
 func (a *align) Pssm(log bool, pseudocount float64, normalization int) (pssm map[uint8][]float64, err error) {
 	// Number of occurences of each different aa/nt
@@ -1734,7 +1749,8 @@ func (a *align) RandSubAlign(length int, consecutive bool) (Alignment, error) {
 
 /*
 Remove identical patterns/sites and return number of occurence
- of each pattern (order of patterns/sites may have changed)
+
+	of each pattern (order of patterns/sites may have changed)
 */
 func (a *align) Compress() (weights []int) {
 	var count interface{}
@@ -1871,10 +1887,10 @@ func (a *align) DiffWithFirst() {
 
 // Compares all sequences to the first one and counts all differences per sequence
 //
-// - alldiffs: The set of all differences that have been seen at least once
-// - diffs   : The number of occurences of each difference, for each sequence
-//             Sequences are ordered as the original alignment. Differences are
-//             written as REFNEW, ex: diffs["AC"]=12.
+//   - alldiffs: The set of all differences that have been seen at least once
+//   - diffs   : The number of occurences of each difference, for each sequence
+//     Sequences are ordered as the original alignment. Differences are
+//     written as REFNEW, ex: diffs["AC"]=12.
 func (a *align) CountDifferences() (alldiffs []string, diffs []map[string]int) {
 	var alldiffsmap map[string]bool
 	var diffmap map[string]int
@@ -1917,7 +1933,8 @@ func (a *align) CountDifferences() (alldiffs []string, diffs []map[string]int) {
 }
 
 /*
- Returns the number of variable sites in the alignment.
+	Returns the number of variable sites in the alignment.
+
 It does not take into account gaps and other charactes like "."
 */
 func (a *align) NbVariableSites() int {
@@ -2117,7 +2134,7 @@ func (a *align) CodonAlign(ntseqs SeqBag) (rtAl *align, err error) {
 
 // Compute conservation status of a given site of the alignment
 //
-// If position is outside the alignment, it returns an error
+// # If position is outside the alignment, it returns an error
 //
 // Possible values are:
 //

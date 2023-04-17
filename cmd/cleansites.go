@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/evolbioinfo/goalign/align"
+	"github.com/evolbioinfo/goalign/gutils"
 	"github.com/evolbioinfo/goalign/io"
 	"github.com/evolbioinfo/goalign/io/utils"
 	"github.com/spf13/cobra"
@@ -11,6 +12,7 @@ import (
 
 var cleanEnds bool
 var sitesposoutfile string
+var sitesreverse bool
 var rmsitesposoutfile string
 
 // cleansitesCmd represents the cleansites command
@@ -22,7 +24,8 @@ var cleansitesCmd = &cobra.Command{
 Removes sites constitued of >= cutoff specific characters. This characters can be :
 
 1. Gap (--char=GAP or --char=-, default)
-2. Any other character X specified by --char=X (case sensitive)
+2. Any other set of characters XYZ specified by --char=XYZ (case sensitive). In this case, it is possible to reverse the match with --reverse. 
+	for example '--char ACGT --reverse' means any character but A,C,G,T.
 3. The most abundant character in the site --char=MAJ (including gaps)
 
 Exception for a cutoff of 0: removes sites constitued of > 0 specified character (with --char=MAJ, then will remove all columns).
@@ -82,18 +85,24 @@ will be removed.`,
 			} else {
 				//single character
 				c := []uint8(cleanChar)
-				if len(c) != 1 {
-					err = fmt.Errorf("--char should be a single character")
-					io.LogError(err)
-					return
-				}
-				char = string(c[0])
-				if (c[0] == 'N' || c[0] == 'n') && cleanIgnoreNs {
+				// if len(c) != 1 {
+				// 	err = fmt.Errorf("--char should be a single character")
+				// 	io.LogError(err)
+				// 	return
+				// }
+				char = string(c)
+				if (gutils.Contains(c, 'N') || gutils.Contains(c, 'n')) && cleanIgnoreNs {
 					err = fmt.Errorf("--ignore-n should not be given with --char N")
 					io.LogError(err)
 					return
 				}
-				nbstart, nbend, kept, rm = al.RemoveCharacterSites(c[0], cleanCutoff, cleanEnds, cleanIgnoreCase, cleanIgnoreGaps, cleanIgnoreNs)
+				if (gutils.Contains(c, '-')) && cleanIgnoreGaps {
+					err = fmt.Errorf("--ignore-gaps should not be given with --char -")
+					io.LogError(err)
+					return
+				}
+
+				nbstart, nbend, kept, rm = al.RemoveCharacterSites(c, cleanCutoff, cleanEnds, cleanIgnoreCase, cleanIgnoreGaps, cleanIgnoreNs, sitesreverse)
 			}
 			afterlength := al.Length()
 			writeAlign(al, f)
@@ -124,6 +133,7 @@ will be removed.`,
 
 func init() {
 	cleansitesCmd.PersistentFlags().BoolVar(&cleanEnds, "ends", false, "If true, then only remove consecutive gap positions from alignment start and end")
+	cleansitesCmd.PersistentFlags().BoolVar(&sitesreverse, "reverse", false, "If true, then reverses the char match (not functional with --char GAP and --char MAJ)")
 	cleansitesCmd.PersistentFlags().StringVar(&sitesposoutfile, "positions", "none", "Output file of all remaining positions (0-based, on position per line)")
 	cleansitesCmd.PersistentFlags().StringVar(&rmsitesposoutfile, "positions-rm", "none", "Output file of all removed positions (0-based, on position per line)")
 	cleanCmd.AddCommand(cleansitesCmd)
