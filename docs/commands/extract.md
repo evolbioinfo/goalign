@@ -14,6 +14,11 @@ This command extracts several sub-alignments from an input alignment. It is simi
 2. End coordinates: 1-based (or 0-based exclusive). If the sub-alignment is defined by several blocks, several end coordinates may be given (same number as start coordinates), and coma separated;
 3. Name of the subsequence
 
+And the optional column:
+
+4. Strand (+ or -)
+
+
 Example of an annotation file:
 
 ```
@@ -38,6 +43,7 @@ If --translate is >=0 and the input alignment is nucleotidic, extracted subseque
 - If --translate 1: Vertebrate mitochondrial genetic code
 - If --translate 2: Invertebrate mitochondrial genetic code
 
+If the strand is -, then the extracted sequence is reverse-complemented.
 
 For example:
 goalign extract -i alignment.fasta -f annotations.txt

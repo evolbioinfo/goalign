@@ -20,6 +20,7 @@ type extractSubSequence struct {
 	starts []int
 	ends   []int
 	name   string
+	strand bool
 }
 
 var extractrefseq string
@@ -156,6 +157,14 @@ var extractCmd = &cobra.Command{
 					subalign.Concat(subaligntmp)
 				}
 			}
+
+			if !subseq.strand {
+				if err = subalign.ReverseComplement(); err != nil {
+					io.LogError(err)
+					return
+				}
+			}
+
 			if al.Alphabet() == align.NUCLEOTIDS && extracttranslate >= 0 {
 				if err = subalign.Translate(0, extracttranslate); err != nil {
 					io.LogError(err)
@@ -191,6 +200,7 @@ func parseCoordinateFile(file string) (coords []extractSubSequence, err error) {
 	var r *bufio.Reader
 	var gr *gzip.Reader
 	var si int
+	var strand bool
 
 	coords = make([]extractSubSequence, 0)
 
@@ -213,14 +223,20 @@ func parseCoordinateFile(file string) (coords []extractSubSequence, err error) {
 	l, e := utils.Readln(r)
 	for e == nil {
 		cols := strings.Split(l, "\t")
-		if cols == nil || len(cols) != 3 {
-			err = errors.New("bad format from coordinate file: There should be 3 columns")
+		if cols == nil || (len(cols) != 3 && len(cols) != 4) {
+			err = errors.New("bad format from coordinate file: There should be 3 or 4 columns")
 			return
+		}
+
+		strand = true
+		if len(cols) == 4 {
+			strand = (cols[3] == "+")
 		}
 		subseq := extractSubSequence{
 			starts: make([]int, 0),
 			ends:   make([]int, 0),
 			name:   cols[2],
+			strand: strand,
 		}
 
 		startstr := strings.Split(cols[0], ",")
@@ -300,11 +316,6 @@ func parseGFFFile(file string) (coords []extractSubSequence, err error) {
 			return
 		}
 
-		if !strand {
-			err = fmt.Errorf("goalign extract only supports + strand so far")
-			return
-		}
-
 		// We extract gene id and name from gene line
 		if cols[2] == "gene" {
 			gname := ""
@@ -354,6 +365,7 @@ func parseGFFFile(file string) (coords []extractSubSequence, err error) {
 					starts: make([]int, 0),
 					ends:   make([]int, 0),
 					name:   parentGeneName,
+					strand: strand,
 				}
 				coordsMap[parentGeneName] = curgene
 			}

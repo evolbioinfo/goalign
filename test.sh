@@ -5553,6 +5553,89 @@ diff -q -b expected2.2 extract.tmp/output.2.fa
 rm -rf input.align input.coordinates extract.tmp expected1 expected2 expected1.2 expected2.2
 
 
+echo "->goalign extract negative strand"
+cat > input.align <<EOF
+>s1
+ACGTACGT
+>s2
+-CGT-C-T
+>s3
+ACGTACGT
+>s4
+ACGTTCGA
+>s5
+ACGTTCGA
+EOF
+
+cat > input.coordinates <<EOF
+1,2	4,5	output.1	+
+3	6	output.2	-
+EOF
+
+cat > expected1 <<EOF
+>s1
+CGTGTA
+>s2
+CGTGT-
+>s3
+CGTGTA
+>s4
+CGTGTT
+>s5
+CGTGTT
+EOF
+
+cat > expected2 <<EOF
+>s1
+GTA
+>s2
+G-A
+>s3
+GTA
+>s4
+GAA
+>s5
+GAA
+EOF
+
+cat > expected1.2 <<EOF
+>s1
+RV
+>s2
+RX
+>s3
+RV
+>s4
+RV
+>s5
+RV
+EOF
+
+cat > expected2.2 <<EOF
+>s1
+V
+>s2
+X
+>s3
+V
+>s4
+E
+>s5
+E
+EOF
+
+mkdir -p extract.tmp
+${GOALIGN} extract -i input.align --coordinates input.coordinates --translate -1 -o extract.tmp
+diff -q -b expected1 extract.tmp/output.1.fa
+diff -q -b expected2 extract.tmp/output.2.fa
+
+${GOALIGN} extract -i input.align --coordinates input.coordinates --translate 0 -o extract.tmp
+diff -q -b expected1.2 extract.tmp/output.1.fa
+diff -q -b expected2.2 extract.tmp/output.2.fa
+
+rm -rf input.align input.coordinates extract.tmp expected1 expected2 expected1.2 expected2.2
+
+
 echo "->goalign extract --ref-seq"
 cat > input.align <<EOF
 >s1
@@ -5605,6 +5688,58 @@ diff -q -b expected2 extract.tmp/output.2.fa
 
 rm -rf input.align input.coordinates extract.tmp expected1 expected2 expected1.2 expected2.2
 
+
+echo "->goalign extract --ref-seq negative strand"
+cat > input.align <<EOF
+>s1
+ACGT--ACGT
+>s2
+-CGT---C-T
+>s3
+ACGT--ACGT
+>s4
+ACGT--TCGA
+>s5
+ACGT--TCGA
+EOF
+
+cat > input.coordinates <<EOF
+1,2	4,5	output.1	+
+3	6	output.2	-
+EOF
+
+cat > expected1 <<EOF
+>s1
+CGTGT--A
+>s2
+CGTGT---
+>s3
+CGTGT--A
+>s4
+CGTGT--T
+>s5
+CGTGT--T
+EOF
+
+cat > expected2 <<EOF
+>s1
+GT--A
+>s2
+G---A
+>s3
+GT--A
+>s4
+GA--A
+>s5
+GA--A
+EOF
+
+mkdir -p extract.tmp
+${GOALIGN} extract -i input.align --coordinates input.coordinates --ref-seq s1 --translate -1 -o extract.tmp
+diff -q -b expected1 extract.tmp/output.1.fa
+diff -q -b expected2 extract.tmp/output.2.fa
+
+rm -rf input.align input.coordinates extract.tmp expected1 expected2 expected1.2 expected2.2
 
 
 echo "->goalign transpose"
