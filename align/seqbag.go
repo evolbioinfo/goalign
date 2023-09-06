@@ -39,6 +39,7 @@ type SeqBag interface {
 	GetSequenceCharById(ith int) ([]uint8, bool)
 	GetSequenceNameById(ith int) (string, bool)
 	GetSequenceByName(name string) (Sequence, bool)
+	GetSequenceIdByName(name string) (i int) // if the name does not exist, i < 0
 	SetSequenceChar(ithAlign, ithSite int, char uint8) error
 	// IgnoreIdentical sets the behavior when duplicate names are encountered while building the alignment
 	// If ignore is IGNORE_NONE: Does not ignore anything
@@ -338,6 +339,19 @@ func (sb *seqbag) GetSequenceByName(name string) (Sequence, bool) {
 	return nil, false
 }
 
+// If sequence exists in alignment, return its index
+// Otherwise, return -1
+func (sb *seqbag) GetSequenceIdByName(name string) int {
+	var s *seq
+	var i int
+	for i, s = range sb.seqs {
+		if s.name == name {
+			return i
+		}
+	}
+	return -1
+}
+
 // If sequence exists in alignment, return sequence,true
 // Otherwise, return "",false
 func (sb *seqbag) GetSequenceById(ith int) (string, bool) {
@@ -414,9 +428,9 @@ func (sb *seqbag) SetSequenceChar(ithAlign, ithSite int, char uint8) error {
 
 // Returns true if:
 //
-// - sb and comp have the same number of sequences &&
-// - each sequence in sb have a sequence in comp with the same name
-//   and the same sequence
+//   - sb and comp have the same number of sequences &&
+//   - each sequence in sb have a sequence in comp with the same name
+//     and the same sequence
 //
 // Identical seqbags may have sequences in different order
 func (sb *seqbag) Identical(comp SeqBag) bool {
@@ -632,7 +646,8 @@ Parameters are:
 from the number of sequences in the output alignment)
 * counts: counts associated to each sequence (if the count of a sequence is missing, it
 is considered as 0, if the count of an unkown sequence is present, it will return an error).
- Sum of counts of all sequences must be > n.
+
+	Sum of counts of all sequences must be > n.
 */
 func (sb *seqbag) RarefySeqBag(nb int, counts map[string]int) (sample SeqBag, err error) {
 	sample, err = sb.rarefySeqBag(nb, counts)
