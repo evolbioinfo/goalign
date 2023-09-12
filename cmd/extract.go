@@ -81,8 +81,43 @@ var extractCmd = &cobra.Command{
 	- If --translate 1: Vertebrate mitochondrial genetic code
 	- If --translate 2: Invertebrate mitochondrial genetic code
 	
-	
-	For example:
+	If --ref-seq is given, and --translate>=0 is given, be careful about the behavior! It will extract the 
+	nucleotide sequences corresponding to start/stop coordinates on the reference sequence, and will translate
+	the resulting alignment with the following process: The extracted alignment will be translated codon by
+	codon using the given reference sequence as guide, by iterating over the reference non gap nucleotides 3 by 3. 
+	At each iteration, the current reference codon may have gaps between nucleotides, and the translation of the
+	current codon will be done as following:
+		* ex 1:
+			Ref: AC--GTACGT
+			Seq: ACTTGTACGT
+			In that case, the first ref codon is [0,1,4], corresponding to sequence ACTTG in seq
+			ACTTG % 3 != 0 ==> Frameshift? => Replaced by T in ref and X in the compared sequence.
+		* ex 2:
+			Ref: AC---GTACGT
+			Seq: ACTTTGTACGT
+			ref codon: [0,1,5]
+			seq      : ACTTTG (%3==0): Insertion - OK => Replaced by "T-" in ref and "TL" in seq
+		* ex 3:
+			Ref: ACGTACGT
+			Seq: A--TACGT
+			ref codon: [0,1,2]
+			seq      : A--: Deletion: not ok : Frameshift? => Replaced by "T" in ref and "X" in comp
+		* ex 4:
+			Ref: AC----GTACGT
+			Seq: ACTT-TGTACGT
+			ref codon: [0,1,6]
+			seq      : ACTTTG (%3==0): Insertion - OK => Replaced by "T-" in ref and "TT" in seq
+		* ex 5:
+			Ref: AC----GTACGT
+			Seq: ACT--TGTACGT
+			ref codon: [0,1,6]
+			seq      : ACTTTG : Insertion not OK : Frameshift? => Replaced by "T-" in ref and "XX" in seq
+	This allows to easily translate a multiple sequence alignment containing partial sequences, but the 
+	interpretation should be careful: the translation of some sequences may not be representative of the 
+	translation of the unaligned sequences.
+
+
+	Basic example:
 	goalign extract -i alignment.fasta -f annotations.txt
 	
 	If the input file contains several alignments, only the first one is considered.
@@ -166,9 +201,16 @@ var extractCmd = &cobra.Command{
 			}
 
 			if al.Alphabet() == align.NUCLEOTIDS && extracttranslate >= 0 {
-				if err = subalign.Translate(0, extracttranslate); err != nil {
-					io.LogError(err)
-					return
+				if refseq {
+					if err = subalign.TranslateByReference(0, extracttranslate, extractrefseq); err != nil {
+						io.LogError(err)
+						return
+					}
+				} else {
+					if err = subalign.Translate(0, extracttranslate); err != nil {
+						io.LogError(err)
+						return
+					}
 				}
 			}
 			if f, err = utils.OpenWriteFile(fmt.Sprintf("%s%c%s%s%s%s", extractoutput, os.PathSeparator, extractprefix, subseq.name, extractsuffix, alignExtension())); err != nil {

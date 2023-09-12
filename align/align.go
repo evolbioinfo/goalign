@@ -126,6 +126,35 @@ type Alignment interface {
 	InversePositions(sites []int) (invsites []int, err error)
 
 	Swap(rate float64)
+	// TranslateByReference translates the alignment codon by codon using the given reference sequence as guide
+	// We traverse reference nt 3 by 3
+	// The reference codon may have gaps between nt ,
+	// ex 1:
+	// Ref: AC--GTACGT
+	// Seq: ACTTGTACGT
+	// In that case, the first ref codon is [0,1,4], corresponding to sequence ACTTG in seq
+	// ACTTG % 3 != 0 ==> Frameshift? => Replaced by X in the compared sequence.
+	// ex 2:
+	// Ref: AC---GTACGT
+	// Seq: ACTTTGTACGT
+	// ref codon: [0,1,5]
+	// seq      : ACTTTG : Insertion - OK => Replaced by "T-" in ref and "TT" in seq
+	// ex 3:
+	// Ref: ACGTACGT
+	// Seq: A--TACGT
+	// ref codon: [0,1,2]
+	// seq      : A--: Deletion: not ok : Frameshift? => Replaced by "T" in ref and "X" in comp
+	// ex 4:
+	// Ref: AC----GTACGT
+	// Seq: ACTT-TGTACGT
+	// ref codon: [0,1,6]
+	// seq      : ACTTTG : Insertion - OK => Replaced by "T-" in ref and "TT" in seq
+	// ex 5:
+	// Ref: AC----GTACGT
+	// Seq: ACT--TGTACGT
+	// ref codon: [0,1,6]
+	// seq      : ACTTTG : Insertion not OK : Frameshift? => Replaced by "T-" in ref and "XX" in seq
+	TranslateByReference(phase int, geneticcode int, refseq string) (err error)
 	Transpose() (Alignment, error) // Output sequences are made of sites and output sites are sequences
 	TrimSequences(trimsize int, fromStart bool) error
 }
@@ -746,6 +775,169 @@ func (a *align) Translate(phase int, geneticcode int) (err error) {
 	} else {
 		a.length = -1
 	}
+	return
+}
+
+// TranslateByReference translates the alignment codon by codon using the given reference sequence as guide
+// We traverse reference nt 3 by 3
+// The reference codon may have gaps between nt ,
+// ex 1:
+// Ref: AC--GTACGT
+// Seq: ACTTGTACGT
+// In that case, the first ref codon is [0,1,4], corresponding to sequence ACTTG in seq
+// ACTTG % 3 != 0 ==> Frameshift? => Replaced by X in the compared sequence.
+// ex 2:
+// Ref: AC---GTACGT
+// Seq: ACTTTGTACGT
+// ref codon: [0,1,5]
+// seq      : ACTTTG : Insertion - OK => Replaced by "T-" in ref and "TT" in seq
+// ex 3:
+// Ref: ACGTACGT
+// Seq: A--TACGT
+// ref codon: [0,1,2]
+// seq      : A--: Deletion: not ok : Frameshift? => Replaced by "T" in ref and "X" in comp
+// ex 4:
+// Ref: AC----GTACGT
+// Seq: ACTT-TGTACGT
+// ref codon: [0,1,6]
+// seq      : ACTTTG : Insertion - OK => Replaced by "T-" in ref and "TT" in seq
+// ex 5:
+// Ref: AC----GTACGT
+// Seq: ACT--TGTACGT
+// ref codon: [0,1,6]
+// seq      : ACTTTG : Insertion not OK : Frameshift? => Replaced by "T-" in ref and "XX" in seq
+func (a *align) TranslateByReference(phase int, geneticcode int, refseq string) (err error) {
+	var refId int                   // Index of the reference sequence
+	var oldseqs []*seq              // We backup the sequences of the alignment
+	var alen, nseq int              // Length and Size of the alignment
+	var code map[string]uint8       // Genetic code
+	var newseqbuffer []bytes.Buffer // The buffers where the temp translated sequences are written
+
+	// We take the reference sequence ID from the alignment
+	if refseq == "" {
+		err = fmt.Errorf("given reference sequence is empty")
+		return
+	}
+	if refId = a.GetSequenceIdByName(refseq); refId == -1 {
+		err = fmt.Errorf("given reference sequence does not exist in the alignment")
+		return
+	}
+	// We check the alphabet
+	if a.Alphabet() != NUCLEOTIDS && a.Alphabet() != BOTH {
+		err = fmt.Errorf("cannot translate this sequence, wrong alphabet")
+		return
+	}
+	// We set the genetic code
+	if code, err = geneticCode(geneticcode); err != nil {
+		return
+	}
+
+	alen = a.Length()
+	nseq = a.NbSequences()
+	oldseqs = a.seqs
+	newseqbuffer = make([]bytes.Buffer, nseq)
+	// remove all sequences from the alignment
+	a.Clear()
+
+	// We iterate over all the codons of the reference sequence (with potential gaps inside)
+	refcodonidx := []int{phase, phase + 1, phase + 2}
+	for refcodonidx[2] < alen {
+		var refaa uint8
+		var naa int // Number of aa in this codon (if 3 nt + 3 gaps: May by 2 aa in some sequences)
+		// We first find the start and end positions of the current codon
+		if oldseqs[refId].sequence[refcodonidx[0]] == GAP && oldseqs[refId].sequence[refcodonidx[1]] == GAP && oldseqs[refId].sequence[refcodonidx[2]] == GAP {
+			naa = (refcodonidx[2] + 1 - refcodonidx[0]) / 3
+			refaa = '-'
+			for i := 0; i < naa; i++ {
+				newseqbuffer[refId].WriteByte('-')
+			}
+		} else {
+			// We find the three reference positions without gap
+			for refcodonidx[2] < alen && oldseqs[refId].sequence[refcodonidx[0]] == GAP {
+				refcodonidx[0]++
+				refcodonidx[1]++
+				refcodonidx[2]++
+			}
+			if refcodonidx[2] >= alen {
+				break
+			}
+			for refcodonidx[2] < alen && oldseqs[refId].sequence[refcodonidx[1]] == GAP {
+				refcodonidx[1]++
+				refcodonidx[2]++
+			}
+			if refcodonidx[2] >= alen {
+				break
+			}
+			for refcodonidx[2] < alen && oldseqs[refId].sequence[refcodonidx[2]] == GAP {
+				refcodonidx[2]++
+			}
+			if refcodonidx[2] >= alen {
+				break
+			}
+			// We then translate the 3 nt of the ref codon in 1 aa
+			refaa = translateCodon(oldseqs[refId].sequence[refcodonidx[0]], oldseqs[refId].sequence[refcodonidx[1]], oldseqs[refId].sequence[refcodonidx[2]], code)
+			// Number of potential amino acids
+			naa = (refcodonidx[2] + 1 - refcodonidx[0]) / 3
+			// We write this aa in the reference sequence buffer
+			newseqbuffer[refId].WriteByte(refaa)
+			// And write potential aa in other sequences as - in the reference
+			for i := 1; i < naa; i++ {
+				newseqbuffer[refId].WriteByte('-')
+			}
+		}
+
+		// Then we manage all the sequences but the reference sequence
+		for compseqId := 0; compseqId < nseq; compseqId++ {
+			if compseqId != refId {
+				// We remove the gaps from the compared sequence corresponding to the reference codon
+				tmpseq := make([]uint8, 0)
+				for si := refcodonidx[0]; si <= refcodonidx[2]; si++ {
+					if oldseqs[compseqId].sequence[si] != GAP {
+						tmpseq = append(tmpseq, oldseqs[compseqId].sequence[si])
+					}
+				}
+				// If the sequence without gaps has length 0 => Deletion
+				if len(tmpseq) == 0 {
+					// We replace the deletion by the number of "-"
+					// corresp to potential aa in other sequence
+					for i := 0; i < naa; i++ {
+						newseqbuffer[compseqId].WriteByte('-')
+					}
+				} else if len(tmpseq)%3 != 0 {
+					// If the sequence without gaps has length not mutliple of 3: Potential frameshift
+					// We replace all the sequence corresponding to the ref codon by as many X as the nb
+					// of potential aa in other sequence
+					for i := 0; i < naa; i++ {
+						newseqbuffer[compseqId].WriteByte('X')
+					}
+				} else {
+					// If the sequence without gaps has length mutliple of 3: We can translate!
+					// We replace all the codons corresponding to the ref codon by their aa translation
+					// + several "-" corresp to potential additional aa in other sequence
+					// We find all corresponding codons of the target sequence, between refcodonidx[0] and refcodonidx[2]
+					n := 0
+					for si := 0; si <= len(tmpseq)-2; si += 3 {
+						aa := translateCodon(tmpseq[si], tmpseq[si+1], tmpseq[si+2], code)
+						newseqbuffer[compseqId].WriteByte(aa)
+						n++
+					}
+					for i := n; i < naa; i++ {
+						newseqbuffer[compseqId].WriteByte('-')
+					}
+				}
+			}
+		}
+		refcodonidx[0] = refcodonidx[2] + 1
+		refcodonidx[1] = refcodonidx[2] + 2
+		refcodonidx[2] = refcodonidx[2] + 3
+	}
+
+	for i := 0; i < nseq; i++ {
+		if err = a.AddSequence(oldseqs[i].name, newseqbuffer[i].String(), oldseqs[i].comment); err != nil {
+			return
+		}
+	}
+
 	return
 }
 

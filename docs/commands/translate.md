@@ -21,6 +21,40 @@ It is possible to specify alternative genetic code with --genetic-code
 IUPAC codes are taken into account for the translation. If a codon containing 
 IUPAC code is ambiguous for translation, then a X is added in place of the aminoacid.
 
+If --ref-seq is given, be careful about the behavior! As with goalign extract, it will will translate
+the alignment with the following process: The alignment will be translated codon by
+codon using the given reference sequence as guide, by iterating over the reference non gap nucleotides 3 by 3. 
+At each iteration, the current reference codon may have gaps between nucleotides, and the translation of the
+current codon will be done as following:
+	* ex 1:
+		Ref: AC--GTACGT
+		Seq: ACTTGTACGT
+		In that case, the first ref codon is [0,1,4], corresponding to sequence ACTTG in seq
+		ACTTG % 3 != 0 ==> Frameshift? => Replaced by T in ref and X in the compared sequence.
+	* ex 2:
+		Ref: AC---GTACGT
+		Seq: ACTTTGTACGT
+		ref codon: [0,1,5]
+		seq      : ACTTTG (%3==0): Insertion - OK => Replaced by "T-" in ref and "TL" in seq
+	* ex 3:
+		Ref: ACGTACGT
+		Seq: A--TACGT
+		ref codon: [0,1,2]
+		seq      : A--: Deletion: not ok : Frameshift? => Replaced by "T" in ref and "X" in comp
+	* ex 4:
+		Ref: AC----GTACGT
+		Seq: ACTT-TGTACGT
+		ref codon: [0,1,6]
+		seq      : ACTTTG (%3==0): Insertion - OK => Replaced by "T-" in ref and "TT" in seq
+	* ex 5:
+		Ref: AC----GTACGT
+		Seq: ACT--TGTACGT
+		ref codon: [0,1,6]
+		seq      : ACTTTG : Insertion not OK : Frameshift? => Replaced by "T-" in ref and "XX" in seq
+This allows to easily translate a multiple sequence alignment containing partial sequences, but the 
+interpretation should be careful: the translation of some sequences may not be representative of the 
+translation of the unaligned sequences.
+
 #### Usage
 ```
 Usage:

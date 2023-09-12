@@ -3246,6 +3246,54 @@ ${GOALIGN} translate -i input --phase 0 --unaligned -o result
 diff -q -b expected result
 rm -f input expected result
 
+echo "->goalign translate --ref-seq"
+cat > expected1 <<EOF
+>s1
+TY
+>s2
+XY
+EOF
+cat > expected2 <<EOF
+>s1
+T-Y
+>s2
+TLY
+EOF
+cat > expected3 <<EOF
+>s1
+TY
+>s2
+XY
+EOF
+cat > expected4 <<EOF
+>s1
+T-Y
+>s2
+TLY
+EOF
+cat > expected5 <<EOF
+>s1
+T-Y
+>s2
+XXY
+EOF
+
+echo -e ">s1\nAC--GTACGT\n>s2\nACTTGTACGT\n" | ${GOALIGN} translate --ref-seq s1 > result
+diff -q -b expected1 result
+echo -e ">s1\nAC---GTACGT\n>s2\nACTTTGTACGT\n" | ${GOALIGN} translate --ref-seq s1 > result
+diff -q -b expected2 result
+echo -e ">s1\nACGTACGT\n>s2\nA--TACGT\n" | ${GOALIGN} translate --ref-seq s1 > result
+diff -q -b expected3 result
+echo -e ">s1\nAC----GTACGT\n>s2\nACTT-TGTACGT\n" | ${GOALIGN} translate --ref-seq s1 > result
+diff -q -b expected4 result
+echo -e ">s1\nAC----GTACGT\n>s2\nACT--TGTACGT\n" | ${GOALIGN} translate --ref-seq s1 > result
+diff -q -b expected5 result
+
+rm -f expected1 expected2 expected3 expected4 expected5 result
+
+
+
+
 echo "->goalign reformat no ignore identical"
 cat > input <<EOF
   6   6
