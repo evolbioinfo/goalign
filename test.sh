@@ -4627,9 +4627,21 @@ MTTTACATTTMATTGGACAATTAGGACCATCTTATTCGCGATCCGTGACCAATTGCTATGGCTCGGGATATGTAGGATAG
 GCCTCTCAGTTCACCTGACM
 EOF
 
+cat > posfile.txt <<EOF
+Seq0000	0	M
+Seq0000	10	M
+Seq0002	0	M
+Seq0002	10	M
+Seq0005	0	M
+Seq0005	10	M
+Seq0009	0	M
+Seq0009	10	M
+Seq0009	99	M
+EOF
+
 $GOALIGN random --seed 123456 | $GOALIGN replace --posfile posfile.txt > result
 diff -q -b result expected
-rm -f  result expected
+rm -f  result expected posfile.txt
 
 echo "->goalign diff"
 cat > input <<EOF
