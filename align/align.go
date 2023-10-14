@@ -103,6 +103,8 @@ type Alignment interface {
 	RefCoordinates(name string, refstart, refend int) (alistart, aliend int, err error)
 	// converts sites on the given sequence to coordinates on the alignment
 	RefSites(name string, sites []int) (refsites []int, err error)
+	// Overwrites the character at position "site" of the sequence "seqname" by "newchar"
+	ReplaceChar(seqname string, site int, newchar uint8) error
 	// Removes sequences having >= cutoff gaps, returns number of removed sequences
 	RemoveGapSeqs(cutoff float64, ignoreNs bool) int
 	// Removes sequences having >= cutoff character, returns number of removed sequences
@@ -1105,6 +1107,26 @@ func (a *align) TrimSequences(trimsize int, fromStart bool) error {
 	}
 	a.length = a.length - trimsize
 	return nil
+}
+
+// ReplaceChar overwrites the character at position "site" of the sequence "seqname" by "newchar"
+func (a *align) ReplaceChar(seqname string, site int, newchar uint8) (err error) {
+	var s Sequence
+	var exists bool
+	if site < 0 {
+		err = fmt.Errorf("replacechar: site cannot be < 0")
+		return
+	}
+	if site >= a.Length() {
+		err = fmt.Errorf("replacechar: site is outside alignment length")
+		return
+	}
+	if s, exists = a.GetSequenceByName(seqname); !exists {
+		err = fmt.Errorf("replacechar: sequence name does not exist in the alignment")
+		return
+	}
+	s.SequenceChar()[site] = newchar
+	return
 }
 
 // Samples randomly a subset of the sequences
