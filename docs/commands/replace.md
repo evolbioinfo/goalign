@@ -6,6 +6,13 @@
 This command replaces characters in sequences of an input alignment. The `--regexp (-e)` option considers the string to be replaced as a regular expression.
 Unless `--unaligned`is specified, the replacement should not change sequence lengths, otherwise it returns an error.
 
+If `--posfile` is given, then `--old` and `--new` are not considered. Instead, characters at sites+sequences specified in the input file
+are replaced in the alignement. The format of the input posfile is tabulated with columns:
+
+- 0: sequence name
+- 1: site index
+- 2: new character
+
 #### Usage
 ```
 Usage:
@@ -17,6 +24,7 @@ Flags:
   -s, --old string      String to replace in the sequences (default "none")
   -o, --output string   Output alignment file (default "stdout")
   -e, --regexp          Considers Replace alignment using regexp
+  -f, --posfile string  File containing sites to replace by give characters in given sequences (deactivates --old & --new) (default "none")
       --unaligned       Considers input sequences as unaligned and fasta format (phylip, nexus,... options are ignored)
 
 Global Flags:
