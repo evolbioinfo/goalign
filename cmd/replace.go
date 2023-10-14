@@ -149,26 +149,29 @@ func readreplacefile(file string) (replace []repchar, err error) {
 	l, e := utils.Readln(r)
 
 	for e == nil {
-		cols := strings.Split(l, "\t")
-		if cols == nil || len(cols) < 3 {
-			err = errors.New("bad format from replace char file: There should be 3 columns: seqname\\tsite\\tnewchar")
-			return
-		}
+		// Authorize comments
+		if !strings.HasPrefix("#") {
+			cols := strings.Split(l, "\t")
+			if cols == nil || len(cols) < 3 {
+				err = errors.New("bad format from replace char file: There should be 3 columns: seqname\\tsite\\tnewchar")
+				return
+			}
 
-		seqname = cols[0]
-		if site, err = strconv.Atoi(cols[1]); err != nil {
-			err = fmt.Errorf("cannot convert site index to int")
-			return
-		}
-		newchar = uint8(cols[2][0])
+			seqname = cols[0]
+			if site, err = strconv.Atoi(cols[1]); err != nil {
+				err = fmt.Errorf("cannot convert site index to int")
+				return
+			}
+			newchar = uint8(cols[2][0])
 
-		replace = append(
-			replace,
-			repchar{
-				seqname: seqname,
-				site:    site,
-				newchar: newchar,
-			})
+			replace = append(
+				replace,
+				repchar{
+					seqname: seqname,
+					site:    site,
+					newchar: newchar,
+				})
+		}
 		l, e = utils.Readln(r)
 	}
 	return
