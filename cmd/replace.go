@@ -150,7 +150,7 @@ func readreplacefile(file string) (replace []repchar, err error) {
 
 	for e == nil {
 		// Authorize comments
-		if !strings.HasPrefix("#") {
+		if !strings.HasPrefix(l, "#") {
 			cols := strings.Split(l, "\t")
 			if cols == nil || len(cols) < 3 {
 				err = errors.New("bad format from replace char file: There should be 3 columns: seqname\\tsite\\tnewchar")
