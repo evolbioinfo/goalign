@@ -14,6 +14,7 @@ const (
 	MODEL_LG
 	MODEL_WAG
 	MODEL_HIVB
+	MODEL_AB
 
 	BL_MIN  = 1.e-08
 	BL_MAX  = 100.0
@@ -52,8 +53,11 @@ func NewProtModel(model int, usegamma bool, alpha float64) (*ProtModel, error) {
 		m, pi = WAGMats()
 	case MODEL_HIVB:
 		m, pi = HIVBMats()
+	case MODEL_AB:
+		m, pi = ABMats()
+
 	default:
-		return nil, fmt.Errorf("This protein model is not implemented")
+		return nil, fmt.Errorf("this protein model is not implemented")
 	}
 	return &ProtModel{
 		pi,
@@ -84,6 +88,8 @@ func ModelStringToInt(model string) int {
 		return MODEL_WAG
 	case "hivb":
 		return MODEL_HIVB
+	case "ab":
+		return MODEL_AB
 	default:
 		return -1
 	}
@@ -100,7 +106,7 @@ func (model *ProtModel) InitModel(aafreqs []float64) error {
 	ns := 20
 
 	if model.mat == nil || model.pi == nil {
-		return fmt.Errorf("Matrices have not been initialized")
+		return fmt.Errorf("matrices have not been initialized")
 	}
 
 	if aafreqs != nil && len(aafreqs) != ns {
@@ -129,7 +135,7 @@ func (model *ProtModel) InitModel(aafreqs []float64) error {
 
 	model.eigen = &mat.Eigen{}
 	if ok = model.eigen.Factorize(model.mat, mat.EigenRight); !ok {
-		return fmt.Errorf("Problem during matrix decomposition")
+		return fmt.Errorf("problem during matrix decomposition")
 	}
 	model.reigenvect = mat.NewDense(ns, ns, nil)
 	model.leigenvect = mat.NewDense(20, 20, nil)
