@@ -479,6 +479,11 @@ func JTTMats() (dmat *mat.Dense, pi []float64) {
 
 /*********************************************************/
 
+// Model of amino acid substitution in proteins encoded by
+// mitochondrial DNA
+// Jun Adachi & Masami Hasegawa
+// Mol Evol 42, 459–468 (1996)
+// https://doi.org/10.1007/bf02498640
 func MtREVMats() (dmat *mat.Dense, pi []float64) {
 	var i, j, naa int
 
