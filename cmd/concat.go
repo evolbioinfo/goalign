@@ -1,6 +1,8 @@
 package cmd
 
 import (
+	"fmt"
+
 	"github.com/evolbioinfo/goalign/align"
 	"github.com/evolbioinfo/goalign/io"
 	"github.com/evolbioinfo/goalign/io/utils"
@@ -8,6 +10,7 @@ import (
 )
 
 var concatout string
+var concatlog string
 
 // concatCmd represents the concat command
 var concatCmd = &cobra.Command{
@@ -33,13 +36,22 @@ or goalign concat -i none -p align*.phy
 		var alchan *align.AlignChannel
 		var align align.Alignment = nil
 		var f utils.StringWriterCloser
+		var l utils.StringWriterCloser
+		var start int
+		if l, err = utils.OpenWriteFile(concatlog); err != nil {
+			io.LogError(err)
+			return
+		}
 
+		start = 0
 		if infile != "none" {
 			if aligns, err = readalign(infile); err != nil {
 				io.LogError(err)
 				return
 			}
 			for al := range aligns.Achan {
+				fmt.Fprintf(l, "%d\t%d\t%s\n", start, start+al.Length(), infile)
+				start += al.Length()
 				if align == nil {
 					align = al
 				} else {
@@ -61,6 +73,8 @@ or goalign concat -i none -p align*.phy
 				return
 			}
 			for al := range alchan.Achan {
+				fmt.Fprintf(l, "%d\t%d\t%s\n", start, start+al.Length(), otherfile)
+				start += al.Length()
 				if align == nil {
 					align = al
 				} else {
@@ -76,6 +90,7 @@ or goalign concat -i none -p align*.phy
 				return
 			}
 		}
+		utils.CloseWriteFile(l, concatlog)
 
 		if f, err = utils.OpenWriteFile(concatout); err != nil {
 			io.LogError(err)
@@ -91,4 +106,5 @@ or goalign concat -i none -p align*.phy
 func init() {
 	RootCmd.AddCommand(concatCmd)
 	concatCmd.PersistentFlags().StringVarP(&concatout, "output", "o", "stdout", "Alignment output file")
+	concatCmd.PersistentFlags().StringVarP(&concatlog, "log", "l", "none", "Log output file (coordinates of all input alignments in the concatenated alignment)")
 }
