@@ -5,6 +5,8 @@
 ### concat
 This command concatenates several alignments in one global alignment. Input alignments may be in phylip or fasta format. If input format is phylip, the file may contain several alignments to concatenate : `goalign concat -i several.phy`. If format is Fasta, all fasta files must be given independently with `goalign concat -i first.fa [second.fa, third.fa, ...]` or `goalign -i none [first.fa, second.Fa, third.fa, ...]`. The order of sequences in alignments may be different, `concat` command will match sequences based on their name.
 
+If `-l` is given, the coordinates of all the input alignments in the concatenated alignment are written in the log file (tab separated values : start (0-based inclusive), end (0-based exclusive), input file name).
+
 #### Usage
 ```
 Usage:
@@ -12,7 +14,8 @@ Usage:
 
 Flags:
   -o, --output string   Alignment output file (default "stdout")
-
+  -l, --log string      Log output file (coordinates of all input alignments 
+                        in the concatenated alignment) (default "none")
 Global Flags:
   -i, --align string   Alignment input file (default "stdin")
   -p, --phylip         Alignment is in phylip? False=Fasta
