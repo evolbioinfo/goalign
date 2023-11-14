@@ -35,6 +35,7 @@ var rootinputstrict bool = false
 var rootoutputstrict bool = false
 var rootoutputoneline = false
 var rootoutputnoblock = false
+var rootalphabet string
 var rootAutoDetectInputFormat bool
 var seed int64 = -1
 var unaligned bool
@@ -122,14 +123,26 @@ func readalign(file string) (alchan *align.AlignChannel, err error) {
 	var fi goio.Closer
 	var r *bufio.Reader
 	var format int
-
+	var alphabet int
 	alchan = &align.AlignChannel{}
+
+	switch rootalphabet {
+	case "auto":
+		alphabet = align.BOTH
+	case "nt":
+		alphabet = align.NUCLEOTIDS
+	case "aa":
+		alphabet = align.AMINOACIDS
+	default:
+		err = fmt.Errorf("given alphabet is not supported: %s", rootalphabet)
+		return
+	}
 
 	if fi, r, err = utils.GetReader(file); err != nil {
 		return
 	}
 	if rootAutoDetectInputFormat {
-		if alchan, format, err = utils.ParseMultiAlignmentsAuto(fi, r, rootinputstrict); err != nil {
+		if alchan, format, err = utils.ParseMultiAlignmentsAuto(fi, r, rootinputstrict, alphabet); err != nil {
 			return
 		}
 		if format == align.FORMAT_PHYLIP {
@@ -144,6 +157,7 @@ func readalign(file string) (alchan *align.AlignChannel, err error) {
 			alchan.Achan = make(chan align.Alignment, 15)
 			go func() {
 				pp := phylip.NewParser(r, rootinputstrict)
+				pp.Alphabet(alphabet)
 				pp.IgnoreIdentical(ignoreidentical)
 				pp.ParseMultiple(alchan)
 				fi.Close()
@@ -151,6 +165,7 @@ func readalign(file string) (alchan *align.AlignChannel, err error) {
 		} else if rootnexus {
 			var al align.Alignment
 			np := nexus.NewParser(r)
+			np.Alphabet(alphabet)
 			np.IgnoreIdentical(ignoreidentical)
 			if al, err = np.Parse(); err != nil {
 				return
@@ -162,6 +177,7 @@ func readalign(file string) (alchan *align.AlignChannel, err error) {
 		} else if rootclustal {
 			var al align.Alignment
 			cp := clustal.NewParser(r)
+			cp.Alphabet(alphabet)
 			cp.IgnoreIdentical(ignoreidentical)
 			if al, err = cp.Parse(); err != nil {
 				return
@@ -173,6 +189,7 @@ func readalign(file string) (alchan *align.AlignChannel, err error) {
 		} else {
 			var al align.Alignment
 			fp := fasta.NewParser(r)
+			fp.Alphabet(alphabet)
 			fp.IgnoreIdentical(ignoreidentical)
 			if al, err = fp.Parse(); err != nil {
 				return
@@ -215,6 +232,7 @@ func init() {
 	RootCmd.PersistentFlags().BoolVar(&rootoutputstrict, "output-strict", false, "Strict phylip output format (only used with -p)")
 	RootCmd.PersistentFlags().BoolVar(&rootoutputoneline, "one-line", false, "Write Phylip sequences on 1 line (only used with -p)")
 	RootCmd.PersistentFlags().BoolVar(&rootoutputnoblock, "no-block", false, "Write Phylip sequences without space separated blocks (only used with -p)")
+	RootCmd.PersistentFlags().StringVar(&rootalphabet, "alphabet", "auto", "Alignment/Sequences alphabet: auto (default), aa, or nt")
 
 	RootCmd.PersistentFlags().BoolVar(&rootAutoDetectInputFormat, "auto-detect", false, "Auto detects input format (overrides -p, -x and -u)")
 

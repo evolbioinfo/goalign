@@ -18,6 +18,7 @@ import (
 type Parser struct {
 	s               *Scanner
 	ignoreidentical int
+	alphabet        int // can be align.BOTH, align.AMINOACIDS or align.NUCLEOTIDS
 	buf             struct {
 		tok Token  // last read token
 		lit string // last read literal
@@ -27,13 +28,28 @@ type Parser struct {
 
 // NewParser returns a new instance of Parser.
 func NewParser(r io.Reader) *Parser {
-	return &Parser{s: NewScanner(r), ignoreidentical: align.IGNORE_NONE}
+	return &Parser{s: NewScanner(r), ignoreidentical: align.IGNORE_NONE, alphabet: align.BOTH}
 }
 
 // If sets to true, then will ignore duplicate sequences that have the same name and the same sequence
 // Otherwise, it just renames them just as the sequences that have same name and different sequences
-func (p *Parser) IgnoreIdentical(ignore int) {
+func (p *Parser) IgnoreIdentical(ignore int) *Parser {
 	p.ignoreidentical = ignore
+	return p
+}
+
+// alphabet: can be align.BOTH (auto detect alphabet), align.NUCLEOTIDS (considers alignment as nucleotides),
+// or align.AMINOACIDS (considers the alignment as aminoacids). If not auto, can return an error if the alignment
+// is not compatible with the given alphabet.
+// If another value is given, then align.BOTH is considered
+func (p *Parser) Alphabet(alphabet int) *Parser {
+	p.alphabet = alphabet
+	if p.alphabet != align.BOTH &&
+		p.alphabet != align.NUCLEOTIDS &&
+		p.alphabet != align.AMINOACIDS {
+		p.alphabet = align.BOTH
+	}
+	return p
 }
 
 // scan returns the next token from the underlying scanner.
@@ -139,7 +155,7 @@ func (p *Parser) Parse() (al align.Alignment, err error) {
 	}
 
 	if int(taxantax) != -1 && int(taxantax) != len(taxlabels) {
-		err = fmt.Errorf("Number of defined taxa in TAXLABELS/DIMENSIONS (%d) is different from length of taxa list (%d)", taxantax, len(taxlabels))
+		err = fmt.Errorf("number of defined taxa in TAXLABELS/DIMENSIONS (%d) is different from length of taxa list (%d)", taxantax, len(taxlabels))
 		return
 	}
 
@@ -148,27 +164,23 @@ func (p *Parser) Parse() (al align.Alignment, err error) {
 	// 	return
 	// }
 
-	if sequences == nil || len(sequences) == 0 {
-		err = fmt.Errorf("No sequence in this Nexus file")
+	if len(sequences) == 0 {
+		err = fmt.Errorf("no sequence in this Nexus file")
 		return
 	}
 
 	// We initialize alignment structure using goalign structure
 	if names != nil && sequences != nil {
-		al = align.NewAlign(align.AlphabetFromString(datatype))
+		al = align.NewAlign(align.UNKNOWN)
 		al.IgnoreIdentical(p.ignoreidentical)
-		if al.Alphabet() == align.UNKNOWN {
-			err = fmt.Errorf("Unknown datatype: %q", datatype)
-			return
-		}
 		if len(names) != int(ntax) && ntax != -1 {
-			err = fmt.Errorf("Number of taxa in alignment (%d)  does not correspond to definition %d", len(names), ntax)
+			err = fmt.Errorf("number of taxa in alignment (%d)  does not correspond to definition %d", len(names), ntax)
 			return
 		}
 		for i, name := range names {
-			seq, _ := sequences[name]
+			seq := sequences[name]
 			if len(seq) != int(nchar) && nchar != -1 {
-				err = fmt.Errorf("Number of character in sequence #%d (%d) does not correspond to definition %d", i, len(seq), nchar)
+				err = fmt.Errorf("number of character in sequence #%d (%d) does not correspond to definition %d", i, len(seq), nchar)
 				return
 			}
 			seq = strings.Replace(seq, string(gap), string(align.GAP), -1)
@@ -182,7 +194,7 @@ func (p *Parser) Parse() (al align.Alignment, err error) {
 		if taxlabels != nil {
 			al.Iterate(func(name string, sequence string) bool {
 				if _, ok := taxlabels[name]; !ok {
-					err = fmt.Errorf("Sequence name %s in the alignment is not defined in the TAXLABELS block", name)
+					err = fmt.Errorf("sequence name %s in the alignment is not defined in the TAXLABELS block", name)
 				}
 				return false
 			})
@@ -190,11 +202,29 @@ func (p *Parser) Parse() (al align.Alignment, err error) {
 				return nil, err
 			}
 			if al.NbSequences() != len(taxlabels) {
-				err = fmt.Errorf("Some taxa names defined in TAXLABELS are not present in the alignment")
+				err = fmt.Errorf("some taxa names defined in TAXLABELS are not present in the alignment")
 				return
 			}
 		}
 		al.ReplaceMatchChars()
+
+		// Set the alphabet
+		var alp int
+		// If the alphabet given on the command line is BOTH,
+		// then we take the alphabet given in the nexus file
+		if p.alphabet == align.BOTH {
+			alp = align.AlphabetFromString(datatype)
+		} else {
+			// Otherwise, we take the alphabet given on the command line
+			alp = p.alphabet
+		}
+		if alp == align.BOTH {
+			al.AutoAlphabet()
+		} else {
+			if err = al.SetAlphabet(alp); err != nil {
+				return
+			}
+		}
 	}
 	return
 }
@@ -214,12 +244,12 @@ func (p *Parser) parseTaxa() (int64, map[string]bool, error) {
 			err = fmt.Errorf("found illegal token %q", lit)
 			stoptaxa = true
 		case EOF:
-			err = fmt.Errorf("End of file within a TAXA block (no END;)")
+			err = fmt.Errorf("end of file within a TAXA block (no END;)")
 			stoptaxa = true
 		case END:
 			tok2, _ := p.scanIgnoreWhitespace()
 			if tok2 != ENDOFCOMMAND {
-				err = fmt.Errorf("End token without ;")
+				err = fmt.Errorf("end token without ;")
 			}
 			stoptaxa = true
 		case DIMENSIONS:
@@ -233,12 +263,12 @@ func (p *Parser) parseTaxa() (int64, map[string]bool, error) {
 				case NTAX:
 					tok3, lit3 := p.scanIgnoreWhitespace()
 					if tok3 != EQUAL {
-						err = fmt.Errorf("Expecting '=' after NTAX, got %q", lit3)
+						err = fmt.Errorf("expecting '=' after NTAX, got %q", lit3)
 						stopdimensions = true
 					}
 					tok4, lit4 := p.scanIgnoreWhitespace()
 					if tok4 != NUMERIC {
-						err = fmt.Errorf("Expecting Integer value after 'NTAX=', got %q", lit4)
+						err = fmt.Errorf("expecting Integer value after 'NTAX=', got %q", lit4)
 						stopdimensions = true
 					}
 					ntax, err = strconv.ParseInt(lit4, 10, 64)
@@ -267,7 +297,7 @@ func (p *Parser) parseTaxa() (int64, map[string]bool, error) {
 				case ENDOFLINE:
 					continue
 				default:
-					err = fmt.Errorf("Unknown token %q (%v) in taxlabel list", lit2, tok2)
+					err = fmt.Errorf("unknown token %q (%v) in taxlabel list", lit2, tok2)
 					stoplabels = true
 				}
 			}
@@ -281,7 +311,7 @@ func (p *Parser) parseTaxa() (int64, map[string]bool, error) {
 
 		default:
 			err = p.parseUnsupportedCommand()
-			aio.PrintMessage(fmt.Sprintf("Unsupported command %q in block TAXA, skipping", lit))
+			aio.PrintMessage(fmt.Sprintf("unsupported command %q in block TAXA, skipping", lit))
 			if err != nil {
 				stoptaxa = true
 			}
@@ -305,17 +335,16 @@ func (p *Parser) parseData() (names []string, sequences map[string]string, nchar
 		tok, lit := p.scanIgnoreWhitespace()
 		switch tok {
 		case ENDOFLINE:
-			break
 		case ILLEGAL:
 			err = fmt.Errorf("found illegal token %q", lit)
 			stopdata = true
 		case EOF:
-			err = fmt.Errorf("End of file within a TAXA block (no END;)")
+			err = fmt.Errorf("end of file within a TAXA block (no END;)")
 			stopdata = true
 		case END:
 			tok2, _ := p.scanIgnoreWhitespace()
 			if tok2 != ENDOFCOMMAND {
-				err = fmt.Errorf("End token without ;")
+				err = fmt.Errorf("end token without ;")
 			}
 			stopdata = true
 		case DIMENSIONS:
@@ -329,12 +358,12 @@ func (p *Parser) parseData() (names []string, sequences map[string]string, nchar
 				case NTAX:
 					tok3, lit3 := p.scanIgnoreWhitespace()
 					if tok3 != EQUAL {
-						err = fmt.Errorf("Expecting '=' after NTAX, got %q", lit3)
+						err = fmt.Errorf("expecting '=' after NTAX, got %q", lit3)
 						stopdimensions = true
 					}
 					tok4, lit4 := p.scanIgnoreWhitespace()
 					if tok4 != NUMERIC {
-						err = fmt.Errorf("Expecting Integer value after 'NTAX=', got %q", lit4)
+						err = fmt.Errorf("expecting Integer value after 'NTAX=', got %q", lit4)
 						stopdimensions = true
 					}
 					ntax, err = strconv.ParseInt(lit4, 10, 64)
@@ -344,12 +373,12 @@ func (p *Parser) parseData() (names []string, sequences map[string]string, nchar
 				case NCHAR:
 					tok3, lit3 := p.scanIgnoreWhitespace()
 					if tok3 != EQUAL {
-						err = fmt.Errorf("Expecting '=' after NTAX, got %q", lit3)
+						err = fmt.Errorf("expecting '=' after NTAX, got %q", lit3)
 						stopdimensions = true
 					}
 					tok4, lit4 := p.scanIgnoreWhitespace()
 					if tok4 != NUMERIC {
-						err = fmt.Errorf("Expecting Integer value after 'NTAX=', got %q", lit4)
+						err = fmt.Errorf("expecting Integer value after 'NTAX=', got %q", lit4)
 						stopdimensions = true
 					}
 					nchar, err = strconv.ParseInt(lit4, 10, 64)
@@ -360,7 +389,7 @@ func (p *Parser) parseData() (names []string, sequences map[string]string, nchar
 					if err = p.parseUnsupportedKey(lit2); err != nil {
 						stopdimensions = true
 					}
-					aio.PrintMessage(fmt.Sprintf("Unsupported key %q in %q command, skipping", lit2, lit))
+					aio.PrintMessage(fmt.Sprintf("unsupported key %q in %q command, skipping", lit2, lit))
 				}
 				if err != nil {
 					stopdata = true
@@ -378,30 +407,30 @@ func (p *Parser) parseData() (names []string, sequences map[string]string, nchar
 				case DATATYPE:
 					tok3, lit3 := p.scanIgnoreWhitespace()
 					if tok3 != EQUAL {
-						err = fmt.Errorf("Expecting '=' after DATATYPE, got %q", lit3)
+						err = fmt.Errorf("expecting '=' after DATATYPE, got %q", lit3)
 						stopformat = true
 					} else {
 						tok4, lit4 := p.scanIgnoreWhitespace()
 						if tok4 == IDENT {
 							datatype = lit4
 						} else {
-							err = fmt.Errorf("Expecting identifier after 'DATATYPE=', got %q", lit4)
+							err = fmt.Errorf("expecting identifier after 'DATATYPE=', got %q", lit4)
 							stopformat = true
 						}
 					}
 				case MISSING:
 					tok3, lit3 := p.scanIgnoreWhitespace()
 					if tok3 != EQUAL {
-						err = fmt.Errorf("Expecting '=' after MISSING, got %q", lit3)
+						err = fmt.Errorf("expecting '=' after MISSING, got %q", lit3)
 						stopformat = true
 					} else {
 						tok4, lit4 := p.scanIgnoreWhitespace()
 						if tok4 != IDENT {
-							err = fmt.Errorf("Expecting Integer value after 'MISSING=', got %q", lit4)
+							err = fmt.Errorf("expecting Integer value after 'MISSING=', got %q", lit4)
 							stopformat = true
 						} else {
 							if len(lit4) != 1 {
-								err = fmt.Errorf("Expecting a single character after MISSING=', got %q", lit4)
+								err = fmt.Errorf("expecting a single character after MISSING=', got %q", lit4)
 								stopformat = true
 							} else {
 								missing = []rune(lit4)[0]
@@ -411,16 +440,16 @@ func (p *Parser) parseData() (names []string, sequences map[string]string, nchar
 				case GAP:
 					tok3, lit3 := p.scanIgnoreWhitespace()
 					if tok3 != EQUAL {
-						err = fmt.Errorf("Expecting '=' after GAP, got %q", lit3)
+						err = fmt.Errorf("expecting '=' after GAP, got %q", lit3)
 						stopformat = true
 					} else {
 						tok4, lit4 := p.scanIgnoreWhitespace()
 						if tok4 != IDENT {
-							err = fmt.Errorf("Expecting an identifier after 'GAP=', got %q", lit4)
+							err = fmt.Errorf("expecting an identifier after 'GAP=', got %q", lit4)
 							stopformat = true
 						} else {
 							if len(lit4) != 1 {
-								err = fmt.Errorf("Expecting a single character after GAP=', got %q", lit4)
+								err = fmt.Errorf("expecting a single character after GAP=', got %q", lit4)
 								stopformat = true
 							} else {
 								gap = []rune(lit4)[0]
@@ -430,16 +459,16 @@ func (p *Parser) parseData() (names []string, sequences map[string]string, nchar
 				case MATCHCHAR:
 					tok3, lit3 := p.scanIgnoreWhitespace()
 					if tok3 != EQUAL {
-						err = fmt.Errorf("Expecting '=' after MATCHCHAR, got %q", lit3)
+						err = fmt.Errorf("expecting '=' after MATCHCHAR, got %q", lit3)
 						stopformat = true
 					} else {
 						tok4, lit4 := p.scanIgnoreWhitespace()
 						if tok4 != IDENT {
-							err = fmt.Errorf("Expecting character value after 'MATCHCHAR=', got %q", lit4)
+							err = fmt.Errorf("expecting character value after 'MATCHCHAR=', got %q", lit4)
 							stopformat = true
 						} else {
 							if len(lit4) != 1 {
-								err = fmt.Errorf("Expecting a single character after MATCHCHAR=', got %q", lit4)
+								err = fmt.Errorf("expecting a single character after MATCHCHAR=', got %q", lit4)
 								stopformat = true
 							} else {
 								matchchar = []rune(lit4)[0]
@@ -450,7 +479,7 @@ func (p *Parser) parseData() (names []string, sequences map[string]string, nchar
 					if err = p.parseUnsupportedKey(lit2); err != nil {
 						stopformat = true
 					}
-					aio.PrintMessage(fmt.Sprintf("Unsupported key %q in %q command, skipping", lit2, lit))
+					aio.PrintMessage(fmt.Sprintf("unsupported key %q in %q command, skipping", lit2, lit))
 				}
 				if err != nil {
 					stopdata = true
@@ -482,7 +511,7 @@ func (p *Parser) parseData() (names []string, sequences map[string]string, nchar
 						case ENDOFLINE:
 							stopseq = true
 						default:
-							err = fmt.Errorf("Expecting sequence after sequence identifier (%q) in Matrix block, got %q", lit2, lit3)
+							err = fmt.Errorf("expecting sequence after sequence identifier (%q) in Matrix block, got %q", lit2, lit3)
 							stopseq = true
 						}
 					}
@@ -496,7 +525,7 @@ func (p *Parser) parseData() (names []string, sequences map[string]string, nchar
 				case ENDOFCOMMAND:
 					stopmatrix = true
 				default:
-					err = fmt.Errorf(fmt.Sprintf("Expecting sequence identifier in Matrix block, got %q", lit2))
+					err = fmt.Errorf(fmt.Sprintf("expecting sequence identifier in Matrix block, got %q", lit2))
 					stopmatrix = true
 				}
 			}
@@ -509,7 +538,7 @@ func (p *Parser) parseData() (names []string, sequences map[string]string, nchar
 			}
 		default:
 			err = p.parseUnsupportedCommand()
-			aio.PrintMessage(fmt.Sprintf("Unsupported command %q in block DATA, skipping", lit))
+			aio.PrintMessage(fmt.Sprintf("unsupported command %q in block DATA, skipping", lit))
 			if err != nil {
 				stopdata = true
 			}
@@ -529,7 +558,7 @@ func (p *Parser) parseUnsupportedCommand() (err error) {
 			err = fmt.Errorf("found illegal token %q", lit)
 			stopunsupported = true
 		case EOF:
-			err = fmt.Errorf("End of file within a command (no;)")
+			err = fmt.Errorf("end of file within a command (no;)")
 			stopunsupported = true
 		case ENDOFCOMMAND:
 			stopunsupported = true
@@ -543,11 +572,11 @@ func (p *Parser) parseUnsupportedKey(key string) (err error) {
 	// Unsupported token
 	tok, lit := p.scanIgnoreWhitespace()
 	if tok != EQUAL {
-		err = fmt.Errorf("Expecting '=' after %s, got %q", key, lit)
+		err = fmt.Errorf("expecting '=' after %s, got %q", key, lit)
 	} else {
 		tok2, lit2 := p.scanIgnoreWhitespace()
 		if tok2 != IDENT && tok2 != NUMERIC {
-			err = fmt.Errorf("Expecting an identifier after '%s=', got %q", key, lit2)
+			err = fmt.Errorf("expecting an identifier after '%s=', got %q", key, lit2)
 		}
 	}
 	return
@@ -564,12 +593,12 @@ func (p *Parser) parseUnsupportedBlock() error {
 			err = fmt.Errorf("found illegal token %q", lit)
 			stopunsupported = true
 		case EOF:
-			err = fmt.Errorf("End of file within a block (no END;)")
+			err = fmt.Errorf("end of file within a block (no END;)")
 			stopunsupported = true
 		case END:
 			tok2, _ := p.scanIgnoreWhitespace()
 			if tok2 != ENDOFCOMMAND {
-				err = fmt.Errorf("End token without ;")
+				err = fmt.Errorf("end token without ;")
 			}
 			stopunsupported = true
 		}
@@ -600,7 +629,7 @@ func (p *Parser) consumeComment(curtoken Token, curlit string) (outtoken Token, 
 		for outtoken != CLOSEBRACK {
 			outtoken, outlit = p.scanIgnoreWhitespace()
 			if outtoken == EOF || outtoken == ILLEGAL {
-				err = fmt.Errorf("Unmatched bracket")
+				err = fmt.Errorf("unmatched bracket")
 			}
 		}
 	}

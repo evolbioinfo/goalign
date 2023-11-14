@@ -21,10 +21,12 @@ type SeqBag interface {
 	AddSequenceChar(name string, sequence []uint8, comment string) error
 	AppendSeqIdentifier(identifier string, right bool)
 	Alphabet() int
+	SetAlphabet(int) error // Sets the alphabet
 	AlphabetStr() string
 	AlphabetCharacters() []uint8
 	AlphabetCharToIndex(c uint8) int // Returns index of the character (nt or aa) in the AlphabetCharacters() array
 	AutoAlphabet()                   // detects and sets alphabet automatically for all the sequences
+	DetectAlphabet() (alphabet int)  //  detects the compatible alphabets
 	CharStats() map[uint8]int64
 	UniqueCharacters() []uint8
 	CharStatsSeq(idx int) (map[uint8]int, error)    // Computes frequency of characters for the given sequence
@@ -192,6 +194,38 @@ func (sb *seqbag) AppendSeqIdentifier(identifier string, right bool) {
 
 func (sb *seqbag) Alphabet() int {
 	return sb.alphabet
+}
+
+// SetAlphabet sets the alphabet of the current sequences
+// alphabet can be align.AMINOACIDS or align.NUCLEOTIDS
+// otherwise returns an error
+func (sb *seqbag) SetAlphabet(alphabet int) (err error) {
+	alpha := sb.DetectAlphabet()
+	if alpha == UNKNOWN {
+		err = fmt.Errorf("input sequence alphabet unknown")
+		return
+	}
+
+	if alphabet == NUCLEOTIDS {
+		if alpha == NUCLEOTIDS || alpha == BOTH {
+			sb.alphabet = NUCLEOTIDS
+		} else {
+			err = fmt.Errorf("given alphabet is not compatible with input sequences")
+			return
+		}
+	} else if alphabet == AMINOACIDS {
+		if alpha == AMINOACIDS || alpha == BOTH {
+			sb.alphabet = AMINOACIDS
+		} else {
+			err = fmt.Errorf("given alphabet is not compatible with input sequences")
+			return
+		}
+	} else {
+		err = fmt.Errorf("given alphabet can not be used in alignment")
+		return
+	}
+
+	return
 }
 
 func (sb *seqbag) AlphabetStr() string {
@@ -507,7 +541,9 @@ func (sb *seqbag) appendToSequence(name string, sequence []uint8) error {
 	return nil
 }
 
-func (sb *seqbag) AutoAlphabet() {
+// Detects the alphabets compatible with the alignment
+// can be align.BOTH, align.NUCLEOTIDS, align.AMINOACIDS, or align.UNKNOWN
+func (sb *seqbag) DetectAlphabet() (alphabet int) {
 	isaa := true
 	isnt := true
 
@@ -532,8 +568,27 @@ func (sb *seqbag) AutoAlphabet() {
 	})
 
 	if isnt {
+		if isaa {
+			alphabet = BOTH
+		} else {
+			alphabet = NUCLEOTIDS
+		}
+	} else {
+		if isaa {
+			alphabet = AMINOACIDS
+		} else {
+			alphabet = UNKNOWN
+		}
+	}
+	return
+}
+
+func (sb *seqbag) AutoAlphabet() {
+	alphabet := sb.DetectAlphabet()
+
+	if alphabet == BOTH || alphabet == NUCLEOTIDS {
 		sb.alphabet = NUCLEOTIDS
-	} else if isaa {
+	} else if alphabet == AMINOACIDS {
 		sb.alphabet = AMINOACIDS
 	} else {
 		sb.alphabet = UNKNOWN

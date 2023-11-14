@@ -16,6 +16,7 @@ type Parser struct {
 	s               *Scanner
 	strict          bool
 	ignoreidentical int
+	alphabet        int // can be align.BOTH, align.AMINOACIDS or align.NUCLEOTIDS
 	buf             struct {
 		tok Token  // last read token
 		lit string // last read literal
@@ -25,13 +26,28 @@ type Parser struct {
 
 // NewParser returns a new instance of Parser.
 func NewParser(r io.Reader, strict bool) *Parser {
-	return &Parser{s: NewScanner(r), strict: strict, ignoreidentical: align.IGNORE_NONE}
+	return &Parser{s: NewScanner(r), strict: strict, ignoreidentical: align.IGNORE_NONE, alphabet: align.BOTH}
 }
 
 // If sets to true, then will ignore duplicate sequences that have the same name and the same sequence
 // Otherwise, it just renames them just as the sequences that have same name and different sequences
-func (p *Parser) IgnoreIdentical(ignore int) {
+func (p *Parser) IgnoreIdentical(ignore int) *Parser {
 	p.ignoreidentical = ignore
+	return p
+}
+
+// alphabet: can be align.BOTH (auto detect alphabet), align.NUCLEOTIDS (considers alignment as nucleotides),
+// or align.AMINOACIDS (considers the alignment as aminoacids). If not auto, can return an error if the alignment
+// is not compatible with the given alphabet.
+// If another value is given, then align.BOTH is considered
+func (p *Parser) Alphabet(alphabet int) *Parser {
+	p.alphabet = alphabet
+	if p.alphabet != align.BOTH &&
+		p.alphabet != align.NUCLEOTIDS &&
+		p.alphabet != align.AMINOACIDS {
+		p.alphabet = align.BOTH
+	}
+	return p
 }
 
 // scan returns the next token from the underlying scanner.
@@ -69,11 +85,9 @@ func (p *Parser) scanWithEOL() (tok Token, lit string) {
 func (p *Parser) unscan() { p.buf.n = 1 }
 
 // Parse parses a phylip alignment
-func (p *Parser) Parse() (align.Alignment, error) {
+func (p *Parser) Parse() (al align.Alignment, err error) {
 	var nbseq int64 = 0
 	var lenseq int64 = 0
-	var al align.Alignment = nil
-	var err error
 
 	// We skip all WS and EOL at the beginning
 	tok, lit := p.scanWithEOL()
@@ -93,10 +107,12 @@ func (p *Parser) Parse() (align.Alignment, error) {
 			return nil, errors.New("The numeric is not parsable: " + lit)
 		}
 		if nbseq == 0 {
-			return nil, errors.New("No sequences in the alignment")
+			err = fmt.Errorf("no sequences in the alignment")
+			return
 		}
 		if nbseq < 0 {
-			return nil, fmt.Errorf("Wrong number of sequences in the alignment: %d", nbseq)
+			err = fmt.Errorf("wrong number of sequences in the alignment: %d", nbseq)
+			return
 		}
 	}
 
@@ -105,30 +121,36 @@ func (p *Parser) Parse() (align.Alignment, error) {
 
 	tok, lit = p.scan()
 	if tok != WS {
-		return nil, errors.New("There should be a whitespace between number of sequences and length")
+		err = fmt.Errorf("there should be a whitespace between number of sequences and length")
+		return
 	}
 
 	// The second token, after a WS, should be a Number
 	tok, lit = p.scan()
 	if tok != NUMERIC {
-		return nil, errors.New("Phylip file must begin with the number of sequences and their length")
+		err = fmt.Errorf("phylip file must begin with the number of sequences and their length")
+		return
 	} else {
 		lenseq, err = strconv.ParseInt(lit, 10, 64)
 		if err != nil {
-			return nil, errors.New("The numeric is not parsable: " + lit)
+			err = fmt.Errorf("the numeric is not parsable: " + lit)
+			return
 		}
 		if lenseq == 0 {
-			return nil, errors.New("0 Length sequences defined in the header")
+			err = fmt.Errorf("0 Length sequences defined in the header")
+			return
 		}
 		if nbseq < 0 {
-			return nil, fmt.Errorf("Wrong sequence length in the header: %d", lenseq)
+			err = fmt.Errorf("wrong sequence length in the header: %d", lenseq)
+			return
 		}
 	}
 
 	// Then a \n
 	tok, lit = p.scan()
 	if tok != ENDOFLINE {
-		return nil, errors.New("Bad Phylip format, \n missing after header")
+		err = fmt.Errorf("bad Phylip format, \\n missing after header")
+		return
 	}
 
 	// Then names of the sequences and sequences
@@ -137,10 +159,12 @@ func (p *Parser) Parse() (align.Alignment, error) {
 			// if strict
 			name := p.s.Read(10)
 			if []rune(name)[len(name)-1] == eof {
-				return nil, fmt.Errorf("Bad Phylip format, less sequences in the file than indicated in the header : %d vs. %d", nbseq, i)
+				err = fmt.Errorf("bad Phylip format, less sequences in the file than indicated in the header : %d vs. %d", nbseq, i)
+				return
 			}
 			if name == "" {
-				return nil, fmt.Errorf("Bad Phylip format, we should have an sequence identifier after the header : %s", lit)
+				err = fmt.Errorf("bad Phylip format, we should have an sequence identifier after the header : %s", lit)
+				return
 			}
 			// We remove spaces from names...
 			name = strings.Replace(name, " ", "", -1)
@@ -148,10 +172,12 @@ func (p *Parser) Parse() (align.Alignment, error) {
 		} else {
 			tok, lit = p.scan()
 			if tok == EOF {
-				return nil, fmt.Errorf("Bad Phylip format, less sequences in the file than indicated in the header : %d vs. %d", nbseq, i)
+				err = fmt.Errorf("bad Phylip format, less sequences in the file than indicated in the header : %d vs. %d", nbseq, i)
+				return
 			}
 			if tok != IDENTIFIER && tok != NUMERIC {
-				return nil, fmt.Errorf("Bad Phylip format, we should have an sequence identifier after the header : %s", lit)
+				err = fmt.Errorf("bad Phylip format, we should have an sequence identifier after the header : %s", lit)
+				return
 			}
 			names[i] = lit
 		}
@@ -171,12 +197,12 @@ func (p *Parser) Parse() (align.Alignment, error) {
 	}
 
 	tok, lit = p.scanWithEOL()
-
 	if tok == ENDOFLINE {
 		tok, lit = p.scan()
 		p.unscan()
 	} else if int(lenseq) != seqs[0].Len() {
-		return nil, errors.New("Bad Phylip Format : Should have a blank line here")
+		err = fmt.Errorf("bad Phylip Format : Should have a blank line here")
+		return
 	}
 	// All sequences are completely parsed
 	// If there are several alignments in the file, we should
@@ -198,7 +224,8 @@ func (p *Parser) Parse() (align.Alignment, error) {
 			if tok != IDENTIFIER {
 				// fmt.Println("Block: ")
 				// fmt.Println(b)
-				return nil, errors.New("Bad Phylip format, we should have a sequence block here")
+				err = fmt.Errorf("bad Phylip format, we should have a sequence block here")
+				return
 			}
 			for tok != ENDOFLINE {
 				switch tok {
@@ -206,7 +233,8 @@ func (p *Parser) Parse() (align.Alignment, error) {
 					seqs[i].WriteString(lit)
 				case WS:
 				default:
-					return nil, errors.New("Bad Phylip format, Unexpected character :" + lit)
+					err = fmt.Errorf("bad Phylip format, Unexpected character :" + lit)
+					return
 				}
 				tok, lit = p.scan()
 			}
@@ -216,7 +244,8 @@ func (p *Parser) Parse() (align.Alignment, error) {
 			tok, lit = p.scan()
 			p.unscan()
 		} else if int(lenseq) != seqs[0].Len() {
-			return nil, errors.New("Bad Phylip Format : Should have a blank line here")
+			err = fmt.Errorf("bad Phylip Format : Should have a blank line here")
+			return
 		}
 		b++
 	}
@@ -228,12 +257,21 @@ func (p *Parser) Parse() (align.Alignment, error) {
 	for i, name := range names {
 		seq := seqs[i].String()
 		if int(lenseq) != len(seq) {
-			return nil, errors.New("Bad Phylip format : Length of sequences does not correspond to header")
+			err = fmt.Errorf("bad Phylip format : Length of sequences does not correspond to header")
+			return
 		}
 		al.AddSequence(name, seq, "")
 	}
-	al.AutoAlphabet()
-	return al, nil
+
+	if p.alphabet == align.BOTH {
+		al.AutoAlphabet()
+	} else {
+		if err = al.SetAlphabet(p.alphabet); err != nil {
+			return
+		}
+	}
+
+	return
 }
 
 /*
@@ -253,5 +291,4 @@ func (p *Parser) ParseMultiple(aligns *align.AlignChannel) {
 	aligns.Err = err
 
 	close(aligns.Achan)
-	return
 }

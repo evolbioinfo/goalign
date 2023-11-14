@@ -50,6 +50,7 @@ Almost all commands can have the following arguments:
 	3. Clustal
     4. Phylip
     If none of these formats is recognized, then will exit with an error. Please also note that in `--auto-detect` mode, phylip format is considered as not strict.
+* `--alphabet`: Used to specify which alphabet must be used to parse the alignment. It can be `auto` (default), `aa`, or `nt`. By default, the alphabet is deduced from the content of the input file. In the case of nexus format, when `--alphabet auto` is specified, the alphabet specified in the nexus file is used. Otherwise, this option overrides the nexus file alphabet.
 
 Output is written to stdout by default, but can be generally written to files with the `-o` option. If the given output file has a `.gz` or `.xz` extension, the output is compressed accordingly.
 

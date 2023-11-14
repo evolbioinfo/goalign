@@ -18,6 +18,7 @@ import (
 type Parser struct {
 	s               *Scanner
 	ignoreidentical int
+	alphabet        int // can be align.BOTH, align.AMINOACIDS or align.NUCLEOTIDS
 	buf             struct {
 		tok Token  // last read token
 		lit string // last read literal
@@ -27,13 +28,28 @@ type Parser struct {
 
 // NewParser returns a new instance of Parser.
 func NewParser(r io.Reader) *Parser {
-	return &Parser{s: NewScanner(r), ignoreidentical: align.IGNORE_NONE}
+	return &Parser{s: NewScanner(r), ignoreidentical: align.IGNORE_NONE, alphabet: align.BOTH}
 }
 
 // If sets to true, then will ignore duplicate sequences that have the same name and the same sequence
 // Otherwise, it just renames them just as the sequences that have same name and different sequences
-func (p *Parser) IgnoreIdentical(ignore int) {
+func (p *Parser) IgnoreIdentical(ignore int) *Parser {
 	p.ignoreidentical = ignore
+	return p
+}
+
+// alphabet: can be align.BOTH (auto detect alphabet), align.NUCLEOTIDS (considers alignment as nucleotides),
+// or align.AMINOACIDS (considers the alignment as aminoacids). If not auto, can return an error if the alignment
+// is not compatible with the given alphabet.
+// If another value is given, then align.BOTH is considered
+func (p *Parser) Alphabet(alphabet int) *Parser {
+	p.alphabet = alphabet
+	if p.alphabet != align.BOTH &&
+		p.alphabet != align.NUCLEOTIDS &&
+		p.alphabet != align.AMINOACIDS {
+		p.alphabet = align.BOTH
+	}
+	return p
 }
 
 // scan returns the next token from the underlying scanner.
@@ -85,7 +101,7 @@ func (p *Parser) parseGeneric(sb align.SeqBag) (err error) {
 	// The first token should be a ">"
 	tok, lit := p.scanIgnoreEndOfLine()
 	if tok != STARTIDENT {
-		err = errors.New("Fasta file should start with a > ")
+		err = errors.New("fasta file should start with a > ")
 		return
 	}
 	p.unscan()
@@ -121,6 +137,13 @@ func (p *Parser) parseGeneric(sb align.SeqBag) (err error) {
 			}
 		}
 	}
-	sb.AutoAlphabet()
+
+	if p.alphabet == align.BOTH {
+		sb.AutoAlphabet()
+	} else {
+		if err = sb.SetAlphabet(p.alphabet); err != nil {
+			return
+		}
+	}
 	return
 }

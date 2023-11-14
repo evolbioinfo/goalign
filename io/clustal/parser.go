@@ -16,6 +16,7 @@ import (
 type Parser struct {
 	s               *Scanner
 	ignoreidentical int
+	alphabet        int // can be align.BOTH, align.AMINOACIDS or align.NUCLEOTIDS
 	buf             struct {
 		tok Token  // last read token
 		lit string // last read literal
@@ -25,13 +26,28 @@ type Parser struct {
 
 // NewParser returns a new instance of Parser.
 func NewParser(r io.Reader) *Parser {
-	return &Parser{s: NewScanner(r), ignoreidentical: align.IGNORE_NONE}
+	return &Parser{s: NewScanner(r), ignoreidentical: align.IGNORE_NONE, alphabet: align.BOTH}
 }
 
 // If sets to true, then will ignore duplicate sequences that have the same name and the same sequence
 // Otherwise, it just renames them just as the sequences that have same name and different sequences
-func (p *Parser) IgnoreIdentical(ignore int) {
+func (p *Parser) IgnoreIdentical(ignore int) *Parser {
 	p.ignoreidentical = ignore
+	return p
+}
+
+// alphabet: can be align.BOTH (auto detect alphabet), align.NUCLEOTIDS (considers alignment as nucleotides),
+// or align.AMINOACIDS (considers the alignment as aminoacids). If not auto, can return an error if the alignment
+// is not compatible with the given alphabet.
+// If another value is given, then align.BOTH is considered
+func (p *Parser) Alphabet(alphabet int) *Parser {
+	p.alphabet = alphabet
+	if p.alphabet != align.BOTH &&
+		p.alphabet != align.NUCLEOTIDS &&
+		p.alphabet != align.AMINOACIDS {
+		p.alphabet = align.BOTH
+	}
+	return p
 }
 
 // scan returns the next token from the underlying scanner.
@@ -69,14 +85,13 @@ func (p *Parser) scanWithEOL() (tok Token, lit string) {
 func (p *Parser) unscan() { p.buf.n = 1 }
 
 // Parse parses a clustal alignment
-func (p *Parser) Parse() (align.Alignment, error) {
+func (p *Parser) Parse() (al align.Alignment, err error) {
 	var nbseq int = 0
-	var al align.Alignment
 	var names []string = make([]string, 0)
 	var seqs []string = make([]string, 0)
 	tok, lit := p.scan()
 	if tok != CLUSTAL {
-		return nil, errors.New("Clustal alignment file must start with 'CLUSTAL'")
+		return nil, errors.New("clustal alignment file must start with 'CLUSTAL'")
 	}
 	for tok != ENDOFLINE && tok != EOF {
 		tok, lit = p.scanWithEOL()
@@ -91,32 +106,36 @@ func (p *Parser) Parse() (align.Alignment, error) {
 		// Last line of a block
 		if tok == WS {
 			if currentnbseqs == 0 {
-				return nil, errors.New("There should not be a white space here, only at last line of blocks")
+				return nil, errors.New("there should not be a white space here, only at last line of blocks")
 			}
 			if nbseq != 0 && currentnbseqs != nbseq {
-				return nil, fmt.Errorf("Conservation line: Sequence block nb %d has different number of sequence (%d)",
+				err = fmt.Errorf("conservation line: Sequence block nb %d has different number of sequence (%d)",
 					nblocks, currentnbseqs)
+				return
 			}
 			for tok != ENDOFLINE && tok != EOF {
 				tok, lit = p.scan()
 			}
 			if tok != ENDOFLINE {
-				return nil, errors.New("There should be a new line after degree of conservation line")
+				err = errors.New("there should be a new line after degree of conservation line")
+				return
 			}
 			tok, lit = p.scanWithEOL()
 			if tok == EOF {
 				break
 			}
 			if tok != ENDOFLINE {
-				return nil, errors.New("There should be a new line after degree of conservation line")
+				err = errors.New("there should be a new line after degree of conservation line")
+				return
 			}
 			tok, lit = p.scan()
 			if tok == EOF {
 				break
 			}
 			if nbseq != 0 && currentnbseqs != nbseq {
-				return nil, fmt.Errorf("Sequence block nb %d has different number of sequence (%d)",
+				err = fmt.Errorf("sequence block nb %d has different number of sequence (%d)",
 					nblocks, currentnbseqs)
+				return
 			}
 			nbseq = currentnbseqs
 			nblocks++
@@ -124,17 +143,20 @@ func (p *Parser) Parse() (align.Alignment, error) {
 		}
 
 		if tok != IDENTIFIER && tok != NUMERIC {
-			return nil, errors.New("We expect a sequence identifier here")
+			err = errors.New("we expect a sequence identifier here")
+			return
 		}
 		name = lit
 		tok, lit = p.scan()
 		if tok != WS {
-			return nil, errors.New("We expect a whitespace after sequence name")
+			err = errors.New("we expect a whitespace after sequence name")
+			return
 		}
 
 		tok, lit = p.scan()
 		if tok != IDENTIFIER {
-			return nil, errors.New("We expect a sequence here")
+			err = errors.New("we expect a sequence here")
+			return
 		}
 		seq = lit
 
@@ -146,11 +168,13 @@ func (p *Parser) Parse() (align.Alignment, error) {
 				// skip
 				tok, lit = p.scan()
 			} else {
-				return nil, errors.New("We expect a current length after sequence + whitespace")
+				err = errors.New("we expect a current length after sequence + whitespace")
+				return
 			}
 		}
 		if tok != ENDOFLINE {
-			return nil, errors.New("We expect ENDOFLINE after sequence in a block")
+			err = errors.New("we expect ENDOFLINE after sequence in a block")
+			return
 		}
 
 		if nblocks == 0 {
@@ -158,7 +182,8 @@ func (p *Parser) Parse() (align.Alignment, error) {
 			seqs = append(seqs, seq)
 		} else {
 			if names[currentnbseqs] != name {
-				return nil, fmt.Errorf("Name at block %d line %d does not correspond to name in first block (%s vs. %s)", nblocks, currentnbseqs, names[currentnbseqs], name)
+				err = fmt.Errorf("name at block %d line %d does not correspond to name in first block (%s vs. %s)", nblocks, currentnbseqs, names[currentnbseqs], name)
+				return
 			}
 			seqs[currentnbseqs] = seqs[currentnbseqs] + seq
 		}
@@ -166,7 +191,8 @@ func (p *Parser) Parse() (align.Alignment, error) {
 	}
 
 	if len(names) == 0 {
-		return nil, errors.New("No sequences in the alignment")
+		err = errors.New("no sequences in the alignment")
+		return
 	}
 
 	for i, n := range names {
@@ -180,5 +206,13 @@ func (p *Parser) Parse() (align.Alignment, error) {
 		}
 	}
 
-	return al, nil
+	if p.alphabet == align.BOTH {
+		al.AutoAlphabet()
+	} else {
+		if err = al.SetAlphabet(p.alphabet); err != nil {
+			return
+		}
+	}
+
+	return
 }

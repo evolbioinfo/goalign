@@ -59,15 +59,18 @@ func ParseAlignmentAuto(r *bufio.Reader, rootinputstrict bool) (al align.Alignme
 // Parses the input buffer while automatically
 // detecting the format between Newick, Phylip, and Nexus
 //
-// If several alignments are present in the input file, they are queued in the channel
+// # If several alignments are present in the input file, they are queued in the channel
 //
 // rootinpustrict: In the case of phylip detected format: should we consider it as strict or not?
+// alphabet: can be align.BOTH (auto detect alphabet), align.NUCLEOTIDS (considers alignment as nucleotides),
+// or align.AMINOACIDS (considers the alignment as aminoacids). If not auto, can return an error if the alignment
+// is not compatible with the given alphabet.
 //
 // If there is something to close ( f!=nil) after the parsing (like input file, etc.), f will be closed
 // after parsing is finished (even in the go routine in the case of several input alignments).
 // If the alignment comes from a file for exemple, the file will be closed by this function, so no need to
 // do it in the calling function
-func ParseMultiAlignmentsAuto(f io.Closer, r *bufio.Reader, rootinputstrict bool) (alchan *align.AlignChannel, format int, err error) {
+func ParseMultiAlignmentsAuto(f io.Closer, r *bufio.Reader, rootinputstrict bool, alphabet int) (alchan *align.AlignChannel, format int, err error) {
 	var al align.Alignment
 	var firstbyte byte
 
@@ -82,7 +85,7 @@ func ParseMultiAlignmentsAuto(f io.Closer, r *bufio.Reader, rootinputstrict bool
 	}
 	// First test Fasta format
 	if firstbyte == '>' {
-		if al, err = fasta.NewParser(r).Parse(); err != nil {
+		if al, err = fasta.NewParser(r).Alphabet(alphabet).Parse(); err != nil {
 			return
 		}
 		format = align.FORMAT_FASTA
@@ -93,7 +96,7 @@ func ParseMultiAlignmentsAuto(f io.Closer, r *bufio.Reader, rootinputstrict bool
 		}
 		close(alchan.Achan)
 	} else if firstbyte == '#' {
-		if al, err = nexus.NewParser(r).Parse(); err != nil {
+		if al, err = nexus.NewParser(r).Alphabet(alphabet).Parse(); err != nil {
 			return
 		}
 		format = align.FORMAT_NEXUS
@@ -104,7 +107,7 @@ func ParseMultiAlignmentsAuto(f io.Closer, r *bufio.Reader, rootinputstrict bool
 		}
 		close(alchan.Achan)
 	} else if firstbyte == 'C' {
-		if al, err = clustal.NewParser(r).Parse(); err != nil {
+		if al, err = clustal.NewParser(r).Alphabet(alphabet).Parse(); err != nil {
 			return
 		}
 		format = align.FORMAT_CLUSTAL
@@ -119,7 +122,7 @@ func ParseMultiAlignmentsAuto(f io.Closer, r *bufio.Reader, rootinputstrict bool
 		// Finally test Phylip
 		alchan.Achan = make(chan align.Alignment, 15)
 		go func() {
-			phylip.NewParser(r, rootinputstrict).ParseMultiple(alchan)
+			phylip.NewParser(r, rootinputstrict).Alphabet(alphabet).ParseMultiple(alchan)
 			if f != nil {
 				f.Close()
 			}
@@ -137,7 +140,9 @@ func ParseMultiAlignmentsAuto(f io.Closer, r *bufio.Reader, rootinputstrict bool
 // - align.FORMAT_CLUSTAL
 // - align.FORMAT_FASTA
 // - any other value is interpreted as align.FORMAT_FASTA
-func ReadAlign(file string, format int) (outAlign align.Alignment, err error) {
+//
+// alphabet : if nexus format, overwrites the included
+func ReadAlign(file string, format int, alphabet int) (outAlign align.Alignment, err error) {
 	var fi io.Closer
 	var r *bufio.Reader
 
@@ -146,19 +151,23 @@ func ReadAlign(file string, format int) (outAlign align.Alignment, err error) {
 	}
 	if format == align.FORMAT_PHYLIP {
 		pp := phylip.NewParser(r, false)
+		pp.Alphabet(alphabet)
 		pp.IgnoreIdentical(align.IGNORE_NONE)
 		outAlign, err = pp.Parse()
 	} else if format == align.FORMAT_NEXUS {
 		np := nexus.NewParser(r)
+		np.Alphabet(alphabet)
 		np.IgnoreIdentical(align.IGNORE_NONE)
 		outAlign, err = np.Parse()
 	} else if format == align.FORMAT_CLUSTAL {
 		cp := clustal.NewParser(r)
+		cp.Alphabet(alphabet)
 		cp.IgnoreIdentical(align.IGNORE_NONE)
 		outAlign, err = cp.Parse()
 	} else {
 		// FASTA
 		fp := fasta.NewParser(r)
+		fp.Alphabet(alphabet)
 		fp.IgnoreIdentical(align.IGNORE_NONE)
 		outAlign, err = fp.Parse()
 	}

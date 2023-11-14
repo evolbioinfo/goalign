@@ -196,9 +196,9 @@ func NewAlign(alphabet int) *align {
 // If the alphabet name is not known, returns align.UNKNOWN
 func AlphabetFromString(alphabet string) int {
 	switch strings.ToLower(alphabet) {
-	case "dna", "rna", "nucleotide":
+	case "dna", "rna", "nucleotide", "nt":
 		return NUCLEOTIDS
-	case "protein":
+	case "protein", "aa":
 		return AMINOACIDS
 	default:
 		return UNKNOWN
