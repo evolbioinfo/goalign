@@ -127,7 +127,11 @@ type Alignment interface {
 	InverseCoordinates(start, length int) (invstarts, invlengths []int, err error)
 	InversePositions(sites []int) (invsites []int, err error)
 
-	Swap(rate float64)
+	// Swap will exchange sequences from one seq to another of the alignment
+	// if rate>=0 and rate<=1 then it takes rate/2 sequences and exhanges sequences
+	// with rate/2 other sequences, from a random position
+	// if pos >=0 and <=1, then take this position (relative to align length) instead of a random one
+	Swap(rate, pos float64) error
 	// TranslateByReference translates the alignment codon by codon using the given reference sequence as guide
 	// We traverse reference nt 3 by 3
 	// The reference codon may have gaps between nt ,
@@ -695,18 +699,25 @@ func (a *align) RemoveCharacterSeqs(c uint8, cutoff float64, ignoreCase, ignoreG
 	return nbremoved
 }
 
+// Swap will exchange sequences from one seq to another of the alignment
+// if rate>=0 and rate<=1 then it takes rate/2 sequences and exhanges sequences
+// with rate/2 other sequences, from a random position
+// if pos >=0 and <=1, then take this position (relative to align length) instead of a random one
 // Swaps a rate of the sequences together
 // takes rate/2 seqs and swap a part of them with the other
 // rate/2 seqs at a random position
-// if rate < 0 : does nothing
-// if rate > 1 : does nothing
-func (a *align) Swap(rate float64) {
+// if rate < 0 : error
+// if rate > 1 : error
+// if pos < 0 : random position is taken
+// if pos > 1 : random position is taken
+func (a *align) Swap(rate, pos float64) (err error) {
 	var nb_to_shuffle, nb_sites int
-	var pos int
+	var position int
 	var tmpchar uint8
 	var seq1, seq2 *seq
 
 	if rate < 0 || rate > 1 {
+		err = fmt.Errorf("rate is outside of the [0,1] range")
 		return
 	}
 	nb_sites = a.Length()
@@ -716,16 +727,21 @@ func (a *align) Swap(rate float64) {
 
 	for i := 0; i < int(nb_to_shuffle/2); i++ {
 		// We take a random position in the sequences and swap both
-		pos = rand.Intn(nb_sites)
+		if pos < 0 || pos > 1 {
+			position = rand.Intn(nb_sites)
+		} else {
+			position = int(float64(nb_sites) * pos)
+		}
 		seq1 = a.seqs[permutation[i]]
 		seq2 = a.seqs[permutation[i+(int)(nb_to_shuffle/2)]]
-		for pos < nb_sites {
-			tmpchar = seq1.sequence[pos]
-			seq1.sequence[pos] = seq2.sequence[pos]
-			seq2.sequence[pos] = tmpchar
-			pos++
+		for position < nb_sites {
+			tmpchar = seq1.sequence[position]
+			seq1.sequence[position] = seq2.sequence[position]
+			seq2.sequence[position] = tmpchar
+			position++
 		}
 	}
+	return
 }
 
 // Replace an old string in sequences by a new string
