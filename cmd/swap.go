@@ -8,6 +8,7 @@ import (
 )
 
 var swapRate float64
+var swapPos float64
 
 // swapCmd represents the swap command
 var swapCmd = &cobra.Command{
@@ -18,7 +19,13 @@ It may take Fasta or Phylip input alignment.
 
 If the input alignment contains several alignments, will process all of them
 
-The only option is to specify the rate of swap.
+It will exchange sequences from one seq to another of the alignment.
+if rate>=0 and rate<=1 then it takes rate/2 sequences and exchanges sequences
+with rate/2 other sequences, from a random position.
+
+If given pos >=0 and <=1 then take this position (relative to align length)
+ instead of a random one.
+
 A rate of 0.5 will swap 25% of the sequences with 
 other 25% of the sequences at a random position.
 
@@ -50,7 +57,10 @@ goalign shuffle swap -i align.fasta -r 0.5
 		defer utils.CloseWriteFile(f, shuffleOutput)
 
 		for al := range aligns.Achan {
-			al.Swap(swapRate)
+			if err = al.Swap(swapRate, swapPos); err != nil {
+				io.LogError(err)
+				return
+			}
 			writeAlign(al, f)
 		}
 
@@ -66,4 +76,5 @@ func init() {
 	shuffleCmd.AddCommand(swapCmd)
 
 	swapCmd.PersistentFlags().Float64VarP(&swapRate, "rate", "r", 0.5, "Rate of Swap sequences (>=0 and <=1)")
+	swapCmd.PersistentFlags().Float64Var(&swapPos, "pos", -1, "Position of the break point (0<pos<1, relative to alignment length), default: -1 (means random)")
 }

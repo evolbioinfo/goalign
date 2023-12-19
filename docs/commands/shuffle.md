@@ -23,7 +23,7 @@ This command adds different type of noises in an input alignment, with these sub
 	```
 * `goalign shuffle seqs` : Shuffles sequence order in alignment. It does not add any noise in the alignment.
 * `goalign shuffle sites`: Shuffles vertically a given proportion of the alignment sites. Optionnaly, it is possible to shuffle vertically an additional (same) proportion of the remaining intact sites for a given proportion of the sequences (~rogues)
-* `goalign shuffle swap` : Swaps a given portion of the sequences in the input alignment. The only option to specify is the swap rate. A rate of 0.5 will swap 25% of the sequences with other 25% of the sequences from a random position to the end. Example swaping 50% of sequences:
+* `goalign shuffle swap` : Swaps a given portion of the sequences in the input alignment. The option `-r` specifies the swap rate. A rate of 0.5 will swap 25% of the sequences with other 25% of the sequences from a random position to the end. The option `--pos` specifies the position from which to swap the sequences. If pos <0 or >1, the, the position is random. Example swaping 50% of sequences at a random position:
   ```
   s1 CCCCCCCCCCCCCC    s1 CCCCCCCCCCCCCC
   s2 AAAAAAAAAAAAAA => s2 AAAAAATTTTTTTT
@@ -137,6 +137,7 @@ Usage:
   goalign shuffle swap [flags]
 
 Flags:
+  --pos float    Position of the break point (0<pos<1, relative to alignment length), default: -1 (means random) (default -1)
   -r, --rate float   Rate of Swap sequences (>=0 and <=1) (default 0.5)
 
 Global Flags:
