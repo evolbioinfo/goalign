@@ -98,7 +98,7 @@ type Alignment interface {
 	Pssm(log bool, pseudocount float64, normalization int) (pssm map[uint8][]float64, err error) // Normalization: PSSM_NORM_NONE, PSSM_NORM_UNIF, PSSM_NORM_DATA
 	Rarefy(nb int, counts map[string]int) (Alignment, error)                                     // Take a new rarefied sample taking into accounts weights
 	RandSubAlign(length int, consecutive bool) (Alignment, error)                                // Extract a random subalignment with given length from this alignment
-	Recombine(rate float64, lenprop float64)
+	Recombine(rate float64, lenprop float64, swap bool) error
 	// converts coordinates on the given sequence to coordinates on the alignment
 	RefCoordinates(name string, refstart, refend int) (alistart, aliend int, err error)
 	// converts sites on the given sequence to coordinates on the alignment
@@ -959,19 +959,23 @@ func (a *align) TranslateByReference(phase int, geneticcode int, refseq string) 
 	return
 }
 
-// Recombines a rate of the sequences to another sequences
-// takes rate/2 seqs and copy/paste a portion of them to the other
-// rate/2 seqs at a random position
-// if rate < 0 : does nothing
-// if rate > 1 : does nothing
+// Recombine recombines a rate of the sequences into other sequences
+// takes prop*nseq seqs and copy/paste a portion of them to the other
+// prop*nseq seqs
+// if prop < 0 : error
+// if prop > 0.5 : error
 // prop must be <= 0.5 because it will recombine x% of seqs based on other x% of seqs
-func (a *align) Recombine(prop float64, lenprop float64) {
+// if swap is true, then swaps the two portions of sequences (2*prop sequences will be impacted)
+// if swap is false, then just transfers the portion of seq1 to seq2
+func (a *align) Recombine(prop float64, lenprop float64, swap bool) (err error) {
 	var seq1, seq2 *seq
 
 	if prop < 0 || prop > 0.5 {
+		err = fmt.Errorf("proportion of sequence is outside of [0,0.5] range")
 		return
 	}
 	if lenprop < 0 || lenprop > 1 {
+		err = fmt.Errorf("proportion of sequence length is outside of [0,1] range")
 		return
 	}
 
@@ -985,9 +989,14 @@ func (a *align) Recombine(prop float64, lenprop float64) {
 		seq1 = a.seqs[permutation[i]]
 		seq2 = a.seqs[permutation[i+nb]]
 		for j := pos; j < pos+lentorecomb; j++ {
+			tmp := seq1.sequence[j]
 			seq1.sequence[j] = seq2.sequence[j]
+			if swap {
+				seq2.sequence[j] = tmp
+			}
 		}
 	}
+	return
 }
 
 // Add prop*100% gaps to lenprop*100% of the sequences

@@ -4,13 +4,19 @@
 
 ### shuffle
 This command adds different type of noises in an input alignment, with these sub-commands:
-* `goalign shuffle recomb`:Recombine a given proportion of the length of a given proportion of the sequences with other sequences (copy/paste). 
-    Example:
+* `goalign shuffle recomb`:Recombine a given proportion of the length of a given proportion of the sequences with other sequences (copy/paste). If swap is true, will impact 2xproportion of the sequences (Example 2)
+    Example (no swap):
 	```
 	s1 CCCCCCCCCCCCCC    s1 CCCCCCCCCCCCCC
 	s2 AAAAAAAAAAAAAA => s2 AAAATTTTTTTAAA
 	s3 GGGGGGGGGGGGGG    s3 GGGGGGGGGGGGGG
 	s4 TTTTTTTTTTTTTT    s4 TTTTTTTTTTTTTT
+    Example 2 (swap):
+	```
+	s1 CCCCCCCCCCCCCC    s1 CCCCCCCCCCCCCC
+	s2 AAAAAAAAAAAAAA => s2 AAAATTTTTTTAAA
+	s3 GGGGGGGGGGGGGG    s3 GGGGGGGGGGGGGG
+	s4 TTTTTTTTTTTTTT    s4 TTTTAAAAAAATTT
 	```
 * `goalign shuffle rogue`: Simulate rogue taxa, by shuffling (horizontally) a given proportion of the sites of a given proportion of the sequences. 
 	Example:
