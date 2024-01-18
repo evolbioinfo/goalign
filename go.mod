@@ -1,6 +1,6 @@
 module github.com/evolbioinfo/goalign
 
-go 1.19
+go 1.21.6
 
 require (
 	github.com/armon/go-radix v1.0.0
