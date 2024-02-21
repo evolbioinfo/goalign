@@ -104,15 +104,17 @@ func BuildWeightsGamma(al align.Alignment) []float64 {
 	return outweights
 }
 
-/* Returns a vector of weights following a Dirichlet distribution D(n ; 1,...,1)
-   with n alignment length
+/*
+Returns a vector of weights following a Dirichlet distribution D(n ; 1,...,1)
+
+	with n alignment length
 */
 func BuildWeightsDirichlet(al align.Alignment) []float64 {
 	alpha := make([]float64, al.Length(), al.Length())
 	for i := 0; i < al.Length(); i++ {
 		alpha[i] = 1
 	}
-	outweights := stats.Dirichlet(float64(al.Length()), alpha...)
+	outweights, _ := stats.Dirichlet(float64(al.Length()), alpha...)
 	return outweights
 }
 
@@ -439,7 +441,8 @@ func probaNt(sequenceCodes [][]uint8, selectedSites []bool, weights []float64) (
 	return pi, nil
 }
 
-/*Returns the proba of each nts for the 2 sequences considered
+/*
+Returns the proba of each nts for the 2 sequences considered
 A=0
 C=1
 G=2
