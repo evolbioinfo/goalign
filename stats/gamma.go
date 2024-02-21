@@ -5,9 +5,10 @@ package stats
 import (
 	"errors"
 	"fmt"
-	"github.com/evolbioinfo/goalign/io"
 	"math"
 	"math/rand"
+
+	"github.com/evolbioinfo/goalign/io"
 )
 
 // Gamma returns a random number of gamma distribution (alpha > 0.0 and beta > 0.0)
