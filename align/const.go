@@ -409,13 +409,13 @@ T=3
 func Nt2Index(nt uint8) (idx int, err error) {
 	switch unicode.ToUpper(rune(nt)) {
 	case 'A':
-		idx = NT_A
+		idx = 0
 	case 'C':
-		idx = NT_C
+		idx = 1
 	case 'G':
-		idx = NT_G
+		idx = 2
 	case 'T':
-		idx = NT_T
+		idx = 3
 	default:
 		err = fmt.Errorf("no index for character: %c", nt)
 	}
