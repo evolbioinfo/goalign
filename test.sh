@@ -5918,10 +5918,19 @@ cat > expected <<EOF
 >s2
 .*NVHDBMKWSRYCGTTA
 EOF
+cat > expected.2 <<EOF
+>s1
+.*NBDHVKMWSYRGCAAT
+>s2
+TAACGRYSWMKVHDBN*.
+EOF
 
 ${GOALIGN} revcomp -i input > output
 diff -q -b expected output
-rm -rf input output expected
+
+${GOALIGN} revcomp -i input s1 > output
+diff -q -b expected.2 output
+rm -rf input output expected expected.2
 
 
 echo "->goalign revcomp --unaligned"
@@ -5937,7 +5946,16 @@ cat > expected <<EOF
 >s2
 ACGT.*NVHDBMKWSRYCGTTA
 EOF
+cat > expected.2 <<EOF
+>s1
+ATUGCYRSWKMBDHVN*.
+>s2
+ACGT.*NVHDBMKWSRYCGTTA
+EOF
 
 ${GOALIGN} revcomp -i input --unaligned > output
 diff -q -b expected output
-rm -rf input output expected
+
+${GOALIGN} revcomp -i input --unaligned s2 > output
+diff -q -b expected.2 output
+rm -rf input output expected expected.2

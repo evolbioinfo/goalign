@@ -64,11 +64,12 @@ type SeqBag interface {
 	RarefySeqBag(nb int, counts map[string]int) (SeqBag, error) // Take a new rarefied sample taking into accounts weights
 	Rename(namemap map[string]string)
 	RenameRegexp(regex, replace string, namemap map[string]string) error
-	Replace(old, new string, regex bool) error        // Replaces old string with new string in sequences of the alignment
-	ShuffleSequences()                                // Shuffle sequence order
-	String() string                                   // Raw string representation (just write all sequences)
-	Translate(phase int, geneticcode int) (err error) // Translates nt sequence in aa
-	ReverseComplement() (err error)                   // Reverse-complements the alignment
+	Replace(old, new string, regex bool) error             // Replaces old string with new string in sequences of the alignment
+	ShuffleSequences()                                     // Shuffle sequence order
+	String() string                                        // Raw string representation (just write all sequences)
+	Translate(phase int, geneticcode int) (err error)      // Translates nt sequence in aa
+	ReverseComplement() (err error)                        // Reverse-complements the alignment
+	ReverseComplementSequences(name ...string) (err error) // Reverse-complements some sequences in the alignment
 	TrimNames(namemap map[string]string, size int) error
 	TrimNamesAuto(namemap map[string]string, curid *int) error
 	Sort() // Sorts the sequences by name
@@ -940,6 +941,30 @@ func (sb *seqbag) ReverseComplement() (err error) {
 			return
 		}
 		Reverse(seq.sequence)
+	}
+
+	return
+}
+
+/*
+ReverseComplement reverse complements all input seuqences.
+- if the alphabet is not NUCLEOTIDES: returns an error
+- IUPAC characters are supported
+*/
+func (sb *seqbag) ReverseComplementSequences(names ...string) (err error) {
+	if sb.Alphabet() != NUCLEOTIDS {
+		err = errors.New("wrong alphabet, cannot reverse complement")
+		return
+	}
+
+	for _, name := range names {
+		s, found := sb.SequenceByName(name)
+		if found {
+			if err = Complement(s.SequenceChar()); err != nil {
+				return
+			}
+			Reverse(s.SequenceChar())
+		}
 	}
 
 	return

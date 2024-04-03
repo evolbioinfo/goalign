@@ -20,6 +20,9 @@ var revCompCmd = &cobra.Command{
 If the input alignment is not nucleotides, then returns an error.
 
 IUPAC codes are taken into account for the reverse complement.
+
+If sequence names are given in the command line (e.g. goalign revcomp -i al.fasta s1 s2 s3), 
+only given sequences are reverse-complemented, if they exist in the alignment.
 `,
 	RunE: func(cmd *cobra.Command, args []string) (err error) {
 		var f utils.StringWriterCloser
@@ -37,9 +40,18 @@ IUPAC codes are taken into account for the reverse complement.
 				io.LogError(err)
 				return
 			}
-			if err = seqs.ReverseComplement(); err != nil {
-				io.LogError(err)
-				return
+
+			// If names are given as arguments, we reverse complement only these sequences
+			if len(args) > 0 {
+				if err = seqs.ReverseComplementSequences(args...); err != nil {
+					io.LogError(err)
+					return
+				}
+			} else {
+				if err = seqs.ReverseComplement(); err != nil {
+					io.LogError(err)
+					return
+				}
 			}
 			writeSequences(seqs, f)
 		} else {
@@ -51,9 +63,17 @@ IUPAC codes are taken into account for the reverse complement.
 				return
 			}
 			for al = range aligns.Achan {
-				if err = al.ReverseComplement(); err != nil {
-					io.LogError(err)
-					return
+				// If names are given as arguments, we reverse complement only these sequences
+				if len(args) > 0 {
+					if err = al.ReverseComplementSequences(args...); err != nil {
+						io.LogError(err)
+						return
+					}
+				} else {
+					if err = al.ReverseComplement(); err != nil {
+						io.LogError(err)
+						return
+					}
 				}
 				writeAlign(al, f)
 			}

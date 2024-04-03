@@ -11,6 +11,9 @@ If `--unaligned` is specified, then input sequences may be unaligned.
 
 IUPAC codes are taken into account.
 
+If sequence names are given in the command line (e.g. goalign revcomp -i al.fasta s1 s2 s3), 
+only given sequences are reverse-complemented, if they exist in the alignment.
+
 #### Usage
 ```
 Usage:
