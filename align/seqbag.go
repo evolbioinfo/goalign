@@ -68,6 +68,8 @@ type SeqBag interface {
 	ShuffleSequences()                                     // Shuffle sequence order
 	String() string                                        // Raw string representation (just write all sequences)
 	Translate(phase int, geneticcode int) (err error)      // Translates nt sequence in aa
+	ToUpper()                                              // replaces lower case characters by upper case characters
+	ToLower()                                              // replaces upper case characters by lower case characters
 	ReverseComplement() (err error)                        // Reverse-complements the alignment
 	ReverseComplementSequences(name ...string) (err error) // Reverse-complements some sequences in the alignment
 	TrimNames(namemap map[string]string, size int) error
@@ -923,6 +925,32 @@ func (sb *seqbag) Translate(phase int, geneticcode int) (err error) {
 	sb.AutoAlphabet()
 
 	return
+}
+
+/*
+ToUpper replaces all lowercase characters by upper case characters in the input sequences.
+
+The seqbag is cleared and old sequences are replaced with upper case sequences
+*/
+func (sb *seqbag) ToUpper() {
+	for _, seq := range sb.seqs {
+		for i, c := range seq.sequence {
+			seq.sequence[i] = uint8(unicode.ToUpper(rune(c)))
+		}
+	}
+}
+
+/*
+ToLower replaces all uppercase characters by lower case characters in the input sequences.
+
+The seqbag is cleared and old sequences are replaced with lower case sequences
+*/
+func (sb *seqbag) ToLower() {
+	for _, seq := range sb.seqs {
+		for i, c := range seq.sequence {
+			seq.sequence[i] = uint8(unicode.ToLower(rune(c)))
+		}
+	}
 }
 
 /*
