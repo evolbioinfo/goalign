@@ -8,11 +8,11 @@ This command replaces lower case characters by upper case characters.
 #### Usage
 ```
 Usage:
-  goalign tolower [flags]
+  goalign toupper [flags]
 
 Flags:
   -h, --help            help for tolower
-  -o, --output string   Output translated alignment file (default "stdout")
+  -o, --output string   Output upper case alignment file (default "stdout")
       --unaligned       Considers sequences as unaligned and format fasta (phylip, nexus,... options are ignored)
 
 Global Flags:

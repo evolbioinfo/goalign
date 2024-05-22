@@ -12,7 +12,7 @@ Usage:
 
 Flags:
   -h, --help            help for tolower
-  -o, --output string   Output translated alignment file (default "stdout")
+  -o, --output string   Output lower case alignment file (default "stdout")
       --unaligned       Considers sequences as unaligned and format fasta (phylip, nexus,... options are ignored)
 
 Global Flags:

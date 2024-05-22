@@ -57,6 +57,6 @@ var toupperCmd = &cobra.Command{
 
 func init() {
 	RootCmd.AddCommand(toupperCmd)
-	toupperCmd.PersistentFlags().StringVarP(&toupperOutput, "output", "o", "stdout", "Output translated alignment file")
+	toupperCmd.PersistentFlags().StringVarP(&toupperOutput, "output", "o", "stdout", "Output upper case alignment file")
 	toupperCmd.PersistentFlags().BoolVar(&unaligned, "unaligned", false, "Considers sequences as unaligned and format fasta (phylip, nexus,... options are ignored)")
 }
