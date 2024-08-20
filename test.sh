@@ -3511,6 +3511,66 @@ ${GOALIGN} dedup -i input -o result -p
 diff -q -b expected result
 rm -f input expected result
 
+
+echo "->goalign dedup N"
+cat > input <<EOF
+  5   6
+1 AANAAA
+2 CCNCCC
+3 GGNGGG
+4 GG-GGG
+5 GG-GGG
+EOF
+cat > expected <<EOF
+   4   6
+1  AANAAA
+2  CCNCCC
+3  GGNGGG
+4  GG-GGG
+EOF
+cat > expected2 <<EOF
+   3   6
+1  AANAAA
+2  CCNCCC
+3  GGNGGG
+EOF
+
+${GOALIGN} dedup -i input -o result -p
+diff -q -b expected result
+${GOALIGN} dedup -i input -o result -p --n-as-gap
+diff -q -b expected2 result
+rm -f input expected expected2 result
+
+
+echo "->goalign dedup X"
+cat > input <<EOF
+  5   6
+1 AAXAAA
+2 RRXRRR
+3 QQXQQQ
+4 QQ-QQQ
+4 QQ-QQQ
+EOF
+cat > expected <<EOF
+   4   6
+1  AAXAAA
+2  RRXRRR
+3  QQXQQQ
+4  QQ-QQQ
+EOF
+cat > expected2 <<EOF
+   3   6
+1  AAXAAA
+2  RRXRRR
+3  QQXQQQ
+EOF
+
+${GOALIGN} dedup -i input -o result -p
+diff -q -b expected result
+${GOALIGN} dedup -i input -o result -p --n-as-gap
+diff -q -b expected2 result
+rm -f input expected expected2 result
+
 echo "->goalign dedup --unaligned"
 cat > input <<EOF
 >1

@@ -10,6 +10,7 @@ import (
 var dedupOutput string
 var dedupLogOutput string
 var dedupName bool
+var dedupNAsGap bool
 
 // dedupCmd represents the dedup command
 var dedupCmd = &cobra.Command{
@@ -65,7 +66,7 @@ This means that seq1 is identical to seq2 and seq3 is identical to seq4.
 				io.LogError(err)
 				return
 			}
-			if id, err = seqs.Deduplicate(); err != nil {
+			if id, err = seqs.Deduplicate(dedupNAsGap); err != nil {
 				io.LogError(err)
 				return
 			} else {
@@ -81,7 +82,7 @@ This means that seq1 is identical to seq2 and seq3 is identical to seq4.
 			}
 
 			for al := range aligns.Achan {
-				if id, err = al.Deduplicate(); err != nil {
+				if id, err = al.Deduplicate(dedupNAsGap); err != nil {
 					io.LogError(err)
 					return
 				} else {
@@ -103,6 +104,7 @@ func init() {
 	RootCmd.AddCommand(dedupCmd)
 	dedupCmd.PersistentFlags().BoolVar(&unaligned, "unaligned", false, "Considers sequences as unaligned and format fasta (phylip, nexus,... options are ignored)")
 	dedupCmd.PersistentFlags().BoolVar(&dedupName, "name", false, "Deduplicate by name instead of sequence event if sequences are different (only the first appears in the output file)")
+	dedupCmd.PersistentFlags().BoolVar(&dedupNAsGap, "n-as-gap", false, "Considers N/X identical to GAPS for identifying identical sequences")
 	dedupCmd.PersistentFlags().StringVarP(&dedupOutput, "output", "o", "stdout", "Deduplicated output alignment file")
 	dedupCmd.PersistentFlags().StringVarP(&dedupLogOutput, "log", "l", "none", "Deduplicated output log file")
 }

@@ -15,6 +15,8 @@ seq3,seq4
 
 This means that seq1 is identical to seq2 and seq3 is identical to seq4.
 
+if `--n-as-gap` is specified: X/N (depending on alphabet) are considered identical to GAPS for identifying identical sequences. Only the first sequence appears in the output alignment.
+
 #### Usage
 ```
 Usage:
@@ -23,7 +25,10 @@ Usage:
 Flags:
   -h, --help            help for dedup
   -l, --log string      Deduplicated output log file (default "none")
+      --n-as-gap        Considers N/X identical to GAPS for identifying identical sequences
+      --name            Deduplicate by name instead of sequence event if sequences are different (only the first appears in the output file)
   -o, --output string   Deduplicated output alignment file (default "stdout")
+      --unaligned       Considers sequences as unaligned and format fasta (phylip, nexus,... options are ignored)
 
 Global Flags:
   -i, --align string    Alignment input file (default "stdin")

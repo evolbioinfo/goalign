@@ -39,7 +39,7 @@ func main() {
 	fi.Close()
 
 	/* Deduplicate */
-	if _,err = al.Deduplicate(); err != nil {
+	if _,err = al.Deduplicate(false); err != nil {
 		panic(err)
 	} else {
 		fmt.Println(fasta.WriteAlignment(al))

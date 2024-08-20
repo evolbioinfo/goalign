@@ -29,13 +29,13 @@ type SeqBag interface {
 	DetectAlphabet() (alphabet int)  //  detects the compatible alphabets
 	CharStats() map[uint8]int64
 	UniqueCharacters() []uint8
-	CharStatsSeq(idx int) (map[uint8]int, error)    // Computes frequency of characters for the given sequence
-	CleanNames(namemap map[string]string)           // Clean sequence names (newick special char)
-	Clear()                                         // Removes all sequences
-	CloneSeqBag() (seqs SeqBag, err error)          // Clones the seqqbag
-	Deduplicate() (identical [][]string, err error) // Remove duplicate sequences
-	FilterLength(minlength, maxlength int) error    // Remove sequences whose length is <minlength or >maxlength
-	GetSequence(name string) (string, bool)         // Get a sequence by names
+	CharStatsSeq(idx int) (map[uint8]int, error)               // Computes frequency of characters for the given sequence
+	CleanNames(namemap map[string]string)                      // Clean sequence names (newick special char)
+	Clear()                                                    // Removes all sequences
+	CloneSeqBag() (seqs SeqBag, err error)                     // Clones the seqqbag
+	Deduplicate(nAsGap bool) (identical [][]string, err error) // Remove duplicate sequences (nAsGap is for considering N/X identical to gaps for sequence comparison)
+	FilterLength(minlength, maxlength int) error               // Remove sequences whose length is <minlength or >maxlength
+	GetSequence(name string) (string, bool)                    // Get a sequence by names
 	GetSequenceById(ith int) (string, bool)
 	GetSequenceChar(name string) ([]uint8, bool)
 	GetSequenceCharById(ith int) ([]uint8, bool)
@@ -309,12 +309,14 @@ func (sb *seqbag) CloneSeqBag() (SeqBag, error) {
 // This function removes sequences that are duplicates of other
 // It keeps one copy of each sequence, with the name of the first
 // found.
+// nAsGap: if true, then considers N characters / X characters as identical to GAPs for sequence comparison
 //
 // As output, identical contains a slice of identical sequence names
 // ex: identical[0] is a slice of identical sequence names
 //
 // It modifies input alignment.
-func (sb *seqbag) Deduplicate() (identical [][]string, err error) {
+func (sb *seqbag) Deduplicate(nAsGap bool) (identical [][]string, err error) {
+	var compareString string
 	oldseqs := sb.seqs
 	sb.Clear()
 	identical = make([][]string, 0)
@@ -324,13 +326,26 @@ func (sb *seqbag) Deduplicate() (identical [][]string, err error) {
 	seqs := make(map[string]int)
 	for _, seq := range oldseqs {
 		s := string(seq.sequence)
+
+		// We create a temp sequence with N/X replaced by GAP
+		if nAsGap {
+			if sb.Alphabet() == AMINOACIDS {
+				compareString = strings.ReplaceAll(s, string(ALL_AMINO), string(GAP))
+			} else if sb.Alphabet() == NUCLEOTIDS {
+				compareString = strings.ReplaceAll(s, string(ALL_NUCLE), string(GAP))
+			} else {
+				compareString = s
+			}
+		} else {
+			compareString = s
+		}
 		// If the group does not exist
-		if i, ok := seqs[s]; !ok {
+		if i, ok := seqs[compareString]; !ok {
 			if err = sb.AddSequence(seq.name, s, seq.comment); err != nil {
 				return
 			}
 			identical = append(identical, []string{seq.name})
-			seqs[s] = len(identical) - 1
+			seqs[compareString] = len(identical) - 1
 		} else {
 			identical[i] = append(identical[i], seq.name)
 		}
