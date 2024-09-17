@@ -235,7 +235,7 @@ func init() {
 	RootCmd.PersistentFlags().BoolVarP(&rootphylip, "phylip", "p", false, "Alignment is in phylip? default fasta")
 	RootCmd.PersistentFlags().BoolVarP(&rootnexus, "nexus", "x", false, "Alignment is in nexus? default fasta")
 	RootCmd.PersistentFlags().BoolVarP(&rootclustal, "clustal", "u", false, "Alignment is in clustal? default fasta")
-	RootCmd.PersistentFlags().BoolVarP(&rootstockholm, "stockholm", "s", false, "Alignment is in stockholm? default fasta")
+	RootCmd.PersistentFlags().BoolVarP(&rootstockholm, "stockholm", "k", false, "Alignment is in stockholm? default fasta")
 	RootCmd.PersistentFlags().IntVarP(&rootcpus, "threads", "t", 1, "Number of threads")
 
 	// If ignore is IGNORE_NONE: Does not ignore anything
