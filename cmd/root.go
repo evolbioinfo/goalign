@@ -20,6 +20,7 @@ import (
 	"github.com/evolbioinfo/goalign/io/paml"
 	"github.com/evolbioinfo/goalign/io/partition"
 	"github.com/evolbioinfo/goalign/io/phylip"
+	"github.com/evolbioinfo/goalign/io/stockholm"
 	"github.com/evolbioinfo/goalign/io/utils"
 	"github.com/evolbioinfo/goalign/version"
 	"github.com/fredericlemoine/cobrashell"
@@ -30,6 +31,7 @@ var infile string
 var rootphylip bool
 var rootnexus bool
 var rootclustal bool
+var rootstockholm bool
 var rootcpus int
 var rootinputstrict bool = false
 var rootoutputstrict bool = false
@@ -151,6 +153,8 @@ func readalign(file string) (alchan *align.AlignChannel, err error) {
 			rootnexus = true
 		} else if format == align.FORMAT_CLUSTAL {
 			rootclustal = true
+		} else if format == align.FORMAT_STOCKHOLM {
+			rootstockholm = true
 		}
 	} else {
 		if rootphylip {
@@ -177,6 +181,18 @@ func readalign(file string) (alchan *align.AlignChannel, err error) {
 		} else if rootclustal {
 			var al align.Alignment
 			cp := clustal.NewParser(r)
+			cp.Alphabet(alphabet)
+			cp.IgnoreIdentical(ignoreidentical)
+			if al, err = cp.Parse(); err != nil {
+				return
+			}
+			alchan.Achan = make(chan align.Alignment, 1)
+			alchan.Achan <- al
+			fi.Close()
+			close(alchan.Achan)
+		} else if rootstockholm {
+			var al align.Alignment
+			cp := stockholm.NewParser(r)
 			cp.Alphabet(alphabet)
 			cp.IgnoreIdentical(ignoreidentical)
 			if al, err = cp.Parse(); err != nil {
@@ -219,6 +235,7 @@ func init() {
 	RootCmd.PersistentFlags().BoolVarP(&rootphylip, "phylip", "p", false, "Alignment is in phylip? default fasta")
 	RootCmd.PersistentFlags().BoolVarP(&rootnexus, "nexus", "x", false, "Alignment is in nexus? default fasta")
 	RootCmd.PersistentFlags().BoolVarP(&rootclustal, "clustal", "u", false, "Alignment is in clustal? default fasta")
+	RootCmd.PersistentFlags().BoolVarP(&rootstockholm, "stockholm", "s", false, "Alignment is in stockholm? default fasta")
 	RootCmd.PersistentFlags().IntVarP(&rootcpus, "threads", "t", 1, "Number of threads")
 
 	// If ignore is IGNORE_NONE: Does not ignore anything
@@ -251,6 +268,8 @@ func writeAlign(al align.Alignment, f utils.StringWriterCloser) {
 		f.WriteString(nexus.WriteAlignment(al))
 	} else if rootclustal {
 		f.WriteString(clustal.WriteAlignment(al))
+	} else if rootstockholm {
+		f.WriteString(stockholm.WriteAlignment(al))
 	} else {
 		f.WriteString(fasta.WriteAlignment(al))
 	}
@@ -276,6 +295,8 @@ func alignExtension() (out string) {
 		out = ".nx"
 	} else if rootclustal {
 		out = ".clustal"
+	} else if rootstockholm {
+		out = ".sto"
 	} else {
 		out = ".fa"
 	}

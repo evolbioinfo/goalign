@@ -24,10 +24,11 @@ const (
 	PSSM_NORM_UNIF = 3 // Normalization by uniform frequency
 	PSSM_NORM_LOGO = 4 // Normalization like LOGO : v(site)=freq*(log2(alphabet)-H(site)-pseudocount
 
-	FORMAT_FASTA   = 0
-	FORMAT_PHYLIP  = 1
-	FORMAT_NEXUS   = 2
-	FORMAT_CLUSTAL = 3
+	FORMAT_FASTA     = 0
+	FORMAT_PHYLIP    = 1
+	FORMAT_NEXUS     = 2
+	FORMAT_CLUSTAL   = 3
+	FORMAT_STOCKHOLM = 4
 
 	POSITION_IDENTICAL      = 0 // All characters in a position are the same
 	POSITION_CONSERVED      = 1 // Same strong group
