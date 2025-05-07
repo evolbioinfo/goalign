@@ -117,7 +117,7 @@ func (p *Parser) Parse() (al align.Alignment, err error) {
 				tok, lit = p.scan()
 			}
 			if tok != ENDOFLINE {
-				err = errors.New("there should be a new line after degree of conservation line")
+				err = fmt.Errorf("there should be a new line after degree of conservation line, line  %d, position %d, have \"%s\", block %d, sequence %d", p.s.line+1, p.s.position+1, lit, nblocks, currentnbseqs)
 				return
 			}
 			tok, lit = p.scanWithEOL()
@@ -125,7 +125,7 @@ func (p *Parser) Parse() (al align.Alignment, err error) {
 				break
 			}
 			if tok != ENDOFLINE {
-				err = errors.New("there should be a new line after degree of conservation line")
+				err = fmt.Errorf("expecting a new line after sequence conservation line,  line %d, position %d, have \"%s\", block %d, sequence %d", p.s.line+1, p.s.position+1, lit, nblocks, currentnbseqs)
 				return
 			}
 			tok, lit = p.scan()
@@ -133,8 +133,7 @@ func (p *Parser) Parse() (al align.Alignment, err error) {
 				break
 			}
 			if nbseq != 0 && currentnbseqs != nbseq {
-				err = fmt.Errorf("sequence block nb %d has different number of sequence (%d)",
-					nblocks, currentnbseqs)
+				err = fmt.Errorf("sequence block has different number of sequence, line %d, position %d, have \"%s\", block %d, sequence %d", p.s.line+1, p.s.position+1, lit, nblocks, currentnbseqs)
 				return
 			}
 			nbseq = currentnbseqs
@@ -143,19 +142,19 @@ func (p *Parser) Parse() (al align.Alignment, err error) {
 		}
 
 		if tok != IDENTIFIER && tok != NUMERIC {
-			err = errors.New("we expect a sequence identifier here")
+			err = fmt.Errorf("expecting a sequence identifier (or a sequence conservation line) line %d, position %d, have \"%s\", block %d, sequence %d", p.s.line+1, p.s.position+1, lit, nblocks, currentnbseqs)
 			return
 		}
 		name = lit
 		tok, lit = p.scan()
 		if tok != WS {
-			err = errors.New("we expect a whitespace after sequence name")
+			err = fmt.Errorf("expecting a whitespace after sequence name,  line %d, position %d, have \"%s\", block %d, sequence %d", p.s.line+1, p.s.position+1, lit, nblocks, currentnbseqs)
 			return
 		}
 
 		tok, lit = p.scan()
 		if tok != IDENTIFIER {
-			err = errors.New("we expect a sequence here")
+			err = fmt.Errorf("expecting a sequence here, line %d, position %d, have \"%s\", block %d, sequence %d", p.s.line+1, p.s.position+1, lit, nblocks, currentnbseqs)
 			return
 		}
 		seq = lit
@@ -168,12 +167,12 @@ func (p *Parser) Parse() (al align.Alignment, err error) {
 				// skip
 				tok, lit = p.scan()
 			} else {
-				err = errors.New("we expect a current length after sequence + whitespace")
+				err = fmt.Errorf("expecting a current length after sequence + whitespace, line %d, position %d, have \"%s\", block %d, sequence %d", p.s.line+1, p.s.position+1, lit, nblocks, currentnbseqs)
 				return
 			}
 		}
 		if tok != ENDOFLINE {
-			err = errors.New("we expect ENDOFLINE after sequence in a block")
+			err = fmt.Errorf("expecting ENDOFLINE after sequence in a block, line %d, position %d, have \"%s\", block %d, sequence %d", p.s.line+1, p.s.position+1, lit, nblocks, currentnbseqs)
 			return
 		}
 
@@ -182,7 +181,7 @@ func (p *Parser) Parse() (al align.Alignment, err error) {
 			seqs = append(seqs, seq)
 		} else {
 			if names[currentnbseqs] != name {
-				err = fmt.Errorf("name at block %d line %d does not correspond to name in first block (%s vs. %s)", nblocks, currentnbseqs, names[currentnbseqs], name)
+				err = fmt.Errorf("sequence name in the current block (%s) does not correspond to sequence name in first block (%s),  line %d, position %d, have \"%s\", block %d, sequence %d", names[currentnbseqs], name, p.s.line+1, p.s.position+1, lit, nblocks, currentnbseqs)
 				return
 			}
 			seqs[currentnbseqs] = seqs[currentnbseqs] + seq

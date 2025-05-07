@@ -14,11 +14,14 @@ import (
 // Scanner represents a lexical scanner.
 type Scanner struct {
 	r *bufio.Reader
+
+	line, prevline         int // current line (for error message)
+	position, prevposition int // current position in the line (for error message)
 }
 
 // NewScanner returns a new instance of Scanner.
 func NewScanner(r io.Reader) *Scanner {
-	return &Scanner{r: bufio.NewReader(r)}
+	return &Scanner{r: bufio.NewReader(r), line: 0, prevline: 0, position: 0, prevposition: 0}
 }
 
 // reads the next n runes from the bufferred reader.
@@ -32,6 +35,13 @@ func (s *Scanner) Read(n int) string {
 			buf.WriteRune(eof)
 			break
 		}
+		s.prevposition = s.position
+		s.position += 1
+		if isEndOfLine(ch) {
+			s.prevline = s.line
+			s.line += 1
+			s.position = 0
+		}
 	}
 	return buf.String()
 }
@@ -40,6 +50,14 @@ func (s *Scanner) Read(n int) string {
 // Returns the rune(0) if an error occurs (or io.EOF is returned).
 func (s *Scanner) read() rune {
 	ch, _, err := s.r.ReadRune()
+	s.prevposition = s.position
+	s.prevline = s.line
+	s.position += 1
+	if isEndOfLine(ch) {
+		s.line += 1
+		s.position = 0
+	}
+
 	if err != nil {
 		return eof
 	}
@@ -48,6 +66,8 @@ func (s *Scanner) read() rune {
 
 // unread places the previously read rune back on the reader.
 func (s *Scanner) unread() {
+	s.position = s.prevposition
+	s.line = s.prevline
 	_ = s.r.UnreadRune()
 }
 
