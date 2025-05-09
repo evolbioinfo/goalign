@@ -26,8 +26,8 @@ func WriteAlignment(al align.Alignment) string {
 	buf.WriteString("#NEXUS\n")
 	buf.WriteString("begin data;\n")
 	buf.WriteString(fmt.Sprintf("dimensions ntax=%d nchar=%d;\n", al.NbSequences(), al.Length()))
-	buf.WriteString(fmt.Sprintf("format datatype=%s;\n", seqtype))
-	buf.WriteString(fmt.Sprintf("matrix\n"))
+	buf.WriteString(fmt.Sprintf("format datatype=%s gap=-;\n", seqtype))
+	buf.WriteString("matrix\n")
 	al.Iterate(func(name string, seq string) bool {
 		buf.WriteString(name)
 		buf.WriteString(" ")

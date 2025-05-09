@@ -931,7 +931,7 @@ cat > expected <<EOF
 #NEXUS
 begin data;
 dimensions ntax=5 nchar=5;
-format datatype=dna;
+format datatype=dna gap=-;
 matrix
 Seq0000 GATTA
 Seq0001 ATTTG
@@ -1118,7 +1118,7 @@ cat > expected <<EOF
 #NEXUS
 begin data;
 dimensions ntax=5 nchar=5;
-format datatype=dna;
+format datatype=dna gap=-;
 matrix
 Seq0000 GATTA
 Seq0001 ATTTG
