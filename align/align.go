@@ -2357,8 +2357,8 @@ func (a *align) CodonAlign(ntseqs SeqBag) (rtAl *align, err error) {
 		}
 		if ntseqindex < len(ntseq) {
 			// At most 2 remaining nucleotides that could not be part of the last codon
-			if len(ntseq)-ntseqindex == 3 {
-				log.Printf("%s: Dropping %s additional nucleotides: stop codon?", name, string(ntseq[ntseqindex:ntseqindex+3]))
+			if (len(ntseq)-ntseqindex)%3 == 0 {
+				log.Printf("%s: Dropping %s additional nucleotides: stop codon(s)?", name, string(ntseq[ntseqindex:ntseqindex+(len(ntseq)-ntseqindex)]))
 			} else if len(ntseq)-ntseqindex <= 2 {
 				log.Printf("%s: Dropping %d additional nucleotides", name, len(ntseq)-ntseqindex)
 			} else {
