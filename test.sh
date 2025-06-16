@@ -4706,29 +4706,38 @@ echo "->goalign replace stops"
 
 cat > input <<EOF
 >S1
-ATGTTTAAATAAAATTTTTAA
+ATGTTTAAATAAAATAGATAA
 >S2
-ATGTTTAAATAAAATTTTTAA
+ATGTTTAAATAAAATAGATAA
 >S3
-ATGTTTAAATAAAATTTTTAA
+ATGTTTAAATAAAATAGATAA
 EOF
 
 cat > expected.1 <<EOF
 >S1
-ATGTTTAAANNNAATTTTTAA
+ATGTTTAAANNNAATAGATAA
 >S2
-ATGTTTAAANNNAATTTTTAA
+ATGTTTAAANNNAATAGATAA
 >S3
-ATGTTTAAANNNAATTTTTAA
+ATGTTTAAANNNAATAGATAA
 EOF
 
 cat > expected.2 <<EOF
 >S1
-ATGTTNNNATAAAATTTTTAA
+ATGTTNNNATAAAANNNATAA
 >S2
-ATGTTNNNATAAAATTTTTAA
+ATGTTNNNATAAAANNNATAA
 >S3
-ATGTTNNNATAAAATTTTTAA
+ATGTTNNNATAAAANNNATAA
+EOF
+
+cat > expected.3 <<EOF
+>S1
+ATGTTTAAANNNAATNNNTAA
+>S2
+ATGTTTAAANNNAATNNNTAA
+>S3
+ATGTTTAAANNNAATNNNTAA
 EOF
 
 ${GOALIGN} replace stops -i input --phase 0 > result.1
@@ -4737,7 +4746,10 @@ diff -q -b result.1 expected.1
 ${GOALIGN} replace stops -i input --phase 2 > result.2
 diff -q -b result.2 expected.2
 
-rm -f input expected.1 expected.2 result.1 result.2
+${GOALIGN} replace stops -i input --phase 0 --genetic-code mitov > result.3
+diff -q -b result.3 expected.3
+
+rm -f input expected.1 expected.2 expected.3 result.1 result.2 result.3
 
 echo "->goalign diff"
 cat > input <<EOF
