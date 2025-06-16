@@ -143,7 +143,6 @@ diff -q -b result expected
 diff -q -b log expectedlog2
 rm -f expected result mapfile log expectedlog2
 
-
 echo "->goalign clean sites --ends"
 cat > input <<EOF
 >Seq0000
@@ -4702,6 +4701,43 @@ EOF
 $GOALIGN random --seed 123456 | $GOALIGN replace --posfile posfile.txt > result
 diff -q -b result expected
 rm -f  result expected posfile.txt
+
+echo "->goalign replace stops"
+
+cat > input <<EOF
+>S1
+ATGTTTAAATAAAATTTTTAA
+>S2
+ATGTTTAAATAAAATTTTTAA
+>S3
+ATGTTTAAATAAAATTTTTAA
+EOF
+
+cat > expected.1 <<EOF
+>S1
+ATGTTTAAANNNAATTTTTAA
+>S2
+ATGTTTAAANNNAATTTTTAA
+>S3
+ATGTTTAAANNNAATTTTTAA
+EOF
+
+cat > expected.2 <<EOF
+>S1
+ATGTTNNNATAAAATTTTTAA
+>S2
+ATGTTNNNATAAAATTTTTAA
+>S3
+ATGTTNNNATAAAATTTTTAA
+EOF
+
+${GOALIGN} replace stops -i input --phase 0 > result.1
+diff -q -b result.1 expected.1
+
+${GOALIGN} replace stops -i input --phase 2 > result.2
+diff -q -b result.2 expected.2
+
+rm -f input expected.1 expected.2 result.1 result.2
 
 echo "->goalign diff"
 cat > input <<EOF
