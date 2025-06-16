@@ -767,6 +767,25 @@ func (a *align) Replace(old, new string, regex bool) (err error) {
 	return
 }
 
+// Replace the STOP codons by NNN
+// In the given phase
+func (a *align) ReplaceStops(phase int, geneticcode int) (err error) {
+
+	if err = a.seqbag.ReplaceStops(phase, geneticcode); err != nil {
+		return
+	}
+	// Verify that sequences still have same length
+	a.IterateChar(func(name string, s []uint8) bool {
+		if len(s) != a.Length() {
+			err = fmt.Errorf("replace STOPs should not change the length of aligned sequences")
+			return true
+		}
+		return false
+	})
+
+	return
+}
+
 // Replaces match characters (.) by their corresponding characters on the first sequence
 //
 // If the correspongind character in the first sequence is also a ".", then leaves it unchanged.

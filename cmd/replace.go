@@ -113,10 +113,10 @@ func init() {
 	RootCmd.AddCommand(replaceCmd)
 
 	replaceCmd.PersistentFlags().StringVarP(&replaceOutput, "output", "o", "stdout", "Output alignment file")
-	replaceCmd.PersistentFlags().BoolVarP(&replaceRegexp, "regexp", "e", false, "Considers Replace alignment using regexp")
-	replaceCmd.PersistentFlags().StringVarP(&replaceOld, "old", "s", "none", "String to replace in the sequences")
-	replaceCmd.PersistentFlags().StringVarP(&replaceNew, "new", "n", "none", "New string that will replace old string in sequences")
-	replaceCmd.PersistentFlags().StringVarP(&replacefile, "posfile", "f", "none", "File containing sites to replace by give characters in given sequences (deactivates --old & --new)")
+	replaceCmd.Flags().BoolVarP(&replaceRegexp, "regexp", "e", false, "Considers Replace alignment using regexp")
+	replaceCmd.Flags().StringVarP(&replaceOld, "old", "s", "none", "String to replace in the sequences")
+	replaceCmd.Flags().StringVarP(&replaceNew, "new", "n", "none", "New string that will replace old string in sequences")
+	replaceCmd.Flags().StringVarP(&replacefile, "posfile", "f", "none", "File containing sites to replace by give characters in given sequences (deactivates --old & --new)")
 	replaceCmd.PersistentFlags().BoolVar(&unaligned, "unaligned", false, "Considers input sequences as unaligned and fasta format (phylip, nexus,... options are ignored)")
 }
 

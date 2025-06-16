@@ -65,6 +65,7 @@ type SeqBag interface {
 	Rename(namemap map[string]string)
 	RenameRegexp(regex, replace string, namemap map[string]string) error
 	Replace(old, new string, regex bool) error             // Replaces old string with new string in sequences of the alignment
+	ReplaceStops(phase int, geneticode int) error          // Replaces stop codons in the given phase using the given genetic code
 	ShuffleSequences()                                     // Shuffle sequence order
 	String() string                                        // Raw string representation (just write all sequences)
 	Translate(phase int, geneticcode int) (err error)      // Translates nt sequence in aa
@@ -878,6 +879,36 @@ func (sb *seqbag) Sort() {
 		s := sb.seqmap[n]
 		sb.seqs[i] = s
 	}
+}
+
+// Replace an old string in sequences by a new string
+// It may be a regexp
+// Uses the given genetic code
+func (sb *seqbag) ReplaceStops(phase int, geneticcode int) (err error) {
+	var code map[string]uint8
+	var aa uint8
+
+	if sb.Alphabet() != NUCLEOTIDS {
+		err = errors.New("wrong alphabet, cannot replace stop codons")
+		return
+	}
+
+	if code, err = geneticCode(geneticcode); err != nil {
+		return
+	}
+
+	for seq := 0; seq < sb.NbSequences(); seq++ {
+		s := sb.seqs[seq]
+		for codon := phase; codon < sb.seqs[seq].Length()-5; codon += 3 {
+			aa = translateCodon(s.sequence[codon], s.sequence[codon+1], s.sequence[codon+2], code)
+			if aa == OTHER {
+				s.sequence[codon] = ALL_NUCLE
+				s.sequence[codon+1] = ALL_NUCLE
+				s.sequence[codon+2] = ALL_NUCLE
+			}
+		}
+	}
+	return nil
 }
 
 /*

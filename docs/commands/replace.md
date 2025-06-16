@@ -76,3 +76,35 @@ Seq0007  GTG---AGGT CTATTTTTCC
 Seq0008  GGTT---G-- -TCTA---CT
 Seq0009  GTAAAGGGTA TGGCCATGTG
 ```
+
+### replace stops
+
+Replace STOP codons in input nt sequences by NNN, in the given phase (except the last codon).
+
+If --phase is given (>=0), then starts at the given offset (default=0)
+
+```
+Usage:
+  goalign replace stops [flags]
+
+Flags:
+      --genetic-code string   Genetic Code: standard, mitoi (invertebrate mitochondrial) or mitov (vertebrate mitochondrial) (default "standard")
+  -h, --help                  help for stops
+      --phase int             Phase in which replace STOP codons
+
+Global Flags:
+  -i, --align string           Alignment input file (default "stdin")
+      --alphabet string        Alignment/Sequences alphabet: auto (default), aa, or nt (default "auto")
+      --auto-detect            Auto detects input format (overrides -p, -x and -u)
+  -u, --clustal                Alignment is in clustal? default fasta
+      --ignore-identical int   Ignore duplicated sequences that have the same name and potentially have same sequences, 0 : Does not ignore anything, 1: Ignore sequences having the same name (keep the first one whatever their sequence), 2: Ignore sequences having the same name and the same sequence
+      --input-strict           Strict phylip input format (only used with -p)
+  -x, --nexus                  Alignment is in nexus? default fasta
+      --no-block               Write Phylip sequences without space separated blocks (only used with -p)
+      --one-line               Write Phylip sequences on 1 line (only used with -p)
+  -o, --output string          Output alignment file (default "stdout")
+      --output-strict          Strict phylip output format (only used with -p)
+  -p, --phylip                 Alignment is in phylip? default fasta
+  -k, --stockholm              Alignment is in stockholm? default fasta
+      --unaligned              Considers input sequences as unaligned and fasta format (phylip, nexus,... options are ignored)
+```

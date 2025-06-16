@@ -98,6 +98,7 @@ Command                                                     | Subcommand |      
 --                                                          | tnt        | Reformats an input alignment into TNT input file
 [rename](commands/rename.md) ([api](api/rename.md))         |            | Rename sequences of the input alignment (using a map file, with a regexp, or just clean names)
 [replace](commands/replace.md) ([api](api/replace.md))      |            | Replace characters in sequences of input alignment
+--                                                          | stops      | Replace stop codons in input nt alignment
 [revcomp](commands/revcomp.md) ([api](api/revcomp.md))      |            | Reverse complements an input alignment
 [sample](commands/sample.md) ([api](api/sample.md))         |            | Samples sequences or sites from an input alignment
 --                                                          | seqs       | Samples a subset of sequences from the input alignment
