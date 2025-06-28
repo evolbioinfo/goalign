@@ -62,6 +62,10 @@ type SeqBag interface {
 	MaxNameLength() int // maximum sequence name length
 	NbSequences() int
 	RarefySeqBag(nb int, counts map[string]int) (SeqBag, error) // Take a new rarefied sample taking into accounts weights
+	// Removes sequences having >= cutoff gaps, returns number of removed sequences
+	RemoveGapSeqs(cutoff float64, ignoreNs bool) int
+	// Removes sequences having >= cutoff character, returns number of removed sequences
+	RemoveCharacterSeqs(c uint8, cutoff float64, ignoreCase, ignoreGaps, ignoreNs bool) int
 	Rename(namemap map[string]string)
 	RenameRegexp(regex, replace string, namemap map[string]string) error
 	Replace(old, new string, regex bool) error             // Replaces old string with new string in sequences of the alignment
@@ -794,6 +798,68 @@ func (sb *seqbag) rarefySeqBag(nb int, counts map[string]int) (sample *seqbag, e
 	})
 
 	return
+}
+
+// Removes sequences constituted of [cutoff*100%,100%] Gaps
+// Exception fo a cutoff of 0: does not remove sequences with 0% gaps
+// Cutoff must be between 0 and 1, otherwise set to 0.
+// 0 means that sequences with > 0 gaps will be removed
+// other cutoffs : ]0,1] mean that sequences with >= cutoff gaps will be removed
+//
+// Returns the number of removed sequences
+func (sb *seqbag) RemoveGapSeqs(cutoff float64, ignoreNs bool) int {
+	return sb.RemoveCharacterSeqs(GAP, cutoff, false, false, ignoreNs)
+}
+
+// RemoveCharacterSeqs Removes sequences constituted of [cutoff*100%,100%] of the given character
+// Exception fo a cutoff of 0: does not remove sequences with 0% of this character
+// Cutoff must be between 0 and 1, otherwise set to 0.
+// 0 means that sequences with > 0 of the given character will be removed
+// other cutoffs : ]0,1] mean that positions with >= cutoff of this character will be removed
+//
+// if ignoreCase then the search is case insensitive
+// if ignoreGaps is true, then gaps are not taken into account
+// if ignoreNs is true, then Ns are not taken into account
+//
+// Returns the number of removed sequences
+func (sb *seqbag) RemoveCharacterSeqs(c uint8, cutoff float64, ignoreCase, ignoreGaps, ignoreNs bool) int {
+	var nbseqs int
+	var total int
+	if cutoff < 0 || cutoff > 1 {
+		cutoff = 0
+	}
+	oldseqs := sb.seqs
+	sb.Clear()
+	nbremoved := 0
+
+	all := uint8(ALL_NUCLE)
+	if sb.Alphabet() == AMINOACIDS {
+		all = uint8(ALL_AMINO)
+	}
+	allc := uint8(unicode.ToLower(rune(all)))
+
+	for _, seq := range oldseqs {
+		nbseqs = 0
+		total = 0
+
+		for site := 0; site < seq.Length(); site++ {
+			if (seq.sequence[site] == c) || (ignoreCase && unicode.ToLower(rune(seq.sequence[site])) == unicode.ToLower(rune(c))) {
+				nbseqs++
+			}
+			// If we exclude gaps and it is a gap: we do nothing
+			// or if we exclude Ns and it is a N: we do nothing
+			if !(ignoreGaps && seq.sequence[site] == uint8(GAP)) && !(ignoreNs && (seq.sequence[site] == all || seq.sequence[site] == allc)) {
+				total++
+			}
+		}
+		if (cutoff > 0.0 && float64(nbseqs) >= cutoff*float64(total)) || (cutoff == 0 && nbseqs > 0) {
+			nbremoved++
+		} else {
+			sb.AddSequenceChar(seq.name, seq.sequence, seq.comment)
+		}
+	}
+
+	return nbremoved
 }
 
 // This function renames sequences of the alignment based on the map in argument

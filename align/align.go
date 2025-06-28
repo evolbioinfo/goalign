@@ -105,10 +105,6 @@ type Alignment interface {
 	RefSites(name string, sites []int) (refsites []int, err error)
 	// Overwrites the character at position "site" of the sequence "seqname" by "newchar"
 	ReplaceChar(seqname string, site int, newchar uint8) error
-	// Removes sequences having >= cutoff gaps, returns number of removed sequences
-	RemoveGapSeqs(cutoff float64, ignoreNs bool) int
-	// Removes sequences having >= cutoff character, returns number of removed sequences
-	RemoveCharacterSeqs(c uint8, cutoff float64, ignoreCase, ignoreGaps, ignoreNs bool) int
 	// Removes sites having >= cutoff gaps, returns the number of consecutive removed sites at start and end of alignment
 	RemoveGapSites(cutoff float64, ends bool) (first, last int, kept, removed []int)
 	// Removes sites having >= cutoff character, returns the number of consecutive removed sites at start and end of alignment
@@ -634,69 +630,6 @@ func (a *align) RefSites(name string, sites []int) (refsites []int, err error) {
 	}
 
 	return
-}
-
-// Removes sequences constituted of [cutoff*100%,100%] Gaps
-// Exception fo a cutoff of 0: does not remove sequences with 0% gaps
-// Cutoff must be between 0 and 1, otherwise set to 0.
-// 0 means that sequences with > 0 gaps will be removed
-// other cutoffs : ]0,1] mean that sequences with >= cutoff gaps will be removed
-//
-// Returns the number of removed sequences
-func (a *align) RemoveGapSeqs(cutoff float64, ignoreNs bool) int {
-	return a.RemoveCharacterSeqs(GAP, cutoff, false, false, ignoreNs)
-}
-
-// RemoveCharacterSeqs Removes sequences constituted of [cutoff*100%,100%] of the given character
-// Exception fo a cutoff of 0: does not remove sequences with 0% of this character
-// Cutoff must be between 0 and 1, otherwise set to 0.
-// 0 means that sequences with > 0 of the given character will be removed
-// other cutoffs : ]0,1] mean that positions with >= cutoff of this character will be removed
-//
-// if ignoreCase then the search is case insensitive
-// if ignoreGaps is true, then gaps are not taken into account
-// if ignoreNs is true, then Ns are not taken into account
-//
-// Returns the number of removed sequences
-func (a *align) RemoveCharacterSeqs(c uint8, cutoff float64, ignoreCase, ignoreGaps, ignoreNs bool) int {
-	var nbseqs int
-	var total int
-	if cutoff < 0 || cutoff > 1 {
-		cutoff = 0
-	}
-	oldseqs := a.seqs
-	length := a.Length()
-	a.Clear()
-	nbremoved := 0
-
-	all := uint8(ALL_NUCLE)
-	if a.Alphabet() == AMINOACIDS {
-		all = uint8(ALL_AMINO)
-	}
-	allc := uint8(unicode.ToLower(rune(all)))
-
-	for _, seq := range oldseqs {
-		nbseqs = 0
-		total = 0
-
-		for site := 0; site < length; site++ {
-			if (seq.sequence[site] == c) || (ignoreCase && unicode.ToLower(rune(seq.sequence[site])) == unicode.ToLower(rune(c))) {
-				nbseqs++
-			}
-			// If we exclude gaps and it is a gap: we do nothing
-			// or if we exclude Ns and it is a N: we do nothing
-			if !(ignoreGaps && seq.sequence[site] == uint8(GAP)) && !(ignoreNs && (seq.sequence[site] == all || seq.sequence[site] == allc)) {
-				total++
-			}
-		}
-		if (cutoff > 0.0 && float64(nbseqs) >= cutoff*float64(total)) || (cutoff == 0 && nbseqs > 0) {
-			nbremoved++
-		} else {
-			a.AddSequenceChar(seq.name, seq.sequence, seq.comment)
-		}
-	}
-
-	return nbremoved
 }
 
 // Swap will exchange sequences from one seq to another of the alignment

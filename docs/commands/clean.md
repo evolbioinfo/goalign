@@ -22,7 +22,7 @@ Two subcommands:
 
     If cutoff is <0 or >1, it will be considered as 0, which means that every site with at least 1 specified character
     will be removed.`,
-* `goalign clean seqs`: Removes sequences with gaps (same options as `clean sites`).
+* `goalign clean seqs`: Removes sequences with gaps (same options as `clean sites`), with an additional option `--unaligned` to handle unaligned sequences.
 
 For both commands, it is possible to specify options :
 - `--ignore-gaps` : It ignores Gaps to compute the cutoff

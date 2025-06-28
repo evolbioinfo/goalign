@@ -433,9 +433,9 @@ ACCTACGGCTCTAGACAGCTGAAGTCCGGTTCCGAGCACTGTACGGAAACTTGAAAAGGCTCGACGGAGGCTTGTTCCGC
 AGAGTGGGACTATAACATAC
 EOF
 cat > expectedlog <<EOF
-[Warning] in cmd/cleanseqs.go (line 61), message: Alignment (0) #seqs before cleaning=10
-[Warning] in cmd/cleanseqs.go (line 62), message: Alignment (0) #seqs after cleaning=5
-[Warning] in cmd/cleanseqs.go (line 63), message: Alignment (0) removed sequences=5
+[Warning] in cmd/cleanseqs.go (line 91), message: Alignment (0) #seqs before cleaning=10
+[Warning] in cmd/cleanseqs.go (line 92), message: Alignment (0) #seqs after cleaning=5
+[Warning] in cmd/cleanseqs.go (line 93), message: Alignment (0) removed sequences=5
 EOF
 ${GOALIGN} clean seqs -i input > result 2>log
 diff -q -b result expected
@@ -512,9 +512,9 @@ ACCTACGGCTCTAGACAGCTGAAGTCCGGTTCCGAGCACTGTACGGAAACTTGAAAAGGCTCGACGGAGGCTTGTTCCGC
 AGAGTGGGACTATAACATAC
 EOF
 cat > expectedlog <<EOF
-[Warning] in cmd/cleanseqs.go (line 61), message: Alignment (0) #seqs before cleaning=10
-[Warning] in cmd/cleanseqs.go (line 62), message: Alignment (0) #seqs after cleaning=9
-[Warning] in cmd/cleanseqs.go (line 63), message: Alignment (0) removed sequences=1
+[Warning] in cmd/cleanseqs.go (line 91), message: Alignment (0) #seqs before cleaning=10
+[Warning] in cmd/cleanseqs.go (line 92), message: Alignment (0) #seqs after cleaning=9
+[Warning] in cmd/cleanseqs.go (line 93), message: Alignment (0) removed sequences=1
 EOF
 
 ${GOALIGN} clean seqs --char N --ignore-gaps -c 0.2 -i input > result 2>log
@@ -587,9 +587,9 @@ ACCTACGGCTCTAGACAGCTGAAGTCCGGTTCCGAGCACTGTACGGAAACTTGAAAAGGCTCGACGGAGGCTTGTTCCGC
 AGAGTGGGACTATAACATAC
 EOF
 cat > expectedlog <<EOF
-[Warning] in cmd/cleanseqs.go (line 61), message: Alignment (0) #seqs before cleaning=10
-[Warning] in cmd/cleanseqs.go (line 62), message: Alignment (0) #seqs after cleaning=9
-[Warning] in cmd/cleanseqs.go (line 63), message: Alignment (0) removed sequences=1
+[Warning] in cmd/cleanseqs.go (line 91), message: Alignment (0) #seqs before cleaning=10
+[Warning] in cmd/cleanseqs.go (line 92), message: Alignment (0) #seqs after cleaning=9
+[Warning] in cmd/cleanseqs.go (line 93), message: Alignment (0) removed sequences=1
 EOF
 ${GOALIGN} clean seqs --char GAP --ignore-n -c 0.2 -i input > result 2>log
 diff -q -b result expected
@@ -617,9 +617,9 @@ ACGT-
 ACGT-
 EOF
 cat > expectedlog <<EOF
-[Warning] in cmd/cleanseqs.go (line 61), message: Alignment (0) #seqs before cleaning=4
-[Warning] in cmd/cleanseqs.go (line 62), message: Alignment (0) #seqs after cleaning=3
-[Warning] in cmd/cleanseqs.go (line 63), message: Alignment (0) removed sequences=1
+[Warning] in cmd/cleanseqs.go (line 91), message: Alignment (0) #seqs before cleaning=4
+[Warning] in cmd/cleanseqs.go (line 92), message: Alignment (0) #seqs after cleaning=3
+[Warning] in cmd/cleanseqs.go (line 93), message: Alignment (0) removed sequences=1
 EOF
 
 ${GOALIGN} clean seqs --char A --ignore-n -c 0.5 -i input > result 2>log
@@ -648,9 +648,9 @@ ACGT-
 ACGT-
 EOF
 cat > expectedlog <<EOF
-[Warning] in cmd/cleanseqs.go (line 61), message: Alignment (0) #seqs before cleaning=4
-[Warning] in cmd/cleanseqs.go (line 62), message: Alignment (0) #seqs after cleaning=3
-[Warning] in cmd/cleanseqs.go (line 63), message: Alignment (0) removed sequences=1
+[Warning] in cmd/cleanseqs.go (line 91), message: Alignment (0) #seqs before cleaning=4
+[Warning] in cmd/cleanseqs.go (line 92), message: Alignment (0) #seqs after cleaning=3
+[Warning] in cmd/cleanseqs.go (line 93), message: Alignment (0) removed sequences=1
 EOF
 
 ${GOALIGN} clean seqs --char A --ignore-n --ignore-case -c 0.9 -i input > result 2>log
@@ -658,6 +658,36 @@ diff -q -b result expected
 diff -q -b log expectedlog
 rm -f result mapfile expected log expectedlog
 
+
+echo "->goalign clean seqs --ignore-n --unaligned /3"
+cat > input <<EOF
+>Seq0000
+ACGT
+>Seq0001
+Aa
+>Seq0002
+ACGT-
+>Seq0003
+ACGT-
+EOF
+cat > expected <<EOF
+>Seq0000
+ACGT
+>Seq0002
+ACGT-
+>Seq0003
+ACGT-
+EOF
+cat > expectedlog <<EOF
+[Warning] in cmd/cleanseqs.go (line 60), message: Alignment (0) #seqs before cleaning=4
+[Warning] in cmd/cleanseqs.go (line 61), message: Alignment (0) #seqs after cleaning=3
+[Warning] in cmd/cleanseqs.go (line 62), message: Alignment (0) removed sequences=1
+EOF
+
+${GOALIGN} clean seqs --unaligned --char A --ignore-n --ignore-case -c 0.9 -i input > result 2>log
+diff -q -b result expected
+diff -q -b log expectedlog
+rm -f result expected log expectedlog
 
 echo "->goalign random"
 cat > expected <<EOF
