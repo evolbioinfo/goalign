@@ -2071,6 +2071,60 @@ ${GOALIGN} random --seed 10 -l 20 | ${GOALIGN} mutate snvs --seed 10 > result
 diff -q -b result expected
 rm -f expected result
 
+echo "->goalign mutate ambig"
+cat > expected <<EOF
+>Seq0000
+GATTAATTTGCCGTAGGCCA
+>Seq0001
+NNNTNNNNANANNNNNNANN
+>Seq0002
+NNNNGNNNNNANNNNTNANN
+>Seq0003
+GAGAGGACTAGTTCATACTT
+>Seq0004
+TNNNNNNANNNNNNNNNCNA
+>Seq0005
+TGTCGGACCTAAGTATTGAG
+>Seq0006
+NNNNNNNNNNTNTTNNNNCN
+>Seq0007
+GTGGAGAGGTCTATTTTTCC
+>Seq0008
+GGNNNNNNNNNNNTANNNNN
+>Seq0009
+GTAAAGGGTATGGCCATGTG
+EOF
+
+cat > expected.2 <<EOF
+>Seq0000
+PHGVHCVSSYRFEKCPNFFC
+>Seq0001
+XXXKXXXXCXMXXXXXXHXX
+>Seq0002
+XXXXEXXXXXAXXXXGXHXX
+>Seq0003
+YHPTYLHWSAPDGRCKTQSV
+>Seq0004
+DXXXXXXMXXXXXXXXXQXH
+>Seq0005
+GLKQYYAQRKATNSHKDLAY
+>Seq0006
+XXXXXXXXXXKXVGXXXXWX
+>Seq0007
+NSNLHNANYSQGHVVSDVIF
+>Seq0008
+YYXXXXXXXXXXXSCXXXXX
+>Seq0009
+PGTTAYLLGHDYNWFCSEKN
+EOF
+
+$GOALIGN random -l 20 --seed 10| $GOALIGN mutate ambig -r 0.8 --seed 10 > output
+$GOALIGN random -a -l 20 --seed 10| $GOALIGN mutate ambig -r 0.8 --seed 10 > output.2
+
+diff -q -b output expected
+diff -q -b output.2 expected.2
+rm -f expected expected.2 output output.2
+
 
 echo "->goalign rename"
 cat > mapfile <<EOF

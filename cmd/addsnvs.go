@@ -8,7 +8,7 @@ import (
 )
 
 // mutateCmd represents the mutate command
-var gapsCmd = &cobra.Command{
+var addSNVsCmd = &cobra.Command{
 	Use:   "snvs",
 	Short: "Adds substitutions uniformly in an input alignment",
 	Long: `Adds substitutions uniformly in an input alignment.
@@ -44,5 +44,5 @@ var gapsCmd = &cobra.Command{
 }
 
 func init() {
-	mutateCmd.AddCommand(gapsCmd)
+	mutateCmd.AddCommand(addSNVsCmd)
 }

@@ -20,6 +20,7 @@ import (
 type Alignment interface {
 	SeqBag
 	AddGaps(rate, lenprop float64)
+	AddAmbiguities(rate, lenprop float64)
 	Append(Alignment) error // Appends alignment sequences to this alignment
 	AvgAllelesPerSite() float64
 	BuildBootstrap(frac float64) Alignment // Bootstrap alignment
@@ -972,6 +973,41 @@ func (a *align) AddGaps(lenprop float64, prop float64) {
 		seq := a.seqs[permseqs[i]]
 		for j := 0; j < nbgaps; j++ {
 			seq.sequence[permsites[j]] = GAP
+		}
+	}
+}
+
+// Add prop*100% ambiguities to lenprop*100% of the sequences
+// if prop < 0 || lenprop<0 : does nothing
+// if prop > 1 || lenprop>1 : does nothing
+// if alphabet is amino: ambig = X
+// else if alphabet is nucleotides: ambig = N
+// else: ambig = X
+func (a *align) AddAmbiguities(lenprop float64, prop float64) {
+	if prop < 0 || prop > 1 {
+		return
+	}
+	if lenprop < 0 || lenprop > 1 {
+		return
+	}
+
+	nb := int(prop * float64(a.NbSequences()))
+	nbambig := int(lenprop * float64(a.Length()))
+	permseqs := rand.Perm(a.NbSequences())
+	allchar := ALL_AMINO
+
+	if a.Alphabet() == AMINOACIDS {
+		allchar = ALL_AMINO
+	} else if a.Alphabet() == NUCLEOTIDS {
+		allchar = ALL_NUCLE
+	}
+
+	// We take a random position in the sequences between min and max
+	for i := 0; i < nb; i++ {
+		permsites := rand.Perm(a.Length())
+		seq := a.seqs[permseqs[i]]
+		for j := 0; j < nbambig; j++ {
+			seq.sequence[permsites[j]] = uint8(allchar)
 		}
 	}
 }
