@@ -120,6 +120,7 @@ You may go to the [doc](docs/index.md) for a more detailed documentation of the 
 * mutate: Add substitutions (~sequencing errors), or gaps, uniformly in an input alignment
   * gaps: Add gaps uniformly in an input alignment
   * snvs: Add substitutions uniformly in an input alignment
+  * ambig: Add ambiguities (N/X) uniformly in an input alignment
 * orf:   Find the longest orf in all given sequences in forward strand
 * phase: Try to find reference orf(s) (aa) in input sequences, and align it on the same phase
 * phasent: Try to find reference sequence (nt) in input sequences, and align it on the same phase
