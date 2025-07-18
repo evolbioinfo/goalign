@@ -311,6 +311,10 @@ func writeAlignFasta(al align.Alignment, f utils.StringWriterCloser) {
 	f.WriteString(fasta.WriteAlignment(al))
 }
 
+func writeAlignStockholm(al align.Alignment, f utils.StringWriterCloser) {
+	f.WriteString(stockholm.WriteAlignment(al))
+}
+
 func writeAlignPhylip(al align.Alignment, f utils.StringWriterCloser) {
 	f.WriteString(phylip.WriteAlignment(al, rootoutputstrict, rootoutputoneline, rootoutputnoblock))
 }
