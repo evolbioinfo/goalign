@@ -506,7 +506,7 @@ func (s *seq) listMutationsComparedToReferenceSequenceCodon(alphabet int, refseq
 				curinsert = append(curinsert, aa)
 				altcodon = append(altcodon, codon...)
 				diffaa = diffaa || aa != refaa
-				diffcodon = diffcodon || string(refcodon) != string(codon)
+				diffcodon = diffcodon || strings.ToUpper(string(refcodon)) != strings.ToUpper(string(codon))
 			}
 			if translate && (len(curinsert) > 1 || diffaa) {
 				mutations = append(mutations, Mutation{Ref: []uint8{refaa}, Pos: aaidx, Alt: curinsert})
