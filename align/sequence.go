@@ -34,16 +34,17 @@ type Sequence interface {
 	// It does not take into account 'N' and '-' in sequences as mutations compared to ref
 	/// sequence (ref sequence can have a '-' or a 'N')
 	NumMutationsComparedToReferenceSequence(alphabet int, seq Sequence) (nummutations int, err error)
-	// returns the list ofdifferences between the reference sequence and each sequence of the alignment
+	// returns the list of differences between the reference sequence and each sequence of the alignment
 	// Counts only non N sites in each sequences (may be a gap or a N in the reference sequence though)
 	// If a character is ambigous (IUPAC notation), then it is counted as a mutation only if it is incompatible with
 	// the reference character.
-	// if aa is true: the sequences are nucleotides and nucleotides are taken codon by codon of the reference sequence
-	// to list mutations. In case of insertion or a deletion in the target sequence: if %3==0: - or aa insert,
+	// if codon is true: the sequences are nucleotides and nucleotides are taken codon by codon of the reference sequence
+	// to list mutations.
+	// it translate is true (codon must be true also):  Translate each codon. In case of insertion or a deletion in the target sequence: if %3==0: - or aa insert,
 	// otherwise "/" ~frameshift?
 	//
 	// If lengths are different, returns an error
-	ListMutationsComparedToReferenceSequence(alphabet int, refseq Sequence, aa bool) (mutations []Mutation, err error)
+	ListMutationsComparedToReferenceSequence(alphabet int, refseq Sequence, codon bool, translate bool) (mutations []Mutation, err error)
 
 	Clone() Sequence
 }
@@ -317,9 +318,9 @@ func (s *seq) NumMutationsComparedToReferenceSequence(alphabet int, refseq Seque
 // the reference character.
 //
 // If lengths are different, returns an error
-func (s *seq) ListMutationsComparedToReferenceSequence(alphabet int, refseq Sequence, aa bool) (mutations []Mutation, err error) {
-	if aa {
-		return s.listMutationsComparedToReferenceSequenceAA(alphabet, refseq)
+func (s *seq) ListMutationsComparedToReferenceSequence(alphabet int, refseq Sequence, codon, translate bool) (mutations []Mutation, err error) {
+	if codon {
+		return s.listMutationsComparedToReferenceSequenceCodon(alphabet, refseq, translate)
 	}
 	return s.listMutationsComparedToReferenceSequence(alphabet, refseq)
 }
@@ -369,11 +370,11 @@ func (s *seq) listMutationsComparedToReferenceSequence(alphabet int, refseq Sequ
 			}
 		} else {
 			if len(curinsert) > 0 {
-				mutations = append(mutations, Mutation{Ref: '-', Pos: refi, Alt: curinsert})
+				mutations = append(mutations, Mutation{Ref: []uint8{'-'}, Pos: refi, Alt: curinsert})
 				curinsert = make([]uint8, 0)
 			}
 			if s.sequence[i] != all && !eq {
-				mutations = append(mutations, Mutation{Ref: refseqchar[i], Pos: refi, Alt: []uint8{s.sequence[i]}})
+				mutations = append(mutations, Mutation{Ref: []uint8{refseqchar[i]}, Pos: refi, Alt: []uint8{s.sequence[i]}})
 			}
 		}
 
@@ -382,7 +383,7 @@ func (s *seq) listMutationsComparedToReferenceSequence(alphabet int, refseq Sequ
 		}
 	}
 	if len(curinsert) > 0 {
-		mutations = append(mutations, Mutation{Ref: '-', Pos: refi, Alt: curinsert})
+		mutations = append(mutations, Mutation{Ref: []uint8{'-'}, Pos: refi, Alt: curinsert})
 		curinsert = make([]uint8, 0)
 	}
 
@@ -392,7 +393,7 @@ func (s *seq) listMutationsComparedToReferenceSequence(alphabet int, refseq Sequ
 // listMutationsComparedToReferenceSequenceAA takes nucleotides codon by codon of the reference seqence
 // to list mutations. In case of insertion or a deletion in the target sequence: if %3==0: - or aa insert,
 // otherwise "/" ~frameshift?
-func (s *seq) listMutationsComparedToReferenceSequenceAA(alphabet int, refseq Sequence) (mutations []Mutation, err error) {
+func (s *seq) listMutationsComparedToReferenceSequenceCodon(alphabet int, refseq Sequence, translate bool) (mutations []Mutation, err error) {
 	var refseqchar []uint8
 	var code map[string]uint8
 
@@ -433,6 +434,7 @@ func (s *seq) listMutationsComparedToReferenceSequenceAA(alphabet int, refseq Se
 	aaidx := 0
 	for refcodonidx[2] < s.Length() {
 		var refaa uint8
+		var refcodon []uint8
 		var allgaps bool = false
 
 		if refseqchar[refcodonidx[0]] == GAP && refseqchar[refcodonidx[1]] == GAP && refseqchar[refcodonidx[2]] == GAP {
@@ -463,35 +465,53 @@ func (s *seq) listMutationsComparedToReferenceSequenceAA(alphabet int, refseq Se
 				break
 			}
 			refaa = translateCodon(refseqchar[refcodonidx[0]], refseqchar[refcodonidx[1]], refseqchar[refcodonidx[2]], code)
+			refcodon = []uint8{refseqchar[refcodonidx[0]], refseqchar[refcodonidx[1]], refseqchar[refcodonidx[2]]}
 		}
 		// We remove the gaps from the compared sequence corresponding to the reference codon
 		tmpseq := make([]uint8, 0)
+		tmpfullseq := make([]uint8, 0)
 		for si := refcodonidx[0]; si <= refcodonidx[2]; si++ {
 			if s.sequence[si] != GAP {
 				tmpseq = append(tmpseq, s.sequence[si])
 			}
+			tmpfullseq = append(tmpfullseq, s.sequence[si])
 		}
 
 		// Deletion
 		if len(tmpseq) == 0 {
 			if !allgaps {
-				mutations = append(mutations, Mutation{Ref: refaa, Pos: aaidx, Alt: []uint8{'-'}})
+				if translate {
+					mutations = append(mutations, Mutation{Ref: []uint8{refaa}, Pos: aaidx, Alt: []uint8{'-'}})
+				} else {
+					mutations = append(mutations, Mutation{Ref: refcodon, Pos: aaidx, Alt: tmpfullseq})
+				}
 			}
 		} else if len(tmpseq)%3 != 0 {
 			// Potential frameshift
-			mutations = append(mutations, Mutation{Ref: refaa, Pos: aaidx, Alt: []uint8{'/'}})
+			if translate {
+				mutations = append(mutations, Mutation{Ref: []uint8{refaa}, Pos: aaidx, Alt: []uint8{'/'}})
+			} else {
+				mutations = append(mutations, Mutation{Ref: refcodon, Pos: aaidx, Alt: tmpfullseq})
+			}
 		} else {
 			// Mutations + potentiel Insertions
 			// We find all corresponding codons of the target sequence, between refcodonidx[0] and refcodonidx[2]
 			curinsert := make([]uint8, 0) // buffer of current consecutive insertions in query seq (gaps in ref seq)
-			diff := false
+			altcodon := make([]uint8, 0)
+			diffaa := false
+			diffcodon := false
 			for si := 0; si <= len(tmpseq)-2; si += 3 {
 				aa := translateCodon(tmpseq[si], tmpseq[si+1], tmpseq[si+2], code)
+				codon := []uint8{tmpseq[si], tmpseq[si+1], tmpseq[si+2]}
 				curinsert = append(curinsert, aa)
-				diff = diff || aa != refaa
+				altcodon = append(altcodon, codon...)
+				diffaa = diffaa || aa != refaa
+				diffcodon = diffcodon || string(refcodon) != string(codon)
 			}
-			if len(curinsert) > 1 || diff {
-				mutations = append(mutations, Mutation{Ref: refaa, Pos: aaidx, Alt: curinsert})
+			if translate && (len(curinsert) > 1 || diffaa) {
+				mutations = append(mutations, Mutation{Ref: []uint8{refaa}, Pos: aaidx, Alt: curinsert})
+			} else if !translate && (len(curinsert) > 1 || diffcodon) {
+				mutations = append(mutations, Mutation{Ref: refcodon, Pos: aaidx, Alt: altcodon})
 			}
 		}
 

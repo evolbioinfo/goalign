@@ -9,6 +9,7 @@ import (
 )
 
 var statMutationsListAA bool
+var statMutationsListCodon bool
 
 // charCmd represents the char command
 var statMutationsListCmd = &cobra.Command{
@@ -20,10 +21,12 @@ var statMutationsListCmd = &cobra.Command{
 	it will try to open a fasta file with the given name to take the first sequence as a reference. If a character is ambigous 
 	(IUPAC notation) in an nucleotide sequence, then it is counted as a mutation only if it is incompatible with the reference character.
 
-	- --aa : takes reference nucleotides codon by codon of the reference sequence to list mutations (alihgn). In case of insertion or a deletion in
-	         the target sequence: if %3!=0 (without gaps): it may be a frameshift, indicated by a '/'. It is better to use this option rather 
-			 than translating the alignment and then listing mutations in aa, because the insertions/deletions may not be appropriately listed if the 
-			 gap is inside a reference codon for example.
+	- --aa : takes reference nucleotides codon by codon of the reference sequence to list mutations (alihgn) and translates each codon. In case of 
+			 insertion or a deletion in the target sequence: if %3!=0 (without gaps): it may be a frameshift, indicated by a '/'. It is better to use
+			 this option rather than translating the alignment and then listing mutations in aa, because the insertions/deletions may not be 
+			 appropriately listed if the gap is inside a reference codon for example.
+
+	- --codon : takes reference nucleotides codon by codon (like --aa) of the reference sequence to list mutations and does not translate them (unlike --aa).
 
 	It does not take into account 'N' as mutations compared to a reference sequence.
 `,
@@ -68,16 +71,16 @@ var statMutationsListCmd = &cobra.Command{
 		}
 		for _, s2 := range al.Sequences() {
 			if s2.Name() != statMutationsRef {
-				if mutations, err = s2.ListMutationsComparedToReferenceSequence(al.Alphabet(), align.NewSequence("ref", []uint8(s), ""), statMutationsListAA); err != nil {
+				if mutations, err = s2.ListMutationsComparedToReferenceSequence(al.Alphabet(), align.NewSequence("ref", []uint8(s), ""), statMutationsListCodon || statMutationsListAA, statMutationsListAA); err != nil {
 					io.LogError(err)
 					return
 				}
 				fmt.Printf("%s", s2.Name())
 				for i, m := range mutations {
 					if i == 0 {
-						fmt.Printf("\t%c%d%s", m.Ref, m.Pos, string(m.Alt))
+						fmt.Printf("\t%s%d%s", string(m.Ref), m.Pos, string(m.Alt))
 					} else {
-						fmt.Printf(",%c%d%s", m.Ref, m.Pos, string(m.Alt))
+						fmt.Printf(",%s%d%s", string(m.Ref), m.Pos, string(m.Alt))
 					}
 				}
 				fmt.Printf("\n")
@@ -89,5 +92,6 @@ var statMutationsListCmd = &cobra.Command{
 
 func init() {
 	statMutationsListCmd.PersistentFlags().BoolVar(&statMutationsListAA, "aa", false, "Take the reference sequence condon by codon, and translate ")
+	statMutationsListCmd.PersistentFlags().BoolVar(&statMutationsListCodon, "codon", false, "Take the reference sequence condon by codon, and do not translate (mutually exclusive with --aa)")
 	statMutationsCmd.AddCommand(statMutationsListCmd)
 }

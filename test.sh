@@ -2504,6 +2504,37 @@ B	P0/,P1/,P2/,P3/,P4/
 C	P0/,P1/,P2F,P3/
 EOF
 
+#>A
+#CCCCCC---CCCCCCCC-C
+#AAACGA---CGA-GACC-C
+#>B
+#CCC CCC --- CCC CCC CC-C
+#--A T-T --- T-T -TT T--C
+#>C
+#CCC CCC --- CCC CCC CC-C
+#--C TT- --- TTT --T CC-C
+
+cat > refseq2 <<EOF
+>ref
+CCCCCC---CCCCCCCC-CC-C
+EOF
+
+cat > input2 <<EOF
+>A
+AAACGA---CGA-GACC-CC-C
+>B
+--AT-T---T-T-TTT--CC-C
+>C
+--CTT----TTT--TCC-GC-C
+EOF
+ 
+
+cat > expected4 <<EOF
+A	CCC0AAA,CCC1CGA,CCC2CGA,CCC3-GA
+B	CCC0--A,CCC1T-T,CCC2T-T,CCC3-TT,CCC4T--C
+C	CCC0--C,CCC1TT-,CCC2TTT,CCC3--T,CCC4CCG
+EOF
+
 ${GOALIGN} stats mutations  -i input --ref-sequence refseq > result
 diff -q -b result expected
 
@@ -2513,7 +2544,10 @@ diff -q -b result expected2
 ${GOALIGN} stats mutations list -i input --ref-sequence refseq --aa > result
 diff -q -b result expected3
 
-rm -f expected expected2 expected3 result refseq
+${GOALIGN} stats mutations list -i input2 --ref-sequence refseq2 --codon > result
+diff -q -b result expected4
+
+rm -f expected expected2 expected3 expected4 result refseq refseq2 input input2
 
 cat > input <<EOF
 >A
