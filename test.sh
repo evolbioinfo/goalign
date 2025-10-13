@@ -2535,6 +2535,17 @@ B	CCC0--A,CCC1T-T,CCC2T-T,CCC3-TT,CCC4T--C
 C	CCC0--C,CCC1TT-,CCC2TTT,CCC3--T,CCC4CCG
 EOF
 
+cat > input3 <<EOF
+>seq_ref
+AAATGGCTCCCATGTTTACGG------CGA
+>seq_query
+AGATGGCACCCACGT---NNNNNNNNNCGT
+EOF
+
+cat > expected5 <<EOF
+seq_query	AAA0AGA,CTC2CAC,TGT4CGT,TTA5---,CGG6NNN,-6NNN,-6NNN,CGA7CGT
+EOF
+
 ${GOALIGN} stats mutations  -i input --ref-sequence refseq > result
 diff -q -b result expected
 
@@ -2547,7 +2558,10 @@ diff -q -b result expected3
 ${GOALIGN} stats mutations list -i input2 --ref-sequence refseq2 --codon > result
 diff -q -b result expected4
 
-rm -f expected expected2 expected3 expected4 result refseq refseq2 input input2
+${GOALIGN} stats mutations list -i input3 --ref-sequence seq_ref --codon > result
+diff -q -b result expected5
+
+rm -f expected expected2 expected3 expected4 result refseq refseq2 input input2 input3 expected5
 
 cat > input <<EOF
 >A

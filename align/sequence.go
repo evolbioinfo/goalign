@@ -439,6 +439,7 @@ func (s *seq) listMutationsComparedToReferenceSequenceCodon(alphabet int, refseq
 
 		if refseqchar[refcodonidx[0]] == GAP && refseqchar[refcodonidx[1]] == GAP && refseqchar[refcodonidx[2]] == GAP {
 			refaa = '-'
+			refcodon = []uint8{'-'}
 			aaidx--
 			allgaps = true
 		} else {
