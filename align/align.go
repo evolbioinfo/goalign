@@ -379,7 +379,7 @@ func (a *align) RemoveCharacterSites(c []uint8, cutoff float64, ends bool, ignor
 	lastcontinuous := a.Length()
 	lenBk := a.Length()
 	all := ALL_AMINO
-	if a.Alphabet() == AMINOACIDS {
+	if a.Alphabet() == NUCLEOTIDS {
 		all = ALL_NUCLE
 	}
 	allc := unicode.ToLower(all)

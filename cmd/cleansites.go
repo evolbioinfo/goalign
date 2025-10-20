@@ -78,7 +78,8 @@ will be removed.`,
 					return
 				}
 				char = "gaps"
-				nbstart, nbend, kept, rm = al.RemoveGapSites(cleanCutoff, cleanEnds)
+				nbstart, nbend, kept, rm = al.RemoveCharacterSites([]uint8{align.GAP}, cleanCutoff, cleanEnds, false, false, cleanIgnoreNs, false)
+				//nbstart, nbend, kept, rm = al.RemoveGapSites(cleanCutoff, cleanEnds)
 			} else if cleanChar == "MAJ" {
 				char = "maj"
 				nbstart, nbend, kept, rm = al.RemoveMajorityCharacterSites(cleanCutoff, cleanEnds, cleanIgnoreGaps, cleanIgnoreNs)
