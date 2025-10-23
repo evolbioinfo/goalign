@@ -3,6 +3,7 @@ package cmd
 import (
 	"fmt"
 	"path/filepath"
+	"strings"
 
 	"github.com/evolbioinfo/goalign/align"
 	"github.com/evolbioinfo/goalign/io"
@@ -25,8 +26,11 @@ var subseqCmd = &cobra.Command{
 
 It takes an alignment and extracts sub-sequences from it, given
 a start position (0-based inclusive) and a length.
-If the length is after the end of the alignment, will stop at the 
+If the length (l)  is after the end of the alignment, will stop at the 
 end of the alignment.
+If the length l <0 , then the extracted sequences will be [start,alilength-l[
+If the length l <0 and a reference sequence is given, the sub alignment will span [start,reflength-l[
+of the ref sequence
 
 For example:
 goalign subseq -p -i al.phy -s 9 -l 10
@@ -118,7 +122,7 @@ If several alignments are present in the input file and the output is a file
 
 		for al := range aligns.Achan {
 			start := subseqstart
-			len := subseqlength
+			leng := subseqlength
 
 			if filenum > 0 && subseqout != "stdout" && subseqout != "-" {
 				fileid = fmt.Sprintf("_al%d", filenum)
@@ -129,14 +133,28 @@ If several alignments are present in the input file and the output is a file
 				}
 			}
 			if refseq {
-				start, len, err = al.RefCoordinates(subseqrefseq, start, len)
+				if leng < 0 {
+					if ref, found := al.GetSequenceChar(subseqrefseq); !found {
+						err = fmt.Errorf("reference sequence %s not found in the alignment", subseqrefseq)
+						io.LogError(err)
+						return
+					} else {
+						leng = len(strings.ReplaceAll(string(ref), "-", "")) + leng - start
+					}
+				}
+				start, leng, err = al.RefCoordinates(subseqrefseq, start, leng)
+			} else {
+				if leng < 0 {
+					leng = (al.Length() + leng) - start
+				}
 			}
+
 			subalignnum := 0
 			for {
 				starts := []int{start}
-				lens := []int{len}
+				lens := []int{leng}
 				if subseqreverse {
-					if starts, lens, err = al.InverseCoordinates(start, len); err != nil {
+					if starts, lens, err = al.InverseCoordinates(start, leng); err != nil {
 						io.LogError(err)
 						return
 					}
@@ -159,7 +177,7 @@ If several alignments are present in the input file and the output is a file
 				}
 				writeAlign(subalign, f)
 				start += subseqstep
-				if subseqstep == 0 || (start+len) > al.Length() {
+				if subseqstep == 0 || (start+leng) > al.Length() {
 					break
 				} else {
 					if subseqout != "stdout" && subseqout != "-" {
@@ -189,7 +207,7 @@ func init() {
 	RootCmd.AddCommand(subseqCmd)
 	subseqCmd.PersistentFlags().StringVarP(&subseqout, "output", "o", "stdout", "Alignment output file")
 	subseqCmd.PersistentFlags().IntVarP(&subseqstart, "start", "s", 0, "Start position (0-based inclusive)")
-	subseqCmd.PersistentFlags().IntVarP(&subseqlength, "length", "l", 10, "Length of the sub alignment")
+	subseqCmd.PersistentFlags().IntVarP(&subseqlength, "length", "l", 10, "Length of the sub alignment. If l <0, then the extracted sequences will be [start,alilength-l[")
 	subseqCmd.PersistentFlags().StringVar(&subseqrefseq, "ref-seq", "none", "Reference sequence on which coordinates are given")
 	subseqCmd.PersistentFlags().BoolVarP(&subseqreverse, "reverse", "r", false, "Take all but the given subsequence")
 	subseqCmd.PersistentFlags().IntVar(&subseqstep, "step", 0, "Step: If > 0, then will generate several alignments, for each window of length l, with starts: [start,start+step, ..., end-l]* ")

@@ -2666,6 +2666,33 @@ ${GOALIGN} random -n 4 --seed 10 -l 10000 | ${GOALIGN} subseq -l 10 -s 5 > resul
 diff -q -b result expected
 rm -f expected result
 
+echo "->goalign subseq -l -3"
+cat > input <<EOF
+>Seq0000
+AAAAACCAAA
+>Seq0001
+CCCCCGGCCC
+>Seq0002
+GGGGGTTGGG
+>Seq0003
+TTTTTAATTT
+EOF
+
+cat > expected <<EOF
+>Seq0000
+CC
+>Seq0001
+GG
+>Seq0002
+TT
+>Seq0003
+AA
+EOF
+
+${GOALIGN} subseq -l -3 -s 5 -i input > result
+diff -q -b result expected
+rm -f expected result input
+
 
 echo "->goalign subseq / refseq"
 cat > input <<EOF
@@ -2683,6 +2710,24 @@ EOF
 ${GOALIGN} subseq -i input -l 4 -s 1 --ref-seq Seq0000 > result
 diff -q -b result expected
 rm -f input expected result
+
+echo "->goalign subseq / refseq -l -3"
+cat > input <<EOF
+>Seq0000
+--ACG--AT-GC
+>Seq0001
+GGACGTTATCGC
+EOF
+cat > expected <<EOF
+>Seq0000
+CG--A
+>Seq0001
+CGTTA
+EOF
+${GOALIGN} subseq -i input -l -3 -s 1 --ref-seq Seq0000 > result
+diff -q -b result expected
+rm -f input expected result
+
 
 echo "->goalign subseq / refseq / rev"
 cat > input <<EOF
