@@ -142,7 +142,10 @@ If several alignments are present in the input file and the output is a file
 						leng = len(strings.ReplaceAll(string(ref), "-", "")) + leng - start
 					}
 				}
-				start, leng, err = al.RefCoordinates(subseqrefseq, start, leng)
+				if start, leng, err = al.RefCoordinates(subseqrefseq, start, leng); err != nil {
+					io.LogError(err)
+					return
+				}
 			} else {
 				if leng < 0 {
 					leng = (al.Length() + leng) - start
