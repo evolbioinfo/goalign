@@ -26,6 +26,9 @@ var simplotWindowStep int
 var simplotOutImageFile string
 var simplotOutImageWidth int
 var simplotOutImageHeight int
+var simplotGroup bool
+var simplotGroupSep string
+var simplotGroupField int
 
 // computedistCmd represents the computedist command
 var computeSimplotCmd = &cobra.Command{
@@ -65,7 +68,9 @@ var computeSimplotCmd = &cobra.Command{
 				err = aligns.Err
 				io.LogError(err)
 			}
-			if windows, err = dna.SimPlotDistances(align, simplotRefSeq, simplotModel, simplotWindows, simplotWindowStep); err != nil {
+			if windows, err = dna.SimPlotDistances(align, simplotRefSeq,
+				simplotModel, simplotWindows, simplotWindowStep, simplotGroup,
+				simplotGroupSep, simplotGroupField); err != nil {
 				io.LogError(err)
 				return
 			}
@@ -141,4 +146,7 @@ func init() {
 	computeSimplotCmd.PersistentFlags().StringVar(&simplotOutImageFile, "image", "none", "LTT plot image image output file")
 	computeSimplotCmd.PersistentFlags().IntVar(&simplotOutImageWidth, "image-width", 4, "LTT plot image image output width")
 	computeSimplotCmd.PersistentFlags().IntVar(&simplotOutImageHeight, "image-height", 4, "LTT plot image output heigh")
+	computeSimplotCmd.PersistentFlags().BoolVar(&simplotGroup, "group", false, "If sequences must be grouped")
+	computeSimplotCmd.PersistentFlags().IntVar(&simplotGroupField, "field", 0, "Field number for extracting group (if group is true)")
+	computeSimplotCmd.PersistentFlags().StringVar(&simplotGroupSep, "sep", "_", "Separator for extracting group (if group is true)")
 }
