@@ -22,6 +22,7 @@ var simplotOutput string
 var simplotModel string
 var simplotRefSeq string
 var simplotWindows int
+var simplotWindowStep int
 var simplotOutImageFile string
 var simplotOutImageWidth int
 var simplotOutImageHeight int
@@ -64,7 +65,7 @@ var computeSimplotCmd = &cobra.Command{
 				err = aligns.Err
 				io.LogError(err)
 			}
-			if windows, err = dna.SimPlotDistances(align, simplotRefSeq, simplotModel, simplotWindows); err != nil {
+			if windows, err = dna.SimPlotDistances(align, simplotRefSeq, simplotModel, simplotWindows, simplotWindowStep); err != nil {
 				io.LogError(err)
 				return
 			}
@@ -106,12 +107,15 @@ var computeSimplotCmd = &cobra.Command{
 				t := plotter.PaletteThumbnailers(colors)
 				for k := range pts {
 					line, point, err = plotter.NewLinePoints(pts[k])
+					fmt.Println(line)
 					point.Shape = draw.CircleGlyph{}
 					point.Radius = 1
 					point.Color = colors.Colors()[i%len(colors.Colors())]
 					line.Color = colors.Colors()[i%len(colors.Colors())]
+					line.StepStyle = plotter.NoStep
 					line.Width = 2
-					p.Add(line, point)
+					p.Add(line)  //, point)
+					p.Add(point) //, point)
 					p.Legend.Add(k, t[i%len(colors.Colors())])
 					i++
 				}
@@ -133,6 +137,7 @@ func init() {
 	computeSimplotCmd.PersistentFlags().StringVarP(&simplotModel, "model", "m", "k2p", "Model for distance computation")
 	computeSimplotCmd.PersistentFlags().StringVarP(&simplotRefSeq, "refseq", "r", "-", "Reference sequence to compare all others")
 	computeSimplotCmd.PersistentFlags().IntVarP(&simplotWindows, "window-size", "w", 100, "Window size")
+	computeSimplotCmd.PersistentFlags().IntVarP(&simplotWindowStep, "window-step", "s", 100, "Window step")
 	computeSimplotCmd.PersistentFlags().StringVar(&simplotOutImageFile, "image", "none", "LTT plot image image output file")
 	computeSimplotCmd.PersistentFlags().IntVar(&simplotOutImageWidth, "image-width", 4, "LTT plot image image output width")
 	computeSimplotCmd.PersistentFlags().IntVar(&simplotOutImageHeight, "image-height", 4, "LTT plot image output heigh")

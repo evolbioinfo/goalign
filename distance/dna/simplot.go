@@ -9,7 +9,7 @@ import (
 
 // Compute the distance for each windows between the reference sequence and all the
 // other sequences. Can be used to draw a simplot
-func SimPlotDistances(al align.Alignment, refseq string, distmodel string, windowsize int) (sp []struct {
+func SimPlotDistances(al align.Alignment, refseq string, distmodel string, windowsize, windowstep int) (sp []struct {
 	WindowStart, WindowEnd int
 	CompSeq                string
 	Distance               float64
@@ -45,13 +45,9 @@ func SimPlotDistances(al align.Alignment, refseq string, distmodel string, windo
 	}
 
 	// Iterate over the windows
-	for start := 0; start <= al.Length(); start += windowsize {
-		len := windowsize
-		if start+windowsize > al.Length() {
-			len = al.Length() - start
-		}
+	for start := 0; start+windowsize <= al.Length(); start += windowstep {
 
-		if subal, err = al.SubAlign(start, len); err != nil {
+		if subal, err = al.SubAlign(start, windowsize); err != nil {
 			return
 		}
 
@@ -72,7 +68,7 @@ func SimPlotDistances(al align.Alignment, refseq string, distmodel string, windo
 					WindowStart, WindowEnd int
 					CompSeq                string
 					Distance               float64
-				}{start, start + len, compname, distMatrix[refid][i]}
+				}{start, start + windowsize, compname, distMatrix[refid][i]}
 				sp = append(sp, window)
 			}
 		}
