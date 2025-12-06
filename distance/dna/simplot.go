@@ -47,13 +47,13 @@ func SimPlotDistances(al align.Alignment, refseq string, distmodel string, windo
 	// We create groups
 	if group {
 		if splitfield < 0 {
-			err = fmt.Errorf("groupe separator fiels must be positive")
+			err = fmt.Errorf("groupe separator fields must be positive")
 			return
 		}
 		for i, s := range al.Sequences() {
 			if s.Name() != refseq {
 				cols := strings.Split(s.Name(), splitsep)
-				if len(cols) < 2 && len(cols) <= splitfield {
+				if len(cols) < 2 || len(cols) <= splitfield {
 					err = fmt.Errorf("split sequence name has less than 2 values or less than the desired field: %s", s.Name())
 					return
 				}
