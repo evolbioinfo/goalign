@@ -112,7 +112,6 @@ var computeSimplotCmd = &cobra.Command{
 				t := plotter.PaletteThumbnailers(colors)
 				for k := range pts {
 					line, point, err = plotter.NewLinePoints(pts[k])
-					fmt.Println(line)
 					point.Shape = draw.CircleGlyph{}
 					point.Radius = 1
 					point.Color = colors.Colors()[i%len(colors.Colors())]
