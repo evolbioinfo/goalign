@@ -106,6 +106,7 @@ You may go to the [doc](docs/index.md) for a more detailed documentation of the 
   * distances: compute evolutionary distances for nucleotide alignment
   * entropy: compute entropy of alignment sites
   * pssm: compute position-specific scoring matrix
+  * simplot: compute similarity plot data + image
 * concat:      Concatenates several alignments by concatenating each sequences having the same name
 * consensus: Compute a basic majority consensus of an input alignment
 * dedup:       Remove sequences that have the same sequence

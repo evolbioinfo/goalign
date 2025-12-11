@@ -30,6 +30,7 @@ This command implements different computations:
     - `-n 3` : By column frequency compared to uniform frequency: same as -n 1, but divides by uniform frequency of the nt/aa (1/4 for nt, 1/20 for aa)
     - `-n 4` : Normalization "Logo".
 	Option `-c` allows to add pseudo counts before normalization, and option `-l` log2 transforms the values.
+ 4. `goalign compute simplot`: See the [dedicated page](simplot.md). Compute a similarity plot between a query sequence and other sequences, using a sliding window.
 
 #### Usage
 
@@ -42,6 +43,7 @@ Available Commands:
   distance    Compute distance matrix from an input alignment
   entropy     Computes entropy of a given alignment
   pssm        Computes and prints a Position specific scoring matrix
+  [simplot](simplot.md))     Computes simplot data and image
 
 Flags:
   -h, --help   help for compute

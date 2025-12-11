@@ -70,6 +70,7 @@ Command                                                     | Subcommand |      
 --                                                          | distance   | Computes distance matrix from inpu alignment
 --                                                          | entropy    | Computes entropy of sites of a given alignment
 --                                                          | pssm       | Computes and prints a Position specific scoring matrix
+--                                                          | [simplot](commands/compute_simplot.md)    | Computes similarity plot data + image
 [concat](commands/concat.md) ([api](api/concat.md))         |            | Concatenates a set of alignment
 [consensus](commands/consensus.md) ([api](api/consensus.md))|            | Computes a basic majority consensus sequence
 [extract](commands/extract.md)                              |            | Extracts sub-sequences from an input alignment
