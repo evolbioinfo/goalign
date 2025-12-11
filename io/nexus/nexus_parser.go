@@ -525,7 +525,7 @@ func (p *Parser) parseData() (names []string, sequences map[string]string, nchar
 				case ENDOFCOMMAND:
 					stopmatrix = true
 				default:
-					err = fmt.Errorf(fmt.Sprintf("expecting sequence identifier in Matrix block, got %q", lit2))
+					err = fmt.Errorf("expecting sequence identifier in Matrix block, got %q", lit2)
 					stopmatrix = true
 				}
 			}

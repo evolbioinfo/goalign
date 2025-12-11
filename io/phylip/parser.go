@@ -133,11 +133,11 @@ func (p *Parser) Parse() (al align.Alignment, err error) {
 	} else {
 		lenseq, err = strconv.ParseInt(lit, 10, 64)
 		if err != nil {
-			err = fmt.Errorf("the numeric is not parsable: " + lit)
+			err = fmt.Errorf("the numeric is not parsable: %s", lit)
 			return
 		}
 		if lenseq == 0 {
-			err = fmt.Errorf("0 Length sequences defined in the header")
+			err = fmt.Errorf("0 length sequences defined in the header")
 			return
 		}
 		if nbseq < 0 {
@@ -233,7 +233,7 @@ func (p *Parser) Parse() (al align.Alignment, err error) {
 					seqs[i].WriteString(lit)
 				case WS:
 				default:
-					err = fmt.Errorf("bad Phylip format, Unexpected character :" + lit)
+					err = fmt.Errorf("bad Phylip format, unexpected character : %s", lit)
 					return
 				}
 				tok, lit = p.scan()

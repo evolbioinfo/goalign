@@ -39,7 +39,7 @@ func TestParse(t *testing.T) {
 	}
 
 	if align3.NbSequences() != 2 {
-		t.Errorf("There are not 2 sequence in the alignment" + fmt.Sprintf("%d", align3.NbSequences()))
+		t.Errorf("There are not 2 sequence in the alignment %d", align3.NbSequences())
 	}
 
 	_, err4 := NewParser(strings.NewReader(fastastring4)).Parse()

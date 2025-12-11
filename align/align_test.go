@@ -2233,19 +2233,19 @@ func Test_align_RemoveMajorityCharacterSites(t *testing.T) {
 	a4.RemoveMajorityCharacterSites(0.6, false, false, true)
 
 	if !a.Identical(exp) {
-		t.Errorf(a.String())
+		t.Errorf("%s", a.String())
 		t.Error(fmt.Errorf("Remove majority failed"))
 	}
 	if !a2.Identical(exp2) {
-		t.Errorf(a2.String())
+		t.Errorf("%s", a2.String())
 		t.Error(fmt.Errorf("Remove majority failed with ends"))
 	}
 	if !a3.Identical(exp3) {
-		t.Errorf(a3.String())
+		t.Errorf("%s", a3.String())
 		t.Error(fmt.Errorf("Remove majority failed ignore gaps"))
 	}
 	if !a4.Identical(exp4) {
-		t.Errorf(a4.String())
+		t.Errorf("%s", a4.String())
 		t.Error(fmt.Errorf("Remove majority failed ignore Ns"))
 	}
 }
