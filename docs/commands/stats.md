@@ -70,6 +70,7 @@ Different sub-commands:
 	it will try to open a fasta file with the given name to take the first sequence as a reference. If a character is ambigous 
 	(IUPAC notation) in a nucleotide sequence, then it is counted as a mutation only if it is incompatible with the reference character.
 	- --aa : takes reference sequence codon by codon to list mutations in the aligned sequences. In case of an insertion or a deletion in the target sequence: if length%3!=0 (without gaps): it may be a frameshift, indicated by a '/'. It is better to use this option rather than translating the alignment and then listing mutations in aa, because the insertions/deletions may not be appropriately listed if the gap is inside a reference codon for example.
+  - `--codon`: takes the reference sequence condon by codon, and do not translate (mutually exclusive with `--aa`)
 
 
 * `goalign stats nalign`: Prints the number of alignments in the input file (Phylip);
