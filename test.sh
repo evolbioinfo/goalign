@@ -2844,6 +2844,44 @@ ${GOALIGN} random -n 4000 --seed 10 -l 10 | ${GOALIGN} subset Seq0001 Seq3999 > 
 diff -q -b result expected
 rm -f expected result
 
+
+echo "->goalign subset --remove-gaps"
+cat > input <<EOF
+>Seq0001
+CCGT-GGCCA
+>Seq002
+CGGGGCCGAC
+>Seq003
+CGGG-CCGAC
+>Seq004
+CGGG-CCGAC
+EOF
+cat > expected1 <<EOF
+>Seq0001
+CCGT-GGCCA
+>Seq003
+CGGG-CCGAC
+>Seq004
+CGGG-CCGAC
+EOF
+cat > expected2 <<EOF
+>Seq0001
+CCGTGGCCA
+>Seq003
+CGGGCCGAC
+>Seq004
+CGGGCCGAC
+EOF
+
+${GOALIGN} subset -i input Seq0001 Seq003 Seq004 > result
+diff -q -b result expected1
+
+${GOALIGN} subset -i input --remove-gaps Seq0001 Seq003 Seq004 > result
+diff -q -b result expected2
+
+rm -f input expected1 expected2 result
+
+
 echo "->goalign subset file"
 cat > expected <<EOF
 >Seq0001

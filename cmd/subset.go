@@ -19,6 +19,7 @@ var nameout string = "stdout"
 var revert bool = false
 var indices bool = false
 var regexmatch = false
+var subsetrmgaps = false
 
 // subsetCmd represents the subset command
 var subsetCmd = &cobra.Command{
@@ -141,6 +142,10 @@ given in the comand line.
 					i++
 					return false
 				})
+
+				if subsetrmgaps {
+					filtered.RemoveGapSites(1.0, false)
+				}
 				writeAlign(filtered, f)
 			}
 			if aligns.Err != nil {
@@ -218,4 +223,5 @@ func init() {
 	subsetCmd.PersistentFlags().BoolVarP(&revert, "revert", "r", false, "If true, will remove given sequences instead of keeping only them")
 	subsetCmd.PersistentFlags().BoolVar(&indices, "indices", false, "If true, extracts given sequence indices instead of sequence names (0-based)")
 	subsetCmd.PersistentFlags().BoolVar(&unaligned, "unaligned", false, "Considers input sequences as unaligned and fasta format (phylip, nexus,... options are ignored)")
+	subsetCmd.PersistentFlags().BoolVar(&subsetrmgaps, "remove-gaps", false, "If true, then remove gap only sites of the sub-alignment (only when --unaligned is not given)")
 }
