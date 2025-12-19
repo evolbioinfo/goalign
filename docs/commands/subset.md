@@ -30,6 +30,7 @@ Flags:
   -o, --output string      Alignment output file (default "stdout")
   -e, --regexp             If sequence names are given as regexp patterns
   -r, --revert             If true, will remove given sequences instead of keeping only them
+      --remove-gaps        If true, then remove gap only sites of the sub-alignment (only when --unaligned is not given)
       --unaligned          Considers input sequences as unaligned and fasta format (phylip, nexus,... options are ignored)
 
 Global Flags:
