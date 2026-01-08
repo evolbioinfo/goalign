@@ -112,6 +112,9 @@ type Alignment interface {
 	RemoveCharacterSites(c []uint8, cutoff float64, ends bool, ignoreCase, ignoreGaps, ignoreNs, reverse bool) (first, last int, kept, removed []int)
 	// Removes sites having >= cutoff of the main character at these sites, returns the number of consecutive removed sites at start and end of alignment
 	RemoveMajorityCharacterSites(cutoff float64, ends, ignoreGaps, ignoreNs bool) (first, last int, kept, removed []int)
+	// Removes sites having >= cutoff lowercase characters at these sites, returns the number of consecutive removed sites at start and end of alignment
+	// additionalchars allows to add some characters in the filter, in addition to the lower cases (for example GAPS, or N)
+	RemoveLowerCaseCharacterSites(additionalchars []uint8, cutoff float64, ends, ignoreGaps, ignoreNs bool, reverse bool) (first, last int, kept, removed []int)
 	// Replaces match characters (.) by their corresponding characters on the first sequence
 	ReplaceMatchChars()
 	Sample(nb int) (Alignment, error) // generate a sub sample of the sequences
@@ -522,6 +525,39 @@ func (a *align) RemoveMajorityCharacterSites(cutoff float64, ends, ignoreGaps, i
 	a.length -= nbremoved
 
 	return firstcontinuous + 1, length - lastcontinuous, kept, rm
+}
+
+// RemoveLowerCaseCharacterSites Removes positions constituted of [cutoff*100%,100%] of lowercase
+// characters in these sites.
+// Exception fo a cutoff of 0: does not remove positions with 0% of lowercase character
+// Cutoff must be between 0 and 1, otherwise set to 0.
+// 0 means that positions with > 0 of lowercase character will be removed
+// other cutoffs : ]0,1] mean that positions with >= cutoff of lowercase characters will be removed
+// additionalChars : characters to consider as well in the filter. The cutoff will be applied on the number of occurences of all characters (lower case + additional)
+//
+// If ends is true: then only removes consecutive positions that match the cutoff
+// from start or from end of alignment.
+// Example with a cutoff of 0.3 and ends and with the given proportion of this character:
+// 0.4 0.5 0.1 0.5 0.6 0.1 0.8 will remove positions 0,1 and 6
+//
+// Returns the number of consecutive removed sites at start and end of alignment and the indexes of the remaining positions
+func (a *align) RemoveLowerCaseCharacterSites(additionalchars []uint8, cutoff float64, ends, ignoreGaps, ignoreNs bool, reverse bool) (first, last int, kept, rm []int) {
+
+	var allcharacters []uint8 = a.UniqueCharactersWithCase()
+	var lowercases []uint8
+
+	lowercases = append(lowercases, additionalchars...)
+
+	// We list all the lowercase characters present in the alignment
+	for _, c := range allcharacters {
+		if unicode.IsLower(rune(c)) {
+			lowercases = append(lowercases, c)
+		}
+	}
+
+	first, last, kept, rm = a.RemoveCharacterSites(lowercases, cutoff, ends, false, ignoreGaps, ignoreNs, reverse)
+
+	return
 }
 
 // RefCoordinates converts coordinates on the given sequence to coordinates on the alignment.

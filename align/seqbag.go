@@ -29,6 +29,7 @@ type SeqBag interface {
 	DetectAlphabet() (alphabet int)  //  detects the compatible alphabets
 	CharStats() map[uint8]int64
 	UniqueCharacters() []uint8
+	UniqueCharactersWithCase() []uint8
 	CharStatsSeq(idx int) (map[uint8]int, error)               // Computes frequency of characters for the given sequence
 	CleanNames(namemap map[string]string)                      // Clean sequence names (newick special char)
 	Clear()                                                    // Removes all sequences
@@ -638,7 +639,7 @@ func (sb *seqbag) CharStats() (chars map[uint8]int64) {
 	return
 }
 
-// Returns the distribution of all characters
+// Returns the distribution of all characters (all uppercase)
 func (sb *seqbag) UniqueCharacters() (chars []uint8) {
 	chars = make([]uint8, 0, 40)
 	present := make([]bool, 130)
@@ -646,6 +647,26 @@ func (sb *seqbag) UniqueCharacters() (chars []uint8) {
 	for _, seq := range sb.seqs {
 		for _, r := range seq.sequence {
 			present[unicode.ToUpper(rune(r))] = true
+		}
+	}
+
+	for i, r := range present {
+		if r {
+			chars = append(chars, uint8(i))
+		}
+	}
+
+	return
+}
+
+// Returns the distribution of all characters keeping the original case
+func (sb *seqbag) UniqueCharactersWithCase() (chars []uint8) {
+	chars = make([]uint8, 0, 40)
+	present := make([]bool, 130)
+
+	for _, seq := range sb.seqs {
+		for _, r := range seq.sequence {
+			present[rune(r)] = true
 		}
 	}
 

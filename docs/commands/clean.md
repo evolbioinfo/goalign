@@ -8,12 +8,13 @@ This command removes alignment sites or sequences constitued of >= than a given 
 Two subcommands:
 
 * `goalign clean sites`: Removes sites constitued of >= cutoff specific characters. This characters can be :
-    1. Gap (--char=GAP or --char=-, default)
+    1. Gap (`--char=GAP` or `--char=-`, default)
     2. Any other set of characters XYZ specified by --char=XYZ (case sensitive). In this case, it is possible to reverse the match with --reverse. 
-	     for example '--char ACGT --reverse' means any character but A,C,G,T.
-    3. The most abundant character in the site --char=MAJ (including gaps)
+	     for example `--char ACGT --reverse` means any character but A,C,G,T.
+    3. The most abundant character in the site `--char=MAJ` (including gaps)
+    4. Lower case characters: It is possible to specify `--char LOWER` to filter out sites based on the number of lower case characters in the column, in combination with other arguments such as `GAPS` and `N`. For example: `--char "LOWER|GAPS"` will filter out sites that based on the number of lower case characters + gaps on the column.
 
-    Exception for a cutoff of 0: removes sites constitued of > 0 specified character (with --char=MAJ, then will remove all columns).
+    Exception for a cutoff of 0: removes sites constitued of > 0 specified character (with `--char=MAJ`, then will remove all columns).
 
     Examples:
     - With a cutoff of 0.5: a site with 5 specified characters over 10 sequences will be removed;

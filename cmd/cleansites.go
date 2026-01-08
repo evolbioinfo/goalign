@@ -2,6 +2,8 @@ package cmd
 
 import (
 	"fmt"
+	"slices"
+	"strings"
 
 	"github.com/evolbioinfo/goalign/align"
 	"github.com/evolbioinfo/goalign/gutils"
@@ -27,6 +29,7 @@ Removes sites constitued of >= cutoff specific characters. This characters can b
 2. Any other set of characters XYZ specified by --char=XYZ (case sensitive). In this case, it is possible to reverse the match with --reverse. 
 	for example '--char ACGT --reverse' means any character but A,C,G,T.
 3. The most abundant character in the site --char=MAJ (including gaps)
+4. Lower case characters: It is possible to specify --char LOWER to filter out sites based on the number of lower case characters in the column, in combination with other arguments such as GAPS and N. For example: --char "LOWER|GAPS" will filter out sites that based on the number of lower case characters + gaps on the column.
 
 Exception for a cutoff of 0: removes sites constitued of > 0 specified character (with --char=MAJ, then will remove all columns).
 
@@ -83,6 +86,31 @@ will be removed.`,
 			} else if cleanChar == "MAJ" {
 				char = "maj"
 				nbstart, nbend, kept, rm = al.RemoveMajorityCharacterSites(cleanCutoff, cleanEnds, cleanIgnoreGaps, cleanIgnoreNs)
+			} else if strings.Contains(cleanChar, "LOWER") {
+				chars := strings.Split(cleanChar, "|")
+				char = strings.ToLower(cleanChar)
+				additionalchars := make([]uint8, 0)
+				if slices.Contains(chars, "GAPS") {
+					if cleanIgnoreGaps {
+						err = fmt.Errorf("--ignore-gaps should not be given with --char GAPS")
+						io.LogError(err)
+						return
+					}
+					additionalchars = append(additionalchars, align.GAP)
+				}
+				if slices.Contains(chars, "N") {
+					if cleanIgnoreNs {
+						err = fmt.Errorf("--ignore-n should not be given with --char N")
+						io.LogError(err)
+						return
+					}
+					if al.Alphabet() == align.AMINOACIDS {
+						additionalchars = append(additionalchars, align.ALL_AMINO)
+					} else if al.Alphabet() == align.NUCLEOTIDS {
+						additionalchars = append(additionalchars, align.ALL_NUCLE)
+					}
+				}
+				nbstart, nbend, kept, rm = al.RemoveLowerCaseCharacterSites(additionalchars, cleanCutoff, cleanEnds, cleanIgnoreGaps, cleanIgnoreNs, sitesreverse)
 			} else {
 				//single character
 				c := []uint8(cleanChar)
