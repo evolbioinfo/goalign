@@ -50,7 +50,7 @@ divide the output file with 'goalign divide' for example.
 				return
 			}
 			for i := 0; i < sampleseqNbSamples; i++ {
-				if sample, err = seqs.SampleSeqBag(sampleseqSize); err != nil {
+				if sample, err = seqs.SampleSeqBag(sampleseqSize, globalRand); err != nil {
 					io.LogError(err)
 					return
 				}
@@ -67,7 +67,7 @@ divide the output file with 'goalign divide' for example.
 
 			for al := range aligns.Achan {
 				for i := 0; i < sampleseqNbSamples; i++ {
-					if sample, err = al.Sample(sampleseqSize); err != nil {
+					if sample, err = al.Sample(sampleseqSize, globalRand); err != nil {
 						io.LogError(err)
 						return
 					}

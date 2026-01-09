@@ -33,7 +33,7 @@ goalign mutate gaps -i align.fa -n 0.5 -r 0.5
 		defer utils.CloseWriteFile(f, mutateOutput)
 
 		for al := range aligns.Achan {
-			al.AddGaps(mutateRate, gapnbseqs)
+			al.AddGaps(mutateRate, gapnbseqs, globalRand)
 			writeAlign(al, f)
 		}
 

@@ -33,7 +33,7 @@ goalign mutate ambig -i align.fa -n 0.5 -r 0.5
 		defer utils.CloseWriteFile(f, mutateOutput)
 
 		for al := range aligns.Achan {
-			al.AddAmbiguities(mutateRate, gapnbseqs)
+			al.AddAmbiguities(mutateRate, gapnbseqs, globalRand)
 			writeAlign(al, f)
 		}
 

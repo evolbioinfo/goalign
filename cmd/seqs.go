@@ -41,7 +41,7 @@ goalign shuffle seqs -i align.fasta
 				io.LogError(err)
 				return
 			}
-			seqs.ShuffleSequences()
+			seqs.ShuffleSequences(globalRand)
 			writeSequences(seqs, f)
 		} else {
 			var aligns *align.AlignChannel
@@ -52,7 +52,7 @@ goalign shuffle seqs -i align.fasta
 			}
 
 			for al := range aligns.Achan {
-				al.ShuffleSequences()
+				al.ShuffleSequences(globalRand)
 				writeAlign(al, f)
 			}
 

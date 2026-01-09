@@ -96,7 +96,7 @@ original alignment.
 					}
 					writeDenseDistBootMatrix(d, align, f)
 				} else {
-					boot := align.BuildBootstrap(distbootFrac)
+					boot := align.BuildBootstrap(distbootFrac, globalRand)
 					if _, _, d, err = protmodel.MLDist(boot, nil); err != nil {
 						io.LogError(err)
 						return
@@ -119,7 +119,7 @@ original alignment.
 						return
 					}
 				} else {
-					boot := align.BuildBootstrap(distbootFrac)
+					boot := align.BuildBootstrap(distbootFrac, globalRand)
 					if distMatrix, err = dna.DistMatrix(boot, nil, dnamodel, -1, -1, -1, -1, cmd.Flags().Changed("alpha"), distbootAlpha, rootcpus); err != nil {
 						io.LogError(err)
 						return

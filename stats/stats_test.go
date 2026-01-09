@@ -11,7 +11,7 @@ func TestDirichlet(t *testing.T) {
 
 	size := 1000
 	alpha := make([]float64, size)
-	for i := 0; i < size; i++ {
+	for i := range size {
 		alpha[i] = 1.0
 	}
 	sample, _ := Dirichlet(1.0, alpha...)

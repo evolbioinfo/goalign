@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"log"
 	"math"
-	"math/rand"
+	mathrand "math/rand"
 	"regexp"
 	"sort"
 	"strings"
@@ -50,7 +50,7 @@ type SeqBag interface {
 	// If ignore is IGNORE_SEQUENCE: Ignore sequences having the same name and the same sequence
 	// Otherwise, sets IGNORE_NONE
 	IgnoreIdentical(int)
-	SampleSeqBag(nb int) (SeqBag, error) // generate a sub sample of the sequences
+	SampleSeqBag(nb int, rand *mathrand.Rand) (SeqBag, error) // generate a sub sample of the sequences
 	Sequence(ith int) (Sequence, bool)
 	SequenceByName(name string) (Sequence, bool)
 	Identical(SeqBag) bool
@@ -62,7 +62,7 @@ type SeqBag interface {
 	LongestORF(reverse bool) (orf Sequence, err error)
 	MaxNameLength() int // maximum sequence name length
 	NbSequences() int
-	RarefySeqBag(nb int, counts map[string]int) (SeqBag, error) // Take a new rarefied sample taking into accounts weights
+	RarefySeqBag(nb int, counts map[string]int, rand *mathrand.Rand) (SeqBag, error) // Take a new rarefied sample taking into accounts weights
 	// Removes sequences having >= cutoff gaps, returns number of removed sequences
 	RemoveGapSeqs(cutoff float64, ignoreNs bool) int
 	// Removes sequences having >= cutoff character, returns number of removed sequences
@@ -71,7 +71,7 @@ type SeqBag interface {
 	RenameRegexp(regex, replace string, namemap map[string]string) error
 	Replace(old, new string, regex bool) error             // Replaces old string with new string in sequences of the alignment
 	ReplaceStops(phase int, geneticode int) error          // Replaces stop codons in the given phase using the given genetic code
-	ShuffleSequences()                                     // Shuffle sequence order
+	ShuffleSequences(rand *mathrand.Rand)                  // Shuffle sequence order
 	String() string                                        // Raw string representation (just write all sequences)
 	Translate(phase int, geneticcode int) (err error)      // Translates nt sequence in aa
 	ToUpper()                                              // replaces lower case characters by upper case characters
@@ -123,13 +123,13 @@ func (sb *seqbag) IgnoreIdentical(ignore int) {
 // Samples randomly a subset of the sequences
 // And returns this new alignment
 // If nb < 1 or nb > nbsequences returns nil and an error
-func (sb *seqbag) SampleSeqBag(nb int) (sample SeqBag, err error) {
-	sample, err = sb.sampleSeqBag(nb)
+func (sb *seqbag) SampleSeqBag(nb int, rand *mathrand.Rand) (sample SeqBag, err error) {
+	sample, err = sb.sampleSeqBag(nb, rand)
 	return
 }
 
 // sampleSeqBag is a private function to allow manipulation of the structure and not the interface
-func (sb *seqbag) sampleSeqBag(nb int) (*seqbag, error) {
+func (sb *seqbag) sampleSeqBag(nb int, rand *mathrand.Rand) (*seqbag, error) {
 	if sb.NbSequences() < nb {
 		return nil, errors.New("number of sequences to sample is greater than alignment size")
 	}
@@ -748,13 +748,13 @@ is considered as 0, if the count of an unkown sequence is present, it will retur
 
 	Sum of counts of all sequences must be > n.
 */
-func (sb *seqbag) RarefySeqBag(nb int, counts map[string]int) (sample SeqBag, err error) {
-	sample, err = sb.rarefySeqBag(nb, counts)
+func (sb *seqbag) RarefySeqBag(nb int, counts map[string]int, rand *mathrand.Rand) (sample SeqBag, err error) {
+	sample, err = sb.rarefySeqBag(nb, counts, rand)
 	return
 }
 
 // rarefySeqBag is a private function to allow manipulation of the structure and not the interface
-func (sb *seqbag) rarefySeqBag(nb int, counts map[string]int) (sample *seqbag, err error) {
+func (sb *seqbag) rarefySeqBag(nb int, counts map[string]int, rand *mathrand.Rand) (sample *seqbag, err error) {
 	// Sequences that will be selected
 	selected := make(map[string]bool)
 	total := 0
@@ -900,7 +900,7 @@ func (sb *seqbag) Rename(namemap map[string]string) {
 
 // Shuffle the order of the sequences in the alignment
 // Does not change biological information
-func (sb *seqbag) ShuffleSequences() {
+func (sb *seqbag) ShuffleSequences(rand *mathrand.Rand) {
 	var temp *seq
 	var n int = sb.NbSequences()
 	for n > 1 {

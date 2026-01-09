@@ -68,7 +68,7 @@ Output: An alignment (phylip or fasta).
 				rootphylip = true
 			}
 			for i := 0; i < rarefyReplicates; i++ {
-				if sample, err = seqs.RarefySeqBag(rarefyNb, counts); err != nil {
+				if sample, err = seqs.RarefySeqBag(rarefyNb, counts, globalRand); err != nil {
 					io.LogError(err)
 					return
 				}
@@ -88,7 +88,7 @@ Output: An alignment (phylip or fasta).
 					rootphylip = true
 				}
 				for i := 0; i < rarefyReplicates; i++ {
-					if sample, err = al.Rarefy(rarefyNb, counts); err != nil {
+					if sample, err = al.Rarefy(rarefyNb, counts, globalRand); err != nil {
 						io.LogError(err)
 						return
 					}

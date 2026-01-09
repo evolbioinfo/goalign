@@ -132,7 +132,7 @@ goalign build seqboot -i align.phylip -p -n 500 -o boot_
 			// several partitions. We generate bootstrap replicates
 			// for each partition, and then concatenate them all.
 			for _, a := range aligns {
-				tmpboot = a.BuildBootstrap(bootstrapfrac)
+				tmpboot = a.BuildBootstrap(bootstrapfrac, globalRand)
 				if boot == nil {
 					boot = tmpboot
 				} else {
@@ -144,7 +144,7 @@ goalign build seqboot -i align.phylip -p -n 500 -o boot_
 			}
 			// We shuffle sequence order
 			if bootstrapOrder {
-				boot.ShuffleSequences()
+				boot.ShuffleSequences(globalRand)
 			}
 
 			bootstring = writeAlignString(boot)

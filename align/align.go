@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"log"
 	"math"
-	"math/rand"
+	mathrand "math/rand"
 	"sort"
 	"strings"
 	"unicode"
@@ -19,11 +19,11 @@ import (
 // Alignment represents a set of aligned sequences (multiple Sequence Alignment)
 type Alignment interface {
 	SeqBag
-	AddGaps(rate, lenprop float64)
-	AddAmbiguities(rate, lenprop float64)
+	AddGaps(rate, lenprop float64, rand *mathrand.Rand)
+	AddAmbiguities(rate, lenprop float64, rand *mathrand.Rand)
 	Append(Alignment) error // Appends alignment sequences to this alignment
 	AvgAllelesPerSite() float64
-	BuildBootstrap(frac float64) Alignment // Bootstrap alignment
+	BuildBootstrap(frac float64, rand *mathrand.Rand) Alignment // Bootstrap alignment
 	CharStatsSite(site int) (map[uint8]int, error)
 	Clone() (Alignment, error)
 	CodonAlign(ntseqs SeqBag) (codonAl *align, err error)
@@ -89,17 +89,17 @@ type Alignment interface {
 	//    3)  if maskreplace is GAP: Replacing character is a GAP
 	MaskOccurences(refseq string, maxOccurence int, maskreplace string) error
 	MaxCharStats(excludeGaps, excludeNs bool) (out []uint8, occur []int, total []int)
-	Mutate(rate float64)  // Adds uniform substitutions in the alignment (~sequencing errors)
-	NbVariableSites() int // Nb of variable sites
+	Mutate(rate float64, rand *mathrand.Rand) // Adds uniform substitutions in the alignment (~sequencing errors)
+	NbVariableSites() int                     // Nb of variable sites
 	// Number of Gaps in each sequence that are unique in their alignment site
 	NumGapsUniquePerSequence(countProfile *CountProfile) (numuniques []int, numnew []int, numboth []int, err error)
 	// returns the number of characters in each sequence that are unique in their alignment site (gaps or others)
 	// It does not take into account 'N' and '-' as unique mutations
 	NumMutationsUniquePerSequence(profile *CountProfile) (numuniques []int, numnew []int, nummuts []int, err error)
 	Pssm(log bool, pseudocount float64, normalization int) (pssm map[uint8][]float64, err error) // Normalization: PSSM_NORM_NONE, PSSM_NORM_UNIF, PSSM_NORM_DATA
-	Rarefy(nb int, counts map[string]int) (Alignment, error)                                     // Take a new rarefied sample taking into accounts weights
-	RandSubAlign(length int, consecutive bool) (Alignment, error)                                // Extract a random subalignment with given length from this alignment
-	Recombine(rate float64, lenprop float64, swap bool) error
+	Rarefy(nb int, counts map[string]int, rand *mathrand.Rand) (Alignment, error)                // Take a new rarefied sample taking into accounts weights
+	RandSubAlign(length int, consecutive bool, rand *mathrand.Rand) (Alignment, error)           // Extract a random subalignment with given length from this alignment
+	Recombine(rate float64, lenprop float64, swap bool, rand *mathrand.Rand) error
 	// converts coordinates on the given sequence to coordinates on the alignment
 	RefCoordinates(name string, refstart, refend int) (alistart, aliend int, err error)
 	// converts sites on the given sequence to coordinates on the alignment
@@ -117,13 +117,13 @@ type Alignment interface {
 	RemoveLowerCaseCharacterSites(additionalchars []uint8, cutoff float64, ends, ignoreGaps, ignoreNs bool, reverse bool) (first, last int, kept, removed []int)
 	// Replaces match characters (.) by their corresponding characters on the first sequence
 	ReplaceMatchChars()
-	Sample(nb int) (Alignment, error) // generate a sub sample of the sequences
-	ShuffleSites(rate float64, roguerate float64, randroguefirst bool) []string
-	SimulateRogue(prop float64, proplen float64) ([]string, []string) // add "rogue" sequences
-	SiteConservation(position int) (int, error)                       // If the site is conserved:
-	Split(part *PartitionSet) ([]Alignment, error)                    //Splits the alignment given the paritions in argument
-	SubAlign(start, length int) (Alignment, error)                    // Extract a subalignment from this alignment
-	SelectSites(sites []int) (Alignment, error)                       // Extract givens sites from the alignment
+	Sample(nb int, rand *mathrand.Rand) (Alignment, error) // generate a sub sample of the sequences
+	ShuffleSites(rate float64, roguerate float64, randroguefirst bool, rand *mathrand.Rand) []string
+	SimulateRogue(prop float64, proplen float64, rand *mathrand.Rand) ([]string, []string) // add "rogue" sequences
+	SiteConservation(position int) (int, error)                                            // If the site is conserved:
+	Split(part *PartitionSet) ([]Alignment, error)                                         //Splits the alignment given the paritions in argument
+	SubAlign(start, length int) (Alignment, error)                                         // Extract a subalignment from this alignment
+	SelectSites(sites []int) (Alignment, error)                                            // Extract givens sites from the alignment
 	InverseCoordinates(start, length int) (invstarts, invlengths []int, err error)
 	InversePositions(sites []int) (invsites []int, err error)
 
@@ -131,7 +131,7 @@ type Alignment interface {
 	// if rate>=0 and rate<=1 then it takes rate/2 sequences and exhanges sequences
 	// with rate/2 other sequences, from a random position
 	// if pos >=0 and <=1, then take this position (relative to align length) instead of a random one
-	Swap(rate, pos float64) error
+	Swap(rate, pos float64, rand *mathrand.Rand) error
 	// TranslateByReference translates the alignment codon by codon using the given reference sequence as guide
 	// We traverse reference nt 3 by 3
 	// The reference codon may have gaps between nt ,
@@ -277,7 +277,7 @@ func (a *align) Length() int {
 // having sequences in the same order. It may not be the case if false, especially when alignemnts
 // have different lengths.
 // Output: List of tax names that are more shuffled than others (length=roguerate*nbsequences)
-func (a *align) ShuffleSites(rate float64, roguerate float64, randroguefirst bool) []string {
+func (a *align) ShuffleSites(rate float64, roguerate float64, randroguefirst bool, rand *mathrand.Rand) []string {
 	var sitepermutation, taxpermutation []int
 
 	if rate < 0 || rate > 1 {
@@ -680,7 +680,7 @@ func (a *align) RefSites(name string, sites []int) (refsites []int, err error) {
 // if rate > 1 : error
 // if pos < 0 : random position is taken
 // if pos > 1 : random position is taken
-func (a *align) Swap(rate, pos float64) (err error) {
+func (a *align) Swap(rate, pos float64, rand *mathrand.Rand) (err error) {
 	var nb_to_shuffle, nb_sites int
 	var position int
 	var tmpchar uint8
@@ -956,7 +956,7 @@ func (a *align) TranslateByReference(phase int, geneticcode int, refseq string) 
 // prop must be <= 0.5 because it will recombine x% of seqs based on other x% of seqs
 // if swap is true, then swaps the two portions of sequences (2*prop sequences will be impacted)
 // if swap is false, then just transfers the portion of seq1 to seq2
-func (a *align) Recombine(prop float64, lenprop float64, swap bool) (err error) {
+func (a *align) Recombine(prop float64, lenprop float64, swap bool, rand *mathrand.Rand) (err error) {
 	var seq1, seq2 *seq
 
 	if prop < 0 || prop > 0.5 {
@@ -991,7 +991,7 @@ func (a *align) Recombine(prop float64, lenprop float64, swap bool) (err error) 
 // Add prop*100% gaps to lenprop*100% of the sequences
 // if prop < 0 || lenprop<0 : does nothing
 // if prop > 1 || lenprop>1 : does nothing
-func (a *align) AddGaps(lenprop float64, prop float64) {
+func (a *align) AddGaps(lenprop float64, prop float64, rand *mathrand.Rand) {
 	if prop < 0 || prop > 1 {
 		return
 	}
@@ -1019,7 +1019,7 @@ func (a *align) AddGaps(lenprop float64, prop float64) {
 // if alphabet is amino: ambig = X
 // else if alphabet is nucleotides: ambig = N
 // else: ambig = X
-func (a *align) AddAmbiguities(lenprop float64, prop float64) {
+func (a *align) AddAmbiguities(lenprop float64, prop float64, rand *mathrand.Rand) {
 	if prop < 0 || prop > 1 {
 		return
 	}
@@ -1061,7 +1061,7 @@ func (a *align) Append(al Alignment) (err error) {
 // if rate < 0 : does nothing
 // if rate > 1 : rate=1
 // It does not apply to gaps or other special characters
-func (a *align) Mutate(rate float64) {
+func (a *align) Mutate(rate float64, rand *mathrand.Rand) {
 	if rate <= 0 {
 		return
 	}
@@ -1099,7 +1099,7 @@ func (a *align) Mutate(rate float64) {
 //   - We shuffle the alignment sites of t
 //
 // Output: List of rogue sequence names, and List of intact sequence names
-func (a *align) SimulateRogue(prop float64, proplen float64) ([]string, []string) {
+func (a *align) SimulateRogue(prop float64, proplen float64, rand *mathrand.Rand) ([]string, []string) {
 	var seq *seq
 
 	if prop < 0 || prop > 1.0 {
@@ -1181,11 +1181,11 @@ func (a *align) ReplaceChar(seqname string, site int, newchar uint8) (err error)
 // Samples randomly a subset of the sequences
 // And returns this new alignment
 // If nb < 1 or nb > nbsequences returns nil and an error
-func (a *align) Sample(nb int) (al Alignment, err error) {
+func (a *align) Sample(nb int, rand *mathrand.Rand) (al Alignment, err error) {
 	var sampleSeqBag *seqbag
 	var ali *align
 
-	if sampleSeqBag, err = a.sampleSeqBag(nb); err != nil {
+	if sampleSeqBag, err = a.sampleSeqBag(nb, rand); err != nil {
 		return
 	}
 
@@ -1214,11 +1214,11 @@ is considered as 0, if the count of an unkown sequence is present, it will retur
 
 	Sum of counts of all sequences must be > n.
 */
-func (a *align) Rarefy(nb int, counts map[string]int) (al Alignment, err error) {
+func (a *align) Rarefy(nb int, counts map[string]int, rand *mathrand.Rand) (al Alignment, err error) {
 	var rarefySeqBag *seqbag
 	var ali *align
 
-	if rarefySeqBag, err = a.rarefySeqBag(nb, counts); err != nil {
+	if rarefySeqBag, err = a.rarefySeqBag(nb, counts, rand); err != nil {
 		return
 	}
 
@@ -1237,7 +1237,7 @@ func (a *align) Rarefy(nb int, counts map[string]int) (al Alignment, err error) 
 // replacement, but the output alignment length is a fraction of the
 // original alignment.
 // (see https://evolution.genetics.washington.edu/phylip/doc/seqboot.html)
-func (a *align) BuildBootstrap(frac float64) (boot Alignment) {
+func (a *align) BuildBootstrap(frac float64, rand *mathrand.Rand) (boot Alignment) {
 	if frac <= 0 || frac > 1 {
 		frac = 1.0
 	}
@@ -1516,12 +1516,12 @@ func (a *align) MaxCharStats(ignoreGaps, ignoreNs bool) (out []uint8, occur []in
 // RandomAlignment generates a random alignment with a given alphabet
 // length and number of sequences. Each character is randomly choosen
 // in a uniform distribution.
-func RandomAlignment(alphabet, length, nbseq int) (al Alignment, err error) {
+func RandomAlignment(alphabet, length, nbseq int, rand *mathrand.Rand) (al Alignment, err error) {
 	var seq []uint8
 	al = NewAlign(alphabet)
 	for i := 0; i < nbseq; i++ {
 		name := fmt.Sprintf("Seq%04d", i)
-		if seq, err = RandomSequence(alphabet, length); err != nil {
+		if seq, err = RandomSequence(alphabet, length, rand); err != nil {
 			return
 		}
 		al.AddSequenceChar(name, seq, "")
@@ -1975,7 +1975,7 @@ func (a *align) InversePositions(sites []int) (invsites []int, err error) {
 // RandSubAlign extracts a subalignment of given length from this alignment
 // If consecutive is true, then a start position is randomly chosen, and the next "length" positions are extracted
 // Otherwise, if consecutive is false, then length positions are sampled without replacement from the original alignment
-func (a *align) RandSubAlign(length int, consecutive bool) (Alignment, error) {
+func (a *align) RandSubAlign(length int, consecutive bool, rand *mathrand.Rand) (Alignment, error) {
 	var tmpseq []uint8
 	var permutation []int
 	var i, p, start int

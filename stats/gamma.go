@@ -3,7 +3,6 @@ package stats
 // Inspired from https://github.com/leesper/go_rng/blob/master/gamma.go
 
 import (
-	"errors"
 	"fmt"
 	"math"
 	"math/rand"
@@ -14,7 +13,7 @@ import (
 // Gamma returns a random number of gamma distribution (alpha > 0.0 and beta > 0.0)
 func Gamma(alpha, beta float64) float64 {
 	if !(alpha > 0.0) || !(beta > 0.0) {
-		io.ExitWithMessage(errors.New(fmt.Sprintf("Invalid parameter alpha %.2f beta %.2f", alpha, beta)))
+		io.ExitWithMessage(fmt.Errorf("Invalid parameter alpha %.2f beta %.2f", alpha, beta))
 	}
 	return gamma(alpha, beta)
 }

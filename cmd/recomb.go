@@ -69,7 +69,7 @@ goalign shuffle recomb -i align.fasta -r 0.5 -n 1 -l 0.5
 		defer utils.CloseWriteFile(f, shuffleOutput)
 
 		for al := range aligns.Achan {
-			if err = al.Recombine(recombNb, recombProp, recombSwap); err != nil {
+			if err = al.Recombine(recombNb, recombProp, recombSwap, globalRand); err != nil {
 				io.LogError(err)
 				return
 			}

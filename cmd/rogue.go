@@ -65,7 +65,7 @@ S4 12345678    S4 1234567
 		defer utils.CloseWriteFile(f, shuffleOutput)
 
 		for al := range aligns.Achan {
-			names, _ := al.SimulateRogue(rogueNb, rogueLength)
+			names, _ := al.SimulateRogue(rogueNb, rogueLength, globalRand)
 			writeAlign(al, f)
 			for _, n := range names {
 				namefile.WriteString(n)

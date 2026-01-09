@@ -28,12 +28,12 @@ var randomCmd = &cobra.Command{
 		defer utils.CloseWriteFile(f, randomOutput)
 
 		if !randomAA {
-			if a, err = align.RandomAlignment(align.NUCLEOTIDS, randomLength, randomSize); err != nil {
+			if a, err = align.RandomAlignment(align.NUCLEOTIDS, randomLength, randomSize, globalRand); err != nil {
 				io.LogError(err)
 				return
 			}
 		} else {
-			if a, err = align.RandomAlignment(align.AMINOACIDS, randomLength, randomSize); err != nil {
+			if a, err = align.RandomAlignment(align.AMINOACIDS, randomLength, randomSize, globalRand); err != nil {
 				io.LogError(err)
 				return
 			}

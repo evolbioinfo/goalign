@@ -3,6 +3,7 @@ package align
 import (
 	"fmt"
 	"math"
+	"math/rand"
 	"reflect"
 	"sort"
 	"strings"
@@ -12,7 +13,7 @@ import (
 func TestRanTranslatedomAlignment(t *testing.T) {
 	length := 3000
 	nbseqs := 500
-	a, err := RandomAlignment(AMINOACIDS, length, nbseqs)
+	a, err := RandomAlignment(AMINOACIDS, length, nbseqs, rand.New(rand.NewSource(100)))
 	if err != nil {
 		t.Error(err)
 	}
@@ -26,7 +27,7 @@ func TestRanTranslatedomAlignment(t *testing.T) {
 }
 
 func TestAppendIdentifier(t *testing.T) {
-	a, err := RandomAlignment(AMINOACIDS, 300, 50)
+	a, err := RandomAlignment(AMINOACIDS, 300, 50, rand.New(rand.NewSource(100)))
 	if err != nil {
 		t.Error(err)
 
@@ -52,7 +53,7 @@ func TestAppendIdentifier(t *testing.T) {
 }
 
 func TestCleanNames(t *testing.T) {
-	a, err := RandomAlignment(AMINOACIDS, 300, 50)
+	a, err := RandomAlignment(AMINOACIDS, 300, 50, rand.New(rand.NewSource(100)))
 	if err != nil {
 		t.Error(err)
 
@@ -82,7 +83,7 @@ func TestRemoveOneGapSite(t *testing.T) {
 	var start, end int
 	var kept, rm []int
 	var l int
-	a, err := RandomAlignment(AMINOACIDS, 300, 300)
+	a, err := RandomAlignment(AMINOACIDS, 300, 300, rand.New(rand.NewSource(100)))
 	if err != nil {
 		t.Error(err)
 
@@ -131,7 +132,7 @@ func TestRemoveAllGapSites(t *testing.T) {
 	var start, end int
 	var kept, rm []int
 
-	a, err := RandomAlignment(AMINOACIDS, 300, 300)
+	a, err := RandomAlignment(AMINOACIDS, 300, 300, rand.New(rand.NewSource(100)))
 	if err != nil {
 		t.Error(err)
 
@@ -203,7 +204,7 @@ func TestRemoveOneGapSiteEnds(t *testing.T) {
 	var l, start, end int
 	var kept, rm []int
 
-	a, err := RandomAlignment(AMINOACIDS, 300, 300)
+	a, err := RandomAlignment(AMINOACIDS, 300, 300, rand.New(rand.NewSource(100)))
 	if err != nil {
 		t.Error(err)
 
@@ -252,7 +253,7 @@ func TestRemoveAllGapSitesEnds(t *testing.T) {
 	var start, end int
 	var kept, rm []int
 
-	a, err := RandomAlignment(AMINOACIDS, 300, 300)
+	a, err := RandomAlignment(AMINOACIDS, 300, 300, rand.New(rand.NewSource(100)))
 	if err != nil {
 		t.Error(err)
 
@@ -344,7 +345,7 @@ func TestRemoveGapSitesEnds(t *testing.T) {
 }
 
 func TestRemoveOneGapSequence(t *testing.T) {
-	a, err := RandomAlignment(AMINOACIDS, 300, 300)
+	a, err := RandomAlignment(AMINOACIDS, 300, 300, rand.New(rand.NewSource(100)))
 	if err != nil {
 		t.Error(err)
 
@@ -366,7 +367,7 @@ func TestRemoveOneGapSequence(t *testing.T) {
 }
 
 func TestRemoveOneGapSequence2(t *testing.T) {
-	a, err := RandomAlignment(AMINOACIDS, 300, 300)
+	a, err := RandomAlignment(AMINOACIDS, 300, 300, rand.New(rand.NewSource(100)))
 	if err != nil {
 		t.Error(err)
 
@@ -390,7 +391,7 @@ func TestRemoveOneGapSequence2(t *testing.T) {
 }
 
 func TestRemoveAllGapSequences(t *testing.T) {
-	a, err := RandomAlignment(AMINOACIDS, 300, 300)
+	a, err := RandomAlignment(AMINOACIDS, 300, 300, rand.New(rand.NewSource(100)))
 	if err != nil {
 		t.Error(err)
 
@@ -412,7 +413,7 @@ func TestRemoveAllGapSequences(t *testing.T) {
 }
 
 func TestRemoveHalfGapSequences(t *testing.T) {
-	a, err := RandomAlignment(AMINOACIDS, 300, 300)
+	a, err := RandomAlignment(AMINOACIDS, 300, 300, rand.New(rand.NewSource(100)))
 	if err != nil {
 		t.Error(err)
 
@@ -436,7 +437,7 @@ func TestRemoveHalfGapSequences(t *testing.T) {
 }
 
 func TestClone(t *testing.T) {
-	a, err := RandomAlignment(AMINOACIDS, 300, 300)
+	a, err := RandomAlignment(AMINOACIDS, 300, 300, rand.New(rand.NewSource(100)))
 	if err != nil {
 		t.Error(err)
 
@@ -467,7 +468,7 @@ func TestClone(t *testing.T) {
 }
 
 func TestClone2(t *testing.T) {
-	a, err := RandomAlignment(AMINOACIDS, 300, 300)
+	a, err := RandomAlignment(AMINOACIDS, 300, 300, rand.New(rand.NewSource(100)))
 	if err != nil {
 		t.Error(err)
 
@@ -508,7 +509,7 @@ func TestClone2(t *testing.T) {
 }
 
 func TestAvgAlleles(t *testing.T) {
-	a, err := RandomAlignment(AMINOACIDS, 300, 300)
+	a, err := RandomAlignment(AMINOACIDS, 300, 300, rand.New(rand.NewSource(100)))
 	if err != nil {
 		t.Error(err)
 
@@ -527,7 +528,7 @@ func TestAvgAlleles(t *testing.T) {
 }
 
 func TestAvgAlleles2(t *testing.T) {
-	a, err := RandomAlignment(AMINOACIDS, 300, 300)
+	a, err := RandomAlignment(AMINOACIDS, 300, 300, rand.New(rand.NewSource(100)))
 	if err != nil {
 		t.Error(err)
 
@@ -563,7 +564,7 @@ func TestAvgAlleles2(t *testing.T) {
 func TestRename(t *testing.T) {
 	length := 3000
 	nbseqs := 500
-	a, err := RandomAlignment(AMINOACIDS, length, nbseqs)
+	a, err := RandomAlignment(AMINOACIDS, length, nbseqs, rand.New(rand.NewSource(100)))
 
 	if err != nil {
 		t.Error(err)
@@ -605,7 +606,7 @@ func TestRename(t *testing.T) {
 func TestReplace(t *testing.T) {
 	length := 3000
 	nbseqs := 500
-	a, err := RandomAlignment(NUCLEOTIDS, length, nbseqs)
+	a, err := RandomAlignment(NUCLEOTIDS, length, nbseqs, rand.New(rand.NewSource(100)))
 
 	if err != nil {
 		t.Error(err)
@@ -643,7 +644,7 @@ func TestReplace(t *testing.T) {
 func TestReplaceRegEx(t *testing.T) {
 	length := 3000
 	nbseqs := 500
-	a, err := RandomAlignment(NUCLEOTIDS, length, nbseqs)
+	a, err := RandomAlignment(NUCLEOTIDS, length, nbseqs, rand.New(rand.NewSource(100)))
 
 	if err != nil {
 		t.Error(err)
@@ -695,7 +696,7 @@ func TestRogue(t *testing.T) {
 	length := 3000
 	nbseqs := 500
 	nrogue := 0.5
-	a, err := RandomAlignment(AMINOACIDS, length, nbseqs)
+	a, err := RandomAlignment(AMINOACIDS, length, nbseqs, rand.New(rand.NewSource(100)))
 
 	if err != nil {
 		t.Error(err)
@@ -706,7 +707,7 @@ func TestRogue(t *testing.T) {
 		t.Error(err2)
 	}
 
-	rogues, intacts := a2.SimulateRogue(nrogue, 1.0)
+	rogues, intacts := a2.SimulateRogue(nrogue, 1.0, rand.New(rand.NewSource(100)))
 
 	if (len(rogues) + len(intacts)) != a.NbSequences() {
 		t.Error("Number of intact + rogue sequences is not the same than the total number of sequences")
@@ -738,7 +739,7 @@ func TestRogue2(t *testing.T) {
 	length := 3000
 	nbseqs := 500
 	nrogue := 0.0
-	a, err := RandomAlignment(AMINOACIDS, length, nbseqs)
+	a, err := RandomAlignment(AMINOACIDS, length, nbseqs, rand.New(rand.NewSource(100)))
 
 	if err != nil {
 		t.Error(err)
@@ -749,7 +750,7 @@ func TestRogue2(t *testing.T) {
 		t.Error(err2)
 	}
 
-	rogues, intacts := a2.SimulateRogue(nrogue, 1.0)
+	rogues, intacts := a2.SimulateRogue(nrogue, 1.0, rand.New(rand.NewSource(100)))
 
 	if (len(rogues) + len(intacts)) != a.NbSequences() {
 		t.Error("Number of intact + rogue sequences is not the same than the total number of sequences")
@@ -775,7 +776,7 @@ func TestRogue3(t *testing.T) {
 	length := 3000
 	nbseqs := 500
 	nrogue := 1.0
-	a, err := RandomAlignment(AMINOACIDS, length, nbseqs)
+	a, err := RandomAlignment(AMINOACIDS, length, nbseqs, rand.New(rand.NewSource(100)))
 
 	if err != nil {
 		t.Error(err)
@@ -786,7 +787,7 @@ func TestRogue3(t *testing.T) {
 		t.Error(err2)
 	}
 
-	rogues, intacts := a2.SimulateRogue(nrogue, 1.0)
+	rogues, intacts := a2.SimulateRogue(nrogue, 1.0, rand.New(rand.NewSource(100)))
 
 	if (len(rogues) + len(intacts)) != a.NbSequences() {
 		t.Error(fmt.Sprintf("Number of intact (%d) + rogue (%d) sequences is not the same than the total number of sequences (%d)", len(intacts), len(rogues), a.NbSequences()))
@@ -814,7 +815,7 @@ func TestRogue3(t *testing.T) {
 func TestEntropy(t *testing.T) {
 	length := 3
 	nbseqs := 5
-	a, _ := RandomAlignment(AMINOACIDS, length, nbseqs)
+	a, _ := RandomAlignment(AMINOACIDS, length, nbseqs, rand.New(rand.NewSource(100)))
 
 	alldifferent := []uint8{'A', 'R', 'N', 'D', 'C'}
 	// First site: only 'R' => Entropy 0.0
@@ -844,7 +845,7 @@ func TestEntropy(t *testing.T) {
 func TestSubAlign(t *testing.T) {
 	length := 200
 	nbseqs := 1001
-	a, _ := RandomAlignment(AMINOACIDS, length, nbseqs)
+	a, _ := RandomAlignment(AMINOACIDS, length, nbseqs, rand.New(rand.NewSource(100)))
 
 	/* We put only A from index 9 to index 99 */
 	for i := 0; i < 1001; i++ {
@@ -879,11 +880,11 @@ func TestConcat(t *testing.T) {
 	var acopy Alignment
 	length := 200
 	nbseqs := 1001
-	a, err = RandomAlignment(AMINOACIDS, length, nbseqs)
+	a, err = RandomAlignment(AMINOACIDS, length, nbseqs, rand.New(rand.NewSource(100)))
 	if err != nil {
 		t.Error(err)
 	}
-	a2, err = RandomAlignment(AMINOACIDS, length*2, nbseqs)
+	a2, err = RandomAlignment(AMINOACIDS, length*2, nbseqs, rand.New(rand.NewSource(100)))
 	if err != nil {
 		t.Error(err)
 	}
@@ -1227,7 +1228,7 @@ func TestIdenticalAligns(t *testing.T) {
 	var err error
 	var a, a2, a3 Alignment
 
-	if a, err = RandomAlignment(AMINOACIDS, 1001, 145); err != nil {
+	if a, err = RandomAlignment(AMINOACIDS, 1001, 145, rand.New(rand.NewSource(100))); err != nil {
 		t.Error(err)
 	}
 
@@ -1239,7 +1240,7 @@ func TestIdenticalAligns(t *testing.T) {
 		t.Error(err)
 	}
 
-	a3.ShuffleSequences()
+	a3.ShuffleSequences(rand.New(rand.NewSource(100)))
 
 	if !a.Identical(a) {
 		t.Error(fmt.Errorf("Same alignment object must be Identical"))

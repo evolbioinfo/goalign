@@ -57,7 +57,7 @@ goalign shuffle sites -i align.fasta -r 0.5
 		defer utils.CloseWriteFile(nameFile, siteRogueNameFile)
 
 		for al := range aligns.Achan {
-			names := al.ShuffleSites(siteRate, siteRogue, stableRogues)
+			names := al.ShuffleSites(siteRate, siteRogue, stableRogues, globalRand)
 			writeAlign(al, f)
 			for _, n := range names {
 				nameFile.WriteString(n)

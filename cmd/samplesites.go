@@ -60,7 +60,7 @@ var samplesitesCmd = &cobra.Command{
 			}
 			defer utils.CloseWriteFile(f, name)
 
-			if subalign, err = al.RandSubAlign(sitelength, siteconsecutive); err != nil {
+			if subalign, err = al.RandSubAlign(sitelength, siteconsecutive, globalRand); err != nil {
 				io.LogError(err)
 				return
 			}

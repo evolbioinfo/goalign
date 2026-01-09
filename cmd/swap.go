@@ -57,7 +57,7 @@ goalign shuffle swap -i align.fasta -r 0.5
 		defer utils.CloseWriteFile(f, shuffleOutput)
 
 		for al := range aligns.Achan {
-			if err = al.Swap(swapRate, swapPos); err != nil {
+			if err = al.Swap(swapRate, swapPos, globalRand); err != nil {
 				io.LogError(err)
 				return
 			}

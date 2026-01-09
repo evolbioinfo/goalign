@@ -31,7 +31,7 @@ var addSNVsCmd = &cobra.Command{
 		defer utils.CloseWriteFile(f, mutateOutput)
 
 		for al := range aligns.Achan {
-			al.Mutate(mutateRate)
+			al.Mutate(mutateRate, globalRand)
 			writeAlign(al, f)
 		}
 

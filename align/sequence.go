@@ -5,7 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"math/bits"
-	"math/rand"
+	mathrand "math/rand"
 	"regexp"
 	"strings"
 	"unicode"
@@ -130,7 +130,7 @@ func (s *seq) LongestORF() (start, end int) {
 	return start, end
 }
 
-func RandomSequence(alphabet, length int) ([]uint8, error) {
+func RandomSequence(alphabet, length int, rand *mathrand.Rand) ([]uint8, error) {
 	seq := make([]uint8, length)
 	for i := 0; i < length; i++ {
 		switch alphabet {

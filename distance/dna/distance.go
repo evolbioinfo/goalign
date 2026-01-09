@@ -195,7 +195,7 @@ func DistMatrix(al align.Alignment, weights []float64, model DistModel, range1Mi
 
 	var wg sync.WaitGroup
 	max := 0.0
-	for cpu := 0; cpu < cpus; cpu++ {
+	for range cpus {
 		wg.Add(1)
 		go func() {
 			for sp := range distchan {

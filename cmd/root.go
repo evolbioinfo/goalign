@@ -43,6 +43,8 @@ var seed int64 = -1
 var unaligned bool
 var ignoreidentical = align.IGNORE_NONE
 
+var globalRand *rand.Rand
+
 var helptemplate string = `{{with or .Long .Short }}{{. | trim}}
 
 {{end}}Version: ` + version.Version + `
@@ -88,8 +90,9 @@ Please note that in --auto-detect mode, phylip format is considered as not stric
 		if seed == -1 {
 			seed = time.Now().UTC().UnixNano()
 		}
-		rand.Seed(seed)
+		globalRand = rand.New(rand.NewSource(seed))
 	},
+
 	Run: func(cmd *cobra.Command, args []string) {
 		s := cobrashell.New()
 		// display welcome info.
