@@ -14,8 +14,10 @@ end of the alignment.
 or on a given sequence coordinate system without gaps (`--ref-seq`). It allows 
 to extract sub alignment by just knowing coordinates on a given unaligned sequence.
 
-If the length l <0 , then the extracted sequences will be [start,alilength-l[
-If the length l <0 and a reference sequence is given, the sub alignment will span [start,reflength-l[
+
+If the length l == 0 , then the extracted sequences will be [start,alilength[
+If the length l <  0 , then the extracted sequences will be [start,alilength-l[
+If the length l <  0 and a reference sequence is given, the sub alignment will span [start,reflength-l[
 of the ref sequence.
 
 For example:
