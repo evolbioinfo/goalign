@@ -28,6 +28,7 @@ It takes an alignment and extracts sub-sequences from it, given
 a start position (0-based inclusive) and a length.
 If the length (l)  is after the end of the alignment, will stop at the 
 end of the alignment.
+If the length == 0 , then the extracted sequences will be [start,alilength[
 If the length l <0 , then the extracted sequences will be [start,alilength-l[
 If the length l <0 and a reference sequence is given, the sub alignment will span [start,reflength-l[
 of the ref sequence
@@ -133,7 +134,7 @@ If several alignments are present in the input file and the output is a file
 				}
 			}
 			if refseq {
-				if leng < 0 {
+				if leng <= 0 {
 					if ref, found := al.GetSequenceChar(subseqrefseq); !found {
 						err = fmt.Errorf("reference sequence %s not found in the alignment", subseqrefseq)
 						io.LogError(err)
@@ -147,7 +148,7 @@ If several alignments are present in the input file and the output is a file
 					return
 				}
 			} else {
-				if leng < 0 {
+				if leng <= 0 {
 					leng = (al.Length() + leng) - start
 				}
 			}
