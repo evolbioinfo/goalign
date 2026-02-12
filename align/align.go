@@ -99,7 +99,7 @@ type Alignment interface {
 	Pssm(log bool, pseudocount float64, normalization int) (pssm map[uint8][]float64, err error) // Normalization: PSSM_NORM_NONE, PSSM_NORM_UNIF, PSSM_NORM_DATA
 	Rarefy(nb int, counts map[string]int, rand *mathrand.Rand) (Alignment, error)                // Take a new rarefied sample taking into accounts weights
 	RandSubAlign(length int, consecutive bool, rand *mathrand.Rand) (Alignment, error)           // Extract a random subalignment with given length from this alignment
-	Recombine(rate float64, lenprop float64, swap bool, rand *mathrand.Rand) error
+	Recombine(rate float64, lenprop float64, swap bool, rand *mathrand.Rand) ([]int, error)
 	// converts coordinates on the given sequence to coordinates on the alignment
 	RefCoordinates(name string, refstart, refend int) (alistart, aliend int, err error)
 	// converts sites on the given sequence to coordinates on the alignment
@@ -956,7 +956,8 @@ func (a *align) TranslateByReference(phase int, geneticcode int, refseq string) 
 // prop must be <= 0.5 because it will recombine x% of seqs based on other x% of seqs
 // if swap is true, then swaps the two portions of sequences (2*prop sequences will be impacted)
 // if swap is false, then just transfers the portion of seq1 to seq2
-func (a *align) Recombine(prop float64, lenprop float64, swap bool, rand *mathrand.Rand) (err error) {
+// Returns the indices of the affected sequences
+func (a *align) Recombine(prop float64, lenprop float64, swap bool, rand *mathrand.Rand) (affectedsequences []int, err error) {
 	var seq1, seq2 *seq
 
 	if prop < 0 || prop > 0.5 {
@@ -973,10 +974,14 @@ func (a *align) Recombine(prop float64, lenprop float64, swap bool, rand *mathra
 	permutation := rand.Perm(a.NbSequences())
 
 	// We take a random position in the sequences between min and max
-	for i := 0; i < nb; i++ {
+	for i := range nb {
 		pos := rand.Intn(a.Length() - lentorecomb + 1)
 		seq1 = a.seqs[permutation[i]]
 		seq2 = a.seqs[permutation[i+nb]]
+		affectedsequences = append(affectedsequences, permutation[i])
+		if swap {
+			affectedsequences = append(affectedsequences, permutation[i+nb])
+		}
 		for j := pos; j < pos+lentorecomb; j++ {
 			tmp := seq1.sequence[j]
 			seq1.sequence[j] = seq2.sequence[j]

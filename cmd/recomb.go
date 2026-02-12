@@ -1,6 +1,8 @@
 package cmd
 
 import (
+	"fmt"
+
 	"github.com/evolbioinfo/goalign/align"
 	"github.com/evolbioinfo/goalign/io"
 	"github.com/evolbioinfo/goalign/io/utils"
@@ -10,6 +12,7 @@ import (
 var recombNb float64
 var recombProp float64
 var recombSwap bool
+var recomblogfile string
 
 // recombCmd represents the recomb command
 var recombCmd = &cobra.Command{
@@ -57,6 +60,8 @@ goalign shuffle recomb -i align.fasta -r 0.5 -n 1 -l 0.5
 	RunE: func(cmd *cobra.Command, args []string) (err error) {
 		var aligns *align.AlignChannel
 		var f utils.StringWriterCloser
+		var affected []int
+		var recomblog utils.StringWriterCloser
 
 		if aligns, err = readalign(infile); err != nil {
 			io.LogError(err)
@@ -68,12 +73,28 @@ goalign shuffle recomb -i align.fasta -r 0.5 -n 1 -l 0.5
 		}
 		defer utils.CloseWriteFile(f, shuffleOutput)
 
+		if recomblog, err = utils.OpenWriteFile(recomblogfile); err != nil {
+			io.LogError(err)
+			return
+		}
+		defer utils.CloseWriteFile(recomblog, recomblogfile)
+
 		for al := range aligns.Achan {
-			if err = al.Recombine(recombNb, recombProp, recombSwap, globalRand); err != nil {
+			if affected, err = al.Recombine(recombNb, recombProp, recombSwap, globalRand); err != nil {
 				io.LogError(err)
 				return
 			}
 			writeAlign(al, f)
+
+			for _, s := range affected {
+				if n, f := al.GetSequenceNameById(s); !f {
+					err = fmt.Errorf("affected sequence not found in the alignment: %d", s)
+					io.LogError(err)
+					return
+				} else {
+					fmt.Fprintf(recomblog, "%d\t%s\n", s, n)
+				}
+			}
 		}
 
 		if aligns.Err != nil {
@@ -89,5 +110,6 @@ func init() {
 
 	recombCmd.PersistentFlags().Float64VarP(&recombNb, "prop-seq", "n", 0.5, "Proportion of the  sequences to recombine")
 	recombCmd.PersistentFlags().Float64VarP(&recombProp, "prop-length", "l", 0.5, "Proportion of length of sequences to recombine")
+	recombCmd.PersistentFlags().StringVar(&recomblogfile, "log", "none", "Log file with the indices of affected sequences")
 	recombCmd.PersistentFlags().BoolVar(&recombSwap, "swap", false, "If true, swaps sequences, otherwise just transfer seq1 subseq to seq2")
 }
