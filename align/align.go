@@ -19,7 +19,8 @@ import (
 // Alignment represents a set of aligned sequences (multiple Sequence Alignment)
 type Alignment interface {
 	SeqBag
-	AddGaps(rate, lenprop float64, rand *mathrand.Rand)
+	// Add random gaps to random sequences, and output the indices of the affected sequences
+	AddGaps(rate, lenprop float64, rand *mathrand.Rand) []int
 	AddAmbiguities(rate, lenprop float64, rand *mathrand.Rand)
 	Append(Alignment) error // Appends alignment sequences to this alignment
 	AvgAllelesPerSite() float64
@@ -996,7 +997,8 @@ func (a *align) Recombine(prop float64, lenprop float64, swap bool, rand *mathra
 // Add prop*100% gaps to lenprop*100% of the sequences
 // if prop < 0 || lenprop<0 : does nothing
 // if prop > 1 || lenprop>1 : does nothing
-func (a *align) AddGaps(lenprop float64, prop float64, rand *mathrand.Rand) {
+// Returns the indices of the affected sequences
+func (a *align) AddGaps(lenprop float64, prop float64, rand *mathrand.Rand) (affected []int) {
 	if prop < 0 || prop > 1 {
 		return
 	}
@@ -1012,10 +1014,12 @@ func (a *align) AddGaps(lenprop float64, prop float64, rand *mathrand.Rand) {
 	for i := 0; i < nb; i++ {
 		permsites := rand.Perm(a.Length())
 		seq := a.seqs[permseqs[i]]
+		affected = append(affected, permseqs[i])
 		for j := 0; j < nbgaps; j++ {
 			seq.sequence[permsites[j]] = GAP
 		}
 	}
+	return
 }
 
 // Add prop*100% ambiguities to lenprop*100% of the sequences
