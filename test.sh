@@ -1629,8 +1629,8 @@ AGAAGCTTTATTAAGTTTTC
 EOF
 
 cat > expectedpart <<EOF
-GTR,input1000=1-10
-GTR,input2000=11-20
+GTR,input1=1-10
+GTR,input2=11-20
 EOF
 ${GOALIGN} concat --out-partition respartition -i none input1 input2 > result
 diff -q -b result expected
