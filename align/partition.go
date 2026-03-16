@@ -14,7 +14,7 @@ type PartitionSet struct {
 
 func NewPartitionSet(alignmentLength int) (ps *PartitionSet) {
 	partitions := make([]int, alignmentLength)
-	for i := 0; i < alignmentLength; i++ {
+	for i := range alignmentLength {
 		partitions[i] = -1
 	}
 	ps = &PartitionSet{
@@ -22,6 +22,19 @@ func NewPartitionSet(alignmentLength int) (ps *PartitionSet) {
 		models:     make([]string, 0),
 		partitions: partitions,
 		length:     alignmentLength,
+	}
+	return
+}
+
+func (ps *PartitionSet) ExtendAliLength(addLength int) (err error) {
+	if addLength <= 0 {
+		err = fmt.Errorf("additional alignment length should be greater than 0")
+		return
+	}
+	ps.length = ps.length + addLength
+	ps.partitions = append(ps.partitions, make([]int, addLength)...)
+	for i := ps.length - addLength; i < ps.length; i++ {
+		ps.partitions[i] = -1
 	}
 	return
 }

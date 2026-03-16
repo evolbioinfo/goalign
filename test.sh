@@ -1627,9 +1627,15 @@ AGAAGCTTTATTAAGTTTTC
 >Seq0009
 ----------TTTACATCGA
 EOF
-${GOALIGN} concat -i none input1 input2 > result
+
+cat > expectedpart <<EOF
+GTR,input1000=1-10
+GTR,input2000=11-20
+EOF
+${GOALIGN} concat --out-partition respartition -i none input1 input2 > result
 diff -q -b result expected
-rm -f expected result input1 input2
+diff -q -b respartition expectedpart
+rm -f expected result input1 input2 respartition expectedpart
 
 echo "->goalign concat (missing sequences in 2)"
 cat > input2 <<EOF
