@@ -46,7 +46,7 @@ alignments and LG for aminoacid alignments.
 		var aligns *align.AlignChannel
 		var alchan *align.AlignChannel
 		var outputpartition *align.PartitionSet
-		var partitionmodel string = "GTR"
+		var partitionmodel string = "DNA"
 		var curalign align.Alignment
 		var f utils.StringWriterCloser // output align
 		var p utils.StringWriterCloser // output partition
@@ -84,7 +84,7 @@ alignments and LG for aminoacid alignments.
 				if nal > 0 {
 					partname = fmt.Sprintf("%s%d", name, nal)
 				}
-				if err = outputpartition.AddRange(partname, "Model", start, start+al.Length()-1, 1); err != nil {
+				if err = outputpartition.AddRange(partname, partitionmodel, start, start+al.Length()-1, 1); err != nil {
 					io.LogError(err)
 					return
 				}

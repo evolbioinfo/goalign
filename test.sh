@@ -1629,13 +1629,51 @@ AGAAGCTTTATTAAGTTTTC
 EOF
 
 cat > expectedpart <<EOF
-GTR,input1=1-10
-GTR,input2=11-20
+DNA,input1=1-10
+DNA,input2=11-20
 EOF
 ${GOALIGN} concat --out-partition respartition -i none input1 input2 > result
 diff -q -b result expected
 diff -q -b respartition expectedpart
 rm -f expected result input1 input2 respartition expectedpart
+
+echo "->goalign concat (aa partition)"
+cat > input1 <<EOF
+>Seq0000
+EQTKHQDGLK
+>Seq0001
+ATWNGGMPFT
+>Seq0002
+ETRPCSPPEC
+EOF
+cat > input2 <<EOF
+>Seq0000
+EQTKHQDGLK
+>Seq0001
+ATWNGGMPFT
+>Seq0002
+ETRPCSPPEC
+EOF
+
+cat > expected <<EOF
+>Seq0000
+EQTKHQDGLKEQTKHQDGLK
+>Seq0001
+ATWNGGMPFTATWNGGMPFT
+>Seq0002
+ETRPCSPPECETRPCSPPEC
+EOF
+
+cat > expectedpart <<EOF
+LG,input1=1-10
+LG,input2=11-20
+EOF
+
+${GOALIGN} concat --out-partition respartition -i none input1 input2 > result
+diff -q -b result expected
+diff -q -b respartition expectedpart
+rm -f expected result input1 input2 respartition expectedpart
+
 
 echo "->goalign concat (missing sequences in 2)"
 cat > input2 <<EOF
