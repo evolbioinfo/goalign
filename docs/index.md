@@ -73,6 +73,7 @@ Command                                                     | Subcommand |      
 --                                                          | [simplot](commands/compute_simplot.md)    | Computes similarity plot data + image
 [concat](commands/concat.md) ([api](api/concat.md))         |            | Concatenates a set of alignment
 [consensus](commands/consensus.md) ([api](api/consensus.md))|            | Computes a basic majority consensus sequence
+[convertgff](commands/convertgff.md)                        |            | Converts GFF coordinates from one reference sequence to another
 [extract](commands/extract.md)                              |            | Extracts sub-sequences from an input alignment
 [completion](commands/completion.md)                        |            | Generates auto-completion commands for bash or zsh
 [dedup](commands/dedup.md) ([api](api/dedup.md))            |            | Deduplicate/Remove identical sequences 
