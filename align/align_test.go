@@ -2567,3 +2567,51 @@ func Test_align_InformativeSites(t *testing.T) {
 		})
 	}
 }
+
+// Test for DestCoordinates function
+func Test_align_DestCoordinates(t *testing.T) {
+	var err error
+	var alistart, alilen int
+
+	in := NewAlign(UNKNOWN)
+
+	in.AddSequence("Seq0000", "--ACG--AT---GC", "")
+	in.AddSequence("Seq0001", "GGACGT-ATCGGGC", "")
+	in.AutoAlphabet()
+
+	expstart, explen := 0, 4
+	alistart, alilen, err = in.DestCoordinates("Seq0000", 2, 6)
+	if alistart != expstart || alilen != explen || err != nil {
+		t.Error(fmt.Errorf("alistart: %d!=%d | alilen: %d!=%d | err: %v", alistart, expstart, alilen, explen, err))
+	}
+
+	expstart, explen = 1, 4
+	alistart, alilen, err = in.DestCoordinates("Seq0000", 3, 9)
+	if alistart != expstart || alilen != explen || err != nil {
+		t.Error(fmt.Errorf("alistart: %d!=%d | alilen: %d!=%d | err: %v", alistart, expstart, alilen, explen, err))
+	}
+
+	expstart, explen = 3, 0
+	alistart, alilen, err = in.DestCoordinates("Seq0000", 5, 2)
+	if alistart != expstart || alilen != explen || err != nil {
+		t.Error(fmt.Errorf("alistart: %d!=%d | alilen: %d!=%d | err: %v", alistart, expstart, alilen, explen, err))
+	}
+
+	expstart, explen = 0, 3
+	alistart, alilen, err = in.DestCoordinates("Seq0000", 1, 6)
+	if alistart != expstart || alilen != explen || err != nil {
+		t.Error(fmt.Errorf("alistart: %d!=%d | alilen: %d!=%d | err: %v", alistart, expstart, alilen, explen, err))
+	}
+
+	expstart, explen = 1, 5
+	alistart, alilen, err = in.DestCoordinates("Seq0001", 1, 6)
+	if alistart != expstart || alilen != explen || err != nil {
+		t.Error(fmt.Errorf("alistart: %d!=%d | alilen: %d!=%d | err: %v", alistart, expstart, alilen, explen, err))
+	}
+
+	expstart, explen = 3, 2
+	alistart, alilen, err = in.DestCoordinates("Seq0000", 5, 7)
+	if alistart != expstart || alilen != explen || err != nil {
+		t.Error(fmt.Errorf("alistart: %d!=%d | alilen: %d!=%d | err: %v", alistart, expstart, alilen, explen, err))
+	}
+}

@@ -102,7 +102,9 @@ type Alignment interface {
 	RandSubAlign(length int, consecutive bool, rand *mathrand.Rand) (Alignment, error)           // Extract a random subalignment with given length from this alignment
 	Recombine(rate float64, lenprop float64, swap bool, rand *mathrand.Rand) ([]int, error)
 	// converts coordinates on the given sequence to coordinates on the alignment
-	RefCoordinates(name string, refstart, refend int) (alistart, aliend int, err error)
+	RefCoordinates(name string, refstart, refend int) (alistart, alilen int, err error)
+	// converts coordinates on the alignment to coordinates on the given sequence
+	DestCoordinates(name string, alistart, alilen int) (deststart, destlen int, err error)
 	// converts sites on the given sequence to coordinates on the alignment
 	RefSites(name string, sites []int) (refsites []int, err error)
 	// Overwrites the character at position "site" of the sequence "seqname" by "newchar"
@@ -557,6 +559,55 @@ func (a *align) RemoveLowerCaseCharacterSites(additionalchars []uint8, cutoff fl
 	}
 
 	first, last, kept, rm = a.RemoveCharacterSites(lowercases, cutoff, ends, false, ignoreGaps, ignoreNs, reverse)
+
+	return
+}
+
+// DestCoordinates converts coordinates on the alignment to coordinates on the given destination sequence.
+// Coordinates on the alignment consider gaps. Output coordinates on the given sequence corresponds
+// to the sequence without gaps.
+//
+// It returns an error if the sequence does not exist or if the coordinates are outside the alignment (<0 or > alignment length)
+// Parameters:
+//   - name: The name of the sequence to output coordinates on
+//   - alistart: The start coordinate to convert (on the alignment, 0-based)
+//   - alilen: The length of the alignment to consider from alistart
+func (a *align) DestCoordinates(name string, alistart, alilen int) (deststart, destlen int, err error) {
+	var exists bool
+	var seq []uint8
+
+	if seq, exists = a.GetSequenceChar(name); !exists {
+		err = fmt.Errorf("sequence %s does not exist in the alignment", name)
+		return
+	}
+	if alistart < 0 {
+		err = fmt.Errorf("start on alignment must be > 0 : %d", alistart)
+		return
+	}
+	if alilen <= 0 {
+		err = fmt.Errorf("alignment length must be > 0 : %d", alilen)
+		return
+	}
+	if alistart+alilen > len(seq) {
+		err = fmt.Errorf("start + Length (%d + %d) on alignment falls outside the alignment", alistart, alilen)
+		return
+	}
+
+	deststart = 0
+	destlen = 0
+	for i, site := range seq {
+		if i < alistart {
+			if site != GAP {
+				deststart++
+			}
+		} else if i >= alistart && i < alistart+alilen {
+			if site != GAP {
+				destlen++
+			}
+		} else if i >= alistart+alilen {
+			break
+		}
+	}
 
 	return
 }

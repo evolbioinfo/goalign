@@ -6463,3 +6463,37 @@ diff -q -b expected.lower output.lower
 ${GOALIGN} toupper -i input --unaligned s2 > output.upper
 diff -q -b expected.upper output.upper
 rm -rf input output.upper output.lower expected.lower expected.upper
+
+# Test convertgff command
+echo "->goalign convertgff"   
+
+cat > input.fasta <<EOF
+>seq1
+AC--ACGTACGT
+>seq2
+ACGT----ACGT
+>seq3
+ACGTACGT--GT
+EOF
+
+cat > input.gff <<EOF
+seq1	Genbank	gene	1	4	.	+	.	ID=gene-g1;Name=Gene1;gene=N;gene_biotype=protein_coding
+seq1	Genbank	CDS	1	4	.	+	.	ID=cds-g1;Name=CDS1;gene=N;gene_biotype=protein_coding;Parent=gene-g1
+seq1	Genbank	gene	5	8	.	+	.	ID=gene-g2;Name=Gene2;gene=P;gene_biotype=protein_coding
+seq1	Genbank	CDS	5	8	.	+	.	ID=cds-g2;Name=CDS2;gene=P;gene_biotype=protein_coding;Parent=gene-g2
+seq1	Genbank	gene	1	6	.	+	.	ID=gene-g3;Name=Gene3;gene=Q;gene_biotype=protein_coding
+seq1	Genbank	CDS	1	6	.	+	.	ID=cds-g3;Name=CDS3;gene=Q;gene_biotype=protein_coding;Parent=gene-g3
+EOF
+
+cat > expected.gff <<EOF
+seq2	Genbank	gene	1	4	.	+	.	ID=gene-Gene1;Name=Gene1;gbkey=Gene;gene=Gene1;gene_biotype=protein_coding
+seq2	Genbank	CDS	1	4	.	+	.	ID=cds-Gene1;Name=Gene1;gbkey=CDS;Parent=gene-Gene1
+seq2	Genbank	gene	5	6	.	+	.	ID=gene-Gene2;Name=Gene2;gbkey=Gene;gene=Gene2;gene_biotype=protein_coding
+seq2	Genbank	CDS	5	6	.	+	.	ID=cds-Gene2;Name=Gene2;gbkey=CDS;Parent=gene-Gene2
+seq2	Genbank	gene	1	4	.	+	.	ID=gene-Gene3;Name=Gene3;gbkey=Gene;gene=Gene3;gene_biotype=protein_coding
+seq2	Genbank	CDS	1	4	.	+	.	ID=cds-Gene3;Name=Gene3;gbkey=CDS;Parent=gene-Gene3
+EOF
+
+${GOALIGN} convertgff -i input.fasta --gff input.gff -o output.gff --ref-seq seq1 --dest-seq seq2
+diff -q -b expected.gff output.gff
+rm -f input.fasta input.gff expected.gff output.gff

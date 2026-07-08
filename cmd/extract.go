@@ -17,10 +17,12 @@ import (
 )
 
 type extractSubSequence struct {
-	starts []int
-	ends   []int
-	name   string
-	strand bool
+	starts     []int
+	ends       []int
+	name       string
+	strand     bool
+	chromosome string
+	source     string
 }
 
 var extractrefseq string
@@ -319,6 +321,9 @@ func parseGFFFile(file string) (coords []extractSubSequence, err error) {
 	// Mapping between gene ids and gene names
 	var geneID2Name map[string]string
 
+	var chromosome string
+	var source string
+
 	coordsMap = make(map[string]*extractSubSequence)
 	geneID2Name = make(map[string]string)
 
@@ -346,7 +351,8 @@ func parseGFFFile(file string) (coords []extractSubSequence, err error) {
 			err = errors.New("bad format from gff file: There should be 9 columns")
 			return
 		}
-
+		chromosome = cols[0]
+		source = cols[1]
 		infos := strings.Split(cols[8], ";")
 		strand = cols[6] == "+"
 		if start, err = strconv.Atoi(cols[3]); err != nil {
@@ -401,13 +407,14 @@ func parseGFFFile(file string) (coords []extractSubSequence, err error) {
 				err = fmt.Errorf("cds parent gene id has no name")
 				return
 			}
-
 			if curgene, ok = coordsMap[parentGeneName]; !ok {
 				curgene = &extractSubSequence{
-					starts: make([]int, 0),
-					ends:   make([]int, 0),
-					name:   parentGeneName,
-					strand: strand,
+					starts:     make([]int, 0),
+					ends:       make([]int, 0),
+					name:       parentGeneName,
+					strand:     strand,
+					chromosome: chromosome,
+					source:     source,
 				}
 				coordsMap[parentGeneName] = curgene
 			}
@@ -420,6 +427,13 @@ func parseGFFFile(file string) (coords []extractSubSequence, err error) {
 	for _, coord := range coordsMap {
 		coords = append(coords, *coord)
 	}
-
 	return
+}
+
+func strand2string(strand bool) string {
+	if strand {
+		return "+"
+	} else {
+		return "-"
+	}
 }
