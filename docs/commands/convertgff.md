@@ -41,7 +41,38 @@ Global Flags:
 Convert coordinates from one reference sequence to another and write the result to a new GFF file:
 
 ```
-goalign convertgff -i alignment.fasta --gff input.gff --ref-seq ref1 --dest-seq dest1 -o output.gff
+goalign convertgff -i input.fasta --gff input.gff --ref-seq seq1 --dest-seq seq2 -o output.gff
 ```
 
-This produces a GFF file where the gene and CDS coordinates are expressed on `dest1` instead of `ref1`.
+Example alignment file `input.fasta`:
+
+```fasta
+>seq1
+AC--ACGTACGT
+>seq2
+ACGT----ACGT
+>seq3
+ACGTACGT--GT
+```
+
+Example GFF file `input.gff`:
+
+```gff
+seq1	Genbank	gene	1	4	.	+	.	ID=gene-g1;Name=Gene1;gene=N;gene_biotype=protein_coding
+seq1	Genbank	CDS	1	4	.	+	.	ID=cds-g1;Name=CDS1;gene=N;gene_biotype=protein_coding;Parent=gene-g1
+seq1	Genbank	gene	5	8	.	+	.	ID=gene-g2;Name=Gene2;gene=P;gene_biotype=protein_coding
+seq1	Genbank	CDS	5	8	.	+	.	ID=cds-g2;Name=CDS2;gene=P;gene_biotype=protein_coding;Parent=gene-g2
+seq1	Genbank	gene	1	6	.	+	.	ID=gene-g3;Name=Gene3;gene=Q;gene_biotype=protein_coding
+seq1	Genbank	CDS	1	6	.	+	.	ID=cds-g3;Name=CDS3;gene=Q;gene_biotype=protein_coding;Parent=gene-g3
+```
+
+This produces a GFF file where the gene and CDS coordinates are expressed on `seq2` instead of `seq1`, for example:
+
+```gff
+seq2	Genbank	gene	5	6	.	+	.	ID=gene-Gene2;Name=Gene2;gbkey=Gene;gene=Gene2;gene_biotype=protein_coding
+seq2	Genbank	CDS	5	6	.	+	.	ID=cds-Gene2;Name=Gene2;gbkey=CDS;Parent=gene-Gene2
+seq2	Genbank	gene	1	4	.	+	.	ID=gene-Gene3;Name=Gene3;gbkey=Gene;gene=Gene3;gene_biotype=protein_coding
+seq2	Genbank	CDS	1	4	.	+	.	ID=cds-Gene3;Name=Gene3;gbkey=CDS;Parent=gene-Gene3
+seq2	Genbank	gene	1	4	.	+	.	ID=gene-Gene1;Name=Gene1;gbkey=Gene;gene=Gene1;gene_biotype=protein_coding
+seq2	Genbank	CDS	1	4	.	+	.	ID=cds-Gene1;Name=Gene1;gbkey=CDS;Parent=gene-Gene1
+```
