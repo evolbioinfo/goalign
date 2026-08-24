@@ -227,6 +227,19 @@ func (a *align) AddSequenceChar(name string, sequence []uint8, comment string) e
 	idx := 0
 	tmpname := name
 
+	// Keeps the sequence as is, with its original (possibly duplicate) name:
+	// neither dropped nor renamed.
+	if ok && a.ignoreidentical == KEEP_DUPLICATE_NAMES {
+		if a.length != -1 && a.length != len(sequence) {
+			return errors.New("Sequence " + name + " does not have same length as other sequences")
+		}
+		a.length = len(sequence)
+		seq := NewSequence(name, sequence, comment)
+		a.seqmap[name] = seq
+		a.seqs = append(a.seqs, seq)
+		return nil
+	}
+
 	// If the sequence name already exists
 	// and ignoreidentical is true, then we ignore this sequence
 	if ok && a.ignoreidentical == IGNORE_NAME {

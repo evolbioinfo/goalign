@@ -59,6 +59,17 @@ This means that seq1 is identical to seq2 and seq3 is identical to seq4.
 		}
 		defer utils.CloseWriteFile(l, dedupLogOutput)
 
+		if dedupName {
+			// Deduplicating by name requires seeing sequences with duplicate
+			// names as they are in the input file: by default, the parsers
+			// rename (or drop) them on the fly, so none would ever reach
+			// Deduplicate(). Temporarily force the parser to keep them, so that
+			// Deduplicate() can build an accurate identical-names log (-l).
+			savedIgnoreIdentical := ignoreidentical
+			ignoreidentical = align.KEEP_DUPLICATE_NAMES
+			defer func() { ignoreidentical = savedIgnoreIdentical }()
+		}
+
 		if unaligned {
 			var seqs align.SeqBag
 
@@ -66,7 +77,7 @@ This means that seq1 is identical to seq2 and seq3 is identical to seq4.
 				io.LogError(err)
 				return
 			}
-			if id, err = seqs.Deduplicate(dedupNAsGap); err != nil {
+			if id, err = seqs.Deduplicate(dedupNAsGap, dedupName); err != nil {
 				io.LogError(err)
 				return
 			} else {
@@ -82,7 +93,7 @@ This means that seq1 is identical to seq2 and seq3 is identical to seq4.
 			}
 
 			for al := range aligns.Achan {
-				if id, err = al.Deduplicate(dedupNAsGap); err != nil {
+				if id, err = al.Deduplicate(dedupNAsGap, dedupName); err != nil {
 					io.LogError(err)
 					return
 				} else {

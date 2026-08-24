@@ -42,6 +42,12 @@ const (
 	IGNORE_NONE     = 0
 	IGNORE_NAME     = 1
 	IGNORE_SEQUENCE = 2
+	// KEEP_DUPLICATE_NAMES keeps sequences having duplicate names as they are while
+	// building a SeqBag/Alignment (no renaming, no dropping). It is meant for internal
+	// use by commands that need to see raw duplicate names (e.g. `goalign dedup --name`),
+	// and should not be used for general alignment building since most other operations
+	// assume unique sequence names.
+	KEEP_DUPLICATE_NAMES = 3
 
 	// IUPAC Nucleotide Code : For bitwise operations
 	NT_OTHER = 0 // GAP, *, etc;?

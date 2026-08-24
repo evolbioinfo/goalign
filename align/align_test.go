@@ -968,7 +968,7 @@ func TestDedup(t *testing.T) {
 		t.Error("There should be 5 sequences before deduplicaion")
 	}
 
-	if identical, err = a.Deduplicate(false); err != nil {
+	if identical, err = a.Deduplicate(false, false); err != nil {
 		t.Error(err)
 	}
 
@@ -992,7 +992,7 @@ func TestDedup(t *testing.T) {
 		}
 	}
 
-	if _, err = a.Deduplicate(false); err != nil {
+	if _, err = a.Deduplicate(false, false); err != nil {
 		t.Error(err)
 	}
 	if a.NbSequences() != 2 {
@@ -1021,7 +1021,7 @@ func TestDedupN(t *testing.T) {
 		t.Error("There should be 5 sequences before deduplicaion")
 	}
 
-	if identical, err = a.Deduplicate(false); err != nil {
+	if identical, err = a.Deduplicate(false, false); err != nil {
 		t.Error(err)
 	}
 
@@ -1045,7 +1045,7 @@ func TestDedupN(t *testing.T) {
 		}
 	}
 
-	if identical, err = aN.Deduplicate(true); err != nil {
+	if identical, err = aN.Deduplicate(true, false); err != nil {
 		t.Error(err)
 	}
 	if aN.NbSequences() != 1 {
@@ -1085,7 +1085,7 @@ func TestDedup2(t *testing.T) {
 		t.Error("There should be 5 sequences before deduplicaion")
 	}
 
-	if identical, err = sb.Deduplicate(false); err != nil {
+	if identical, err = sb.Deduplicate(false, false); err != nil {
 		t.Error(err)
 	}
 
@@ -1109,7 +1109,7 @@ func TestDedup2(t *testing.T) {
 		}
 	}
 
-	if _, err = sb.Deduplicate(false); err != nil {
+	if _, err = sb.Deduplicate(false, false); err != nil {
 		t.Error(err)
 	}
 	if sb.NbSequences() != 2 {
@@ -1133,7 +1133,7 @@ func TestDedup3(t *testing.T) {
 		t.Error("There should be 5 sequences before deduplicaion")
 	}
 
-	if identical, err = sb.Deduplicate(false); err != nil {
+	if identical, err = sb.Deduplicate(false, false); err != nil {
 		t.Error(err)
 	}
 
@@ -1157,11 +1157,60 @@ func TestDedup3(t *testing.T) {
 		}
 	}
 
-	if _, err = sb.Deduplicate(false); err != nil {
+	if _, err = sb.Deduplicate(false, false); err != nil {
 		t.Error(err)
 	}
 	if sb.NbSequences() != 4 {
 		t.Error("There should be 4 sequences in the de-deduplicated alignment")
+	}
+}
+
+func TestDedupByName(t *testing.T) {
+	var err error
+	var sb SeqBag = NewSeqBag(NUCLEOTIDS)
+	// KEEP_DUPLICATE_NAMES is what `goalign dedup --name` relies on: it lets
+	// sequences with duplicate names survive parsing as is, so Deduplicate()
+	// can see and report them, instead of the default behavior which renames
+	// (or IGNORE_NAME/IGNORE_SEQUENCE which silently drop) duplicates on the fly.
+	sb.IgnoreIdentical(KEEP_DUPLICATE_NAMES)
+	sb.AddSequence("A", "ACGT", "")
+	sb.AddSequence("B", "ACGG", "")
+	sb.AddSequence("A", "TTTT", "")
+	sb.AddSequence("C", "ACGT", "")
+
+	var expectedIdentical [][]string = [][]string{{"A", "A"}, {"B"}, {"C"}}
+	var identical [][]string
+
+	if sb.NbSequences() != 4 {
+		t.Error("There should be 4 sequences before deduplication")
+	}
+
+	if identical, err = sb.Deduplicate(false, true); err != nil {
+		t.Error(err)
+	}
+
+	if sb.NbSequences() != 3 {
+		t.Error("There should be 3 sequences in the deduplicated alignment")
+	}
+
+	if len(identical) != len(expectedIdentical) {
+		t.Errorf("After deduplicate, slice of identical sequences is different from expected: %d vs. %d", len(expectedIdentical), len(identical))
+		return
+	}
+	for i, id := range expectedIdentical {
+		if len(id) != len(identical[i]) {
+			t.Errorf("After deduplicate, slice of identical sequences is different from expected: %d vs. %d", len(id), len(identical[i]))
+			return
+		}
+		for j, name := range id {
+			if identical[i][j] != name {
+				t.Errorf("After deduplicate, slice of identical sequences is different from expected: %s vs. %s", name, identical[i][j])
+			}
+		}
+	}
+
+	if seq, ok := sb.GetSequence("A"); !ok || seq != "ACGT" {
+		t.Errorf("The first sequence named \"A\" should have been kept (ACGT), got %q", seq)
 	}
 }
 

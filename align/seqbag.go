@@ -34,7 +34,7 @@ type SeqBag interface {
 	CleanNames(namemap map[string]string)                      // Clean sequence names (newick special char)
 	Clear()                                                    // Removes all sequences
 	CloneSeqBag() (seqs SeqBag, err error)                     // Clones the seqqbag
-	Deduplicate(nAsGap bool) (identical [][]string, err error) // Remove duplicate sequences (nAsGap is for considering N/X identical to gaps for sequence comparison)
+	Deduplicate(nAsGap, byName bool) (identical [][]string, err error) // Remove duplicate sequences (nAsGap is for considering N/X identical to gaps for sequence comparison, byName deduplicates on sequence name instead of sequence content)
 	FilterLength(minlength, maxlength int) error               // Remove sequences whose length is <minlength or >maxlength
 	GetSequence(name string) (string, bool)                    // Get a sequence by names
 	GetSequenceById(ith int) (string, bool)
@@ -113,7 +113,7 @@ func NewSeqBag(alphabet int) *seqbag {
 // Otherwise, sets IGNORE_NONE
 func (sb *seqbag) IgnoreIdentical(ignore int) {
 	switch ignore {
-	case IGNORE_NONE, IGNORE_NAME, IGNORE_SEQUENCE:
+	case IGNORE_NONE, IGNORE_NAME, IGNORE_SEQUENCE, KEEP_DUPLICATE_NAMES:
 		sb.ignoreidentical = ignore
 	default:
 		sb.ignoreidentical = IGNORE_NONE
@@ -157,6 +157,15 @@ func (sb *seqbag) AddSequenceChar(name string, sequence []uint8, comment string)
 	s, ok := sb.seqmap[name]
 	idx := 0
 	tmpname := name
+
+	// Keeps the sequence as is, with its original (possibly duplicate) name:
+	// neither dropped nor renamed.
+	if ok && sb.ignoreidentical == KEEP_DUPLICATE_NAMES {
+		seq := NewSequence(name, sequence, comment)
+		sb.seqmap[name] = seq
+		sb.seqs = append(sb.seqs, seq)
+		return nil
+	}
 
 	// If the sequence name already exists with the same sequence
 	// and ignoreidentical is true, then we ignore this sequence
@@ -316,12 +325,13 @@ func (sb *seqbag) CloneSeqBag() (SeqBag, error) {
 // It keeps one copy of each sequence, with the name of the first
 // found.
 // nAsGap: if true, then considers N characters / X characters as identical to GAPs for sequence comparison
+// byName: if true, then deduplicates sequences having the same name, whatever their sequence
 //
 // As output, identical contains a slice of identical sequence names
 // ex: identical[0] is a slice of identical sequence names
 //
 // It modifies input alignment.
-func (sb *seqbag) Deduplicate(nAsGap bool) (identical [][]string, err error) {
+func (sb *seqbag) Deduplicate(nAsGap, byName bool) (identical [][]string, err error) {
 	var compareString string
 	oldseqs := sb.seqs
 	sb.Clear()
@@ -333,8 +343,10 @@ func (sb *seqbag) Deduplicate(nAsGap bool) (identical [][]string, err error) {
 	for _, seq := range oldseqs {
 		s := string(seq.sequence)
 
-		// We create a temp sequence with N/X replaced by GAP
-		if nAsGap {
+		if byName {
+			compareString = seq.name
+		} else if nAsGap {
+			// We create a temp sequence with N/X replaced by GAP
 			if sb.Alphabet() == AMINOACIDS {
 				compareString = strings.ReplaceAll(s, string(ALL_AMINO), string(GAP))
 			} else if sb.Alphabet() == NUCLEOTIDS {
