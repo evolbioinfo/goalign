@@ -318,6 +318,9 @@ func parseGFFFile(file string) (coords []extractSubSequence, err error) {
 	var curgene *extractSubSequence
 	// Name of the gene to the gene coords
 	var coordsMap map[string]*extractSubSequence
+	// Gene names in the order they first appear in the GFF file,
+	// so that output order is deterministic (map iteration order is random)
+	var geneOrder []string
 	// Mapping between gene ids and gene names
 	var geneID2Name map[string]string
 
@@ -417,6 +420,7 @@ func parseGFFFile(file string) (coords []extractSubSequence, err error) {
 					source:     source,
 				}
 				coordsMap[parentGeneName] = curgene
+				geneOrder = append(geneOrder, parentGeneName)
 			}
 			curgene.starts = append(curgene.starts, start-1)
 			curgene.ends = append(curgene.ends, end)
@@ -424,8 +428,8 @@ func parseGFFFile(file string) (coords []extractSubSequence, err error) {
 		l, e = utils.Readln(r)
 	}
 
-	for _, coord := range coordsMap {
-		coords = append(coords, *coord)
+	for _, name := range geneOrder {
+		coords = append(coords, *coordsMap[name])
 	}
 	return
 }

@@ -7,7 +7,7 @@ This command converts the coordinates of an input GFF annotation from one sequen
 
 It reads an input alignment together with a GFF file that describes gene and CDS features. For each CDS feature, it uses the alignment to map the coordinates from the reference sequence to the destination sequence and writes a new GFF file with corresponding gene and CDS entries on the destination sequence.
 
-The input GFF file is expected to contain gene lines and CDS lines. Each CDS line should be linked to its parent gene through the `Parent` attribute, and each gene line should define a `Name` attribute. The output file contains one gene line and one CDS line per converted feature.
+The input GFF file is expected to contain gene lines and CDS lines. Each CDS line should be linked to its parent gene through the `Parent` attribute, and each gene line should define a `Name` attribute. The output file contains one gene line and one CDS line per converted feature. Genes are written in the order in which they first appear (as CDS parents) in the input GFF file.
 
 The conversion is based on the alignment coordinates and the sequences specified by `--ref-seq` and `--dest-seq`. If a coordinate falls outside the alignment, or if a block length is invalid, the command exits with an error.
 
@@ -69,10 +69,10 @@ seq1	Genbank	CDS	1	6	.	+	.	ID=cds-g3;Name=CDS3;gene=Q;gene_biotype=protein_codin
 This produces a GFF file where the gene and CDS coordinates are expressed on `seq2` instead of `seq1`, for example:
 
 ```gff
+seq2	Genbank	gene	1	4	.	+	.	ID=gene-Gene1;Name=Gene1;gbkey=Gene;gene=Gene1;gene_biotype=protein_coding
+seq2	Genbank	CDS	1	4	.	+	.	ID=cds-Gene1;Name=Gene1;gbkey=CDS;Parent=gene-Gene1
 seq2	Genbank	gene	5	6	.	+	.	ID=gene-Gene2;Name=Gene2;gbkey=Gene;gene=Gene2;gene_biotype=protein_coding
 seq2	Genbank	CDS	5	6	.	+	.	ID=cds-Gene2;Name=Gene2;gbkey=CDS;Parent=gene-Gene2
 seq2	Genbank	gene	1	4	.	+	.	ID=gene-Gene3;Name=Gene3;gbkey=Gene;gene=Gene3;gene_biotype=protein_coding
 seq2	Genbank	CDS	1	4	.	+	.	ID=cds-Gene3;Name=Gene3;gbkey=CDS;Parent=gene-Gene3
-seq2	Genbank	gene	1	4	.	+	.	ID=gene-Gene1;Name=Gene1;gbkey=Gene;gene=Gene1;gene_biotype=protein_coding
-seq2	Genbank	CDS	1	4	.	+	.	ID=cds-Gene1;Name=Gene1;gbkey=CDS;Parent=gene-Gene1
 ```
