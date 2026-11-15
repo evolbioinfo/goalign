@@ -27,6 +27,7 @@ This command implements different computations:
     - Characters are upper-cased before counting. `*` and `.` are never taken into account; `-` is not taken into account with `--remove-gaps` (`-g`); N, X, IUPAC ambiguity codes and any other non standard nucleotide/amino acid character are not taken into account with `--ignore-ambiguities`. Without this option, they are counted as states of their own, which may strongly inflate entropy on alignments with many undetermined positions (e.g. viral genomes).
     - With `--ignore-ambiguities`, the alphabet matters: an alignment auto-detected as "both" (e.g. a protein alignment made only of A, C, G, T, N...) is treated as nucleotides (use `--alphabet aa` to force amino acids), and an alignment of unknown alphabet (characters that are neither nucleotides nor amino acids) produces an error.
     - Sites with no character taken into account have an entropy of `NaN`, and are not taken into account in the average.
+    - Values are printed with 3 decimals by default; use `--precision` to change it (applies to both per-site values and the `-a` average). Low entropy values (e.g. a single variant among thousands of sequences) need more than 3 decimals to be meaningful.
 3. `goalign compute pssm`: Computes and prints a Position specific scoring matrix. Different kind of matrices may be computed, depending on `-n` option:
     - `-n 0` : None, means raw counts
     - `-n 1` : By column frequency, i.e. frequency of nt/aa per site/column
@@ -67,6 +68,7 @@ Flags:
   -h, --help                 help for entropy
       --ignore-ambiguities   If true, then do not take into account N, X and other ambiguous/non standard characters in the computation
       --log-base string      Base of the logarithm: "e" (nats, default), 2 (bits), 10, or any positive number (default "e")
+      --precision int        Number of decimals of output entropy values (per site and average) (default 3)
   -g, --remove-gaps          If true, then do not take into account gaps in the computation
 ```
 

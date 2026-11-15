@@ -14,6 +14,7 @@ var entropyAverage bool
 var entropyRemoveGaps bool
 var entropyRemoveAmbiguities bool
 var entropyLogBase string
+var entropyPrecision int
 
 // entropyCmd represents the entropy command
 var entropyCmd = &cobra.Command{
@@ -37,6 +38,9 @@ Alignment \t Site \t Entropy
 Entropy is Shannon entropy, computed with the natural logarithm by default, i.e. values
 are in nats. Use --log-base 2 to get values in bits (as in "goalign compute pssm -n 4"
 sequence logos, which are always in bits), or --log-base 10.
+
+Values are printed with 3 decimals by default (both per site and with -a).
+Use --precision to print more (or fewer) decimals.
 
 Characters are upper-cased before counting. The computation does not take into account
 the following characters:
@@ -64,6 +68,12 @@ and it will not be taken into account in the average.
 		var aligns *align.AlignChannel
 		var e float64
 		var logfactor float64 = 1.0
+
+		if entropyPrecision < 0 {
+			err = fmt.Errorf("invalid --precision %d: must be >= 0", entropyPrecision)
+			io.LogError(err)
+			return
+		}
 
 		if entropyLogBase != "e" {
 			var base float64
@@ -101,12 +111,12 @@ and it will not be taken into account in the average.
 							total++
 						}
 					} else {
-						fmt.Printf("%d\t%d\t%.3f\n", nb, i, e)
+						fmt.Printf("%d\t%d\t%.*f\n", nb, i, entropyPrecision, e)
 					}
 				}
 			}
 			if entropyAverage {
-				fmt.Printf("%d\t%.3f\n", nb, avg/float64(total))
+				fmt.Printf("%d\t%.*f\n", nb, entropyPrecision, avg/float64(total))
 			}
 			nb++
 		}
@@ -125,4 +135,5 @@ func init() {
 	entropyCmd.PersistentFlags().BoolVarP(&entropyRemoveGaps, "remove-gaps", "g", false, "If true, then do not take into account gaps in the computation")
 	entropyCmd.PersistentFlags().BoolVar(&entropyRemoveAmbiguities, "ignore-ambiguities", false, "If true, then do not take into account N, X and other ambiguous/non standard characters in the computation")
 	entropyCmd.PersistentFlags().StringVar(&entropyLogBase, "log-base", "e", "Base of the logarithm: \"e\" (nats, default), 2 (bits), 10, or any positive number")
+	entropyCmd.PersistentFlags().IntVar(&entropyPrecision, "precision", 3, "Number of decimals of output entropy values (per site and average)")
 }
