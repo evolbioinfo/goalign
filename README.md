@@ -225,9 +225,13 @@ goalign compute pssm -n 4 -i align.fasta
 ```
 goalign compute distance -m k2p -i align.fasta -t 5
 ```
-* Compute site entropry
+* Compute site entropy (in nats by default)
 ```
 goalign compute entropy -i align.fasta
+```
+* Compute site entropy in bits, ignoring gaps and ambiguous characters (N, X, IUPAC codes), with 6 decimals
+```
+goalign compute entropy -i align.fasta -g --ignore-ambiguities --log-base 2 --precision 6
 ```
 * Build 100 bootstrap alignments from an input alignment, in a single tar.gz file (5 threads)
 ```
