@@ -51,6 +51,12 @@ Almost all commands can have the following arguments:
     4. Phylip
     If none of these formats is recognized, then will exit with an error. Please also note that in `--auto-detect` mode, phylip format is considered as not strict.
 * `--alphabet`: Used to specify which alphabet must be used to parse the alignment. It can be `auto` (default), `aa`, or `nt`. By default, the alphabet is deduced from the content of the input file. In the case of nexus format, when `--alphabet auto` is specified, the alphabet specified in the nexus file is used. Otherwise, this option overrides the nexus file alphabet.
+    In `auto` mode, the alphabet is detected as follows (case insensitive):
+    - Characters valid both as nucleotides and amino acids: `A C G T U B D H K M N R S V W X Y`, plus `-`, `.`, `*` and `?`. `U` is uracil for nucleotides, and selenocysteine for amino acids;
+    - Amino-acid only characters: `E F I L P Q Z J O` (`J`: Leu/Ile ambiguity, `O`: pyrrolysine);
+    - Any other character makes the alphabet unknown.
+
+    If all characters are valid in both alphabets (e.g. `ACGU`, or a protein made only of the letters above), the alignment is considered as nucleotidic. Use `--alphabet aa` to force amino acids in that case.
 
 Output is written to stdout by default, but can be generally written to files with the `-o` option. If the given output file has a `.gz` or `.xz` extension, the output is compressed accordingly.
 

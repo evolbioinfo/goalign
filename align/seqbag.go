@@ -589,12 +589,10 @@ func (sb *seqbag) DetectAlphabet() (alphabet int) {
 			couldbent := false
 			couldbeaa := false
 			switch nt {
-			case 'A', 'C', 'B', 'R', 'G', '?', GAP, POINT, OTHER, 'D', 'K', 'S', 'H', 'M', 'N', 'V', 'X', 'T', 'W', 'Y':
+			case 'A', 'C', 'B', 'R', 'G', '?', GAP, POINT, OTHER, 'D', 'K', 'S', 'H', 'M', 'N', 'V', 'X', 'T', 'W', 'Y', 'U':
 				couldbent = true
 				couldbeaa = true
-			case 'U', 'O':
-				couldbent = true
-			case 'Q', 'E', 'I', 'L', 'F', 'P', 'Z':
+			case 'Q', 'E', 'I', 'L', 'F', 'P', 'Z', 'J', 'O':
 				couldbeaa = true
 			}
 			isaa = isaa && couldbeaa
@@ -719,12 +717,10 @@ func DetectAlphabet(seq string) int {
 		couldbent := false
 		couldbeaa := false
 		switch nt {
-		case 'A', 'C', 'B', 'R', 'G', '?', GAP, POINT, OTHER, 'D', 'K', 'S', 'H', 'M', 'N', 'V', 'X', 'T', 'W', 'Y':
+		case 'A', 'C', 'B', 'R', 'G', '?', GAP, POINT, OTHER, 'D', 'K', 'S', 'H', 'M', 'N', 'V', 'X', 'T', 'W', 'Y', 'U':
 			couldbent = true
 			couldbeaa = true
-		case 'U', 'O':
-			couldbent = true
-		case 'Q', 'E', 'I', 'L', 'F', 'P', 'Z':
+		case 'Q', 'E', 'I', 'L', 'F', 'P', 'Z', 'J', 'O':
 			couldbeaa = true
 		}
 		isaa = isaa && couldbeaa

@@ -842,6 +842,34 @@ func TestEntropy(t *testing.T) {
 	}
 }
 
+func TestDetectAlphabetJUO(t *testing.T) {
+	tests := []struct {
+		seq      string
+		expected int
+	}{
+		{"ACGU", BOTH},        // U: uracil, or selenocysteine
+		{"ACGTU", BOTH},       // U alone does not make it protein
+		{"ACKQJ", AMINOACIDS}, // J: Leu/Ile ambiguity
+		{"ACGTO", AMINOACIDS}, // O: pyrrolysine, not a nucleotide code
+		{"ACGTUO", AMINOACIDS},
+		{"ACGT1", UNKNOWN},
+	}
+	for _, tc := range tests {
+		if a := DetectAlphabet(tc.seq); a != tc.expected {
+			t.Errorf("DetectAlphabet(%q): expected %d, got %d", tc.seq, tc.expected, a)
+		}
+		sq := NewSequence("s", []uint8(tc.seq), "")
+		if a := sq.DetectAlphabet(); a != tc.expected {
+			t.Errorf("seq.DetectAlphabet(%q): expected %d, got %d", tc.seq, tc.expected, a)
+		}
+		sb := NewSeqBag(UNKNOWN)
+		sb.AddSequence("s", tc.seq, "")
+		if a := sb.DetectAlphabet(); a != tc.expected {
+			t.Errorf("seqbag.DetectAlphabet(%q): expected %d, got %d", tc.seq, tc.expected, a)
+		}
+	}
+}
+
 func TestSubAlign(t *testing.T) {
 	length := 200
 	nbseqs := 1001
