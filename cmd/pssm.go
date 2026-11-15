@@ -27,7 +27,8 @@ Different normalizations are possible with --normalization (-n):
                            but divides by frequency of the nt/aa in the whole alignment
 	--normalization 3: By column frequency compared to uniform frequency: same as -n 1, 
                            but divides by uniform frequency of the nt/aa (1/4 for nt, 1/20 for aa)
-	--normalization 4: Normalization "Logo"
+	--normalization 4: Normalization "Logo". Uses Shannon entropy in bits (log2), as is the convention
+                           for sequence logos (unlike "goalign compute entropy", which outputs nats by default)
 
 Possible to add pseudo counts (before normalization) with --pseudo-count (-c)
 

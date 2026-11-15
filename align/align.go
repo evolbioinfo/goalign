@@ -47,7 +47,16 @@ type Alignment interface {
 	CountDifferences() (alldiffs []string, diffs []map[string]int)
 	// Compares all sequences to the first one and replace identical characters with .
 	DiffWithFirst()
-	Entropy(site int, removegaps bool) (float64, error) // Entropy of the given site
+	// Shannon entropy of the given site, in nats (natural logarithm).
+	// Equivalent to EntropyFiltered(site, removegaps, false).
+	Entropy(site int, removegaps bool) (float64, error)
+	// Shannon entropy of the given site, in nats (natural logarithm).
+	// Characters are upper-cased before counting. '*' and '.' are never counted,
+	// '-' is not counted if removegaps is true, and every character that is not a
+	// standard nucleotide (A, C, G, T, U) or amino acid (20 standard ones), depending
+	// on the alignment alphabet, is not counted if removeambiguities is true
+	// (N, X, IUPAC codes R, Y, K, M, S, W, B, D, H, V, and B, Z, J for proteins, etc.).
+	EntropyFiltered(site int, removegaps, removeambiguities bool) (float64, error)
 	// Positions of potential frameshifts
 	// if startinggapsasincomplete is true, then considers gaps as the beginning
 	// as incomplete sequence, then take the right phase
@@ -1635,11 +1644,48 @@ func (a *align) AvgAllelesPerSite() float64 {
 	return float64(nballeles) / float64(nbsites)
 }
 
-// Entropy of the given site. If the site number is < 0 or > length -> returns an error
+// Entropy of the given site, in nats (natural logarithm).
+// See EntropyFiltered. If the site number is < 0 or >= length -> returns an error.
 // if removegaps is true, do not take into account gap characters
 func (a *align) Entropy(site int, removegaps bool) (float64, error) {
-	if site < 0 || site > a.Length() {
+	return a.EntropyFiltered(site, removegaps, false)
+}
+
+// EntropyFiltered computes the Shannon entropy of the given site, in nats
+// (natural logarithm). If the site number is < 0 or >= length -> returns an error.
+//
+// Characters are upper-cased before counting (as in Pssm and CharStats).
+// The following characters are not taken into account:
+//   - '*' and '.' : always
+//   - '-'         : if removegaps is true
+//   - every character that is not a standard nucleotide (A, C, G, T, U) for
+//     nucleotide alignments, or not one of the 20 standard amino acids for
+//     protein alignments: if removeambiguities is true (N, X, IUPAC ambiguity codes...).
+//     Alignments of alphabet BOTH are treated as nucleotides. If the alphabet is
+//     UNKNOWN, an error is returned (the standard character set cannot be chosen).
+//
+// If no character is taken into account at this site, returns NaN.
+func (a *align) EntropyFiltered(site int, removegaps, removeambiguities bool) (float64, error) {
+	if site < 0 || site >= a.Length() {
 		return 1.0, errors.New("site position is outside alignment")
+	}
+
+	var allowed map[uint8]bool
+	if removeambiguities {
+		allowed = make(map[uint8]bool)
+		var std []uint8
+		switch a.Alphabet() {
+		case AMINOACIDS:
+			std = stdaminoacid
+		case NUCLEOTIDS, BOTH:
+			// BOTH: all characters are valid nucleotides, treated as nucleotides
+			std = append([]uint8{'U'}, stdnucleotides...)
+		default:
+			return math.NaN(), errors.New("cannot ignore ambiguities: alignment alphabet is unknown (it contains characters that are neither nucleotides nor amino acids)")
+		}
+		for _, c := range std {
+			allowed[c] = true
+		}
 	}
 
 	// Number of occurences of each different aa/nt
@@ -1647,25 +1693,27 @@ func (a *align) Entropy(site int, removegaps bool) (float64, error) {
 	total := 0
 	entropy := 0.0
 	for seq := 0; seq < a.NbSequences(); seq++ {
-		s := a.seqs[seq].sequence[site]
-		if s != OTHER && s != POINT && (!removegaps || s != GAP) {
-			nb, ok := occur[s]
-			if !ok {
-				occur[s] = 1
-			} else {
-				occur[s] = nb + 1
-			}
-			total++
+		s := uint8(unicode.ToUpper(rune(a.seqs[seq].sequence[site])))
+		if s == OTHER || s == POINT {
+			continue
 		}
+		if removegaps && s == GAP {
+			continue
+		}
+		if removeambiguities && s != GAP && !allowed[s] {
+			continue
+		}
+		occur[s]++
+		total++
+	}
+
+	if total == 0 {
+		return math.NaN(), nil
 	}
 
 	for _, v := range occur {
 		proba := float64(v) / float64(total)
 		entropy -= proba * math.Log(proba)
-	}
-
-	if total == 0 {
-		return math.NaN(), nil
 	}
 	return entropy, nil
 }
@@ -1909,7 +1957,9 @@ func (a *align) Pssm(log bool, pseudocount float64, normalization int) (pssm map
 		}
 	}
 
-	/* Initialize entropy if NORM_LOGO*/
+	/* Initialize entropy if NORM_LOGO.
+	   Warning: this entropy is in bits (log2), as is the convention for sequence logos,
+	   whereas Entropy()/EntropyFiltered() return nats (natural log) */
 	entropy = make([]float64, a.Length())
 	/* Applying normalization factors */
 	for k, v := range pssm {

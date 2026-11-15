@@ -22,13 +22,17 @@ This command implements different computations:
   will compute distance only between sequences [0 to 9] and sequences [10 to 19].
   Output matrix will be formatted the same way as usual, except that it will be made of 0 except for
   the comparisons 0 vs. 10; 0 .vs 11; ...; 9 vs. 19.
-2. `goalign compute entropy`: Computes the entropy of each sites of the input alignment or the average entropy of all sites (`-a` option).
+2. `goalign compute entropy`: Computes the Shannon entropy of each sites of the input alignment or the average entropy of all sites (`-a` option).
+    - Entropy is computed with the natural logarithm by default, i.e. values are in **nats**. `--log-base 2` gives values in bits, `--log-base 10` in base 10 (any positive base is accepted).
+    - Characters are upper-cased before counting. `*` and `.` are never taken into account; `-` is not taken into account with `--remove-gaps` (`-g`); N, X, IUPAC ambiguity codes and any other non standard nucleotide/amino acid character are not taken into account with `--ignore-ambiguities`. Without this option, they are counted as states of their own, which may strongly inflate entropy on alignments with many undetermined positions (e.g. viral genomes).
+    - With `--ignore-ambiguities`, the alphabet matters: an alignment auto-detected as "both" (e.g. a protein alignment made only of A, C, G, T, N...) is treated as nucleotides (use `--alphabet aa` to force amino acids), and an alignment of unknown alphabet (characters that are neither nucleotides nor amino acids) produces an error.
+    - Sites with no character taken into account have an entropy of `NaN`, and are not taken into account in the average.
 3. `goalign compute pssm`: Computes and prints a Position specific scoring matrix. Different kind of matrices may be computed, depending on `-n` option:
     - `-n 0` : None, means raw counts
     - `-n 1` : By column frequency, i.e. frequency of nt/aa per site/column
     - `-n 2` : By column frequency compared to alignment frequency: same as -n 1, but divides by frequency of the nt/aa in the whole alignment
     - `-n 3` : By column frequency compared to uniform frequency: same as -n 1, but divides by uniform frequency of the nt/aa (1/4 for nt, 1/20 for aa)
-    - `-n 4` : Normalization "Logo".
+    - `-n 4` : Normalization "Logo". Uses Shannon entropy in **bits** (log2), as is the convention for sequence logos (unlike `goalign compute entropy`, which outputs nats by default).
 	Option `-c` allows to add pseudo counts before normalization, and option `-l` log2 transforms the values.
  4. `goalign compute simplot`: See the [dedicated page](simplot.md). Compute a similarity plot between a query sequence and other sequences, using a sliding window.
 
@@ -52,6 +56,18 @@ Global Flags:
   -i, --align string   Alignment input file (default "stdin")
   -p, --phylip         Alignment is in phylip? False=Fasta
   --input-strict       Strict phylip input format (only used with -p)
+```
+
+* entropy command
+```
+goalign compute entropy [flags]
+
+Flags:
+  -a, --average              Compute only the average entropy of input alignment
+  -h, --help                 help for entropy
+      --ignore-ambiguities   If true, then do not take into account N, X and other ambiguous/non standard characters in the computation
+      --log-base string      Base of the logarithm: "e" (nats, default), 2 (bits), 10, or any positive number (default "e")
+  -g, --remove-gaps          If true, then do not take into account gaps in the computation
 ```
 
 * distance command

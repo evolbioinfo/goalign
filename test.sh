@@ -1487,6 +1487,28 @@ diff -q -b result expected
 rm -f expected result restmp
 
 
+echo "->goalign compute entropy --ignore-ambiguities --log-base 2"
+cat > input <<EOF
+>a
+AN-
+>b
+AAc
+>c
+CRC
+>d
+CAc
+EOF
+cat > expected <<EOF
+Alignment	Site	Entropy
+0	0	1.000
+0	1	0.000
+0	2	0.811
+EOF
+${GOALIGN} compute entropy -i input --ignore-ambiguities --log-base 2 > result
+diff -q -b result expected
+rm -f input expected result
+
+
 echo "->goalign compute pssm logo"
 cat > expected <<EOF
 	A	C	G	T

@@ -819,7 +819,7 @@ func TestEntropy(t *testing.T) {
 
 	alldifferent := []uint8{'A', 'R', 'N', 'D', 'C'}
 	// First site: only 'R' => Entropy 0.0
-	// Second site: Only different aminoacids => Entropy 1.0
+	// Second site: 5 different aminoacids, equiprobable => Entropy ln(5) = 1.609 nats (2.322 bits)
 	for i := 0; i < 5; i++ {
 		a.SetSequenceChar(i, 0, 'R')
 		a.SetSequenceChar(i, 1, alldifferent[i])
@@ -867,6 +867,104 @@ func TestDetectAlphabetJUO(t *testing.T) {
 		if a := sb.DetectAlphabet(); a != tc.expected {
 			t.Errorf("seqbag.DetectAlphabet(%q): expected %d, got %d", tc.seq, tc.expected, a)
 		}
+	}
+}
+
+func TestEntropyFiltered(t *testing.T) {
+	a := NewAlign(NUCLEOTIDS)
+	// site 0: A A C C N R - -  ; site 1: a A c C . * - -
+	seqs := []string{"Aa", "AA", "Cc", "CC", "N.", "R*", "--", "--"}
+	for i, sq := range seqs {
+		if err := a.AddSequence(fmt.Sprintf("s%d", i), sq, ""); err != nil {
+			t.Fatal(err)
+		}
+	}
+	ln2 := math.Log(2)
+	// A:2 C:2 N:1 R:1 -:2
+	all := -(3*0.25*math.Log(0.25) + 2*0.125*math.Log(0.125))
+	// A:2 C:2 N:1 R:1
+	nogap := -(2*(2.0/6)*math.Log(2.0/6) + 2*(1.0/6)*math.Log(1.0/6))
+	// A:2 C:2 -:2
+	noambig := math.Log(3)
+	tests := []struct {
+		site         int
+		gaps, ambigs bool
+		expected     float64
+	}{
+		{0, false, false, all},
+		{0, true, false, nogap},
+		{0, false, true, noambig},
+		{0, true, true, ln2},
+		// lower case is upper-cased; '.' and '*' never counted
+		{1, true, false, ln2},
+		{1, false, false, math.Log(3)},
+	}
+	for _, tc := range tests {
+		e, err := a.EntropyFiltered(tc.site, tc.gaps, tc.ambigs)
+		if err != nil {
+			t.Error(err)
+		}
+		if math.Abs(e-tc.expected) > 1e-9 {
+			t.Errorf("site %d gaps=%v ambigs=%v: expected %f, got %f", tc.site, tc.gaps, tc.ambigs, tc.expected, e)
+		}
+	}
+
+	// Site made only of ambiguities => NaN
+	b := NewAlign(NUCLEOTIDS)
+	b.AddSequence("s1", "N", "")
+	b.AddSequence("s2", "R", "")
+	if e, _ := b.EntropyFiltered(0, true, true); !math.IsNaN(e) {
+		t.Errorf("expected NaN, got %f", e)
+	}
+
+	// Protein alignment: K and Q must be kept, X removed
+	p := NewAlign(AMINOACIDS)
+	for i, sq := range []string{"A", "C", "K", "Q", "X"} {
+		p.AddSequence(fmt.Sprintf("p%d", i), sq, "")
+	}
+	if e, err := p.EntropyFiltered(0, false, true); err != nil || math.Abs(e-math.Log(4)) > 1e-9 {
+		t.Errorf("protein: expected %f, got %f (err %v)", math.Log(4), e, err)
+	}
+
+	// Protein containing J (Leu/Ile ambiguity code): detected as amino acids,
+	// and J is removed as an ambiguity
+	j := NewAlign(UNKNOWN)
+	for i, sq := range []string{"AJ", "CJ", "KJ", "QJ"} {
+		j.AddSequence(fmt.Sprintf("j%d", i), sq, "")
+	}
+	if alpha := j.DetectAlphabet(); alpha != AMINOACIDS {
+		t.Errorf("alignment containing J should be detected as amino acids, got %d", alpha)
+	}
+	if alpha := DetectAlphabet("ACKQJ"); alpha != AMINOACIDS {
+		t.Errorf("sequence containing J should be detected as amino acids, got %d", alpha)
+	}
+	j.SetAlphabet(AMINOACIDS)
+	if e, err := j.EntropyFiltered(0, false, true); err != nil || math.Abs(e-math.Log(4)) > 1e-9 {
+		t.Errorf("protein with J, site 0: expected %f, got %f (err %v)", math.Log(4), e, err)
+	}
+	if e, err := j.EntropyFiltered(1, false, true); err != nil || !math.IsNaN(e) {
+		t.Errorf("protein with J, site 1 (only J): expected NaN, got %f (err %v)", e, err)
+	}
+
+	// Unknown alphabet => error with removeambiguities,
+	// instead of a silent fallback to nucleotides
+	u := NewAlign(UNKNOWN)
+	for i, sq := range []string{"AJ", "CJ", "KJ", "QJ"} {
+		u.AddSequence(fmt.Sprintf("u%d", i), sq, "")
+	}
+	if _, err := u.EntropyFiltered(0, false, true); err == nil {
+		t.Error("expected an error with unknown alphabet and removeambiguities")
+	}
+	if e, err := u.EntropyFiltered(0, false, false); err != nil || math.Abs(e-math.Log(4)) > 1e-9 {
+		t.Errorf("unknown alphabet without filtering: expected %f, got %f (err %v)", math.Log(4), e, err)
+	}
+
+	// Out of bounds sites => error, not panic
+	if _, err := a.Entropy(a.Length(), false); err == nil {
+		t.Error("expected an error for site == length")
+	}
+	if _, err := a.Entropy(-1, false); err == nil {
+		t.Error("expected an error for site < 0")
 	}
 }
 
